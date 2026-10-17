@@ -60,6 +60,7 @@ internal static class Program
             InFixture("final-scan-rollback",TestFinalScanRollback);
             InFixture("prepared-corruption",TestPreparedCorruption);
             InFixture("approved-duplicate",TestDuplicateRepair);
+            InFixture("directory-leases",TestDirectoryLeases);
             Check(RuntimeFiles.IsMutable("GameData/SCANsat/PluginData/Settings.cfg"),"SCANsat runtime settings allowed");
             Check(!RuntimeFiles.IsMutable("GameData/FarFutureTechnologies/Parts/Engines/part.cfg"),"Part definitions remain immutable");
             Check(!RuntimeFiles.IsMutable("GameData/SCANsat/PluginData/plugin.dll"),"PluginData assemblies remain immutable");
@@ -123,6 +124,32 @@ internal static class Program
         Check(File.ReadAllText(Directory.GetFiles(Path.Combine(root,"APF/.disabled-install-copies"),"privatekey.txt",SearchOption.AllDirectories).Single())=="duplicate identity preserved","Disabled duplicate identity retained recoverably");
         Check(File.ReadAllText(Path.Combine(root,"Resources/unrelated.txt"))=="unrelated Resources retained","Duplicate repair preserves unrelated Resources files");
     }
+    private static void TestDirectoryLeases()
+    {
+        string empty=Path.Combine(root,"empty-directory");Directory.CreateDirectory(empty);
+        var method=typeof(PreparedPack).GetMethod("PlainDirectory",System.Reflection.BindingFlags.Static|System.Reflection.BindingFlags.NonPublic);
+        try {
+            method.Invoke(null,new object[]{root,empty});bool rejected=false;
+            try{Directory.Move(empty,empty+"-moved");}catch(IOException){rejected=true;}
+            Check(rejected,"Cached directory handle prevents replacement even without file locks");
+            using(var write=OpenDirectoryForWrite(empty,0x40000000,7,IntPtr.Zero,3,0x02000000,IntPtr.Zero)) {
+                int error=System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+                Check(write.IsInvalid&&error==32,"Directory lease blocks GENERIC_WRITE handles; attribute-only retagging is checked separately");
+            }
+        }finally{PreparedPack.Close();}
+        Directory.Move(empty,empty+"-moved");Check(Directory.Exists(empty+"-moved"),"Directory lease release restores ordinary rename access");
+        using(var write=OpenDirectoryForWrite(empty+"-moved",0x40000000,7,IntPtr.Zero,3,0x02000000,IntPtr.Zero))Check(!write.IsInvalid,"Directory lease release restores normal write-handle access");
+        string link=Path.Combine(root,"directory-junction");
+        using(var process=Process.Start(new ProcessStartInfo{FileName=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System),"cmd.exe"),Arguments=ApfProcessArguments.Join(new[]{"/c","mklink","/J",link,empty+"-moved"}),UseShellExecute=false,CreateNoWindow=true,WindowStyle=ProcessWindowStyle.Hidden,RedirectStandardOutput=true,RedirectStandardError=true})) {
+            Check(process.WaitForExit(10000)&&process.ExitCode==0,"Owned junction safety fixture created without opening a window");
+        }
+        bool blocked=false;
+        try{method.Invoke(null,new object[]{root,link});}
+        catch(System.Reflection.TargetInvocationException error){blocked=error.InnerException is InvalidDataException;}
+        finally{PreparedPack.Close();}
+        Check(blocked,"Directory cache rejects a junction using opened-handle attributes");
+    }
+    [System.Runtime.InteropServices.DllImport("kernel32.dll",EntryPoint="CreateFileW",CharSet=System.Runtime.InteropServices.CharSet.Unicode,SetLastError=true)]private static extern Microsoft.Win32.SafeHandles.SafeFileHandle OpenDirectoryForWrite(string path,uint access,uint sharing,IntPtr security,uint disposition,uint flags,IntPtr template);
     private static string BackupRoot {get{return Path.Combine(root,"APF/.transaction-backup");}}
     private static ApfRecoveryJournal ReadJournal()
     {

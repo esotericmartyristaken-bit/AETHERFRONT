@@ -17,7 +17,7 @@
   "groups": [
     {
       "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
-      "directories": ["Aetherfront-RC25-Work/Engine", "Aetherfront-RC25-Work/CorePatcher", "Aetherfront-RC25-Work/ClientUi", "Aetherfront-RC25-Work/ClientPatcher", "Aetherfront-RC25-Work/NativeTests", "Aetherfront-RC25-Work/InstallerTests", "Aetherfront-RC25-Work/ProfileTests", "Aetherfront-RC25-Work/ModFixes/Source"],
+      "directories": ["Aetherfront-RC25-Work/Engine", "Aetherfront-RC25-Work/CorePatcher", "Aetherfront-RC25-Work/ClientUi", "Aetherfront-RC25-Work/ClientPatcher", "Aetherfront-RC25-Work/NativeTests", "Aetherfront-RC25-Work/InstallerTests", "Aetherfront-RC25-Work/ProfileTests", "Aetherfront-RC25-Work/DirectoryLeaseTests", "Aetherfront-RC25-Work/ModFixes/Source"],
       "extensions": [".cs", ".csproj", ".cfg"]
     },
     {

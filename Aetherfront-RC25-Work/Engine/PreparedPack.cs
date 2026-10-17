@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.Win32.SafeHandles;
 using ApfCore;
 
 namespace KesasInstall
@@ -37,6 +38,7 @@ namespace KesasInstall
     {
         private static readonly List<FileStream> locks = new List<FileStream>();
         private static readonly Dictionary<string,FileStream> fileLocks = new Dictionary<string,FileStream>(StringComparer.OrdinalIgnoreCase);
+        private static readonly Dictionary<string,SafeFileHandle> directoryLocks = new Dictionary<string,SafeFileHandle>(StringComparer.OrdinalIgnoreCase);
         private static PreparedReceipt active;
         private static ApfSyncTransaction transaction;
         private static string preparedData;
@@ -130,14 +132,14 @@ namespace KesasInstall
                         if(!ApfPaths.IsSafeRelative(relative)||!expected.Add(relative))throw new InvalidDataException("Unsafe or duplicate prepared file.");
                         string target=Path.GetFullPath(Path.Combine(data,relative.Replace('/',Path.DirectorySeparatorChar)));
                         if(!string.Equals(target,packageRoot,StringComparison.OrdinalIgnoreCase)&&!ApfPaths.IsUnder(target,packageRoot))throw new InvalidDataException("Prepared file escapes its package.");
-                        ApfPaths.EnsureNoReparsePoints(root,target);
+                        PlainFile(root,target);
                         var input=new FileStream(target,FileMode.Open,FileAccess.Read,FileShare.Read);
                         locks.Add(input);
                         fileLocks.Add(relative,input);
                         using(var hash=SHA256.Create())if(!string.Equals(ApfJson.ToHex(hash.ComputeHash(input)),file.Sha256,StringComparison.OrdinalIgnoreCase))throw new InvalidDataException("Prepared file changed: "+file.Path);
                     }
                     string[] actual=File.Exists(packageRoot)?new[]{packageRoot}:Directory.GetFiles(packageRoot,"*",SearchOption.AllDirectories);
-                    foreach(string file in actual){ApfPaths.EnsureNoReparsePoints(root,file);if(!expected.Contains(file.Substring(data.Length+1).Replace('\\','/')))throw new InvalidDataException("Unexpected prepared file.");}
+                    foreach(string file in actual){PlainFile(root,file);if(!expected.Contains(file.Substring(data.Length+1).Replace('\\','/')))throw new InvalidDataException("Unexpected prepared file.");}
                     if(actual.Length!=expected.Count)throw new InvalidDataException("Prepared file count differs.");
                 }
                 active=receipt;transaction=value;preparedData=data;
@@ -189,11 +191,17 @@ namespace KesasInstall
             // Windows refuses parent-directory rename while children are open.
             // Reopen and hash after the rename, then retain locks until commit.
             foreach(var file in prepared.Files){string key=ApfPaths.NormalizeGameDataRelative(file.Path);fileLocks[key].Dispose();fileLocks.Remove(key);}
+            ReleaseDirectories();
+            // Ordinary path-based mutation needs directory sharing released.
+            // Revalidate both complete paths immediately before that mutation;
+            // the cache is empty and cannot authorize a stale directory here.
+            ApfPaths.EnsureNoReparsePoints(transaction.GameRoot,source);
+            ApfPaths.EnsureNoReparsePoints(transaction.GameRoot,target);
             if(Directory.Exists(source))Directory.Move(source,target);else File.Move(source,target);
             foreach(var file in prepared.Files) {
                 string relativeFile=ApfPaths.NormalizeGameDataRelative(file.Path);
                 string destination=Path.Combine(gameData,relativeFile.Replace('/',Path.DirectorySeparatorChar));
-                ApfPaths.EnsureNoReparsePoints(transaction.GameRoot,destination);
+                PlainFile(transaction.GameRoot,destination);
                 var input=new FileStream(destination,FileMode.Open,FileAccess.Read,FileShare.Read);locks.Add(input);fileLocks.Add(relativeFile,input);
                 using(var hash=SHA256.Create())if(!string.Equals(ApfJson.ToHex(hash.ComputeHash(input)),file.Sha256,StringComparison.OrdinalIgnoreCase))throw new InvalidDataException("Committed prepared bytes differ: "+file.Path);
             }
@@ -209,7 +217,7 @@ namespace KesasInstall
             var paths=new HashSet<string>(package.Files.Select(f=>ApfPaths.NormalizeGameDataRelative(f.Path)),StringComparer.OrdinalIgnoreCase);
             if(actual.Length!=paths.Count||actual.Any(f=>!paths.Contains(f.Substring(gameData.Length+1).Replace('\\','/'))))throw new InvalidDataException("Prepared installed package paths changed.");
             foreach(string file in actual) {
-                ApfPaths.EnsureNoReparsePoints(transaction.GameRoot,file);
+                PlainFile(transaction.GameRoot,file);
                 // The installed path must still name the exact locked file.
                 using(var current=new FileStream(file,FileMode.Open,FileAccess.Read,FileShare.Read|FileShare.Delete)) {
                     if(!GetFileInformationByHandle(fileLocks[file.Substring(gameData.Length+1).Replace('\\','/')].SafeFileHandle.DangerousGetHandle(),out var held)||!GetFileInformationByHandle(current.SafeFileHandle.DangerousGetHandle(),out var now)||held.Volume!=now.Volume||held.IndexHigh!=now.IndexHigh||held.IndexLow!=now.IndexLow)throw new InvalidDataException("Prepared installed file identity changed.");
@@ -217,9 +225,47 @@ namespace KesasInstall
             }
             return package.Files;
         }
-        public static void Close(){active=null;transaction=null;preparedData=null;bundledClient=null;duplicateClient=null;foreach(var input in locks)input.Dispose();locks.Clear();fileLocks.Clear();}
+        public static void Close(){active=null;transaction=null;preparedData=null;bundledClient=null;duplicateClient=null;foreach(var input in locks)input.Dispose();locks.Clear();fileLocks.Clear();ReleaseDirectories();}
+        public static void ReleaseDirectories(){foreach(var handle in directoryLocks.Values)handle.Dispose();directoryLocks.Clear();}
+        private static void PlainFile(string root,string path)
+        {
+            root=Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar);
+            path=Path.GetFullPath(path);
+            if(!ApfPaths.IsUnder(path,root))throw new InvalidDataException("Prepared file escapes its game root.");
+            PlainDirectory(root,Path.GetDirectoryName(path));
+            var attributes=File.GetAttributes(path);
+            if((attributes&(FileAttributes.ReparsePoint|FileAttributes.Directory))!=0)throw new InvalidDataException("Prepared file is not a plain regular file.");
+        }
+        private static void PlainDirectory(string root,string path)
+        {
+            root=Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar);path=Path.GetFullPath(path);
+            if(directoryLocks.TryGetValue(path,out var existing)) {
+                // Attribute-only opens can retag some directories despite data
+                // sharing restrictions. Recheck every held ancestor HANDLE,
+                // without repeating expensive path-resolution walks per file.
+                if(!GetFileInformationByHandle(existing.DangerousGetHandle(),out var current)||(current.Attributes&0x10)==0||(current.Attributes&0x400)!=0)throw new InvalidDataException("Secured directory attributes changed.");
+                if(!string.Equals(path,root,StringComparison.OrdinalIgnoreCase))PlainDirectory(root,Path.GetDirectoryName(path));
+                return;
+            }
+            if(string.Equals(path,root,StringComparison.OrdinalIgnoreCase))ApfPaths.EnsureNoReparsePoints(root,root);
+            else {
+                if(!ApfPaths.IsUnder(path,root))throw new InvalidDataException("Prepared directory escapes its game root.");
+                PlainDirectory(root,Path.GetDirectoryName(path));
+            }
+            // A non-delete-sharing directory handle prevents rename/reparse
+            // replacement, so verified ancestors can safely be reused. Open the
+            // reparse point itself and inspect the HANDLE, closing the check/open
+            // race. Do not merely cache a prior path-based attributes result.
+            // FILE_LIST_DIRECTORY participates in Windows sharing checks;
+            // desiredAccess=0 metadata handles do not prevent rename.
+            var handle=CreateFile(path,1,1,IntPtr.Zero,3,0x02200000,IntPtr.Zero);
+            if(handle.IsInvalid){handle.Dispose();throw new IOException("Could not secure prepared directory: "+path);}
+            if(!GetFileInformationByHandle(handle.DangerousGetHandle(),out var information)||(information.Attributes&0x10)==0||(information.Attributes&0x400)!=0){handle.Dispose();throw new InvalidDataException("Prepared directory is not a plain directory.");}
+            directoryLocks.Add(path,handle);
+        }
         [StructLayout(LayoutKind.Sequential)]private struct FileIdentity { public uint Attributes,CreationLow,CreationHigh,AccessLow,AccessHigh,WriteLow,WriteHigh,Volume,SizeHigh,SizeLow,Links,IndexHigh,IndexLow; }
         [DllImport("kernel32.dll",SetLastError=true)]private static extern bool GetFileInformationByHandle(IntPtr handle,out FileIdentity information);
+        [DllImport("kernel32.dll",EntryPoint="CreateFileW",CharSet=CharSet.Unicode,SetLastError=true)]private static extern SafeFileHandle CreateFile(string path,uint access,uint sharing,IntPtr security,uint disposition,uint flags,IntPtr template);
         private static string Mac(string payload,byte[] key){using(var hash=new HMACSHA256(key))return Convert.ToBase64String(hash.ComputeHash(Encoding.UTF8.GetBytes(payload)));}
         private static bool SameMac(string left,string right){if(left==null||left.Length!=right.Length)return false;int difference=0;for(int i=0;i<left.Length;i++)difference|=left[i]^right[i];return difference==0;}
     }

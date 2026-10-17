@@ -31,7 +31,8 @@ namespace KesasInstall
         }
         public static ApfSyncPlan ScanFinal(string gameData,ApfPackManifest manifest,ApfPackState state)
         {
-            return ApfPackScanner.Scan(gameData,manifest,state);
+            try{return ApfPackScanner.Scan(gameData,manifest,state);}
+            finally{PreparedPack.ReleaseDirectories();}
         }
     }
 }

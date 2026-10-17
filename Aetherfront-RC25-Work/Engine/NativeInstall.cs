@@ -50,7 +50,7 @@ namespace KesasInstall
                     bool authenticated=transaction is ApfClientUpdateTransaction client?ApfTransactionSecurity.Verify(client,key):ApfTransactionSecurity.Verify((ApfSyncTransaction)transaction,key);
                     if(!authenticated)throw new InvalidDataException("Installation authorization failed.");
                     completion=new Completion(transaction,root);
-                    if(transaction is ApfSyncTransaction prepared)PreparedPack.Open(prepared,transactionPath);
+                    if(transaction is ApfSyncTransaction prepared){PreparedPack.Open(prepared,transactionPath);PreparedPack.ReleaseDirectories();}
                     if(kind=="client")ApfPostExitRunner.Apply(helperRoot,transactionPath,true);
                     else PostExit.Apply(helperRoot,transactionPath);
                 }

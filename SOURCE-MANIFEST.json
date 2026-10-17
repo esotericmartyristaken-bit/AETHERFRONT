@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-17T08:58:03.3305538Z",
+  "createdUtc": "2026-10-17T09:28:53.1318383Z",
   "publication": "Reviewed source-only snapshot. Git publication and runtime deployment are separate operations.",
   "sourceBase": {
     "tree": "Aetherfront-Source",
     "upstream": "LunaMultiplayer",
     "tag": "0.29.2",
     "commit": "60a2ed5dbfdddc08536a98b999c781e3c12b0649",
-    "commitEvidence": "Sibling upstream Git metadata and existing handoff; not a commit identity for modified source."
+    "commitEvidence": "Sibling LunaMultiplayer-Source git metadata and existing handoff documentation; not a commit identity for the modified export."
   },
   "rebuildStatus": "NOT independently rebuildable as shipping RC25 from source export alone; authenticated historical baselines and licensed KSP/Unity dependencies are required. See SOURCE-PROVENANCE.md.",
   "concurrentSourceReviewPending": false,
@@ -18,6 +18,8 @@
     "Real Unity scenes, graphical rendering and remote-player gameplay require post-update in-game validation",
     "Refresh source or metadata and rerun privacy checks after further changes"
   ],
+  "excludedDirectoryCount": 239,
+  "excludedReparsePointCount": 0,
   "files": [
     {
       "path": "Aetherfront-RC18-Work/BinaryChecks/BinaryChecks.csproj",
@@ -1868,6 +1870,28 @@
       "transformations": []
     },
     {
+      "path": "Aetherfront-RC25-Work/DirectoryLeaseTests/DirectoryLeaseTests.csproj",
+      "source": "Aetherfront-RC25-Work/DirectoryLeaseTests/DirectoryLeaseTests.csproj",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 593,
+      "sha256": "0a4a1e415087c54a45bae0203853e2c4b8423d89e6e5f9084d0fd9f300d43c83",
+      "sourceSha256": "0a4a1e415087c54a45bae0203853e2c4b8423d89e6e5f9084d0fd9f300d43c83",
+      "sourceModifiedUtc": "2026-10-17T09:20:02.7209351Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/DirectoryLeaseTests/Program.cs",
+      "source": "Aetherfront-RC25-Work/DirectoryLeaseTests/Program.cs",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 10383,
+      "sha256": "5c46bd3ae14f7dc3e9477565f51c0ceb98a4a9e36376a690e8044a6ff5fd03d4",
+      "sourceSha256": "a3f1949709b3fc6c783871ac7df52b4b760d7343174676475e1090e13571a760",
+      "sourceModifiedUtc": "2026-10-17T09:21:09.4991928Z",
+      "transformations": [
+        "absolute workspace root replaced by ."
+      ]
+    },
+    {
       "path": "Aetherfront-RC25-Work/Engine/Engine.csproj",
       "source": "Aetherfront-RC25-Work/Engine/Engine.csproj",
       "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
@@ -1891,11 +1915,13 @@
       "path": "Aetherfront-RC25-Work/Engine/NativeInstall.cs",
       "source": "Aetherfront-RC25-Work/Engine/NativeInstall.cs",
       "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
-      "bytes": 13261,
-      "sha256": "c63dbd185003fb61641b8ec6b9b1455e3ac68dadb0c3ad95e99125c2f24c62e3",
-      "sourceSha256": "c63dbd185003fb61641b8ec6b9b1455e3ac68dadb0c3ad95e99125c2f24c62e3",
-      "sourceModifiedUtc": "2026-10-17T08:36:21.4281213Z",
-      "transformations": []
+      "bytes": 13297,
+      "sha256": "eae01b9dbbc9e859de130d37bff254aa3b8c5f02a3b9e914a362ebd01ff62a93",
+      "sourceSha256": "eae01b9dbbc9e859de130d37bff254aa3b8c5f02a3b9e914a362ebd01ff62a93",
+      "sourceModifiedUtc": "2026-10-17T09:14:45.4374726Z",
+      "transformations": [
+        "explicitly refreshed after source review"
+      ]
     },
     {
       "path": "Aetherfront-RC25-Work/Engine/PostExit.cs",
@@ -1911,21 +1937,25 @@
       "path": "Aetherfront-RC25-Work/Engine/PreparedPack.cs",
       "source": "Aetherfront-RC25-Work/Engine/PreparedPack.cs",
       "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
-      "bytes": 18898,
-      "sha256": "0bf3832132245f35a460d600639203d25f1333065b3cb3b79973a53256df8216",
-      "sourceSha256": "0bf3832132245f35a460d600639203d25f1333065b3cb3b79973a53256df8216",
-      "sourceModifiedUtc": "2026-10-17T08:45:51.484695Z",
-      "transformations": []
+      "bytes": 22632,
+      "sha256": "957299f392a93d6b238f33f5118329026a6179536e3730c7ee26ddc1e4776c65",
+      "sourceSha256": "957299f392a93d6b238f33f5118329026a6179536e3730c7ee26ddc1e4776c65",
+      "sourceModifiedUtc": "2026-10-17T09:17:47.3131111Z",
+      "transformations": [
+        "explicitly refreshed after source review"
+      ]
     },
     {
       "path": "Aetherfront-RC25-Work/Engine/RuntimeFiles.cs",
       "source": "Aetherfront-RC25-Work/Engine/RuntimeFiles.cs",
       "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
-      "bytes": 2617,
-      "sha256": "f1806ebba48ad105943727c5292608190509a6f63d285d21703d10b640157dc2",
-      "sourceSha256": "f1806ebba48ad105943727c5292608190509a6f63d285d21703d10b640157dc2",
-      "sourceModifiedUtc": "2026-10-17T08:40:04.6389122Z",
-      "transformations": []
+      "bytes": 2678,
+      "sha256": "40e27241662617469833aa7fc85c4759ab2fae3eef1430f7956c7a07e08e69e9",
+      "sourceSha256": "40e27241662617469833aa7fc85c4759ab2fae3eef1430f7956c7a07e08e69e9",
+      "sourceModifiedUtc": "2026-10-17T09:14:45.439479Z",
+      "transformations": [
+        "explicitly refreshed after source review"
+      ]
     },
     {
       "path": "Aetherfront-RC25-Work/InstallerTests/InstallerTests.csproj",
@@ -2001,11 +2031,13 @@
       "path": "Aetherfront-RC25-Work/NativeTests/Program.cs",
       "source": "Aetherfront-RC25-Work/NativeTests/Program.cs",
       "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
-      "bytes": 22462,
-      "sha256": "4bd497df1103dd0ae2b75be38be191ac6e99b19db1cc318adbed6bb020cc5e89",
-      "sourceSha256": "4bd497df1103dd0ae2b75be38be191ac6e99b19db1cc318adbed6bb020cc5e89",
-      "sourceModifiedUtc": "2026-10-17T08:45:51.4881423Z",
-      "transformations": []
+      "bytes": 25106,
+      "sha256": "646a46b037cc2dc914106f4f483e22e44139391d1ad241817858fab0a12a2a9c",
+      "sourceSha256": "646a46b037cc2dc914106f4f483e22e44139391d1ad241817858fab0a12a2a9c",
+      "sourceModifiedUtc": "2026-10-17T09:21:53.459083Z",
+      "transformations": [
+        "explicitly refreshed after source review"
+      ]
     },
     {
       "path": "Aetherfront-RC25-Work/PLAYER-INSTALL.txt",
@@ -2031,11 +2063,14 @@
       "path": "Aetherfront-RC25-Work/ProfileTests/Program.cs",
       "source": "Aetherfront-RC25-Work/ProfileTests/Program.cs",
       "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
-      "bytes": 9361,
-      "sha256": "a876c8f60b88d8dd020b5bf623e1404c11509f2d489edc0ebec4ec7ed348ca82",
-      "sourceSha256": "a876c8f60b88d8dd020b5bf623e1404c11509f2d489edc0ebec4ec7ed348ca82",
-      "sourceModifiedUtc": "2026-10-17T08:46:30.8305733Z",
-      "transformations": []
+      "bytes": 28127,
+      "sha256": "ad73b4e0ce234ea93fd276cb04d572f8b1a84b22f156b89db3cae4a3cb6e0e3f",
+      "sourceSha256": "c9f2e6796eaf47820a5dc1cdf96ea6dfc3b7ceb83489a3e75bddd34d40862350",
+      "sourceModifiedUtc": "2026-10-17T09:22:23.8847468Z",
+      "transformations": [
+        "absolute workspace root replaced by .",
+        "explicitly refreshed after source review"
+      ]
     },
     {
       "path": "Aetherfront-RC25-Work/Test-Helper.ps1",
@@ -26522,8 +26557,8 @@
       "path": "export-policy.json",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 18341,
-      "sha256": "e2cc424a579d67c62ba4f27a5560c8af6f011556f7ca12b9ef2d73df686375ba",
+      "bytes": 18386,
+      "sha256": "a9f477486073c3943e4a1caf6a524e1c978d15b90a7d303c05c2e4d0ecb655e9",
       "sourceSha256": null,
       "transformations": []
     },
@@ -26549,8 +26584,8 @@
       "path": "TESTING.md",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 16209,
-      "sha256": "b84128b3d49b7411c4544a4ecf43d7baaf4d6c0c7fb4e40907f8933a33837ddc",
+      "bytes": 16969,
+      "sha256": "f02b144ec5c0f953aa51fbd5b8739a8ff23d5389aab9535b943714bc7460033a",
       "sourceSha256": null,
       "transformations": []
     },
@@ -26582,7 +26617,7 @@
       "transformations": []
     }
   ],
-  "totalFileBytes": 13728713,
+  "totalFileBytes": 13765735,
   "exclusions": [
     "All Git history and Git metadata; CI workflows and operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",

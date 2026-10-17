@@ -16,11 +16,17 @@ Regular graphical content on Potato.
 
 Candidate execution evidence:
 
-- Sixty-one native installation/rollback checks passed on Windows CLR and the
+- Sixty-eight native installation/rollback checks passed on Windows CLR and the
   actual KSP Mono runtime with the starter's unchanged runtime DLLs. Coverage
   includes prepared-file corruption, execution locks, permanent approved mod
   removal, recovery of replacements, approved duplicate-client disable and
   narrow generated-settings/cache exceptions.
+- Thirteen actual Windows attribute-only reparse probes passed on .NET 8.
+  Sharing flags alone do not prevent all retagging: the empty-directory probe
+  changed the held handle's attributes, and the updated cache rejected reuse.
+  Nonempty-directory retagging was rejected by Windows. The cache rechecks all
+  held ancestor handles; normal path mutation releases the leases and performs
+  the original full path safety checks before rename. File hashes are retained.
 - Seventy-one installer harness checks and thirteen combined NativeRun commit
   assertions passed on each runtime. A synthetic RC25-to-RC26 client/pack bundle
   committed client files, prepared packages, duplicate repair and a rich receipt
@@ -31,7 +37,11 @@ Candidate execution evidence:
   published readiness/completion and released executable locks.
 - The compatibility media suite passed 3,323 checks. Four new immutable assets
   were downloaded anonymously from GitHub and matched their declared hashes.
-- Full-size fresh Potato-to-Regular-to-Potato execution remains in progress.
+- Full-size Potato-to-Regular-to-Potato execution remains in progress. The
+  original fresh 177-package preparation completed; its read-only preflight was
+  stopped before authorization consumption or mutation to improve redundant
+  path checks. The continuation reuses those authenticated prepared bytes and
+  records that it did not repeat the original extraction.
 
 Tests using the actual KSP
 Mono runtime are runtime/API tests, not a Unity scene, rendered game, B9 fuel
