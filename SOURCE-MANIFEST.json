@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-17T05:00:11.4719894Z",
-  "publication": "Reviewed Git-tracked source snapshot; signed release assets are published separately",
+  "createdUtc": "2026-10-17T06:09:13.3477891Z",
+  "publication": "STAGED ONLY; not pushed",
   "sourceBase": {
     "tree": "Aetherfront-Source",
     "upstream": "LunaMultiplayer",
@@ -10,14 +10,12 @@
     "commit": "60a2ed5dbfdddc08536a98b999c781e3c12b0649",
     "commitEvidence": "Sibling LunaMultiplayer-Source git metadata and existing handoff documentation; not a commit identity for the modified export."
   },
-  "rebuildStatus": "NOT independently rebuildable as shipping RC22 from this export alone; see README.md",
+  "rebuildStatus": "NOT independently rebuildable as shipping RC23 from this export alone; authenticated RC22 baseline and licensed game dependencies are required; see SOURCE-PROVENANCE.md",
   "concurrentSourceReviewPending": false,
   "integrationGates": [
-    "Future edits require renewed source-drift, privacy and license review before publication",
-    "Exact clean shipping-binary rebuild remains unsupported; retain source provenance limits",
-    "Interactive rendering and gameplay testing is separate from headless installer verification"
+    "Unity gameplay and mixed-profile landing validation remain user-run; automated checks are documented in TESTING.md"
   ],
-  "excludedDirectoryCount": 194,
+  "excludedDirectoryCount": 200,
   "excludedReparsePointCount": 0,
   "files": [
     {
@@ -984,9 +982,7 @@
       "sha256": "32515776ffbf6817b8c8569f0fa967a7c66f8680291980e0637c23ede4472032",
       "sourceSha256": "32515776ffbf6817b8c8569f0fa967a7c66f8680291980e0637c23ede4472032",
       "sourceModifiedUtc": "2026-10-17T03:37:26.9856206Z",
-      "transformations": [
-        "explicitly refreshed after source review"
-      ]
+      "transformations": []
     },
     {
       "path": "Aetherfront-RC22-Work/GitHubTests/GitHubTests.csproj",
@@ -1208,9 +1204,7 @@
       "sha256": "6d4675fddd4f0245ccc7f50ef5d88d26070b6eaa130c4a70fd502893a0079848",
       "sourceSha256": "6d4675fddd4f0245ccc7f50ef5d88d26070b6eaa130c4a70fd502893a0079848",
       "sourceModifiedUtc": "2026-10-17T03:37:26.9886141Z",
-      "transformations": [
-        "explicitly refreshed after source review"
-      ]
+      "transformations": []
     },
     {
       "path": "Aetherfront-RC22-Work/Test-GitHubRecovery.ps1",
@@ -1350,6 +1344,96 @@
       "sha256": "d3a0c62e4498db678231a6c54afa8c61c69f1abbc1dc7a0611d6f48ee9cd845b",
       "sourceSha256": "d3a0c62e4498db678231a6c54afa8c61c69f1abbc1dc7a0611d6f48ee9cd845b",
       "sourceModifiedUtc": "2026-10-16T23:39:47.8624109Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC23-Work/Build-Release.ps1",
+      "source": "Aetherfront-RC23-Work/Build-Release.ps1",
+      "role": "RC23 official 4K profile build recipe",
+      "bytes": 10420,
+      "sha256": "57caec441455815821b48d12512dae8b837697b4346d2d78d69b09010b171ec9",
+      "sourceSha256": "57caec441455815821b48d12512dae8b837697b4346d2d78d69b09010b171ec9",
+      "sourceModifiedUtc": "2026-10-17T05:52:26.0474063Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC23-Work/Compare-Kcalbeloh.ps1",
+      "source": "Aetherfront-RC23-Work/Compare-Kcalbeloh.ps1",
+      "role": "unmodified upstream texture and gameplay-map comparison",
+      "bytes": 4127,
+      "sha256": "1b542b45c75a61a89c0b0b7963674394ee48b4587b80d7ede6dfdfb16df93eb6",
+      "sourceSha256": "1b542b45c75a61a89c0b0b7963674394ee48b4587b80d7ede6dfdfb16df93eb6",
+      "sourceModifiedUtc": "2026-10-17T05:48:19.5816871Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC23-Work/ConnectionTests/ConnectionTests.csproj",
+      "source": "Aetherfront-RC23-Work/ConnectionTests/ConnectionTests.csproj",
+      "role": "RC23 version-only patch and official 4K texture-profile regression source",
+      "bytes": 607,
+      "sha256": "0681f750ee2d93643e5df0ed3045ed17abc08adb3d686dd76bae9a627126f81b",
+      "sourceSha256": "0681f750ee2d93643e5df0ed3045ed17abc08adb3d686dd76bae9a627126f81b",
+      "sourceModifiedUtc": "2026-10-17T05:58:02.0089452Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC23-Work/ConnectionTests/Program.cs",
+      "source": "Aetherfront-RC23-Work/ConnectionTests/Program.cs",
+      "role": "RC23 version-only patch and official 4K texture-profile regression source",
+      "bytes": 9590,
+      "sha256": "a7db31068db1afe5873e0d70bdd54c5380608c844a233cdf9ce5360486fea0c5",
+      "sourceSha256": "a7db31068db1afe5873e0d70bdd54c5380608c844a233cdf9ce5360486fea0c5",
+      "sourceModifiedUtc": "2026-10-17T06:00:17.5423284Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC23-Work/Patcher/Patcher.csproj",
+      "source": "Aetherfront-RC23-Work/Patcher/Patcher.csproj",
+      "role": "RC23 version-only patch and official 4K texture-profile regression source",
+      "bytes": 400,
+      "sha256": "5b800bb3edd433c49f4eeccdf57105d3a1d175c59b148e26d9df23cf1656c55d",
+      "sourceSha256": "5b800bb3edd433c49f4eeccdf57105d3a1d175c59b148e26d9df23cf1656c55d",
+      "sourceModifiedUtc": "2026-10-17T05:48:19.569319Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC23-Work/Patcher/Program.cs",
+      "source": "Aetherfront-RC23-Work/Patcher/Program.cs",
+      "role": "RC23 version-only patch and official 4K texture-profile regression source",
+      "bytes": 3188,
+      "sha256": "f8b6c6fa011ab6663707a5c20aaf46b15aa95d11c224938cecc7ce20005b5f48",
+      "sourceSha256": "f8b6c6fa011ab6663707a5c20aaf46b15aa95d11c224938cecc7ce20005b5f48",
+      "sourceModifiedUtc": "2026-10-17T05:50:18.8633502Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC23-Work/Prepare-Media.ps1",
+      "source": "Aetherfront-RC23-Work/Prepare-Media.ps1",
+      "role": "verified immutable RC23 media preparation",
+      "bytes": 1278,
+      "sha256": "04a9b6184f38388bd378f40b3253cf8afa03b555c04cdc68e4894e058a621bec",
+      "sourceSha256": "04a9b6184f38388bd378f40b3253cf8afa03b555c04cdc68e4894e058a621bec",
+      "sourceModifiedUtc": "2026-10-17T05:52:49.3010337Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC23-Work/ProfileTests/ProfileTests.csproj",
+      "source": "Aetherfront-RC23-Work/ProfileTests/ProfileTests.csproj",
+      "role": "RC23 version-only patch and official 4K texture-profile regression source",
+      "bytes": 1182,
+      "sha256": "8955d812da28733fe351bd13fedd165bb33da5713cf41f2194e168fce4838282",
+      "sourceSha256": "8955d812da28733fe351bd13fedd165bb33da5713cf41f2194e168fce4838282",
+      "sourceModifiedUtc": "2026-10-17T05:53:50.0921088Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC23-Work/ProfileTests/Program.cs",
+      "source": "Aetherfront-RC23-Work/ProfileTests/Program.cs",
+      "role": "RC23 version-only patch and official 4K texture-profile regression source",
+      "bytes": 29806,
+      "sha256": "e3cf93cb5663e4eba6753d045e7cecd6ed295ce0db33acfae626f6aa70fc79f9",
+      "sourceSha256": "e3cf93cb5663e4eba6753d045e7cecd6ed295ce0db33acfae626f6aa70fc79f9",
+      "sourceModifiedUtc": "2026-10-17T06:06:35.5236009Z",
       "transformations": []
     },
     {
@@ -25708,9 +25792,7 @@
       "sha256": "32515776ffbf6817b8c8569f0fa967a7c66f8680291980e0637c23ede4472032",
       "sourceSha256": "32515776ffbf6817b8c8569f0fa967a7c66f8680291980e0637c23ede4472032",
       "sourceModifiedUtc": "2026-10-17T03:37:26.9856206Z",
-      "transformations": [
-        "explicitly refreshed after source review"
-      ]
+      "transformations": []
     },
     {
       "path": "KESAS-VPS-Server/Publish-Release.ps1",
@@ -25765,8 +25847,8 @@
       "path": "README.md",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 2107,
-      "sha256": "a0bc19c5489baffdad7be4601deb6d5141b9ace2b9b0886ddc0f82ad15bd090c",
+      "bytes": 2408,
+      "sha256": "be5a200c72a1131a26e1ff929b1f23a20ca3ab0d8d17c00977f861ff98147126",
       "sourceSha256": null,
       "transformations": []
     },
@@ -25801,8 +25883,8 @@
       "path": "SOURCE-PROVENANCE.md",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 12690,
-      "sha256": "5ff81b87e5ebc9a5bf3088ab9c6bb530d1d93277c1977bd69de915254fcbbfad",
+      "bytes": 13342,
+      "sha256": "bf1b56d3101e2e5ebf863df92df37aee9ccf4f7d39227a58334b357584a83d25",
       "sourceSha256": null,
       "transformations": []
     },
@@ -25819,8 +25901,8 @@
       "path": "export-policy.json",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 15118,
-      "sha256": "85af1bb7c99b03802a508e597876a75b06fdb526ff22666bfa4329dfc41f72b7",
+      "bytes": 15737,
+      "sha256": "143fdc9811adf7c395e4d8a76f8a1bb5165855349701d0f9c56d5656412bd374",
       "sourceSha256": null,
       "transformations": []
     },
@@ -25846,8 +25928,8 @@
       "path": "TESTING.md",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 6993,
-      "sha256": "7f2bb01edfa7f5dd7b735b032719e8166829a07f563ef51e8cf56569badf541b",
+      "bytes": 9679,
+      "sha256": "80476f6834239ce62bf1f84f63ed709fc496f1e332fe6281b3b78b3bc7620257",
       "sourceSha256": null,
       "transformations": []
     },
@@ -25879,7 +25961,7 @@
       "transformations": []
     }
   ],
-  "totalFileBytes": 13174284,
+  "totalFileBytes": 13239140,
   "exclusions": [
     "All Git history and Git metadata; CI workflows and operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>10</LangVersion>
+    <Optimize>true</Optimize>
+    <ShippedPlugins>$(MSBuildProjectDirectory)\..\Candidate\Client\GameData\LunaMultiplayer\Plugins</ShippedPlugins>
+  </PropertyGroup>
+  <Target Name="RequireCandidate" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="!Exists('$(ShippedPlugins)\ApfCore.dll') Or !Exists('$(ShippedPlugins)\KesasInstall.dll') Or !Exists('$(ShippedPlugins)\JsonFx.dll')" Text="Build the signed RC23 candidate first; references must be its shipped binaries." />
+  </Target>
+  <ItemGroup>
+    <Reference Include="ApfCore"><HintPath>$(ShippedPlugins)\ApfCore.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="KesasInstall"><HintPath>$(ShippedPlugins)\KesasInstall.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="JsonFx"><HintPath>$(ShippedPlugins)\JsonFx.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+</Project>

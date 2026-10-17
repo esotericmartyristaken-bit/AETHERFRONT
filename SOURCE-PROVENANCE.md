@@ -7,6 +7,7 @@ Source-only maintenance snapshot for `esotericmartyristaken-bit/AETHERFRONT`. Th
 - `Aetherfront-Source/`: available first-party Luna Multiplayer fork client, server, shared protocol, faction/career systems, updater, package/diagnostics hosts, tools, tests, and documentation.
 - `KESAS-RC12-Work/`, `KESAS-RC14-Work/` through `KESAS-RC17-Work/`, and `Aetherfront-RC18-Work/` through `Aetherfront-RC22-Work/`: selected shipping-client patch lineage, installer/downloader overlays, build scripts and regression sources. RC22 adds GitHub transport, publisher and deployment tests. These are not release assets.
 - `APFDiscordBot/` and `Aetherfront-Source/APFDiscordBridge/`: integration source, examples and tests, without production configuration or state.
+- `Aetherfront-RC23-Work/`: a version-only derivative of the authenticated RC22 client, an official Kcalbeloh 4K Potato texture declaration, comparison tooling and focused installer/connection tests. Regular package declarations are unchanged. The unmodified official texture archive is a release asset, not committed source.
 - `KESAS-VPS-Server/`: explicitly selected deployment scripts only. They can stop/start/publish when invoked by an operator; do not run them as a build/test shortcut.
 - `SOURCE-MANIFEST.json`: per-file original and staged SHA-256, role, source path, transformations, snapshot timestamp and exclusions. Paths are relative to the original workspace, not personal absolute paths.
 - `BINARY-PREREQUISITES.json`: fingerprints of excluded baseline assemblies available during export. Presence is not permission to redistribute them and is not proof that a source tree exactly matches a deployed binary.
@@ -16,6 +17,8 @@ Source-only maintenance snapshot for `esotericmartyristaken-bit/AETHERFRONT`. Th
 Upstream base: Luna Multiplayer `0.29.2`, commit `60a2ed5dbfdddc08536a98b999c781e3c12b0649`, evidenced by the sibling original checkout and existing handoff documentation. The modified available fork tree is not represented as a clean checkout of that commit. The original upstream README and license remain under `Aetherfront-Source/`.
 
 ## Build dependencies and limitations
+
+RC23 retains the baseline-source limitation below: its small version patch requires the authenticated RC22 client and separately licensed KSP dependencies. It does not rebuild or alter the installer/core behavior. Future releases must preserve the last activated catalog rather than reverting to the historical RC16 catalog.
 
 **This snapshot alone cannot reproduce the shipping RC22 client or prove equivalence with the deployed server.** The available full fork predates later binary-based client work. The historical patchers preserve methods from excluded RC11/RC13/RC16/RC19 baseline assemblies. Recover the complete corresponding first-party source history, or obtain and privately verify the required baselines before attempting a shipping rebuild. Do not substitute an older full-tree build and call it RC22.
 

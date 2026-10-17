@@ -1,4 +1,51 @@
-# RC22 verification
+# RC23 verification
+
+RC23 changes Potato's Kcalbeloh texture declaration to the unmodified official
+`v1.1.8` 4K archive. Regular's 210 package declarations and the other 175 Potato
+packages are unchanged. Installer/core DLLs are byte-identical to RC22; the client
+patch changes only its version constant and one version-returning method, with
+6,312 unrelated methods preserved.
+
+## Official archive comparison
+
+- Official 4K archive: 696,453,837 bytes; SHA256
+  `57beb1c4342582da0ef44a9f838f24103583028f4c5eb2fa6ba33f5ce541c2b1`.
+- Both variants contain the same 227 file paths. All 42 height/biome maps match
+  byte-for-byte. There are 179 identical files and 48 differing visual textures.
+- Expanded textures: 1,251,654,435 bytes for 4K versus 2,668,739,659 bytes for 8K.
+- Fresh Potato archive total falls from 5,381,231,200 to 4,401,551,360 bytes.
+- The official archive retains its original bytes and `GameData/` prefix. Its
+  explicit destination/strip-prefix mapping installs one `KcalbelohTextures` root.
+- GitHub media preparation verified 218 immutable assets. The 217 prior assets
+  were retained; only the new 4K asset was uploaded.
+
+## RC23 execution evidence
+
+The production native helper passed an isolated 8K seed, 8K-to-4K, 4K-to-8K and
+repeat 8K-to-4K sequence. Each phase independently verified all 227 installed
+content hashes, removal of obsolete package state, absence of leftover files,
+missing-file detection and preservation of unrelated data. The repeated final
+phase used an explicitly re-established preservation checkpoint; the first three
+phase proofs were retained. Final positive result: 2026-10-17 06:08:02 UTC.
+
+The live RC22-to-RC23 connection check remains pending activation. These tests use
+owned headless fixtures, not a real gameplay session. Full-profile rendering and
+mixed-profile landings are not claimed.
+
+An initial isolated-fixture test correctly failed because it declared the entire
+modpack while staging only one texture package. The corrected focused fixture
+declares only that texture plus an unrelated sentinel rule. No shipping
+validation was disabled or bypassed. Early build attempts also exposed a missing
+local Cecil resolver path, a disallowed additional metadata filename, and an
+export-directory restriction; those unpublished attempts were retained and the
+recipes corrected before publication.
+
+An initially repeated fixture operation reused dummy process ID 0 and produced
+the same authorization as an earlier operation. The helper correctly rejected
+the already-consumed authorization. The final continuation used a fresh signed
+fixture argument; no receipt was deleted and replay protection was not bypassed.
+
+## RC22 baseline verification
 
 ## Completed checks
 
