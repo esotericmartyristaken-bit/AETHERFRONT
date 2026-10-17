@@ -65,16 +65,31 @@ function Invoke-PublisherCompletion($Plan) {
         $result[0].Version -cne $Plan.Version -or $result[0].Repository -cne $Plan.Repository){throw 'GitHub completion was not confirmed; preserve the completion journal.'}
     $result[0]
 }
+function Read-PublisherPlayerStatus([string]$Path) {
+    # The bridge briefly holds an exclusive write handle. Retry only Windows
+    # sharing/locking conflicts; malformed, missing or oversized status fails
+    # closed. Player freshness and both zero counts are checked by the caller.
+    for($attempt=0;$attempt -lt 20;$attempt++) {
+        $inputStream=$null
+        try {
+            $inputStream=[IO.File]::Open($Path,[IO.FileMode]::Open,[IO.FileAccess]::Read,([IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete))
+            if($inputStream.Length -gt 4MB){throw 'Invalid authoritative player status; no services stopped.'}
+            $reader=New-Object IO.StreamReader($inputStream)
+            try{return ($reader.ReadToEnd()|ConvertFrom-Json)}finally{$reader.Dispose()}
+        } catch {
+            $cause=$_.Exception.GetBaseException()
+            $nativeCode=$cause.HResult -band 65535
+            if($cause -isnot [IO.IOException] -or $nativeCode -notin @(32,33) -or $attempt -eq 19){throw}
+            Start-Sleep -Milliseconds 100
+        } finally {if($null -ne $inputStream){$inputStream.Dispose()}}
+    }
+    throw 'Authoritative player status could not be read; no services stopped.'
+}
 function Assert-PublisherEmpty($Root,$Config) {
     # Preparation can outlast the bot's original empty-server check. Recheck
     # authoritative state immediately before the first service stop.
     $path=Get-UpdateChildPath $Root 'Server/APFDiscordBridge/status.json'
-    $inputStream=New-Object IO.FileStream($path,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::ReadWrite)
-    try{
-        if($inputStream.Length -gt 4MB){throw 'Invalid authoritative player status; no services stopped.'}
-        $reader=New-Object IO.StreamReader($inputStream)
-        try{$status=$reader.ReadToEnd()|ConvertFrom-Json}finally{$reader.Dispose()}
-    }finally{$inputStream.Dispose()}
+    $status=Read-PublisherPlayerStatus $path
     $updated=[DateTimeOffset]$status.updatedAt
     $age=([DateTimeOffset]::UtcNow-$updated.ToUniversalTime()).TotalSeconds
     $gameIds=@(Get-UpdateServiceProcesses $Root $Config|Where-Object Path -ieq ([IO.Path]::GetFullPath("$Root/Server/Server.exe"))|ForEach-Object Id)

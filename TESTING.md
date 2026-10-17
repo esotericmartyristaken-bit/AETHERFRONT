@@ -1,4 +1,4 @@
-# RC25 verification in progress
+# RC25 verification
 
 RC25 replaces the RC24 desktop installation window with in-game staging and an
 explicit Restart & apply button. A hidden post-exit helper remains necessary to
@@ -35,18 +35,44 @@ Candidate execution evidence:
 - The production Windows PowerShell helper passed without any desktop UI
   payload. It loaded shadow dependencies, authenticated/applied a prepared pack,
   published readiness/completion and released executable locks.
+- Full-size preflight took 10 minutes 52 seconds on this host, exceeding the
+  candidate's ten-minute readiness limit. The final core changes only that
+  limit to thirty minutes; 689 other methods and all other instructions in the
+  launcher are unchanged. Integration tests resolved 951 references on each
+  runtime. No elapsed thirty-minute timeout test is claimed. The profile cycle
+  uses the earlier core's identical content-application logic; final-core native
+  checks and the production hidden helper were rerun separately.
 - The compatibility media suite passed 3,323 checks. Four new immutable assets
   were downloaded anonymously from GitHub and matched their declared hashes.
-- Full-size Potato-to-Regular-to-Potato execution remains in progress. The
-  original fresh 177-package preparation completed; its read-only preflight was
-  stopped before authorization consumption or mutation to improve redundant
-  path checks. The continuation reuses those authenticated prepared bytes and
-  records that it did not repeat the original extraction.
+- The first RC25 publication stopped before native activation because the
+  bridge briefly held its status file exclusively. The same signed prepared
+  release and all three matching draft assets were retained; RC24 stayed up.
+  Publisher status reads now retry only Windows sharing/locking conflicts for
+  a bounded interval. Twelve regression checks passed in Windows PowerShell
+  5.1 and PowerShell 7, including persistent-lock rejection, malformed/oversized
+  data, stale/future timestamps, nonzero counts and wrong server PID. No player
+  or freshness guard was bypassed to resume publication.
+- Full-size Potato-to-Regular-to-Potato execution completed on 2026-10-17 at
+  10:18 UTC, with thirteen end-to-end assertions passing. The fresh 177-package
+  Potato commit, Regular's 211-package profile with 42 replacements and two
+  removals, and the return to Potato with eight replacements and 35 removals
+  completed native verification. Matching reconnect receipts, changed-profile
+  rejection, same-commit extra-mod removal, saves, identity and controls passed.
+  The original fresh preparation had completed before its read-only preflight
+  was stopped to improve redundant path checks. The continuation reused those
+  authenticated prepared bytes; it did not repeat that initial extraction.
+  Regular and return-to-Potato preparation ran in the continuation itself.
 
 Tests using the actual KSP
 Mono runtime are runtime/API tests, not a Unity scene, rendered game, B9 fuel
 selection or real remote player connection. No clean post-update KSP.log is
 claimed before that game has actually been run.
+
+The inspected pre-update log also contained a stock `SpaceCenter.Start()` null
+reference and upstream missing-model/texture warnings. Their causes were not
+established independently. They must be rechecked in a new game log after the
+dependency and compatibility fixes; they are not represented as proven fixes
+or suppressed to manufacture a clean log.
 
 ## Historical RC24 verification
 

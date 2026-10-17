@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-17T09:46:18.9757752Z",
+  "createdUtc": "2026-10-17T10:31:30.0032435Z",
   "publication": "Reviewed source-only snapshot. Git publication and runtime deployment are separate operations.",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -13,9 +13,10 @@
   "rebuildStatus": "NOT independently rebuildable as shipping RC25 from source export alone; authenticated historical baselines and licensed KSP/Unity dependencies are required. See SOURCE-PROVENANCE.md.",
   "concurrentSourceReviewPending": false,
   "integrationGates": [
-    "Targeted client/core grafts reviewed; unrelated method audit and CLR/KSP Mono runtime checks passed",
-    "Full-size profile-chain execution status is recorded separately in TESTING.md",
-    "Real Unity scenes, graphical rendering and remote-player gameplay require post-update in-game validation",
+    "Targeted client/core grafts reviewed; CLR and KSP Mono runtime checks passed",
+    "Full-size Potato to Regular to Potato cycle passed thirteen end-to-end assertions",
+    "Bounded publisher bridge-status retry passed twelve fail-closed regressions in PowerShell 5.1 and 7",
+    "Real Unity rendering and gameplay still require an updated in-game run",
     "Refresh source or metadata and rerun privacy checks after further changes"
   ],
   "excludedDirectoryCount": 239,
@@ -1919,9 +1920,7 @@
       "sha256": "eae01b9dbbc9e859de130d37bff254aa3b8c5f02a3b9e914a362ebd01ff62a93",
       "sourceSha256": "eae01b9dbbc9e859de130d37bff254aa3b8c5f02a3b9e914a362ebd01ff62a93",
       "sourceModifiedUtc": "2026-10-17T09:14:45.4374726Z",
-      "transformations": [
-        "explicitly refreshed after source review"
-      ]
+      "transformations": []
     },
     {
       "path": "Aetherfront-RC25-Work/Engine/PostExit.cs",
@@ -1941,9 +1940,7 @@
       "sha256": "957299f392a93d6b238f33f5118329026a6179536e3730c7ee26ddc1e4776c65",
       "sourceSha256": "957299f392a93d6b238f33f5118329026a6179536e3730c7ee26ddc1e4776c65",
       "sourceModifiedUtc": "2026-10-17T09:17:47.3131111Z",
-      "transformations": [
-        "explicitly refreshed after source review"
-      ]
+      "transformations": []
     },
     {
       "path": "Aetherfront-RC25-Work/Engine/RuntimeFiles.cs",
@@ -1953,9 +1950,7 @@
       "sha256": "40e27241662617469833aa7fc85c4759ab2fae3eef1430f7956c7a07e08e69e9",
       "sourceSha256": "40e27241662617469833aa7fc85c4759ab2fae3eef1430f7956c7a07e08e69e9",
       "sourceModifiedUtc": "2026-10-17T09:14:45.439479Z",
-      "transformations": [
-        "explicitly refreshed after source review"
-      ]
+      "transformations": []
     },
     {
       "path": "Aetherfront-RC25-Work/InstallerTests/InstallerTests.csproj",
@@ -2035,9 +2030,7 @@
       "sha256": "646a46b037cc2dc914106f4f483e22e44139391d1ad241817858fab0a12a2a9c",
       "sourceSha256": "646a46b037cc2dc914106f4f483e22e44139391d1ad241817858fab0a12a2a9c",
       "sourceModifiedUtc": "2026-10-17T09:21:53.459083Z",
-      "transformations": [
-        "explicitly refreshed after source review"
-      ]
+      "transformations": []
     },
     {
       "path": "Aetherfront-RC25-Work/PLAYER-INSTALL.txt",
@@ -2068,8 +2061,7 @@
       "sourceSha256": "c9f2e6796eaf47820a5dc1cdf96ea6dfc3b7ceb83489a3e75bddd34d40862350",
       "sourceModifiedUtc": "2026-10-17T09:22:23.8847468Z",
       "transformations": [
-        "absolute workspace root replaced by .",
-        "explicitly refreshed after source review"
+        "absolute workspace root replaced by ."
       ]
     },
     {
@@ -2090,6 +2082,16 @@
       "sha256": "c0789898ea02edce0435fb418cacd1c26bdcab6d6734d7c32515d939ac36b03a",
       "sourceSha256": "c0789898ea02edce0435fb418cacd1c26bdcab6d6734d7c32515d939ac36b03a",
       "sourceModifiedUtc": "2026-10-17T08:21:22.3625153Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/Test-PublisherStatus.ps1",
+      "source": "Aetherfront-RC25-Work/Test-PublisherStatus.ps1",
+      "role": "Bounded bridge-status sharing-conflict and fail-closed activation regressions",
+      "bytes": 4438,
+      "sha256": "7e39d340980a52d3586879f03875439b7bb3904086f180b7f263dabb0b393ba5",
+      "sourceSha256": "7e39d340980a52d3586879f03875439b7bb3904086f180b7f263dabb0b393ba5",
+      "sourceModifiedUtc": "2026-10-17T10:26:37.446693Z",
       "transformations": []
     },
     {
@@ -26454,11 +26456,13 @@
       "path": "KESAS-VPS-Server/Publish-Release.ps1",
       "source": "KESAS-VPS-Server/Publish-Release.ps1",
       "role": "current deployment implementation, not executed",
-      "bytes": 24146,
-      "sha256": "7f128f75fb157623903ebaa0dab789968ca4ef0aa7b32c56723c8ce55ec19961",
-      "sourceSha256": "7f128f75fb157623903ebaa0dab789968ca4ef0aa7b32c56723c8ce55ec19961",
-      "sourceModifiedUtc": "2026-10-17T01:45:28.716671Z",
-      "transformations": []
+      "bytes": 24991,
+      "sha256": "335ede03f5e97da3553e9e8bac90578f695490e9c66387dd48a3d07a48bf615e",
+      "sourceSha256": "335ede03f5e97da3553e9e8bac90578f695490e9c66387dd48a3d07a48bf615e",
+      "sourceModifiedUtc": "2026-10-17T10:26:37.4446625Z",
+      "transformations": [
+        "explicitly refreshed after source review"
+      ]
     },
     {
       "path": "KESAS-VPS-Server/Start-Server.ps1",
@@ -26503,8 +26507,8 @@
       "path": "README.md",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 2753,
-      "sha256": "ddd176b624ed4e71a6b3e799257c97f5eebf5b1e65e71798292d1de189d86772",
+      "bytes": 3584,
+      "sha256": "819eec071ced71ff8a04da154f0ebc9f43c7ebe4d0739e9ff88bd22148cbbbe8",
       "sourceSha256": null,
       "transformations": []
     },
@@ -26557,8 +26561,8 @@
       "path": "export-policy.json",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 18386,
-      "sha256": "a9f477486073c3943e4a1caf6a524e1c978d15b90a7d303c05c2e4d0ecb655e9",
+      "bytes": 18538,
+      "sha256": "c293a82d1f23b8458cb054e434c5b4573f56fa444d1f5323206b0d08bbb2beab",
       "sourceSha256": null,
       "transformations": []
     },
@@ -26584,8 +26588,8 @@
       "path": "TESTING.md",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 16969,
-      "sha256": "f02b144ec5c0f953aa51fbd5b8739a8ff23d5389aab9535b943714bc7460033a",
+      "bytes": 18850,
+      "sha256": "cf615848ad0470589a452ec14ecbf66e611863232a4f99db2331c9949004fb32",
       "sourceSha256": null,
       "transformations": []
     },
@@ -26617,7 +26621,7 @@
       "transformations": []
     }
   ],
-  "totalFileBytes": 13765901,
+  "totalFileBytes": 13774048,
   "exclusions": [
     "All Git history and Git metadata; CI workflows and operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",

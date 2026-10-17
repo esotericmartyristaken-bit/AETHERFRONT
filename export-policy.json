@@ -64,6 +64,7 @@
     {"source":"Aetherfront-RC25-Work/Build-ModFixes.ps1","role":"RC25 immutable compatibility media preparation"},
     {"source":"Aetherfront-RC25-Work/Test-ModFixes.ps1","role":"RC25 compatibility regression checks"},
     {"source":"Aetherfront-RC25-Work/Test-Helper.ps1","role":"RC25 production hidden PowerShell helper regression"},
+    {"source":"Aetherfront-RC25-Work/Test-PublisherStatus.ps1","role":"Bounded bridge-status sharing-conflict and fail-closed activation regressions"},
     {"source":"Aetherfront-RC25-Work/ModFixes/Patch-Waterfall.ps1","role":"RC25 two-method GameData asset-loader restriction"},
     {"source":"Aetherfront-RC25-Work/ModFixes/Dependencies.lock.json","role":"Checksum-pinned public upstream dependency"},
     {"source":"Aetherfront-RC24-Work/Build-Release.ps1","role":"RC24 build from authenticated RC23 template"},
