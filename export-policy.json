@@ -16,6 +16,16 @@
   "deniedFilePattern": "(?i)(?:^|/)(?:Aetherfront-Client-Handoff\\.md|SetDirectories\\.bat|CopyToKSPDirectory\\.bat|Publish-Release\\.before\\.ps1|config\\.json|WORK-STATE\\.json|TEST-RESULTS\\.json|EVIDENCE\\.json|LIVE-RESULT\\.json)|\\.(?:user|suo|log|cache|pem|key|pfx|p12|crt|cer|snk)$|^Aetherfront-Source/(?:LmpMasterServer|MasterServer)/app\\.config$",
   "groups": [
     {
+      "role": "RC26 generated-runtime verification repair, targeted scanner/version grafts and regression proofs",
+      "directories": ["Aetherfront-RC26-Work/Engine", "Aetherfront-RC26-Work/NativeTests", "Aetherfront-RC26-Work/VersionPatcher", "Aetherfront-RC26-Work/ProfileTests", "Aetherfront-RC26-Work/ModFixes/Tests"],
+      "extensions": [".cs", ".csproj", ".ps1", ".md", ".config"]
+    },
+    {
+      "role": "RC26 narrowly scoped static texture bindings and checksum-pinned additive archive recipe",
+      "directories": ["Aetherfront-RC26-Work/Assets/Source"],
+      "extensions": [".ps1", ".cfg", ".json", ".txt"]
+    },
+    {
       "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
       "directories": ["Aetherfront-RC25-Work/Engine", "Aetherfront-RC25-Work/CorePatcher", "Aetherfront-RC25-Work/ClientUi", "Aetherfront-RC25-Work/ClientPatcher", "Aetherfront-RC25-Work/NativeTests", "Aetherfront-RC25-Work/InstallerTests", "Aetherfront-RC25-Work/ProfileTests", "Aetherfront-RC25-Work/DirectoryLeaseTests", "Aetherfront-RC25-Work/ModFixes/Source"],
       "extensions": [".cs", ".csproj", ".cfg"]
@@ -57,6 +67,13 @@
     }
   ],
   "explicitFiles": [
+    {"source":"Aetherfront-RC26-Work/Build-Code.ps1","role":"RC26 authenticated RC25 scanner/version graft and Engine build"},
+    {"source":"Aetherfront-RC26-Work/Build-Release.ps1","role":"RC26 immutable release and four-root legacy-helper migration recipe"},
+    {"source":"Aetherfront-RC26-Work/Test-Native.ps1","role":"RC25 failure reproduction, old-helper migration and RC26 verification regressions"},
+    {"source":"Aetherfront-RC26-Work/Prepare-Assets.ps1","role":"RC26 content-addressed additive texture-alias media preparation"},
+    {"source":"Aetherfront-RC26-Work/Test-Assets.ps1","role":"RC26 original-entry preservation and exact static-binding checks"},
+    {"source":"Aetherfront-RC26-Work/Verify-Live.ps1","role":"RC26 native signed feed and listener-preservation verification"},
+    {"source":"Aetherfront-RC26-Work/Verify-Public.ps1","role":"RC26 anonymous downloads, signatures and historical media verification"},
     {"source":"Aetherfront-RC25-Work/Build-Release.ps1","role":"RC25 build recipe from the authenticated RC24 template"},
     {"source":"Aetherfront-RC25-Work/Build-Code.ps1","role":"RC25 targeted binary graft and audit build recipe"},
     {"source":"Aetherfront-RC25-Work/APFApplyUpdate.ps1","role":"RC25 hidden post-exit commit helper; no desktop installer"},

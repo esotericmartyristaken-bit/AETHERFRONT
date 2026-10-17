@@ -1,0 +1,44 @@
+RC26 bounded asset stage
+========================
+
+Prepare-Assets.ps1 creates a new immutable Assets/Staged directory containing
+Media/*.zip (five archives), ASSET-PLAN.json, ASSET-PLAN.json.sha256, and
+ASSET-TEST-RESULT.json. An existing stage is rejected before any output write.
+Use -OutputDirectory Assets/Staged-<new-name> for a separate build.
+
+The plan has version = kesas-rc26 and media[5].declaration with complete planned
+package declarations. Each media item also contains oldDeclaration, oldSha256,
+oldSizeBytes, sourceArchivePath, filename, profiles, addedEntries, entry counts,
+and expanded sizes. profileChanges maps the same five replacements to full and
+potato and hashes all untouched package declarations. The four parent asset IDs
+and kesas-rc25-modfixes ID remain unchanged; only version, archiveUrl, sha256 and
+sizeBytes change. The URLs are planned publication locations, not uploaded files.
+
+This is input to a signed catalog, NOT a cryptographically signed plan or catalog.
+The release owner must authenticate/sign the final catalog and independently
+review the explicit ASSET-PLAN.json SHA256. No private keys are read here. No
+client, runtime, native code, version file, release, server or home files are
+modified. No media is uploaded or copied to live configuration.
+
+Every parent ZIP is preserved as an exact byte-for-byte prefix. New local entries
+and a new central directory are appended; original directory records and archive
+comments are copied unchanged. Thus old compression bytes, local metadata,
+timestamps, attributes, extra fields and comments are retained, not reconstructed.
+Only seven same-parent texture aliases and one new owned config are added.
+
+Test-Assets.ps1 is read-only. It verifies all original entry contents and metadata,
+the complete old archive prefix, raw central-directory metadata, exact approved
+additions, source alias hashes, eight unique static/transform bindings, both
+profile mappings, all unrelated declaration hashes, and deterministic additions.
+It rejects wildcard patches, extra syntax, fake FOR nodes, duplicate bindings,
+wrong roots and traversal. Passing evidence does not claim installation or Unity
+rendering validation. Residual unresolved issues are recorded in ASSET-PLAN.json.
+
+Commands (from the APF workspace):
+  pwsh -NoProfile -File Aetherfront-RC26-Work/Prepare-Assets.ps1
+  pwsh -NoProfile -File Aetherfront-RC26-Work/Test-Assets.ps1
+
+The release owner may replace the five matching RC25 package declarations using
+the explicit reviewed plan hash, preserve all other packages/policy, and copy the
+five named media files only into a unique local release candidate. Publishing,
+installation, signed manifest generation and Unity validation are separate work.

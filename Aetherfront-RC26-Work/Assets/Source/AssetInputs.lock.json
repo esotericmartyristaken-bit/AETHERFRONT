@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "sourceCatalogPath": "Aetherfront-RC25-Work/ModFixes/Staged-RC25/ClientOverlay/GameData/LunaMultiplayer/Launcher/install-catalog.json",
+  "sourceCatalogSha256": "dc96d70b45804d5266f1b1c5f8575c55e7d448f1996721c509efc4b3c5b18f97",
+  "packages": [
+    {
+      "id": "kesas-modularlaunchpads-8feabdb7",
+      "root": "ModularLaunchPads",
+      "sha256": "edc997f01e4c591560c907f3a19cbe23daaf2dc6e2322c170921cc368e4682d7",
+      "sizeBytes": 69825739,
+      "archivePath": "KESAS-VPS-Server/Server/Config/kesas-modularlaunchpads-8feabdb7-edc997f01e4c5915.zip",
+      "aliases": [
+        { "sourceEntry": "ModularLaunchPads/Launch_Stands/LaunchStands01.dds", "addedEntry": "ModularLaunchPads/Launch_Plates/LaunchStands01.dds", "sha256": "21aa1dc9286eb3fd935d87ce05ce5b9a557da9008f7b35e2661b2c61daeb6d40" },
+        { "sourceEntry": "ModularLaunchPads/Launch_Stands/LaunchStands01.dds", "addedEntry": "ModularLaunchPads/Saturn_Shuttle/LaunchStands01.dds", "sha256": "21aa1dc9286eb3fd935d87ce05ce5b9a557da9008f7b35e2661b2c61daeb6d40" }
+      ]
+    },
+    {
+      "id": "kesas-umbraspaceindustries-2ed9115b",
+      "root": "UmbraSpaceIndustries",
+      "sha256": "18010ae46eae10b8a819bbfc0058b7148ca4abe1fa858504fccd85a0728819b6",
+      "sizeBytes": 115850116,
+      "archivePath": "KESAS-VPS-Server/Server/Config/kesas-umbraspaceindustries-2ed9115b-18010ae46eae10b8.zip",
+      "aliases": [
+        { "sourceEntry": "UmbraSpaceIndustries/FTT/Assets/SAS_512.png", "addedEntry": "UmbraSpaceIndustries/FTT/Assets/SAS_PrimaryMat_high_BaseColor.png", "sha256": "e1e0abbcb1a2d9e5f088fe7edf19bfe15dd8e8a7a6185c110e85c0b985063391" },
+        { "sourceEntry": "UmbraSpaceIndustries/ExpPack/PackRat/Assets/PackRat_Seat.dds", "addedEntry": "UmbraSpaceIndustries/ExpPack/PackRat/Assets/model000.dds", "sha256": "f3ca5d3c447c5da0055c2e5f01c934720c84e2e331d31a8d6d94c82a3612bc92" }
+      ]
+    },
+    {
+      "id": "kesas-tundraspacecenter-7018b381",
+      "root": "TundraSpaceCenter",
+      "sha256": "8a4b4a4ef108f77c8697dbd53d5b3361b3948b32183f9543d9bda44f89ced64b",
+      "sizeBytes": 34108881,
+      "archivePath": "KESAS-VPS-Server/Server/Config/kesas-tundraspacecenter-7018b381-8a4b4a4ef108f77c.zip",
+      "aliases": [
+        { "sourceEntry": "TundraSpaceCenter/Pads/TSC_39/LC40-tower.dds", "addedEntry": "TundraSpaceCenter/Pads/TSC_41/LC40-tower.dds", "sha256": "5c23165ce1df6025efffa514d53e0ea203d9608af78d3da7b5addb055ada24ec" }
+      ]
+    },
+    {
+      "id": "kesas-interstellartechnologies-173d8c64",
+      "root": "InterstellarTechnologies",
+      "sha256": "8e80ee9bdf0dd6f17afd0e9f3be3e726b861566884c87402d519a51149359b76",
+      "sizeBytes": 32422069,
+      "archivePath": "KESAS-VPS-Server/Server/Config/kesas-interstellartechnologies-173d8c64-8e80ee9bdf0dd6f1.zip",
+      "aliases": [
+        { "sourceEntry": "InterstellarTechnologies/Parts/Utility/Deuteriumproductionplant/Textured-Stainless.png", "addedEntry": "InterstellarTechnologies/Parts/Utility/Deuteriumproductionplant/Textured-Stainless,png.png", "sha256": "0d40d114985f9690ebb808fa1d65319125e04bb10b71f4346c8400b2d8213833" },
+        { "sourceEntry": "InterstellarTechnologies/Parts/Utility/Helium3productionplant/Textured-Stainless.png", "addedEntry": "InterstellarTechnologies/Parts/Utility/Helium3productionplant/Textured-Stainless,png.png", "sha256": "0d40d114985f9690ebb808fa1d65319125e04bb10b71f4346c8400b2d8213833" }
+      ]
+    },
+    {
+      "id": "kesas-rc25-modfixes",
+      "root": "ZZZ_KESASModFixes",
+      "sha256": "3b6268ae33660c64903813fdaf95eb896aa32b677bc223493622b7c625342698",
+      "sizeBytes": 520,
+      "archivePath": "Aetherfront-RC25-Work/ModFixes/Staged-RC25/Media/kesas-rc25-modfixes-3b6268ae33660c64903813fdaf95eb896aa32b677bc223493622b7c625342698.zip",
+      "aliases": [],
+      "preservedEntry": "ZZZ_KESASModFixes/OptionalVisualModules.cfg",
+      "preservedEntrySha256": "f09e919e1256d43bf725c8319550f992bff75297a5ec2160148c8579b2a114ce"
+    }
+  ],
+  "bindings": [
+    { "staticName": "AtlasVIF", "marker": "OSSMAT", "transform": "model_pad_pipe", "mainTexture": "BUILTIN:/ksp_pad_pipes_diff", "emissiveTexture": null, "logLines": [18073] },
+    { "staticName": "SmallRadomeOutpost", "marker": "OSSMAT", "transform": "model_roof_model", "mainTexture": "BUILTIN:/model_vab_exterior_tile_04_roof", "emissiveTexture": null, "logLines": [18727] },
+    { "staticName": "TLC_34", "marker": "TSCMAT", "transform": "model-vab_interior_props", "mainTexture": "BUILTIN:/model_vab_interior_props", "emissiveTexture": null, "logLines": [20310] },
+    { "staticName": "TLC_34", "marker": "TSCMAT", "transform": "ksp_pad_cylTank_diff_2", "mainTexture": "BUILTIN:/ksp_pad_cylTank_diff", "emissiveTexture": null, "logLines": [20314] },
+    { "staticName": "TLC_36", "marker": "TSCMAT", "transform": "model_vab_exterio_tile_00", "mainTexture": "BUILTIN:/model_vab_exterior_tile_00", "emissiveTexture": null, "logLines": [20347] },
+    { "staticName": "KSC-40A", "marker": "TSCMAT", "transform": "model_vab_exterior_tole_04", "mainTexture": "BUILTIN:/model_vab_exterior_tile_04_roof", "emissiveTexture": null, "logLines": [20406] },
+    { "staticName": "KSC-40A", "marker": "TSCMAT", "transform": "model_vab_exterior_lines-01", "mainTexture": "BUILTIN:/model_vab_exterior_lines_01", "emissiveTexture": null, "logLines": [20408] },
+    { "staticName": "KSC-40A", "marker": "TSCMAT", "transform": "model_vab_exterior_details", "mainTexture": "BUILTIN:/model_vab_exterior_details_01", "emissiveTexture": "BUILTIN:/model_vab_exterior_details_01_emissive", "logLines": [20410, 20412] }
+  ]
+}
