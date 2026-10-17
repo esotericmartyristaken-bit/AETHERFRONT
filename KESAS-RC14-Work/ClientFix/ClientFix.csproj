@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>KesasClientFixSource</AssemblyName>
+    <LangVersion>10</LangVersion>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Nullable>disable</Nullable>
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="LmpClient"><HintPath>../Inputs/LmpClient.dll</HintPath></Reference>
+    <Reference Include="AetherfrontCore"><HintPath>../Inputs/AetherfrontCore.dll</HintPath></Reference>
+    <Reference Include="ApfCore"><HintPath>../Inputs/ApfCore.dll</HintPath></Reference>
+    <Reference Include="Assembly-CSharp"><HintPath>../../Aetherfront-KSP-Smoke/KSP_x64_Data/Managed/Assembly-CSharp.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>../../Aetherfront-KSP-Smoke/KSP_x64_Data/Managed/UnityEngine.CoreModule.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.UI"><HintPath>../../Aetherfront-KSP-Smoke/KSP_x64_Data/Managed/UnityEngine.UI.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>

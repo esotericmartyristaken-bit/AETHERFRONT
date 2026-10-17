@@ -1,0 +1,12 @@
+[
+  { "Id": "start", "Title": "Starting technology", "Description": "The faction's starter capability.", "ScienceCost": 0, "Starter": true },
+  { "Id": "engineering101", "Title": "Engineering 101", "Description": "Basic engineering facilities and construction.", "ScienceCost": 20, "PrerequisiteIds": ["start"] },
+  { "Id": "basicRocketry", "Title": "Basic rocketry", "Description": "Small launch vehicles and early propulsion.", "ScienceCost": 45, "PrerequisiteIds": ["engineering101"] },
+  { "Id": "stability", "Title": "Stability", "Description": "Control systems for survivable flight.", "ScienceCost": 45, "PrerequisiteIds": ["engineering101"] },
+  { "Id": "survivability", "Title": "Survivability", "Description": "Crew protection and recovery equipment.", "ScienceCost": 45, "PrerequisiteIds": ["engineering101"] },
+  { "Id": "generalRocketry", "Title": "General rocketry", "Description": "Larger engines and structural launch capability.", "ScienceCost": 90, "PrerequisiteIds": ["basicRocketry"] },
+  { "Id": "flight", "Title": "Flight", "Description": "Atmospheric flight and aerodynamic control.", "ScienceCost": 90, "PrerequisiteIds": ["stability"] },
+  { "Id": "scienceTech", "Title": "Science technology", "Description": "Instruments for systematic exploration.", "ScienceCost": 90, "PrerequisiteIds": ["engineering101"] },
+  { "Id": "advRocketry", "Title": "Advanced rocketry", "Description": "High-performance propulsion for the frontier.", "ScienceCost": 160, "PrerequisiteIds": ["generalRocketry", "scienceTech"] },
+  { "Id": "frontier-propulsion", "Title": "Frontier propulsion", "Description": "Aetherfront research-derived experimental propulsion license.", "ScienceCost": 300, "PrerequisiteIds": ["advRocketry"] }
+]

@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net472</TargetFramework><LangVersion>10</LangVersion><AssemblyName>KesasInstall</AssemblyName><Optimize>true</Optimize><DebugType>none</DebugType></PropertyGroup>
+  <ItemGroup><Reference Include="ApfCore"><HintPath>../../KESAS-RC16-Work/ApfCore.dll</HintPath><Private>false</Private></Reference></ItemGroup>
+</Project>

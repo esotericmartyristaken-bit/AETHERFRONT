@@ -1,0 +1,70 @@
+Aetherfront GitHub distribution setup
+
+Status
+The client transport, signed Connect-time checks, release publisher and staged
+deployment hooks are implemented locally. RC21 remains live. RC22 is an
+unconfigured test candidate, not a starter to distribute. No GitHub repository
+has been changed and no running download or server has been restarted.
+
+Information required
+1. Create a PUBLIC GitHub repository, for example aetherfront-downloads.
+   Initialize it with a README so a default branch exists. Send its full URL,
+   such as https://github.com/YOUR-ACCOUNT/aetherfront-downloads.
+2. Authenticate GitHub CLI on this Windows server. It is already installed:
+
+   & "C:\Program Files\GitHub CLI\gh.exe" auth login --hostname github.com --git-protocol https --web
+
+   Complete the browser/device-code flow yourself, then say authentication is
+   complete. Do not send your password, personal access token or device code
+   in chat. The publisher uses the CLI's local authentication; clients receive
+   no credentials and need no GitHub account.
+3. For a repository-scoped alternative, a fine-grained personal access token
+   needs access only to that repository and Contents: Read and write. Metadata
+   read access is automatic. Organization approval may be required. Store any
+   token locally, never in this project, release assets or client settings.
+
+Publication design
+- Immutable package ZIPs live in the non-latest pack-media release.
+- Each kesas-rcNN release holds the exact signed APFClientUpdate.json, complete
+  client archive and public starter. No game installation, universe, saves,
+  player identities, private signing/TLS keys or publish credentials are sent.
+- Every Connect fetches GitHub's latest signed feed. The selected server's
+  signed active feed prevents early/future-client installation. Invalid
+  signatures and wrong hashes are rejected. Approved GitHub redirects require
+  valid hostname/chain TLS; the game server retains certificate pinning.
+- Public clients use no REST API token. Media caches remain keyed by archive
+  SHA256, so changing hosting does not invalidate partial or complete downloads.
+- On network/CDN unavailability, the client can resume from the original
+  pinned server. Redirect, signature and hash failures never become trusted.
+
+Operator steps after repository and authentication are available
+1. Run Configure-GitHubRelease.ps1 -Repository OWNER/REPO -Apply in PowerShell7.
+   It preserves earlier unpublished test artifacts and builds the configured
+   signed RC22 candidate. Re-run candidate/runtime/upgrade verification.
+2. Run Install-GitHubPublisher.ps1 -Apply after its preflight. This installs only
+   future release hooks, with recovery copies of the original scripts. No
+   running service is restarted by this installation.
+3. When the current download can safely tolerate a normal staged restart,
+   stage and queue the configured release through the existing 15-minute bot
+   workflow. Do not force an early restart of an active download.
+   For the first large upload, Prepare-GitHubMedia -Plan can preload only media
+   before queueing the timed deployment. It creates no client version release
+   and changes no latest channel, local service, or stable feed. Do not prepare
+   a version draft from a separately rebuilt candidate: native publication
+   must upload its own exact signed archive bytes.
+4. Before stopping services, hooks verify/upload missing immutable media and
+   a draft of the exact native signed feed/client/starter. Existing assets are
+   reused only when remote size and SHA256 digest match. Published bytes are
+   never clobbered. The first media upload is large and must not compete with
+   the protected current transfer; schedule it accordingly.
+5. After server health and the native stable feed are ready, the version release
+   becomes GitHub latest. An unknown API outcome is read back before retrying.
+   Native activation failures use the existing recovery path. A conflicting
+   already-published tag requires a new version, not destructive replacement.
+6. New release builds inherit the enabled repository/media settings from the
+   current public template unless explicitly overridden. Existing skipped-
+   revision clients receive the compatibility update from the original origin
+   before using GitHub. Keep that origin available during migration.
+
+First live GitHub publication and actual KSP-to-GitHub integration remain
+pending the repository, authentication and an approved deployment window.

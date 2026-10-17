@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net472</TargetFramework><LangVersion>10</LangVersion><AssemblyName>KesasConnectSource</AssemblyName><GenerateAssemblyInfo>false</GenerateAssemblyInfo><Optimize>true</Optimize><DebugType>none</DebugType><NoWarn>0436</NoWarn></PropertyGroup>
+  <ItemGroup>
+    <Reference Include="LmpClient"><HintPath>../../KESAS-RC17-Work/Patched/LmpClient.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="ApfCore"><HintPath>../../KESAS-RC17-Work/Patched/ApfCore.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="KesasInstall"><HintPath>../Engine/bin/Release/net472/KesasInstall.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Assembly-CSharp"><HintPath>../../Aetherfront-KSP-Smoke/KSP_x64_Data/Managed/Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>../../Aetherfront-KSP-Smoke/KSP_x64_Data/Managed/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.IMGUIModule"><HintPath>../../Aetherfront-KSP-Smoke/KSP_x64_Data/Managed/UnityEngine.IMGUIModule.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

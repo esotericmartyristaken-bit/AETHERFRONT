@@ -1,0 +1,294 @@
+﻿using LmpCommon;
+using LmpCommon.Time;
+using Server.Client;
+using Server.Command;
+using Server.Context;
+using Server.Events;
+using Server.Exit;
+using Server.Log;
+using Server.Plugin;
+using Server.Server;
+using Server.Settings;
+using Server.Settings.Structures;
+using Server.System;
+using Server.Upnp;
+using Server.Utilities;
+using Server.Apf;
+using Server.Aetherfront;
+using Server.Web;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Reflection;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Server
+{
+    public class MainServer
+    {
+        public static readonly TaskFactory LongRunTaskFactory = new TaskFactory(TaskCreationOptions.LongRunning, TaskContinuationOptions.None);
+
+        private static readonly ManualResetEvent QuitEvent = new ManualResetEvent(false);
+
+        private static readonly WinExitSignal ExitSignal = Common.PlatformIsWindows() ? new WinExitSignal() : null;
+
+        private static readonly List<Task> TaskContainer = new List<Task>();
+
+        public static readonly CancellationTokenSource CancellationTokenSrc = new CancellationTokenSource();
+
+        private static bool IsRestart = false;
+
+        public static void Main(string[] args)
+        {
+            // Capture failures raised outside the synchronous Main try/catch. The server
+            // contains long-running async-void/task loops; without these handlers an
+            // unhandled callback can terminate the process with only a truncated log.
+            AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+            TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
+
+            // Memory diagnostics are an opt-in operator tool. Gating them on a CLI flag
+            // (rather than just the IntervalSettings entry) keeps the production log clean
+            // by default and means turning diagnostics on for a hosted server is a single
+            // launcher edit, not an XML edit followed by a restart.
+            // Note: We're going to true it for now and return to HasFlag another time.
+            var memoryDiagnosticsEnabled = HasFlag(args, "--memorydiag");
+
+            //Verify the .NET runtime before anything else so we can give users a clear,
+            //actionable message instead of failing later with a confusing error.
+            DotNetRuntimeChecker.EnsureCorrectRuntimeOrExit();
+
+            try
+            {
+                // Force culture to en-US to avoid 'System.Net.Sockets.resources' assembly load error.
+                var ci = new CultureInfo("en-US");
+                Thread.CurrentThread.CurrentCulture = ci;
+                Thread.CurrentThread.CurrentUICulture = ci;
+
+                if (Common.PlatformIsWindows())
+                    Console.Title = $"LMP {LmpVersioning.CurrentVersion}";
+
+                Console.OutputEncoding = Encoding.UTF8;
+
+                LunaLog.Info("Remember! Quit the server by using 'Control + C' so a backup is properly made before closing!");
+                LunaLog.Info("Documentation available at https://github.com/LunaMultiplayer/LunaMultiplayer/wiki");
+
+                if (Common.PlatformIsWindows())
+                    ExitSignal.Exit += (sender, args) => Exit();
+                else
+                {
+                    //Register the ctrl+c event and exit signal if we are on linux
+                    Console.CancelKeyPress += (sender, args) => Exit();
+                }
+
+                //We disable quick edit as otherwise when you select some text for copy/paste then you can't write to the console and server freezes
+                //This just happens on windows....
+                if (Common.PlatformIsWindows())
+                    ConsoleUtil.DisableConsoleQuickEdit();
+
+                //We cannot run more than 6 instances ofd servers + clients as otherwise the sync time will fail (30 seconds / 5 seconds = 6) but we use 3 for safety
+                if (GetRunningInstances() > 3)
+                    throw new HandledException("Cannot run more than 3 servers at a time!");
+
+                //Start the server clock
+                ServerContext.ServerClock.Start();
+
+                ServerContext.ServerStarting = true;
+
+                //Set day for log change
+                ServerContext.Day = LunaNetworkTime.Now.Day;
+
+                LunaLog.Normal($"Luna Server version: {LmpVersioning.CurrentVersion} ({AppContext.BaseDirectory})");
+
+                // Truncate the craft create/remove audit file so each server run starts with a clean log.
+                CraftCreationAndRemovalLog.Initialize();
+
+                Universe.CheckUniverse();
+                LoadSettingsAndGroups();
+                ApfServerSettings.Load();
+                AetherfrontServerSystem.Initialize();
+                KerbalSystem.MigrateCrewRoster();
+                VesselStoreSystem.LoadExistingVessels();
+                var scenariosCreated = ScenarioSystem.GenerateDefaultScenarios();
+                ScenarioStoreSystem.LoadExistingScenarios(scenariosCreated);
+                LmpPluginHandler.LoadPlugins();
+                WarpSystem.Reset();
+                TimeSystem.Reset();
+
+                LunaLog.Normal($"Starting '{GeneralSettings.SettingsStore.ServerName}' on Address {ConnectionSettings.SettingsStore.ListenAddress} Port {ConnectionSettings.SettingsStore.Port}... ");
+
+                LidgrenServer.SetupLidgrenServer();
+                LmpPortMapper.OpenLmpPort().Wait();
+                LmpPortMapper.OpenWebPort().Wait();
+                ServerContext.ServerRunning = true;
+                WebServer.StartWebServer();
+
+                //Do not add the command handler thread to the TaskContainer as it's a blocking task
+                LongRunTaskFactory.StartNew(CommandHandler.ThreadMain, CancellationTokenSrc.Token);
+
+                TaskContainer.Add(LongRunTaskFactory.StartNew(WebServer.RefreshWebServerInformation, CancellationTokenSrc.Token));
+
+                TaskContainer.Add(LongRunTaskFactory.StartNew(LmpPortMapper.RefreshUpnpPort, CancellationTokenSrc.Token));
+                TaskContainer.Add(LongRunTaskFactory.StartNew(LogThread.RunLogThread, CancellationTokenSrc.Token));
+                TaskContainer.Add(LongRunTaskFactory.StartNew(ClientMainThread.ThreadMain, CancellationTokenSrc.Token));
+
+                TaskContainer.Add(LongRunTaskFactory.StartNew(() => BackupSystem.PerformBackups(CancellationTokenSrc.Token), CancellationTokenSrc.Token));
+                TaskContainer.Add(LongRunTaskFactory.StartNew(LidgrenServer.StartReceivingMessages, CancellationTokenSrc.Token));
+                TaskContainer.Add(LongRunTaskFactory.StartNew(LidgrenMasterServer.RegisterWithMasterServer, CancellationTokenSrc.Token));
+                TaskContainer.Add(LongRunTaskFactory.StartNew(LidgrenMasterServer.CheckNATType, CancellationTokenSrc.Token));
+
+                TaskContainer.Add(LongRunTaskFactory.StartNew(VersionChecker.RefreshLatestVersion, CancellationTokenSrc.Token));
+                TaskContainer.Add(LongRunTaskFactory.StartNew(VersionChecker.DisplayNewVersionMsg, CancellationTokenSrc.Token));
+
+                TaskContainer.Add(LongRunTaskFactory.StartNew(() => GcSystem.PerformGarbageCollection(CancellationTokenSrc.Token), CancellationTokenSrc.Token));
+
+                if (memoryDiagnosticsEnabled)
+                {
+                    LunaLog.Normal("Memory diagnostics enabled (--memorydiag). [MemDiag] lines will be written to the log.");
+                    TaskContainer.Add(LongRunTaskFactory.StartNew(() => MemoryDiagnosticsLogger.LogMemoryDiagnostics(CancellationTokenSrc.Token), CancellationTokenSrc.Token));
+                }
+
+                while (ServerContext.ServerStarting)
+                    Thread.Sleep(500);
+
+                LunaLog.Normal("All systems up and running. Поехали!");
+                LmpPluginHandler.FireOnServerStart();
+
+                QuitEvent.WaitOne();
+
+                LmpPluginHandler.FireOnServerStop();
+
+                AetherfrontServerSystem.Shutdown();
+
+                LunaLog.Normal("So long and thanks for all the fish!");
+
+                if (IsRestart)
+                {
+                    //Start new server
+                    var serverExePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\Server.exe";
+                    var newProcLmpServer = new ProcessStartInfo { FileName = serverExePath };
+                    Process.Start(newProcLmpServer);
+                }
+            }
+            catch (Exception e)
+            {
+                LunaLog.Fatal(e is HandledException ? e.Message : $"Error in main server thread, Exception: {e}");
+                Console.ReadLine(); //Avoid closing automatically
+            }
+        }
+
+        private static void OnUnhandledException(object sender, UnhandledExceptionEventArgs args)
+        {
+            var exception = args.ExceptionObject as Exception;
+            var message = exception == null ? args.ExceptionObject?.ToString() : exception.ToString();
+            try
+            {
+                LunaLog.Fatal($"Unhandled process exception (terminating={args.IsTerminating}): {message}");
+            }
+            catch (Exception logException)
+            {
+                Console.Error.WriteLine($"Unhandled process exception (terminating={args.IsTerminating}): {message}");
+                Console.Error.WriteLine($"Failed to write unhandled exception to Luna log: {logException}");
+            }
+        }
+
+        private static void OnUnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs args)
+        {
+            try
+            {
+                LunaLog.Error($"Unobserved task exception: {args.Exception}");
+            }
+            catch (Exception logException)
+            {
+                Console.Error.WriteLine($"Unobserved task exception: {args.Exception}");
+                Console.Error.WriteLine($"Failed to write unobserved task exception to Luna log: {logException}");
+            }
+
+            // Prevent a task finalizer from escalating the same fault after it is logged.
+            args.SetObserved();
+        }
+
+        private static void LoadSettingsAndGroups()
+        {
+            LunaLog.Debug("Loading groups...");
+            GroupSystem.LoadGroups();
+            LunaLog.Debug("Loading settings...");
+            SettingsHandler.LoadSettings();
+            SettingsHandler.ValidateDifficultySettings();
+            DefaultSettingsChecker.WarnIfUsingDefaults();
+
+            if (GeneralSettings.SettingsStore.ModControl)
+            {
+                LunaLog.Debug("Loading mod control...");
+                ModFileSystem.LoadModFile();
+            }
+
+            if (Common.PlatformIsWindows())
+            {
+                Console.Title += $" ({GeneralSettings.SettingsStore.ServerName})";
+#if DEBUG
+                Console.Title += " DEBUG";
+#endif
+            }
+        }
+
+        /// <summary>
+        /// Return the number of running instances.
+        /// </summary>
+        private static int GetRunningInstances() => Process.GetProcessesByName("LunaServer.exe").Length;
+
+        /// <summary>
+        /// Case-insensitive check for a single command-line flag. Kept tiny on purpose: the
+        /// server has historically had no CLI surface and we don't want to grow one accidentally.
+        /// If we ever need more than two or three flags, swap this for a dedicated parser.
+        /// </summary>
+        private static bool HasFlag(string[] args, string flag)
+        {
+            if (args == null) return false;
+            for (var i = 0; i < args.Length; i++)
+            {
+                if (string.Equals(args[i], flag, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Runs the exit logic
+        /// </summary>
+        private static void Exit()
+        {
+            LunaLog.Normal("Exiting... Please wait until all threads are finished");
+            ExitEvent.Exit();
+
+            CancellationTokenSrc.Cancel();
+            Task.WaitAll(TaskContainer.ToArray());
+
+            ServerContext.Shutdown("Server is shutting down");
+
+            QuitEvent.Set();
+        }
+
+        /// <summary>
+        /// Runs the restart logic
+        /// </summary>
+        public static void Restart()
+        {
+            //Perform Backups
+            BackupSystem.PerformBackups(CancellationTokenSrc.Token);
+            LunaLog.Normal("Restarting...  Please wait until all threads are finished");
+
+            ServerContext.Shutdown("Server is restarting");
+            CancellationTokenSrc.Cancel();
+
+            Task.WaitAll(TaskContainer.ToArray());
+
+            IsRestart = true;
+
+            QuitEvent.Set();
+        }
+    }
+}

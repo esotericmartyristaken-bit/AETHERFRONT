@@ -1,0 +1,32 @@
+Aetherfront - Windows KSP 1.12.5
+
+1. Close KSP. Extract this ZIP into a clean, licensed KSP 1.12.5 game folder,
+   beside KSP_x64.exe. Merge the folders. Keep Squad and any DLC you own.
+   A separate copy outside Steam and Program Files is recommended.
+2. Launch KSP normally. Open the Aetherfront window.
+3. Enter your player name, server IP and port. Choose Regular or Potato from
+   the install-profile dropdown, then Connect.
+
+The client checks the selected server's requirements and downloads missing or
+outdated files. The window shows package names, download size, progress, speed
+and estimated time. Downloads can resume after interruption. KSP closes and
+restarts automatically to apply verified changes, then reconnects.
+
+Your profile choice is saved. To change it later, return to the main menu,
+select the other profile and Connect. Unneeded profile files move into a
+recovery backup. Extra, unrelated mods require your approval before removal.
+
+No CKAN, launcher shortcut or manually run script is needed. A background
+helper applies changes only after KSP exits, because loaded DLLs cannot be
+safely replaced while the game is running.
+
+Regular and Potato share gameplay content. Potato removes optional graphics
+and sound effects and uses low graphics settings. Required dependencies stay.
+Large ships and shared content can still need substantial CPU and memory.
+
+Saves, identity and controls are preserved. Recovery files remain under
+APF/.transaction-backup. Returning to Regular restores the graphics settings
+saved before Potato mode. Never share your player identity or private keys.
+
+Only servers matching the starter's trusted certificate and signing key can
+provide updates. Typing a different IP does not bypass these checks.

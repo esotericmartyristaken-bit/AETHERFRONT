@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <AssemblyName>APFDiscordBridge</AssemblyName>
+    <RootNamespace>APFDiscordBridge</RootNamespace>
+    <LmpServerRoot Condition="'$(LmpServerRoot)' == ''">$(MSBuildProjectDirectory)\..\..\..\..\Documents\Codex\2026-08-11\tsclient-c-users-jkell-downloads-2\outputs\LunaMultiplayer-0.29.2\Server-Host\LMPServer</LmpServerRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Server" HintPath="$(LmpServerRoot)\Server.dll" Private="false" />
+    <Reference Include="AetherfrontCore" HintPath="$(LmpServerRoot)\AetherfrontCore.dll" Private="false" />
+    <Reference Include="Newtonsoft.Json" HintPath="$(LmpServerRoot)\Newtonsoft.Json.dll" Private="false" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,76 @@
+{
+  "scannedUtc": "2026-10-17T00:58:48.2651341Z",
+  "filesScanned": 2581,
+  "elapsedSeconds": 21.9424623,
+  "ruleMilliseconds": {
+    "private-host": 3509.1322999999998,
+    "credential-url": 825.2456000000003,
+    "private-key": 910.4443999999994,
+    "discord-token": 3420.1021000000005,
+    "github-token": 943.9019999999997,
+    "cloud-key": 768.0334999999997,
+    "credential-literal": 2723.7219000000014,
+    "user-home": 954.7075000000002
+  },
+  "regexTimeoutSecondsPerFileRule": 2,
+  "findingCount": 0,
+  "findings": [],
+  "reviewedSyntheticMatches": [
+    {
+      "path": "Aetherfront-RC22-Work/GitHub.Publish.ps1",
+      "rule": "credential-literal",
+      "matchSha256": "37ebf4d8a5cb951e9a0fd076997ffcf07601c62ff341ef676a4329111d0f8284",
+      "reason": "Literal credential-detection regex definition, not a credential; only this exact assignment match is reviewed."
+    },
+    {
+      "path": "Aetherfront-RC22-Work/GitHub.Publish.ps1",
+      "rule": "credential-literal",
+      "matchSha256": "f9387b64d62c51953baed8867a1dd32d0cfd4fbfdeb977d5d089c0644a00df45",
+      "reason": "Literal strong-secret detection regex definition, not a credential; real values remain scan findings."
+    },
+    {
+      "path": "Aetherfront-RC22-Work/Test-GitHubPublisher.ps1",
+      "rule": "private-key",
+      "matchSha256": "5a1cb9e60fd9e4c9eb8fb7bf5f8ce594f2c3d547a4e0606dc602286bbc286fbe",
+      "reason": "Synthetic malicious ZIP/content fixture in publisher security tests; not an actual private key."
+    },
+    {
+      "path": "Aetherfront-RC22-Work/Test-GitHubPublisher.ps1",
+      "rule": "credential-url",
+      "matchSha256": "fbddae166ead16d1dd67736b19403ab1ac0095e344f663573848af911a7ce273",
+      "reason": "Deliberately rejected credential-bearing URL in a negative security test."
+    },
+    {
+      "path": "APFDiscordBot/test/smoke.test.js",
+      "rule": "user-home",
+      "matchSha256": "e71681643ee7c2e7f6f3bdb47c729062e12efc955398fdfb33be137ddcff2b91",
+      "reason": "Synthetic error-path redaction unit test input."
+    },
+    {
+      "path": "APFDiscordBot/test/smoke.test.js",
+      "rule": "private-host",
+      "matchSha256": "227994d2c45ba2bc7b07982b150624fd90a20796522dfa0770e185d70affcd71",
+      "reason": "Synthetic path-redaction unit test input; not accessed."
+    },
+    {
+      "path": "KESAS-VPS-Server/GitHub.Publish.ps1",
+      "rule": "credential-literal",
+      "matchSha256": "37ebf4d8a5cb951e9a0fd076997ffcf07601c62ff341ef676a4329111d0f8284",
+      "reason": "Installed copy of the same reviewed credential-detection regex definition."
+    },
+    {
+      "path": "KESAS-VPS-Server/GitHub.Publish.ps1",
+      "rule": "credential-literal",
+      "matchSha256": "f9387b64d62c51953baed8867a1dd32d0cfd4fbfdeb977d5d089c0644a00df45",
+      "reason": "Installed copy of the same reviewed strong-secret detection regex definition."
+    },
+    {
+      "path": "scripts/Export-GitHubSource.ps1",
+      "rule": "private-host",
+      "matchSha256": "227994d2c45ba2bc7b07982b150624fd90a20796522dfa0770e185d70affcd71",
+      "reason": "Scanner pattern definition only; never accessed."
+    }
+  ],
+  "contentOrMatchedValuesPrinted": false,
+  "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
+}

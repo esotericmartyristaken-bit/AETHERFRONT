@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "profileId": "apf-main-career",
+  "displayName": "APF Main Career",
+  "mode": "Career",
+  "saveNamespace": "APF/apf-main/Career",
+  "progressionSchemaVersion": 1,
+  "sharedProgression": false,
+  "resetOnPackChange": true,
+  "startingFunds": 25000,
+  "startingScience": 0,
+  "startingReputation": 0
+}

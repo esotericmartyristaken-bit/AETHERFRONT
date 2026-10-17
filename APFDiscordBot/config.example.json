@@ -1,0 +1,80 @@
+{
+  "discord": {
+    "tokenEnv": "APF_DISCORD_TOKEN",
+    "guildId": "",
+    "channels": {
+      "dashboard": "",
+      "console": "",
+      "lunaChat": "",
+      "publicStatus": ""
+    },
+    "offlineAlertUserId": "",
+    "publicServerPassword": "",
+    "pinDashboard": true,
+    "motd": "Welcome to APF.",
+    "rules": "Be respectful. No exploits. Follow APF moderator instructions.",
+    "adminRoleIds": [],
+    "operatorRoleIds": [],
+    "moderatorRoleIds": [],
+    "timezone": "Europe/Berlin"
+  },
+  "lmp": {
+    "serverRoot": ".\\EXTI-Server",
+    "executable": "Server.exe",
+    "port": 2252,
+    "masterListUrl": "https://ms.lmp.dasskelett.dev/",
+    "serverName": "EXTI",
+    "memoryWarningBytes": 2147483648,
+    "bridgeDirectory": ".\\EXTI-Server\\APFDiscordBridge",
+    "websiteUrl": "",
+    "control": {
+      "mode": "observe",
+      "allowExternalProcessStart": false,
+      "allowExternalProcessStop": false,
+      "allowExternalProcessRestart": false,
+      "autoStart": false,
+      "visibleTerminal": true
+    }
+  },
+  "universe": {
+    "universeRoot": ".\\EXTI-Server\\Universe",
+    "backupRoot": ".\\Backups\\EXTI",
+    "exportRoot": ".\\Exports\\EXTI",
+    "maxBackups": 8,
+    "allowRestore": false,
+    "allowAssetRestore": false,
+    "autoBackupIntervalMinutes": 240
+  },
+  "health": {
+    "statusPollMs": 5000,
+    "failureConfirmations": 2,
+    "recoveryConfirmations": 2,
+    "logAlertCooldownMs": 1800000,
+    "memoryRecoveryRatio": 0.85,
+    "startupGraceMinutes": 5,
+    "logQuietMinutes": 60,
+    "diskWarningPercent": 10
+  },
+  "updates": {
+    "stagingRoot": "updates\\staged",
+    "stateFile": "state\\update-state.json",
+    "rollbackRoot": "state\\update-rollbacks",
+    "pollIntervalMs": 2000,
+    "deploymentTimeoutMs": 180000,
+    "defaultCountdownMinutes": 15,
+    "requirePreDeployBackup": true
+  },
+  "security": {
+    "deleteTransientResponsesMs": 12000,
+    "commandCooldownMs": 750,
+    "chatCooldownMs": 750,
+    "chatDuplicateWindowMs": 3000,
+    "maxMessageLength": 500,
+    "bridgeMessageTtlMs": 120000,
+    "bridgeMaxInboxFiles": 200,
+    "bridgeMaxEventBytes": 131072,
+    "chatQueueMax": 200,
+    "chatQueueTtlMs": 300000,
+    "auditAllActions": true
+  }
+}

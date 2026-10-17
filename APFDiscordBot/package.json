@@ -1,0 +1,23 @@
+{
+  "name": "apf-discord-bot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "doctor": "node src/doctor.js",
+    "provision:channels": "node src/provision-channels.js",
+    "validate": "node src/validate-config.js",
+    "backup": "node src/backup-once.js",
+    "stage:update": "node src/stage-update.js",
+    "schedule:update": "node src/schedule-update.js",
+    "test": "node --test",
+    "test:safe": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\\Test-APFAll.ps1"
+  },
+  "dependencies": {
+    "discord.js": "14.27.0"
+  }
+}

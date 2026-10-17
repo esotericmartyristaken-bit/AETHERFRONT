@@ -1,0 +1,207 @@
+[
+  {
+    "project": "Aetherfront-Source/AetherfrontCore/AetherfrontCore.csproj",
+    "package": "Newtonsoft.Json",
+    "version": "12.0.3"
+  },
+  {
+    "project": "Aetherfront-Source/ApfCore/ApfCore.csproj",
+    "package": "Newtonsoft.Json",
+    "version": "12.0.3"
+  },
+  {
+    "project": "Aetherfront-Source/Lidgren.Net/Lidgren.Net.csproj",
+    "package": "Microsoft.NETFramework.ReferenceAssemblies.net46",
+    "version": "1.0.3"
+  },
+  {
+    "project": "Aetherfront-Source/LmpClient/LmpClient.csproj",
+    "package": "Microsoft.NETFramework.ReferenceAssemblies.net472",
+    "version": "1.0.3"
+  },
+  {
+    "project": "Aetherfront-Source/LmpMasterServer/LmpMasterServer.csproj",
+    "package": "CachedQuickLz",
+    "version": "1.3.1"
+  },
+  {
+    "project": "Aetherfront-Source/LmpMasterServer/LmpMasterServer.csproj",
+    "package": "DotNetZip",
+    "version": "1.15.0"
+  },
+  {
+    "project": "Aetherfront-Source/LmpMasterServer/LmpMasterServer.csproj",
+    "package": "HtmlTextWriter",
+    "version": "2.1.1"
+  },
+  {
+    "project": "Aetherfront-Source/LmpMasterServer/LmpMasterServer.csproj",
+    "package": "log4net",
+    "version": "2.0.12"
+  },
+  {
+    "project": "Aetherfront-Source/LmpMasterServer/LmpMasterServer.csproj",
+    "package": "Microsoft.Bcl.AsyncInterfaces",
+    "version": "6.0.0"
+  },
+  {
+    "project": "Aetherfront-Source/LmpMasterServer/LmpMasterServer.csproj",
+    "package": "Microsoft.CSharp",
+    "version": "4.7.0"
+  },
+  {
+    "project": "Aetherfront-Source/LmpMasterServer/LmpMasterServer.csproj",
+    "package": "Microsoft.VisualStudio.Threading",
+    "version": "16.10.56"
+  },
+  {
+    "project": "Aetherfront-Source/LmpMasterServer/LmpMasterServer.csproj",
+    "package": "Microsoft.VisualStudio.Validation",
+    "version": "16.9.32"
+  },
+  {
+    "project": "Aetherfront-Source/LmpMasterServer/LmpMasterServer.csproj",
+    "package": "Microsoft.Win32.Registry",
+    "version": "5.0.0"
+  },
+  {
+    "project": "Aetherfront-Source/LmpMasterServer/LmpMasterServer.csproj",
+    "package": "Newtonsoft.Json",
+    "version": "12.0.3"
+  },
+  {
+    "project": "Aetherfront-Source/LmpMasterServer/LmpMasterServer.csproj",
+    "package": "Open.NAT",
+    "version": "2.1.0.0"
+  },
+  {
+    "project": "Aetherfront-Source/LmpMasterServer/LmpMasterServer.csproj",
+    "package": "System.Runtime.CompilerServices.Unsafe",
+    "version": "6.0.0"
+  },
+  {
+    "project": "Aetherfront-Source/LmpMasterServer/LmpMasterServer.csproj",
+    "package": "System.Security.AccessControl",
+    "version": "6.0.0"
+  },
+  {
+    "project": "Aetherfront-Source/LmpMasterServer/LmpMasterServer.csproj",
+    "package": "System.Security.Principal.Windows",
+    "version": "5.0.0"
+  },
+  {
+    "project": "Aetherfront-Source/LmpMasterServer/LmpMasterServer.csproj",
+    "package": "System.Threading",
+    "version": "4.3.0"
+  },
+  {
+    "project": "Aetherfront-Source/LmpMasterServer/LmpMasterServer.csproj",
+    "package": "System.Threading.Tasks.Extensions",
+    "version": "4.5.4"
+  },
+  {
+    "project": "Aetherfront-Source/LmpMasterServer/LmpMasterServer.csproj",
+    "package": "Microsoft.VisualStudio.Threading.Analyzers",
+    "version": "16.10.56"
+  },
+  {
+    "project": "Aetherfront-Source/LmpMasterServerTest/LmpMasterServerTest.csproj",
+    "package": "Microsoft.NET.Test.Sdk",
+    "version": "17.1.0"
+  },
+  {
+    "project": "Aetherfront-Source/LmpMasterServerTest/LmpMasterServerTest.csproj",
+    "package": "NUnit",
+    "version": "3.13.3"
+  },
+  {
+    "project": "Aetherfront-Source/LmpMasterServerTest/LmpMasterServerTest.csproj",
+    "package": "NUnit3TestAdapter",
+    "version": "4.2.1"
+  },
+  {
+    "project": "Aetherfront-Source/LmpMasterServerTest/LmpMasterServerTest.csproj",
+    "package": "NUnit.Analyzers",
+    "version": "3.3.0"
+  },
+  {
+    "project": "Aetherfront-Source/LmpMasterServerTest/LmpMasterServerTest.csproj",
+    "package": "coverlet.collector",
+    "version": "3.1.2"
+  },
+  {
+    "project": "Aetherfront-Source/LmpUpdater/LmpUpdater.csproj",
+    "package": "DotNetZip",
+    "version": "1.15.0"
+  },
+  {
+    "project": "Aetherfront-Source/LmpUpdater/LmpUpdater.csproj",
+    "package": "Newtonsoft.Json",
+    "version": "12.0.3"
+  },
+  {
+    "project": "Aetherfront-Source/Server/Server.csproj",
+    "package": "ByteSize",
+    "version": "2.0.0"
+  },
+  {
+    "project": "Aetherfront-Source/Server/Server.csproj",
+    "package": "CachedQuickLz",
+    "version": "1.3.1"
+  },
+  {
+    "project": "Aetherfront-Source/Server/Server.csproj",
+    "package": "Humanizer.Core",
+    "version": "2.8.26"
+  },
+  {
+    "project": "Aetherfront-Source/Server/Server.csproj",
+    "package": "LunaConfigNode",
+    "version": "1.9.1"
+  },
+  {
+    "project": "Aetherfront-Source/Server/Server.csproj",
+    "package": "Microsoft.VisualStudio.Threading",
+    "version": "16.10.56"
+  },
+  {
+    "project": "Aetherfront-Source/Server/Server.csproj",
+    "package": "open.nat.core",
+    "version": "2.1.0.5"
+  },
+  {
+    "project": "Aetherfront-Source/Server/Server.csproj",
+    "package": "System.Drawing.Common",
+    "version": "6.0.0"
+  },
+  {
+    "project": "Aetherfront-Source/ServerTest/ServerTest.csproj",
+    "package": "Microsoft.NET.Test.Sdk",
+    "version": "17.3.2"
+  },
+  {
+    "project": "Aetherfront-Source/ServerTest/ServerTest.csproj",
+    "package": "MSTest.TestAdapter",
+    "version": "2.2.10"
+  },
+  {
+    "project": "Aetherfront-Source/ServerTest/ServerTest.csproj",
+    "package": "MSTest.TestFramework",
+    "version": "2.2.10"
+  },
+  {
+    "project": "Aetherfront-Source/ServerTest/ServerTest.csproj",
+    "package": "LunaConfigNode",
+    "version": "1.9.1"
+  },
+  {
+    "project": "Aetherfront-Source/uhttpsharp/uhttpsharp.csproj",
+    "package": "log4net",
+    "version": "2.0.12"
+  },
+  {
+    "project": "Aetherfront-Source/uhttpsharp/uhttpsharp.csproj",
+    "package": "Newtonsoft.Json",
+    "version": "12.0.3"
+  }
+]

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!--
+      KSP 1.12.x runs Mono without a netstandard facade. Keep the portable
+      target for the .NET 6 server/tools, and emit a net472 build for the
+      Unity client so ApfCore can load without netstandard.dll.
+    -->
+    <TargetFrameworks>netstandard2.0;net472</TargetFrameworks>
+    <LangVersion>8</LangVersion>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="JsonFx">
+      <HintPath>..\External\Dependencies\JsonFx.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' != 'net472'">
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+</Project>

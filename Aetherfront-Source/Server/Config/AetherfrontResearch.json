@@ -1,0 +1,14 @@
+[
+  {
+    "Id": "frontier-propulsion",
+    "SeasonId": "frontier-research",
+    "Title": "Frontier propulsion",
+    "Description": "Pool faction science to unlock an experimental propulsion technology.",
+    "TargetScience": 250,
+    "RewardTechnologyId": "frontier-propulsion",
+    "FundsRewardMicro": 2500000,
+    "ReputationReward": 5,
+    "PublicProgress": true,
+    "RepeatPeriodDays": 7
+  }
+]

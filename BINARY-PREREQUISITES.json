@@ -1,0 +1,84 @@
+[
+  {
+    "path": "KESAS-Import-rc11/LmpClient-rc11.dll",
+    "presentDuringExport": true,
+    "bytes": 1058816,
+    "sha256": "85d95fe9fa361f5f27b06402a87ed5e0bad41599379b7dc2d74cca72d82e7800",
+    "exported": false
+  },
+  {
+    "path": "KESAS-Client-Baselines/RC13/LmpClient.dll",
+    "presentDuringExport": false,
+    "exported": false
+  },
+  {
+    "path": "KESAS-RC14-Work/LmpClient-rc14.dll",
+    "presentDuringExport": true,
+    "bytes": 1057280,
+    "sha256": "8d2e8b8aea81e9703ab21d1159ce5cd464d92893f8e3c791b576ff1797580738",
+    "exported": false
+  },
+  {
+    "path": "KESAS-RC15-Work/Inputs/ApfCore.dll",
+    "presentDuringExport": true,
+    "bytes": 129536,
+    "sha256": "cbd524dd590d96740b97772ea55a74504e9cb4920482718e3bf5f951ccd60be8",
+    "exported": false
+  },
+  {
+    "path": "KESAS-RC15-Work/Inputs/AetherfrontCore.dll",
+    "presentDuringExport": true,
+    "bytes": 168960,
+    "sha256": "1cbf59ceea11d7a32c6907aa85e4f4dde1b231c4230e6f630d2b47dfc337b5b5",
+    "exported": false
+  },
+  {
+    "path": "KESAS-RC15-Work/Inputs/JsonFx.dll",
+    "presentDuringExport": true,
+    "bytes": 217088,
+    "sha256": "8ff95ee45b3e9167f8fd36622eb6e3ebce915f8fee4fc2bd6ccb5ce66749d54f",
+    "exported": false
+  },
+  {
+    "path": "KESAS-RC16-Work/LmpClient.dll",
+    "presentDuringExport": true,
+    "bytes": 1055232,
+    "sha256": "cfdfda879f4392ec9bd88ddda4a70cc9257ceda36c37ca97a5b6d3899043123f",
+    "exported": false
+  },
+  {
+    "path": "KESAS-RC16-Work/ApfCore.dll",
+    "presentDuringExport": true,
+    "bytes": 129024,
+    "sha256": "c261b624df9bbb1a5e7ec46dbf8be3818a7e332223b0a70ee9187afe64e69c1d",
+    "exported": false
+  },
+  {
+    "path": "KESAS-RC17-Work/Patched/ApfCore.dll",
+    "presentDuringExport": true,
+    "bytes": 128000,
+    "sha256": "bd036b5e176cf465d30b8275e50bafd37552814a6917fdc13efb26c97aead99d",
+    "exported": false
+  },
+  {
+    "path": "Aetherfront-RC19-Work/Patched/LmpClient.dll",
+    "presentDuringExport": true,
+    "bytes": 1060864,
+    "sha256": "ebfd3c1eb3185effbe38a251ed2d2759957f23f83ce268b9eba9b742d4506353",
+    "exported": false
+  },
+  {
+    "path": "Aetherfront-RC19-Work/Patched/ApfCore.dll",
+    "presentDuringExport": true,
+    "bytes": 128000,
+    "sha256": "bd036b5e176cf465d30b8275e50bafd37552814a6917fdc13efb26c97aead99d",
+    "exported": false
+  },
+  {
+    "path": "KESAS-VPS-Server/Server/Server.dll",
+    "presentDuringExport": true,
+    "bytes": 757760,
+    "sha256": "32e7beea41224b6368127ee346dd2f3f0069d66ed15682c78526a621871e845e",
+    "exported": false
+  }
+]

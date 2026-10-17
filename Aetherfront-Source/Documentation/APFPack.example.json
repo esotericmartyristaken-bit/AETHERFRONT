@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "serverId": "apf-test",
+  "packId": "apf-main",
+  "packVersion": "1.0.0",
+  "kspVersion": "1.12.5",
+  "requiredClientVersion": "apf-client-1",
+  "requiredDlc": [],
+  "protectedRoots": ["Squad", "SquadExpansion", "LunaMultiPlayer"],
+  "managedPackages": [],
+  "clientOnly": []
+}

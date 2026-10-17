@@ -1,5 +1,9 @@
 # Aetherfront
 
+Technical dependencies, provenance and exclusions: [Source provenance](SOURCE-PROVENANCE.md).
+This source-only snapshot cannot independently reproduce the shipping RC22 client;
+historical baseline binaries and separately licensed KSP/Unity dependencies are required.
+
 Aetherfront is a Kerbal Space Program multiplayer fork with an in-game installer
 and signed updates. This repository hosts source code and public download
 releases. Release publication is being initialized; use only a completed client

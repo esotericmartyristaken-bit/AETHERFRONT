@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net472</TargetFramework><LangVersion>10</LangVersion><AssemblyName>KesasPolicySource</AssemblyName></PropertyGroup>
+  <ItemGroup><Reference Include="ApfCore"><HintPath>../../KESAS-RC15-Work/Inputs/ApfCore.dll</HintPath><Private>false</Private></Reference></ItemGroup>
+</Project>

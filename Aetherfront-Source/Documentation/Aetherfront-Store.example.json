@@ -1,0 +1,26 @@
+[
+  {
+    "Id": "lore-origin",
+    "Title": "Founding Charter",
+    "Description": "A public Chronicle title for the faction founding story.",
+    "PriceFundsMicro": 250000,
+    "PriceScience": 5,
+    "Stock": -1,
+    "GrantTechnologyId": "",
+    "Enabled": true,
+    "Public": true,
+    "ConfigManaged": true
+  },
+  {
+    "Id": "research-license-engineering",
+    "Title": "Engineering Research License",
+    "Description": "Unlocks the server-defined engineering101 technology.",
+    "PriceFundsMicro": 500000,
+    "PriceScience": 25,
+    "Stock": -1,
+    "GrantTechnologyId": "engineering101",
+    "Enabled": true,
+    "Public": true,
+    "ConfigManaged": true
+  }
+]

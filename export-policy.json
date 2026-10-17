@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "metadataFiles": ["README.md", "SOURCE-PROVENANCE.md", "THIRD-PARTY-NOTICES.md", "EXPORT-REVIEW.md", ".gitignore", ".gitattributes", "export-policy.json"],
+  "reviewedMatches": [
+    {"path":"Aetherfront-RC22-Work/GitHub.Publish.ps1","rule":"credential-literal","matchSha256":"37ebf4d8a5cb951e9a0fd076997ffcf07601c62ff341ef676a4329111d0f8284","reason":"Literal credential-detection regex definition, not a credential; only this exact assignment match is reviewed."},
+    {"path":"Aetherfront-RC22-Work/GitHub.Publish.ps1","rule":"credential-literal","matchSha256":"f9387b64d62c51953baed8867a1dd32d0cfd4fbfdeb977d5d089c0644a00df45","reason":"Literal strong-secret detection regex definition, not a credential; real values remain scan findings."},
+    {"path":"KESAS-VPS-Server/GitHub.Publish.ps1","rule":"credential-literal","matchSha256":"37ebf4d8a5cb951e9a0fd076997ffcf07601c62ff341ef676a4329111d0f8284","reason":"Installed copy of the same reviewed credential-detection regex definition."},
+    {"path":"KESAS-VPS-Server/GitHub.Publish.ps1","rule":"credential-literal","matchSha256":"f9387b64d62c51953baed8867a1dd32d0cfd4fbfdeb977d5d089c0644a00df45","reason":"Installed copy of the same reviewed strong-secret detection regex definition."},
+    {"path":"Aetherfront-RC22-Work/Test-GitHubPublisher.ps1","rule":"private-key","matchSha256":"5a1cb9e60fd9e4c9eb8fb7bf5f8ce594f2c3d547a4e0606dc602286bbc286fbe","reason":"Synthetic malicious ZIP/content fixture in publisher security tests; not an actual private key."},
+    {"path":"Aetherfront-RC22-Work/Test-GitHubPublisher.ps1","rule":"credential-url","matchSha256":"fbddae166ead16d1dd67736b19403ab1ac0095e344f663573848af911a7ce273","reason":"Deliberately rejected credential-bearing URL in a negative security test."},
+    {"path":"APFDiscordBot/test/smoke.test.js","rule":"user-home","matchSha256":"e71681643ee7c2e7f6f3bdb47c729062e12efc955398fdfb33be137ddcff2b91","reason":"Synthetic error-path redaction unit test input."},
+    {"path":"APFDiscordBot/test/smoke.test.js","rule":"private-host","matchSha256":"227994d2c45ba2bc7b07982b150624fd90a20796522dfa0770e185d70affcd71","reason":"Synthetic path-redaction unit test input; not accessed."},
+    {"path":"scripts/Export-GitHubSource.ps1","rule":"private-host","matchSha256":"227994d2c45ba2bc7b07982b150624fd90a20796522dfa0770e185d70affcd71","reason":"Scanner pattern definition only; never accessed."}
+  ],
+  "deniedDirectoryPattern": "(?i)^(?:\\.git|\\.vs|\\.idea|\\.vscode|bin|obj|packages|node_modules|Build|TestRuntime|TestResults|logs?|Universe|saves|screenshots|secrets|diagnostics|Backups|artifacts|updates|state|Config|Candidate.*|Release.*|Patched|.*Fixture.*|.*backup.*|Decompiled|ModpackSource|HostedPackages)$",
+  "deniedFilePattern": "(?i)(?:^|/)(?:Aetherfront-Client-Handoff\\.md|SetDirectories\\.bat|CopyToKSPDirectory\\.bat|Publish-Release\\.before\\.ps1|config\\.json|WORK-STATE\\.json|TEST-RESULTS\\.json|EVIDENCE\\.json|LIVE-RESULT\\.json)|\\.(?:user|suo|log|cache|pem|key|pfx|p12|crt|cer|snk)$|^Aetherfront-Source/(?:LmpMasterServer|MasterServer)/app\\.config$",
+  "groups": [
+    {
+      "role": "fork client/server/shared libraries/tests/tools",
+      "directories": ["Aetherfront-Source/AetherfrontCore", "Aetherfront-Source/AetherfrontCore.Tests", "Aetherfront-Source/ApfCertificateTool", "Aetherfront-Source/ApfCore", "Aetherfront-Source/ApfCore.Tests", "Aetherfront-Source/ApfDiagnosticsHost", "Aetherfront-Source/APFDiscordBridge", "Aetherfront-Source/ApfPackHost", "Aetherfront-Source/ApfPackTool", "Aetherfront-Source/ApfProtocol.Tests", "Aetherfront-Source/ApfUpdater", "Aetherfront-Source/ApfUpdater.Tests", "Aetherfront-Source/ApfUpdateTool", "Aetherfront-Source/Lidgren", "Aetherfront-Source/Lidgren.Core", "Aetherfront-Source/Lidgren.Net", "Aetherfront-Source/LmpClient", "Aetherfront-Source/LmpCommon", "Aetherfront-Source/LmpCommonTest", "Aetherfront-Source/LmpGlobal", "Aetherfront-Source/LmpMasterServer", "Aetherfront-Source/LmpMasterServerTest", "Aetherfront-Source/LmpUpdater", "Aetherfront-Source/MasterServer", "Aetherfront-Source/MasterServersList", "Aetherfront-Source/Server", "Aetherfront-Source/ServerTest", "Aetherfront-Source/uhttpsharp", "Aetherfront-Source/Documentation", "Aetherfront-Source/Scripts", "Aetherfront-Source/.nuget"],
+      "extensions": [".cs", ".csproj", ".shproj", ".projitems", ".props", ".targets", ".config", ".xml", ".resx", ".md", ".txt", ".ps1", ".bat", ".cmd", ".sh", ".json"]
+    },
+    {
+      "role": "shipping client patch lineage and RC22 overlays/tests/build/publication scripts",
+      "directories": ["KESAS-RC12-Work/Patcher", "KESAS-RC14-Work/ClientFix", "KESAS-RC14-Work/Patcher", "KESAS-RC14-Work/Tests", "KESAS-RC15-Work/ClientUi", "KESAS-RC15-Work/Patcher", "KESAS-RC15-Work/Bridge", "KESAS-RC16-Work/CorePolicy", "KESAS-RC16-Work/CorePatcher", "KESAS-RC16-Work/VersionPatcher", "KESAS-RC16-Work/Launcher", "KESAS-RC16-Work/PackBuilder", "KESAS-RC16-Work/ValidatePack", "KESAS-RC16-Work/FirstInstall", "KESAS-RC16-Work/Tools", "KESAS-RC17-Work/ClientUi", "KESAS-RC17-Work/Engine", "KESAS-RC17-Work/Patcher", "KESAS-RC17-Work/Tests", "KESAS-RC17-Work/BinaryChecks", "KESAS-RC17-Work/GameStub", "Aetherfront-RC18-Work/ClientUi", "Aetherfront-RC18-Work/Engine", "Aetherfront-RC18-Work/Patcher", "Aetherfront-RC18-Work/TransferTests", "Aetherfront-RC19-Work/Engine", "Aetherfront-RC19-Work/Patcher", "Aetherfront-RC19-Work/TransferTests", "Aetherfront-RC19-Work/MonoHost", "Aetherfront-RC20-Work/Engine", "Aetherfront-RC20-Work/Patcher", "Aetherfront-RC21-Work/Engine", "Aetherfront-RC21-Work/Patcher", "Aetherfront-RC22-Work/Engine", "Aetherfront-RC22-Work/Patcher", "Aetherfront-RC22-Work/GameStub", "Aetherfront-RC22-Work/Tests", "Aetherfront-RC22-Work/TransferTests", "Aetherfront-RC22-Work/GitHubTests", "Aetherfront-RC22-Work/BinaryChecks", "Aetherfront-RC22-Work/MonoAudit", "Aetherfront-RC22-Work/MonoHost", "Aetherfront-RC22-Work/UpdaterFixture", "Aetherfront-RC22-Work/PublicTransferProbe", "Aetherfront-RC22-Work/UpgradeDownloadProbe", "Aetherfront-RC22-Work/NativePublisher"],
+      "extensions": [".cs", ".csproj", ".ps1", ".cpp", ".c", ".h", ".md"]
+    },
+    {
+      "role": "current RC22 live-profile regression sources, not executed against live services",
+      "directories": ["Aetherfront-RC22-Work/LiveProfileTests"],
+      "extensions": [".cs", ".csproj"]
+    },
+    {
+      "role": "historical regression and helper sources required by the shipping patch lineage",
+      "directories": ["KESAS-RC14-Work/UpdaterFixture", "KESAS-RC15-Work/UpdaterFixture", "KESAS-RC16-Work/Tests", "KESAS-RC16-Work/UpdaterFixture", "KESAS-RC17-Work/UpdaterFixture", "Aetherfront-RC18-Work/Tests", "Aetherfront-RC18-Work/BinaryChecks", "Aetherfront-RC18-Work/GameStub", "Aetherfront-RC19-Work/Tests", "Aetherfront-RC19-Work/MonoAudit", "Aetherfront-RC19-Work/GameStub", "Aetherfront-RC19-Work/BinaryChecks", "Aetherfront-RC20-Work/Tests", "Aetherfront-RC20-Work/MonoHost", "Aetherfront-RC20-Work/MonoAudit", "Aetherfront-RC20-Work/TransferTests", "Aetherfront-RC20-Work/GameStub", "Aetherfront-RC20-Work/BinaryChecks", "Aetherfront-RC21-Work/Tests", "Aetherfront-RC21-Work/MonoHost", "Aetherfront-RC21-Work/MonoAudit", "Aetherfront-RC21-Work/TransferTests", "Aetherfront-RC21-Work/GameStub", "Aetherfront-RC21-Work/BinaryChecks"],
+      "extensions": [".cs", ".csproj", ".ps1", ".cpp", ".c", ".h"]
+    },
+    {
+      "role": "Discord integration source/tests/operator scripts",
+      "directories": ["APFDiscordBot/src", "APFDiscordBot/test", "APFDiscordBot/scripts", "APFDiscordBot/docs"],
+      "extensions": [".js", ".mjs", ".json", ".ps1", ".md"]
+    }
+  ],
+  "explicitFiles": [
+    {"source":"KESAS-RC14-Work/Build-Release.ps1","role":"historical first-party build recipe"},
+    {"source":"KESAS-RC15-Work/Build-Release.ps1","role":"historical first-party build recipe"},
+    {"source":"KESAS-RC16-Work/Build-Release.ps1","role":"historical first-party build recipe"},
+    {"source":"KESAS-RC17-Work/Build-Code.ps1","role":"historical first-party build recipe"},
+    {"source":"KESAS-RC17-Work/Build-Release.ps1","role":"historical first-party build recipe"},
+    {"source":"Aetherfront-RC18-Work/Build-Code.ps1","role":"historical first-party build recipe"},
+    {"source":"Aetherfront-RC19-Work/Build-Code.ps1","role":"historical first-party build recipe"},
+    {"source":"Aetherfront-RC20-Work/Build-Code.ps1","role":"historical first-party build recipe"},
+    {"source":"Aetherfront-RC21-Work/Build-Code.ps1","role":"historical first-party build recipe"},
+    {"source":"APFDiscordBot/test/fixtures/bridge-message.json","role":"synthetic protocol test input, not runtime state"},
+    {"source":"Aetherfront-Source/LICENSE","role":"upstream license"},
+    {"source":"Aetherfront-Source/README.md","role":"upstream README"},
+    {"source":"Aetherfront-Source/CONTRIBUTING.md","role":"upstream contribution guidance"},
+    {"source":"Aetherfront-Source/CODE_OF_CONDUCT.md","role":"upstream community guidance"},
+    {"source":"Aetherfront-Source/global.json","role":"fork SDK pin"},
+    {"source":"Aetherfront-Source/LunaMultiPlayer.sln","role":"fork solution"},
+    {"source":"Aetherfront-Source/LMP Readme.txt","role":"upstream attribution"},
+    {"source":"Aetherfront-Source/Server/Config/AetherfrontResearch.json","role":"checked-in fork research content, not live configuration"},
+    {"source":"Aetherfront-Source/Server/Config/AetherfrontTechnology.json","role":"checked-in fork technology content, not live configuration"},
+    {"source":"KESAS-RC15-Work/ClientText.json","role":"first-party UI text graft input"},
+    {"source":"APFDiscordBot/package.json","role":"Node dependency versions"},
+    {"source":"APFDiscordBot/package-lock.json","role":"Node dependency lock"},
+    {"source":"APFDiscordBot/config.example.json","role":"example configuration only"},
+    {"source":"APFDiscordBot/.env.example","role":"environment variable placeholders only"},
+    {"source":"APFDiscordBot/README.md","role":"bot operator documentation"},
+    {"source":"APFDiscordBot/UPDATES.md","role":"bot release workflow"},
+    {"source":"Aetherfront-RC22-Work/APFApplyUpdate.ps1","role":"RC22 update helper"},
+    {"source":"Aetherfront-RC22-Work/Build-Code.ps1","role":"RC22 build gate"},
+    {"source":"Aetherfront-RC22-Work/Build-Release.ps1","role":"RC22 assembly recipe, excluded inputs required"},
+    {"source":"Aetherfront-RC22-Work/Configure-GitHubRelease.ps1","role":"RC22 GitHub configuration recipe"},
+    {"source":"Aetherfront-RC22-Work/Export-Starter.ps1","role":"RC22 starter assembly"},
+    {"source":"Aetherfront-RC22-Work/GITHUB-SETUP.txt","role":"RC22 publication documentation"},
+    {"source":"Aetherfront-RC22-Work/GitHub.Publish.ps1","role":"RC22 publication implementation, not executed"},
+    {"source":"Aetherfront-RC22-Work/Install-GitHubPublisher.ps1","role":"RC22 publication installation recipe, not executed"},
+    {"source":"Aetherfront-RC22-Work/KESASLauncher.ps1","role":"RC22 launcher"},
+    {"source":"Aetherfront-RC22-Work/PLAYER-INSTALL.txt","role":"RC22 player installation documentation"},
+    {"source":"Aetherfront-RC22-Work/Preload-GitHubMedia.ps1","role":"RC22 media workflow source only"},
+    {"source":"Aetherfront-RC22-Work/Prepare-Candidate.ps1","role":"RC22 candidate recipe, not executed"},
+    {"source":"Aetherfront-RC22-Work/Probe-GitHubPublic.ps1","role":"RC22 public transport probe source only"},
+    {"source":"Aetherfront-RC22-Work/Probe-Starter.ps1","role":"RC22 probe source only"},
+    {"source":"Aetherfront-RC22-Work/Test-GitHubDeployment.ps1","role":"RC22 deployment tests, not executed"},
+    {"source":"Aetherfront-RC22-Work/Test-GitHubRecovery.ps1","role":"reviewed native publisher recovery regression source, not executed"},
+    {"source":"Aetherfront-RC22-Work/Test-GitHubPublisher.ps1","role":"RC22 publisher tests, not executed"},
+    {"source":"Aetherfront-RC22-Work/Test-KspRuntime.ps1","role":"RC22 embedded Mono gate, not executed"},
+    {"source":"Aetherfront-RC22-Work/Verify-Live.ps1","role":"RC22 verification recipe, not executed"},
+    {"source":"Aetherfront-RC22-Work/Verify-Starter.ps1","role":"RC22 verification recipe, not executed"},
+    {"source":"KESAS-VPS-Server/Update.Common.ps1","role":"deployment helper source, no configuration or keys"},
+    {"source":"KESAS-VPS-Server/Publish-Release.ps1","role":"current deployment implementation, not executed"},
+    {"source":"KESAS-VPS-Server/GitHub.Publish.ps1","role":"installed reviewed GitHub publication helper source, not executed"},
+    {"source":"KESAS-VPS-Server/Start-Server.ps1","role":"deployment recipe, not executed"},
+    {"source":"KESAS-VPS-Server/Stop-Server.ps1","role":"deployment recipe, not executed"},
+    {"source":"KESAS-VPS-Server/Export-Client.ps1","role":"deployment export recipe, not executed"},
+    {"source":"KESAS-VPS-Server/Configure-Server.ps1","role":"deployment configuration recipe, not executed"}
+  ],
+  "binaryPrerequisites": ["KESAS-Import-rc11/LmpClient-rc11.dll", "KESAS-Client-Baselines/RC13/LmpClient.dll", "KESAS-RC14-Work/LmpClient-rc14.dll", "KESAS-RC15-Work/Inputs/ApfCore.dll", "KESAS-RC15-Work/Inputs/AetherfrontCore.dll", "KESAS-RC15-Work/Inputs/JsonFx.dll", "KESAS-RC16-Work/LmpClient.dll", "KESAS-RC16-Work/ApfCore.dll", "KESAS-RC17-Work/Patched/ApfCore.dll", "Aetherfront-RC19-Work/Patched/LmpClient.dll", "Aetherfront-RC19-Work/Patched/ApfCore.dll", "KESAS-VPS-Server/Server/Server.dll"],
+  "exclusions": ["All Git history and Git metadata; CI workflows and operator/editor settings", "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs", "All KSP/Unity paid or proprietary assemblies and KSP installations", "All mod/pack assets and package archives, imported/decompiled binaries or sources", "All private/public key files, tokens, certificates, environment secrets and actual bot/server/deployment configuration", "All logs, diagnostics, player identities, universe/saves/runtime state and machine-only caches", "Old handoff with deployment credentials; machine-local directory selection and copy batch helpers", "Aetherfront-Source/LmpMasterServer/app.config and MasterServer/app.config omitted entirely because embedded credential-like values have ambiguous provenance", "Generated test fixture outputs and historical runtime/candidate/release/backup snapshots", "UnityTlsSmoke is still changing and intentionally deferred to a later reviewed source refresh", "Images/icons are omitted even when upstream-owned; original project resource references may require adaptation"]
+}
