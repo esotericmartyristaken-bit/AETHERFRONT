@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-17T06:45:45.2360294Z",
+  "createdUtc": "2026-10-17T06:53:44.0663320Z",
   "publication": "STAGED ONLY; not pushed",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -26158,8 +26158,8 @@
       "path": "TESTING.md",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 13029,
-      "sha256": "5ea0ec05108a4baa29c945252d88407ea9874522a0296de645276366f40146bf",
+      "bytes": 13841,
+      "sha256": "1c3acd6044431bc41fdf804631712981fed72650a15750ca16ba73e6b6bd21ed",
       "sourceSha256": null,
       "transformations": []
     },
@@ -26191,7 +26191,7 @@
       "transformations": []
     }
   ],
-  "totalFileBytes": 13383727,
+  "totalFileBytes": 13384539,
   "exclusions": [
     "All Git history and Git metadata; CI workflows and operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",

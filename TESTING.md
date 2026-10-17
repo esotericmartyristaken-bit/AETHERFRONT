@@ -37,8 +37,19 @@ Current execution evidence:
   save, identity, selected server, profile and profile preference. These are
   direct helper-application tests, not proof every historical Connect repairs
   itself. RC24's own helper ran headlessly and did not auto-restart.
-- Live deployment and the separate old-Connect network migration remain pending.
-  No full Unity gameplay session is claimed.
+- RC24 activated at 2026-10-17 06:51:40 UTC through the existing 15-minute
+  workflow's empty-server gate. Native signature/file verification, bridge and
+  listener ownership, pinned HTTPS health and protected configuration hashes
+  passed. Vanilla and the bot retained their original processes.
+- Anonymous downloads of all three RC24 release assets matched native bytes;
+  the 463-file signature/inventory and all 218 media assets verified. The public
+  starter SHA256 is
+  `5d42c4df07e82425e0677cd0a48fd0ea28fe733f7f8d873e5339d16d01b87b7a`.
+- The actual old RC23 Connect implementation fetched the signed RC24 client
+  through GitHub and applied it with its existing native helper. All 463 installed
+  hashes matched. Save, identity, Potato selection and partial cache survived.
+  This network check covers client migration, not a fresh full-modpack install.
+- No full Unity gameplay session or RC24 full-profile reconnect is claimed.
 
 The patcher verified 6,311 unrelated client methods and 684 unrelated core
 methods unchanged. The native guard hooks are active only inside the post-exit
