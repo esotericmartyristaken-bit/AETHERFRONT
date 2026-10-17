@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-17T06:09:13.3477891Z",
+  "createdUtc": "2026-10-17T06:45:45.2360294Z",
   "publication": "STAGED ONLY; not pushed",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -10,12 +10,12 @@
     "commit": "60a2ed5dbfdddc08536a98b999c781e3c12b0649",
     "commitEvidence": "Sibling LunaMultiplayer-Source git metadata and existing handoff documentation; not a commit identity for the modified export."
   },
-  "rebuildStatus": "NOT independently rebuildable as shipping RC23 from this export alone; authenticated RC22 baseline and licensed game dependencies are required; see SOURCE-PROVENANCE.md",
+  "rebuildStatus": "NOT independently rebuildable as shipping RC24 from this export alone; authenticated RC23 baseline and licensed game dependencies are required; see SOURCE-PROVENANCE.md",
   "concurrentSourceReviewPending": false,
   "integrationGates": [
     "Unity gameplay and mixed-profile landing validation remain user-run; automated checks are documented in TESTING.md"
   ],
-  "excludedDirectoryCount": 200,
+  "excludedDirectoryCount": 216,
   "excludedReparsePointCount": 0,
   "files": [
     {
@@ -1434,6 +1434,236 @@
       "sha256": "e3cf93cb5663e4eba6753d045e7cecd6ed295ce0db33acfae626f6aa70fc79f9",
       "sourceSha256": "e3cf93cb5663e4eba6753d045e7cecd6ed295ce0db33acfae626f6aa70fc79f9",
       "sourceModifiedUtc": "2026-10-17T06:06:35.5236009Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC24-Work/APFApplyUpdate.ps1",
+      "source": "Aetherfront-RC24-Work/APFApplyUpdate.ps1",
+      "role": "RC24 shadow-loaded native helper and explicit completion window",
+      "bytes": 2690,
+      "sha256": "61684395c76fe1f53027defff747377ce8084adad42b11a4478372e67ea57a00",
+      "sourceSha256": "61684395c76fe1f53027defff747377ce8084adad42b11a4478372e67ea57a00",
+      "sourceModifiedUtc": "2026-10-17T06:29:41.2721662Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC24-Work/Build-Release.ps1",
+      "source": "Aetherfront-RC24-Work/Build-Release.ps1",
+      "role": "RC24 build from authenticated RC23 template",
+      "bytes": 6063,
+      "sha256": "0c770ae9e265e8ea2f849c52ac4b8482a66f15e02fef4d906d1992a504f1116e",
+      "sourceSha256": "0c770ae9e265e8ea2f849c52ac4b8482a66f15e02fef4d906d1992a504f1116e",
+      "sourceModifiedUtc": "2026-10-17T06:29:41.270168Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC24-Work/Engine/Engine.csproj",
+      "source": "Aetherfront-RC24-Work/Engine/Engine.csproj",
+      "role": "RC24 explicit-restart installer, native guards and regression sources",
+      "bytes": 733,
+      "sha256": "7bd5b554455f5dcf6195ca4c2e7baa1b907a59175e60706b6fbfe522c4ee3f8c",
+      "sourceSha256": "7bd5b554455f5dcf6195ca4c2e7baa1b907a59175e60706b6fbfe522c4ee3f8c",
+      "sourceModifiedUtc": "2026-10-17T06:22:25.1528497Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC24-Work/Engine/Installer.cs",
+      "source": "Aetherfront-RC24-Work/Engine/Installer.cs",
+      "role": "RC24 explicit-restart installer, native guards and regression sources",
+      "bytes": 35320,
+      "sha256": "89e3aa7f0ddea70499fed6c6b77d8a11512a0e271e6e80c8159850a942a69188",
+      "sourceSha256": "89e3aa7f0ddea70499fed6c6b77d8a11512a0e271e6e80c8159850a942a69188",
+      "sourceModifiedUtc": "2026-10-17T06:22:25.1558512Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC24-Work/Engine/NativeInstall.cs",
+      "source": "Aetherfront-RC24-Work/Engine/NativeInstall.cs",
+      "role": "RC24 explicit-restart installer, native guards and regression sources",
+      "bytes": 12349,
+      "sha256": "97c2124406c096b15910b00f7c7827a4ba758a3c0f1efed08a1888219dfb99a9",
+      "sourceSha256": "97c2124406c096b15910b00f7c7827a4ba758a3c0f1efed08a1888219dfb99a9",
+      "sourceModifiedUtc": "2026-10-17T06:30:29.6385603Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC24-Work/Engine/PostExit.cs",
+      "source": "Aetherfront-RC24-Work/Engine/PostExit.cs",
+      "role": "RC24 explicit-restart installer, native guards and regression sources",
+      "bytes": 2281,
+      "sha256": "ce110f8153baac895f48ef00891d4193374bdf82b179e6edd2e143e29e9c8aba",
+      "sourceSha256": "ce110f8153baac895f48ef00891d4193374bdf82b179e6edd2e143e29e9c8aba",
+      "sourceModifiedUtc": "2026-10-17T06:22:25.1817728Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC24-Work/GitHubTests/GitHubTests.csproj",
+      "source": "Aetherfront-RC24-Work/GitHubTests/GitHubTests.csproj",
+      "role": "RC24 explicit-restart installer, native guards and regression sources",
+      "bytes": 612,
+      "sha256": "157b2add21dd11899c809bce0630ea3341f1adc27608303d7b4b2c8e5dab8711",
+      "sourceSha256": "157b2add21dd11899c809bce0630ea3341f1adc27608303d7b4b2c8e5dab8711",
+      "sourceModifiedUtc": "2026-10-17T06:30:52.0676341Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC24-Work/NativeTests/NativeTests.csproj",
+      "source": "Aetherfront-RC24-Work/NativeTests/NativeTests.csproj",
+      "role": "RC24 explicit-restart installer, native guards and regression sources",
+      "bytes": 724,
+      "sha256": "9c6e2e5d9eb7e54ac3eb70e810d0e809144b04cbf30a51acd4bb89e4c28b0993",
+      "sourceSha256": "9c6e2e5d9eb7e54ac3eb70e810d0e809144b04cbf30a51acd4bb89e4c28b0993",
+      "sourceModifiedUtc": "2026-10-17T06:26:53.5924419Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC24-Work/NativeTests/Program.cs",
+      "source": "Aetherfront-RC24-Work/NativeTests/Program.cs",
+      "role": "RC24 explicit-restart installer, native guards and regression sources",
+      "bytes": 18503,
+      "sha256": "4fb004da296ca8fc690a50a289e0c4e2061f8a57abaefc4f7a9648c9a477c01a",
+      "sourceSha256": "4fb004da296ca8fc690a50a289e0c4e2061f8a57abaefc4f7a9648c9a477c01a",
+      "sourceModifiedUtc": "2026-10-17T06:38:53.8522893Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC24-Work/NativeUi/InstallWindow.cs",
+      "source": "Aetherfront-RC24-Work/NativeUi/InstallWindow.cs",
+      "role": "RC24 explicit-restart installer, native guards and regression sources",
+      "bytes": 11450,
+      "sha256": "70953987d01d6494e90bf6548f5d171f4420409cd23f429bac5532dfdf5b49a4",
+      "sourceSha256": "70953987d01d6494e90bf6548f5d171f4420409cd23f429bac5532dfdf5b49a4",
+      "sourceModifiedUtc": "2026-10-17T06:26:45.649831Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC24-Work/NativeUi/NativeUi.csproj",
+      "source": "Aetherfront-RC24-Work/NativeUi/NativeUi.csproj",
+      "role": "RC24 explicit-restart installer, native guards and regression sources",
+      "bytes": 615,
+      "sha256": "afaeb2888191f7f649875b1213891b4f920434637875a95709dd469d6018ee4b",
+      "sourceSha256": "afaeb2888191f7f649875b1213891b4f920434637875a95709dd469d6018ee4b",
+      "sourceModifiedUtc": "2026-10-17T06:23:34.7720952Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC24-Work/NativeUi/Test-InstallWindow.ps1",
+      "source": "Aetherfront-RC24-Work/NativeUi/Test-InstallWindow.ps1",
+      "role": "RC24 explicit-restart installer, native guards and regression sources",
+      "bytes": 6110,
+      "sha256": "d8ee09714a665251319023e45ff0b9c4bd65bb34b916a6ec09cff6f4a28dfc22",
+      "sourceSha256": "d8ee09714a665251319023e45ff0b9c4bd65bb34b916a6ec09cff6f4a28dfc22",
+      "sourceModifiedUtc": "2026-10-17T06:28:03.520944Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC24-Work/NativeUi/Test-VisibleInstall.ps1",
+      "source": "Aetherfront-RC24-Work/NativeUi/Test-VisibleInstall.ps1",
+      "role": "RC24 explicit-restart installer, native guards and regression sources",
+      "bytes": 11714,
+      "sha256": "08135bc0f0e854f52d9134ab49924fd2f5221851f5a798081b15f113165c5a49",
+      "sourceSha256": "08135bc0f0e854f52d9134ab49924fd2f5221851f5a798081b15f113165c5a49",
+      "sourceModifiedUtc": "2026-10-17T06:38:15.6478704Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC24-Work/NetworkUpgrade/NetworkUpgrade.csproj",
+      "source": "Aetherfront-RC24-Work/NetworkUpgrade/NetworkUpgrade.csproj",
+      "role": "RC24 explicit-restart installer, native guards and regression sources",
+      "bytes": 788,
+      "sha256": "c5079a2f6f21b776984a3cfdb0d9f33e755058e988386e60281030ab7dd550c8",
+      "sourceSha256": "c5079a2f6f21b776984a3cfdb0d9f33e755058e988386e60281030ab7dd550c8",
+      "sourceModifiedUtc": "2026-10-17T06:40:50.2890917Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC24-Work/NetworkUpgrade/Program.cs",
+      "source": "Aetherfront-RC24-Work/NetworkUpgrade/Program.cs",
+      "role": "RC24 explicit-restart installer, native guards and regression sources",
+      "bytes": 5005,
+      "sha256": "c92b56d5d6c5d955df358f9dbb30fb6ec4709ff4a91d24ac52bc3503e052f652",
+      "sourceSha256": "c92b56d5d6c5d955df358f9dbb30fb6ec4709ff4a91d24ac52bc3503e052f652",
+      "sourceModifiedUtc": "2026-10-17T06:40:50.3092313Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC24-Work/Patcher/Patcher.csproj",
+      "source": "Aetherfront-RC24-Work/Patcher/Patcher.csproj",
+      "role": "RC24 explicit-restart installer, native guards and regression sources",
+      "bytes": 400,
+      "sha256": "5b800bb3edd433c49f4eeccdf57105d3a1d175c59b148e26d9df23cf1656c55d",
+      "sourceSha256": "5b800bb3edd433c49f4eeccdf57105d3a1d175c59b148e26d9df23cf1656c55d",
+      "sourceModifiedUtc": "2026-10-17T06:24:32.7382441Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC24-Work/Patcher/Program.cs",
+      "source": "Aetherfront-RC24-Work/Patcher/Program.cs",
+      "role": "RC24 explicit-restart installer, native guards and regression sources",
+      "bytes": 7548,
+      "sha256": "7d34112a65795e4eed2ef25e89a64458dca5e5104d7629ea64c24c2630517c08",
+      "sourceSha256": "7d34112a65795e4eed2ef25e89a64458dca5e5104d7629ea64c24c2630517c08",
+      "sourceModifiedUtc": "2026-10-17T06:24:32.7767776Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC24-Work/PLAYER-INSTALL.txt",
+      "source": "Aetherfront-RC24-Work/PLAYER-INSTALL.txt",
+      "role": "RC24 player installation and permanent-removal instructions",
+      "bytes": 2235,
+      "sha256": "03814b9e02c3f494a0692d38d265315d10e0405068094bf8ec219c6af4389e67",
+      "sourceSha256": "03814b9e02c3f494a0692d38d265315d10e0405068094bf8ec219c6af4389e67",
+      "sourceModifiedUtc": "2026-10-17T06:28:38.2512738Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC24-Work/Test-Helper.ps1",
+      "source": "Aetherfront-RC24-Work/Test-Helper.ps1",
+      "role": "RC24 native PowerShell helper regression source",
+      "bytes": 4754,
+      "sha256": "7dc92e160a38eac49a4776f388e4c0a46aa3901bb0f19b9326a9dd2bffa7d932",
+      "sourceSha256": "7dc92e160a38eac49a4776f388e4c0a46aa3901bb0f19b9326a9dd2bffa7d932",
+      "sourceModifiedUtc": "2026-10-17T06:32:56.8285923Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC24-Work/Test-Transfer.ps1",
+      "source": "Aetherfront-RC24-Work/Test-Transfer.ps1",
+      "role": "RC24 Windows CLR and KSP Mono regression runner",
+      "bytes": 814,
+      "sha256": "d153c29e13db3dd30321782127dc996a964f74aad76bceb7c798c99fa8197d85",
+      "sourceSha256": "d153c29e13db3dd30321782127dc996a964f74aad76bceb7c798c99fa8197d85",
+      "sourceModifiedUtc": "2026-10-17T06:30:52.0701911Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC24-Work/TransferTests/TransferTests.csproj",
+      "source": "Aetherfront-RC24-Work/TransferTests/TransferTests.csproj",
+      "role": "RC24 explicit-restart installer, native guards and regression sources",
+      "bytes": 614,
+      "sha256": "04bbdcfdf2d7a7734d39f0cf70dbb56f82cb737a1a03bb18cb9ae2217179b81b",
+      "sourceSha256": "04bbdcfdf2d7a7734d39f0cf70dbb56f82cb737a1a03bb18cb9ae2217179b81b",
+      "sourceModifiedUtc": "2026-10-17T06:30:52.0574485Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC24-Work/UpgradeTests/Program.cs",
+      "source": "Aetherfront-RC24-Work/UpgradeTests/Program.cs",
+      "role": "RC24 explicit-restart installer, native guards and regression sources",
+      "bytes": 7296,
+      "sha256": "d43faeb5d86feee06ac5a9a2414f41c61c7d60c219160bb3bc76cdbad4859df2",
+      "sourceSha256": "d43faeb5d86feee06ac5a9a2414f41c61c7d60c219160bb3bc76cdbad4859df2",
+      "sourceModifiedUtc": "2026-10-17T06:34:58.1148515Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC24-Work/UpgradeTests/UpgradeTests.csproj",
+      "source": "Aetherfront-RC24-Work/UpgradeTests/UpgradeTests.csproj",
+      "role": "RC24 explicit-restart installer, native guards and regression sources",
+      "bytes": 498,
+      "sha256": "8cec816b1a117e1997190fe0d6085268dfe5bdf12bbbd81f4ce524c8e0bdde9e",
+      "sourceSha256": "8cec816b1a117e1997190fe0d6085268dfe5bdf12bbbd81f4ce524c8e0bdde9e",
+      "sourceModifiedUtc": "2026-10-16T23:39:48.926777Z",
       "transformations": []
     },
     {
@@ -25847,8 +26077,8 @@
       "path": "README.md",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 2408,
-      "sha256": "be5a200c72a1131a26e1ff929b1f23a20ca3ab0d8d17c00977f861ff98147126",
+      "bytes": 2753,
+      "sha256": "ddd176b624ed4e71a6b3e799257c97f5eebf5b1e65e71798292d1de189d86772",
       "sourceSha256": null,
       "transformations": []
     },
@@ -25883,8 +26113,8 @@
       "path": "SOURCE-PROVENANCE.md",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 13342,
-      "sha256": "bf1b56d3101e2e5ebf863df92df37aee9ccf4f7d39227a58334b357584a83d25",
+      "bytes": 14059,
+      "sha256": "3f8a18a69811975611a2c41529168b44f41766d13d36406e5bf7e0e2fef3ff5a",
       "sourceSha256": null,
       "transformations": []
     },
@@ -25901,8 +26131,8 @@
       "path": "export-policy.json",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 15737,
-      "sha256": "143fdc9811adf7c395e4d8a76f8a1bb5165855349701d0f9c56d5656412bd374",
+      "bytes": 16796,
+      "sha256": "085b0e2edbb65854bc00591f67b0bcee1d133fee0d964504f4d833efde9adb44",
       "sourceSha256": null,
       "transformations": []
     },
@@ -25928,8 +26158,8 @@
       "path": "TESTING.md",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 9679,
-      "sha256": "80476f6834239ce62bf1f84f63ed709fc496f1e332fe6281b3b78b3bc7620257",
+      "bytes": 13029,
+      "sha256": "5ea0ec05108a4baa29c945252d88407ea9874522a0296de645276366f40146bf",
       "sourceSha256": null,
       "transformations": []
     },
@@ -25961,7 +26191,7 @@
       "transformations": []
     }
   ],
-  "totalFileBytes": 13239140,
+  "totalFileBytes": 13383727,
   "exclusions": [
     "All Git history and Git metadata; CI workflows and operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",

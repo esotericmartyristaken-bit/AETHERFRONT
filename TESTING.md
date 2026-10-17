@@ -1,4 +1,51 @@
-# RC23 verification
+# RC24 verification
+
+RC24 keeps all RC23 Regular and Potato package declarations. Native installation
+now has a visible, responsive progress window and a success-only Restart KSP
+button. Neither pack nor client helper restarts automatically. Both executable
+names are locked during application/verification and until completion is
+acknowledged. Extra-mod removal still requires approval; approved removed mods
+are permanently deleted without a content backup. Replaced managed files and
+state retain failure recovery.
+
+Current execution evidence:
+
+- Forty-six native checks passed, including actual CreateProcess rejection
+  for both executable names while locked, explicit restart, authenticated apply,
+  removed-mod backup absence, replacement-file recovery and player preservation.
+  Edge cases cover replacement/removal collisions, bare deletion paths,
+  overlapping completion ownership and forced final-scan failure. Failed-scan
+  rollback restored managed content/state without restoring permanently removed
+  extra mods.
+- Thirty-one hidden STA completion-window checks passed. These cover close
+  blocking, success-only explicit restart, failure details and rollback without a
+  restart action. A separate rendered preview was visually inspected.
+- The production Windows PowerShell shadow loader passed with the desktop UI
+  loaded from its `.bin` payload, authenticated pack application, a final helper
+  completion marker and released execution locks.
+- All 394 GitHub/redirect checks passed on Windows CLR and the exact KSP Mono
+  runtime. All 41 transfer checks passed on each runtime. The first CLR transfer
+  attempt failed its observed-parallelism assertion; the exact unchanged
+  executable passed on rerun. The original failed log is retained; its cause was
+  not independently established and is not relabeled as a pass.
+- Twenty-eight actual visible-window integration checks passed in 5.12 seconds:
+  the real form started the native worker, rejected closing while busy, completed
+  verification without automatically launching a process, and its explicit
+  restart button launched the owned GameStub. This is not Unity gameplay testing.
+- Fourteen helper-application baselines passed: RC13 through RC24, damaged RC13
+  and Potato RC16. Every run verified all 463 signed files and preservation of
+  save, identity, selected server, profile and profile preference. These are
+  direct helper-application tests, not proof every historical Connect repairs
+  itself. RC24's own helper ran headlessly and did not auto-restart.
+- Live deployment and the separate old-Connect network migration remain pending.
+  No full Unity gameplay session is claimed.
+
+The patcher verified 6,311 unrelated client methods and 684 unrelated core
+methods unchanged. The native guard hooks are active only inside the post-exit
+helper. Final helper completion is recorded separately from the core transaction
+log, after graphics/profile writes succeed.
+
+## RC23 verification
 
 RC23 changes Potato's Kcalbeloh texture declaration to the unmodified official
 `v1.1.8` 4K archive. Regular's 210 package declarations and the other 175 Potato
@@ -28,9 +75,14 @@ missing-file detection and preservation of unrelated data. The repeated final
 phase used an explicitly re-established preservation checkpoint; the first three
 phase proofs were retained. Final positive result: 2026-10-17 06:08:02 UTC.
 
-The live RC22-to-RC23 connection check remains pending activation. These tests use
-owned headless fixtures, not a real gameplay session. Full-profile rendering and
-mixed-profile landings are not claimed.
+RC23 activated and passed native readiness and anonymous GitHub verification:
+all three release assets matched native bytes, all 462 signed files verified and
+all 218 media assets matched. Vanilla and the bot were unchanged. The separate
+RC22 Connect test upgraded its client to RC23 and downloaded the official 4K
+archive, but timed out fetching the final pinned-origin pack metadata before
+application. That run is retained as a failure, not an installation pass. These
+tests use owned headless fixtures, not a real gameplay session. Full-profile
+rendering and mixed-profile landings are not claimed.
 
 An initial isolated-fixture test correctly failed because it declared the entire
 modpack while staging only one texture package. The corrected focused fixture

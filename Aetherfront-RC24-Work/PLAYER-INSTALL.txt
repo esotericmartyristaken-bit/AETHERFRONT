@@ -1,0 +1,37 @@
+Aetherfront - Windows KSP 1.12.5
+
+1. Close KSP. Extract the starter ZIP into a licensed KSP 1.12.5 game folder,
+   beside KSP_x64.exe. Merge the folders. Keep Squad and any DLC you own.
+2. Launch KSP. Open Aetherfront, enter your name, server IP and port, choose
+   Regular or Potato, then Connect.
+3. Approve the listed removal of any unrelated mods, or cancel to keep them.
+   Approved removed mods are permanently deleted, without a recovery backup.
+4. Downloads finish in game. KSP then closes so loaded files can be replaced.
+   A separate Aetherfront installation window shows installation progress.
+   Do not open KSP while this window is installing or verifying files.
+5. When installation has passed verification, click Restart KSP. You can also
+   close the completed window and start KSP later. KSP never restarts itself.
+
+Connect checks the selected server and downloads only missing or changed
+packages. Verified downloads remain cached after interruption. Earlier client
+versions can update directly to the current version. An older updater may still
+restart automatically for its first client-only migration; subsequent pack
+installation uses the new completion window.
+
+Regular and Potato share gameplay content. Potato removes optional graphics
+and sound effects and uses low graphics settings. Potato uses the official
+Kcalbeloh 4K textures; Regular uses 8K. Height and biome maps are identical.
+Your profile choice is saved; change it from the main menu, then Connect.
+
+Saves, identity and controls are preserved. Replaced managed files retain
+failure recovery under APF/.transaction-backup. This does not include approved
+removed mods. Returning to Regular restores the graphics settings saved before
+Potato mode. Never share your player identity or private keys.
+
+If installation fails, KSP is not restarted. Keep it closed and retain
+APF/APFUpdater.log, APF/LastInstallResult.json and recovery data for diagnosis.
+Only a complete LastInstallResult.json entry means every helper stage finished;
+a pack transaction log entry alone does not include final graphics settings.
+
+Only servers matching the starter's trusted certificate and signing key can
+provide updates. Typing another IP does not bypass these checks.

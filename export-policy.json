@@ -36,6 +36,11 @@
       "extensions": [".cs", ".csproj"]
     },
     {
+      "role": "RC24 explicit-restart installer, native guards and regression sources",
+      "directories": ["Aetherfront-RC24-Work/Engine", "Aetherfront-RC24-Work/Patcher", "Aetherfront-RC24-Work/NativeUi", "Aetherfront-RC24-Work/NativeTests", "Aetherfront-RC24-Work/UpgradeTests", "Aetherfront-RC24-Work/NetworkUpgrade", "Aetherfront-RC24-Work/TransferTests", "Aetherfront-RC24-Work/GitHubTests"],
+      "extensions": [".cs", ".csproj", ".ps1"]
+    },
+    {
       "role": "historical regression and helper sources required by the shipping patch lineage",
       "directories": ["KESAS-RC14-Work/UpdaterFixture", "KESAS-RC15-Work/UpdaterFixture", "KESAS-RC16-Work/Tests", "KESAS-RC16-Work/UpdaterFixture", "KESAS-RC17-Work/UpdaterFixture", "Aetherfront-RC18-Work/Tests", "Aetherfront-RC18-Work/BinaryChecks", "Aetherfront-RC18-Work/GameStub", "Aetherfront-RC19-Work/Tests", "Aetherfront-RC19-Work/MonoAudit", "Aetherfront-RC19-Work/GameStub", "Aetherfront-RC19-Work/BinaryChecks", "Aetherfront-RC20-Work/Tests", "Aetherfront-RC20-Work/MonoHost", "Aetherfront-RC20-Work/MonoAudit", "Aetherfront-RC20-Work/TransferTests", "Aetherfront-RC20-Work/GameStub", "Aetherfront-RC20-Work/BinaryChecks", "Aetherfront-RC21-Work/Tests", "Aetherfront-RC21-Work/MonoHost", "Aetherfront-RC21-Work/MonoAudit", "Aetherfront-RC21-Work/TransferTests", "Aetherfront-RC21-Work/GameStub", "Aetherfront-RC21-Work/BinaryChecks"],
       "extensions": [".cs", ".csproj", ".ps1", ".cpp", ".c", ".h"]
@@ -47,6 +52,11 @@
     }
   ],
   "explicitFiles": [
+    {"source":"Aetherfront-RC24-Work/Build-Release.ps1","role":"RC24 build from authenticated RC23 template"},
+    {"source":"Aetherfront-RC24-Work/APFApplyUpdate.ps1","role":"RC24 shadow-loaded native helper and explicit completion window"},
+    {"source":"Aetherfront-RC24-Work/PLAYER-INSTALL.txt","role":"RC24 player installation and permanent-removal instructions"},
+    {"source":"Aetherfront-RC24-Work/Test-Transfer.ps1","role":"RC24 Windows CLR and KSP Mono regression runner"},
+    {"source":"Aetherfront-RC24-Work/Test-Helper.ps1","role":"RC24 native PowerShell helper regression source"},
     {"source":"Aetherfront-RC23-Work/Build-Release.ps1","role":"RC23 official 4K profile build recipe"},
     {"source":"Aetherfront-RC23-Work/Compare-Kcalbeloh.ps1","role":"unmodified upstream texture and gameplay-map comparison"},
     {"source":"Aetherfront-RC23-Work/Prepare-Media.ps1","role":"verified immutable RC23 media preparation"},

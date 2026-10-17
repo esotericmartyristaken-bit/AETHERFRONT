@@ -8,6 +8,7 @@ Source-only maintenance snapshot for `esotericmartyristaken-bit/AETHERFRONT`. Th
 - `KESAS-RC12-Work/`, `KESAS-RC14-Work/` through `KESAS-RC17-Work/`, and `Aetherfront-RC18-Work/` through `Aetherfront-RC22-Work/`: selected shipping-client patch lineage, installer/downloader overlays, build scripts and regression sources. RC22 adds GitHub transport, publisher and deployment tests. These are not release assets.
 - `APFDiscordBot/` and `Aetherfront-Source/APFDiscordBridge/`: integration source, examples and tests, without production configuration or state.
 - `Aetherfront-RC23-Work/`: a version-only derivative of the authenticated RC22 client, an official Kcalbeloh 4K Potato texture declaration, comparison tooling and focused installer/connection tests. Regular package declarations are unchanged. The unmodified official texture archive is a release asset, not committed source.
+- `Aetherfront-RC24-Work/`: installer source, a desktop-only completion window, six guarded core hooks, authenticated RC23 client patching and focused native/upgrade/runtime tests. Both profiles retain their RC23 package declarations. The desktop window is shipped as a `.bin` payload, not a KSP-loaded plugin DLL.
 - `KESAS-VPS-Server/`: explicitly selected deployment scripts only. They can stop/start/publish when invoked by an operator; do not run them as a build/test shortcut.
 - `SOURCE-MANIFEST.json`: per-file original and staged SHA-256, role, source path, transformations, snapshot timestamp and exclusions. Paths are relative to the original workspace, not personal absolute paths.
 - `BINARY-PREREQUISITES.json`: fingerprints of excluded baseline assemblies available during export. Presence is not permission to redistribute them and is not proof that a source tree exactly matches a deployed binary.
@@ -19,6 +20,8 @@ Upstream base: Luna Multiplayer `0.29.2`, commit `60a2ed5dbfdddc08536a98b999c781
 ## Build dependencies and limitations
 
 RC23 retains the baseline-source limitation below: its small version patch requires the authenticated RC22 client and separately licensed KSP dependencies. It does not rebuild or alter the installer/core behavior. Future releases must preserve the last activated catalog rather than reverting to the historical RC16 catalog.
+
+RC24 requires the authenticated RC23 baseline. It preserves unrelated client/core methods, adds helper-only executable locks and an explicit restart action, and permanently removes approved extra/profile mods without retaining their content in recovery. Replacement files retain recovery. Its available installer and desktop-window source does not remove the historical full-client source limitation.
 
 **This snapshot alone cannot reproduce the shipping RC22 client or prove equivalence with the deployed server.** The available full fork predates later binary-based client work. The historical patchers preserve methods from excluded RC11/RC13/RC16/RC19 baseline assemblies. Recover the complete corresponding first-party source history, or obtain and privately verify the required baselines before attempting a shipping rebuild. Do not substitute an older full-tree build and call it RC22.
 
