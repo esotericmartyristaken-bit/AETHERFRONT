@@ -46,7 +46,9 @@ var apply=installer.Methods.Single(m=>m.Name=="ApplyTransaction");
 var scan=apply.Body.Instructions.Single(i=>i.Operand is MethodReference m&&m.DeclaringType.FullName=="ApfCore.ApfPackScanner"&&m.Name=="Scan");
 scan.Operand=Hook("RuntimeFiles","ScanFinal");changed.Add(apply.FullName);
 var launch=core.MainModule.GetType("ApfCore.ApfPostExitLauncher").Methods.Single(m=>m.Name=="Launch");
-int timeout=0;foreach(var instruction in launch.Body.Instructions)if(instruction.OpCode==OpCodes.Ldc_I4&&Equals(instruction.Operand,20000)){instruction.Operand=600000;timeout++;}
+// Full-size verification exceeded ten minutes on this host. Keep this bounded,
+// but do not abandon an authenticated helper that is still securing the pack.
+int timeout=0;foreach(var instruction in launch.Body.Instructions)if(instruction.OpCode==OpCodes.Ldc_I4&&Equals(instruction.Operand,20000)){instruction.Operand=1800000;timeout++;}
 if(timeout!=1)throw new InvalidDataException("Unexpected helper handshake timeout sites.");changed.Add(launch.FullName);
 Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(args[2]))!);
 core.MainModule.Mvid=Guid.NewGuid();core.Write(args[2]);

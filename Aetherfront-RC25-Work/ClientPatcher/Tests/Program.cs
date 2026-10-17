@@ -88,7 +88,7 @@ if(args.Length==3) {
     using var integrated=AssemblyDefinition.ReadAssembly(args[0],new ReaderParameters{AssemblyResolver=resolver});
     using var core=AssemblyDefinition.ReadAssembly(args[1],new ReaderParameters{AssemblyResolver=resolver});
     var launch=core.MainModule.GetType("ApfCore.ApfPostExitLauncher").Methods.Single(m=>m.Name=="Launch");
-    Check(launch.Body.Instructions.Count(i=>i.OpCode==OpCodes.Ldc_I4 && Equals(i.Operand,600000))==1,"Integrated core waits at most 600 seconds for readiness");
+    Check(launch.Body.Instructions.Count(i=>i.OpCode==OpCodes.Ldc_I4 && Equals(i.Operand,1800000))==1,"Integrated core waits at most 1800 seconds for readiness");
     var flow=integrated.MainModule.GetType("LmpClient.Apf.ConnectionInstall");
     int resolved=0;
     foreach(var method in new[]{flow,integrated.MainModule.GetType("LmpClient.Windows.Connection.ConnectionWindow"),integrated.MainModule.GetType("LmpClient.Apf.CanonicalStartup")}.SelectMany(t=>t.Methods)
@@ -99,5 +99,5 @@ if(args.Length==3) {
             if(instruction.Operand is Instruction branch)Check(method.Body.Instructions.Contains(branch),"Branch remains inside body");
         }
     Check(!flow.Methods.SelectMany(m=>m.HasBody?m.Body.Instructions:Enumerable.Empty<Instruction>()).Any(i=>i.Operand is MethodReference m && (m.DeclaringType.FullName.StartsWith("System.Windows.Forms") || m.DeclaringType.FullName=="KesasInstall.NativeInstall")),"No in-game native UI invocation");
-    Console.WriteLine($"PASS integration: {resolved} references resolve against main-owned RC25 core and engine; readiness timeout 600000ms.");
+    Console.WriteLine($"PASS integration: {resolved} references resolve against main-owned RC25 core and engine; readiness timeout 1800000ms.");
 }

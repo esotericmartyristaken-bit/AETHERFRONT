@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-17T09:28:53.1318383Z",
+  "createdUtc": "2026-10-17T09:46:18.9757752Z",
   "publication": "Reviewed source-only snapshot. Git publication and runtime deployment are separate operations.",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -1723,20 +1723,20 @@
       "path": "Aetherfront-RC25-Work/ClientPatcher/Program.cs",
       "source": "Aetherfront-RC25-Work/ClientPatcher/Program.cs",
       "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
-      "bytes": 20040,
-      "sha256": "197d898d6954eba000958663edd42f82eff13ad0ae009efc2719a3b576d57a1b",
-      "sourceSha256": "197d898d6954eba000958663edd42f82eff13ad0ae009efc2719a3b576d57a1b",
-      "sourceModifiedUtc": "2026-10-17T08:34:44.786565Z",
+      "bytes": 20043,
+      "sha256": "64e4f76cfbcbe22266c066218b55742c753b4f1c3bad39423b4d625ea2903e95",
+      "sourceSha256": "64e4f76cfbcbe22266c066218b55742c753b4f1c3bad39423b4d625ea2903e95",
+      "sourceModifiedUtc": "2026-10-17T09:41:48.8997598Z",
       "transformations": []
     },
     {
       "path": "Aetherfront-RC25-Work/ClientPatcher/Tests/Program.cs",
       "source": "Aetherfront-RC25-Work/ClientPatcher/Tests/Program.cs",
       "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
-      "bytes": 10303,
-      "sha256": "3b645f9a9b9639ef30918ba79da9a4417f320dcb100ff664366809fcbfc22089",
-      "sourceSha256": "3b645f9a9b9639ef30918ba79da9a4417f320dcb100ff664366809fcbfc22089",
-      "sourceModifiedUtc": "2026-10-17T08:34:44.7941883Z",
+      "bytes": 10306,
+      "sha256": "292a0a572338d5dae2072b89c0a14924c9ecac8322ed18963a0c84cdf9cfe40b",
+      "sourceSha256": "292a0a572338d5dae2072b89c0a14924c9ecac8322ed18963a0c84cdf9cfe40b",
+      "sourceModifiedUtc": "2026-10-17T09:40:13.3464689Z",
       "transformations": []
     },
     {
@@ -1863,10 +1863,10 @@
       "path": "Aetherfront-RC25-Work/CorePatcher/Program.cs",
       "source": "Aetherfront-RC25-Work/CorePatcher/Program.cs",
       "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
-      "bytes": 6136,
-      "sha256": "15f8de39d017881af474717f660fd4cd054c21c76c60bb117e94f84f74098f0c",
-      "sourceSha256": "15f8de39d017881af474717f660fd4cd054c21c76c60bb117e94f84f74098f0c",
-      "sourceModifiedUtc": "2026-10-17T08:20:31.4763784Z",
+      "bytes": 6296,
+      "sha256": "bc361fcc1650c4e7a58e37c3ee2dc181d0aa4051e9fe5a8b0889d7f89c856e02",
+      "sourceSha256": "bc361fcc1650c4e7a58e37c3ee2dc181d0aa4051e9fe5a8b0889d7f89c856e02",
+      "sourceModifiedUtc": "2026-10-17T09:36:42.5698141Z",
       "transformations": []
     },
     {
@@ -26617,7 +26617,7 @@
       "transformations": []
     }
   ],
-  "totalFileBytes": 13765735,
+  "totalFileBytes": 13765901,
   "exclusions": [
     "All Git history and Git metadata; CI workflows and operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",

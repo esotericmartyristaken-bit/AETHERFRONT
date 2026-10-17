@@ -187,16 +187,16 @@ using(var core=AssemblyDefinition.ReadAssembly(args[1])) {
 var report=new{version="kesas-rc25",baselineClientSha256=clientHash,baselineCoreSha256=coreHash,
     donorSha256=Hash(args[2]),engineSha256=Hash(enginePath),clientSha256=Hash(clientOutput),changedMethods=changed.OrderBy(m=>m).ToArray(),
     preservedMethods=preserved,newMethods=allVerified.Keys.Except(pristine.MainModule.Types.SelectMany(Flatten).SelectMany(t=>t.Methods).Select(m=>m.FullName)).ToArray(),
-    resolvedReferences=resolved,serializerGuards=2,coreWritten=false,baselineReadyTimeoutMilliseconds=readyTimeout,requiredReadyTimeoutMilliseconds=600000,
+    resolvedReferences=resolved,serializerGuards=2,coreWritten=false,baselineReadyTimeoutMilliseconds=readyTimeout,requiredReadyTimeoutMilliseconds=1800000,
     canonicalStartupGuard="Awake ownership plus exact-path AddonLoader.StartAddon prefix; noncanonical LmpClient addons are skipped before component creation; rejected components cannot run canonical cleanup.",
     startupGuardLimitation="Cannot undo legacy Awake that ran before the canonical RC25 Awake; approved duplicate-folder cleanup remains required.",
     handshakeScanMethod=fetchAndScan.FullName,handshakeScanOriginalOffset=$"IL_{connectionScanOffset:x4}",handshakeScanReplacedCalls=1,
     handshakeScanTarget=connectionScan.FullName,finalCoreApplyScanUnchanged=true,
-    integrationRequirement="Main-owned core patcher must set ApfPostExitLauncher.Launch timeout to 600000 milliseconds; silent helper owns apply and relaunch."};
+    integrationRequirement="Main-owned core patcher must set ApfPostExitLauncher.Launch timeout to 1800000 milliseconds; silent helper owns apply and relaunch."};
 File.WriteAllText(Path.Combine(output,"audit.json"),JsonSerializer.Serialize(report,new JsonSerializerOptions{WriteIndented=true}));
 Console.WriteLine($"PASS RC25: {changed.Count} existing methods changed; {preserved} methods preserved; {resolved} references resolved; two idempotent serializer guards.");
 Console.WriteLine("LmpClient.dll SHA256 "+report.clientSha256);
-Console.WriteLine("CORE NOT WRITTEN: .ready timeout 20000ms requires main-owned 600000ms patch.");
+Console.WriteLine("CORE NOT WRITTEN: .ready timeout 20000ms requires main-owned 1800000ms patch.");
 
 static string Signature(MethodDefinition method)
 {
