@@ -1,18 +1,18 @@
 {
-  "scannedUtc": "2026-10-17T06:53:42.3136877Z",
-  "filesScanned": 2618,
-  "elapsedSeconds": 13.2285507,
+  "scannedUtc": "2026-10-17T08:57:59.9111170Z",
+  "filesScanned": 2657,
+  "elapsedSeconds": 68.6149463,
   "ruleMilliseconds": {
-    "private-key": 642.6187000000004,
-    "credential-url": 558.1355000000002,
-    "credential-literal": 1980.958400000003,
-    "private-host": 2115.270099999998,
-    "github-token": 591.4216999999999,
-    "user-home": 549.2581999999996,
-    "cloud-key": 521.9567000000002,
-    "discord-token": 1981.8879000000013
+    "github-token": 1717.408399999999,
+    "private-host": 11221.653399999994,
+    "user-home": 1582.017799999999,
+    "discord-token": 10732.805300000013,
+    "private-key": 3279.131400000001,
+    "credential-url": 2076.7657999999997,
+    "credential-literal": 8922.52040000001,
+    "cloud-key": 1077.781700000001
   },
-  "regexTimeoutSecondsPerFileRule": 2,
+  "regexTimeoutSecondsPerFileRule": 5,
   "findingCount": 0,
   "findings": [],
   "reviewedSyntheticMatches": [

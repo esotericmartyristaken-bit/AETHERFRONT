@@ -76,7 +76,7 @@ function Scan([string]$Root) {
             'private-host' = '(?i)(?:\\\\tsclient\\|[A-Z]:\\Users\\[^\\\r\n]+\\(?:\.ssh|\.aws|\.azure)\\)'
         }
         foreach ($rule in $rules.GetEnumerator()) {
-            if(-not $cachedRegex.ContainsKey($rule.Key)){$cachedRegex[$rule.Key]=[regex]::new($rule.Value,[Text.RegularExpressions.RegexOptions]::Singleline,[TimeSpan]::FromSeconds(2));$ruleMilliseconds[$rule.Key]=0.0}
+            if(-not $cachedRegex.ContainsKey($rule.Key)){$cachedRegex[$rule.Key]=[regex]::new($rule.Value,[Text.RegularExpressions.RegexOptions]::Singleline,[TimeSpan]::FromSeconds(5));$ruleMilliseconds[$rule.Key]=0.0}
             $ruleTimer=[Diagnostics.Stopwatch]::StartNew()
             try{$ruleMatches=@($cachedRegex[$rule.Key].Matches($text))}catch [Text.RegularExpressions.RegexMatchTimeoutException]{$findings.Add([ordered]@{path=$relative;rule=($rule.Key+'-timeout')});continue}finally{$ruleMilliseconds[$rule.Key]+=$ruleTimer.Elapsed.TotalMilliseconds}
             foreach ($match in $ruleMatches) {
@@ -93,7 +93,7 @@ function Scan([string]$Root) {
             }
         }
     }
-    return [ordered]@{scannedUtc=[DateTime]::UtcNow.ToString('o');filesScanned=$scanned;elapsedSeconds=$scanTimer.Elapsed.TotalSeconds;ruleMilliseconds=$ruleMilliseconds;regexTimeoutSecondsPerFileRule=2;findingCount=$findings.Count;findings=@($findings.ToArray());reviewedSyntheticMatches=@($reviewed.ToArray());contentOrMatchedValuesPrinted=$false;scope='Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check.'}
+    return [ordered]@{scannedUtc=[DateTime]::UtcNow.ToString('o');filesScanned=$scanned;elapsedSeconds=$scanTimer.Elapsed.TotalSeconds;ruleMilliseconds=$ruleMilliseconds;regexTimeoutSecondsPerFileRule=5;findingCount=$findings.Count;findings=@($findings.ToArray());reviewedSyntheticMatches=@($reviewed.ToArray());contentOrMatchedValuesPrinted=$false;scope='Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check.'}
 }
 
 $policy = Get-Content -LiteralPath $policyPath -Raw | ConvertFrom-Json

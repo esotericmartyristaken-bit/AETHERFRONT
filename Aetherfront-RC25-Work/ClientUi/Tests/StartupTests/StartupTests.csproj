@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net472</TargetFramework><LangVersion>10</LangVersion><AutomaticallyUseReferenceAssemblyPackages>false</AutomaticallyUseReferenceAssemblyPackages><Optimize>true</Optimize></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../CanonicalStartup.cs" Link="CanonicalStartup.cs" />
+    <Reference Include="0Harmony"><HintPath>../../../../Aetherfront-RC24-Work/Candidate/Client/GameData/000_Harmony/0Harmony.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,49 @@
+Aetherfront - Windows KSP 1.12.5
+
+1. Close KSP. Extract the starter ZIP into a licensed KSP 1.12.5 game folder,
+   beside KSP_x64.exe. Merge the folders. Keep Squad and any DLC you own.
+2. Launch KSP. At the main menu, open Aetherfront, enter your name, server IP
+   and port, choose Regular or Potato, then Connect.
+3. Review the listed changes in game. Approve removal of unrelated mods only
+   if you want them permanently deleted, without a removed-mod backup. Cancel
+   to keep your installed files. Approval alone does not begin the commit.
+4. Download, preparation and verification progress stays in the game window.
+   Wait for the explicit Restart & apply button. KSP stays open until you
+   choose that button; Cancel keeps the current installation.
+5. Click Restart & apply once when ready. This authorizes the prepared client
+   and selected pack update together. KSP closes normally; a hidden helper
+   commits and verifies the files, then relaunches KSP. No external installation
+   window opens. Do not force-close KSP or the helper during this commit, and
+   do not start another KSP instance while waiting for the verified relaunch.
+
+Connect downloads only missing or changed packages. Verified downloads remain
+cached after interruption. If files already match, Connect joins without an
+installation restart. Do not close KSP during preparation unless you first
+cancel and wait for cancellation to finish.
+
+One legacy transition: an installation still running RC24 or earlier must first
+migrate using its OLD updater code. That migration may show the old external
+completion window or use its old restart behavior. Follow that window's
+instructions and keep KSP closed while it installs. The new in-game button and
+hidden-helper flow apply once the RC25 client is running; they cannot change
+an updater already loaded by the old client.
+
+Regular and Potato share gameplay content. Potato removes optional graphics
+and sound effects and uses low graphics settings. Potato uses the official
+Kcalbeloh 4K textures; Regular uses 8K. Height and biome maps are identical.
+Your profile choice is saved; change it from the main menu, then Connect.
+
+Saves, identity and controls are preserved. Replaced managed files retain
+failure recovery under APF/.transaction-backup. Approved removed mods are
+permanently deleted and are NOT included in that recovery. Returning to Regular
+restores the graphics settings saved before Potato mode. Never share your
+player identity or private keys.
+
+If preparation fails, read the in-game error. If the hidden commit fails, KSP
+is not relaunched. Do not retry blindly or delete recovery data. Retain
+APF/APFUpdater.log, APF/LastInstallResult.json and recovery data for diagnosis.
+Only a complete LastInstallResult.json entry means every helper stage finished;
+a pack transaction entry alone does not include the final graphics settings.
+
+Only servers matching the starter's trusted certificate and signing key can
+provide updates. Typing another IP does not bypass these checks.

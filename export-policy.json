@@ -16,6 +16,11 @@
   "deniedFilePattern": "(?i)(?:^|/)(?:Aetherfront-Client-Handoff\\.md|SetDirectories\\.bat|CopyToKSPDirectory\\.bat|Publish-Release\\.before\\.ps1|config\\.json|WORK-STATE\\.json|TEST-RESULTS\\.json|EVIDENCE\\.json|LIVE-RESULT\\.json)|\\.(?:user|suo|log|cache|pem|key|pfx|p12|crt|cer|snk)$|^Aetherfront-Source/(?:LmpMasterServer|MasterServer)/app\\.config$",
   "groups": [
     {
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "directories": ["Aetherfront-RC25-Work/Engine", "Aetherfront-RC25-Work/CorePatcher", "Aetherfront-RC25-Work/ClientUi", "Aetherfront-RC25-Work/ClientPatcher", "Aetherfront-RC25-Work/NativeTests", "Aetherfront-RC25-Work/InstallerTests", "Aetherfront-RC25-Work/ProfileTests", "Aetherfront-RC25-Work/ModFixes/Source"],
+      "extensions": [".cs", ".csproj", ".cfg"]
+    },
+    {
       "role": "fork client/server/shared libraries/tests/tools",
       "directories": ["Aetherfront-Source/AetherfrontCore", "Aetherfront-Source/AetherfrontCore.Tests", "Aetherfront-Source/ApfCertificateTool", "Aetherfront-Source/ApfCore", "Aetherfront-Source/ApfCore.Tests", "Aetherfront-Source/ApfDiagnosticsHost", "Aetherfront-Source/APFDiscordBridge", "Aetherfront-Source/ApfPackHost", "Aetherfront-Source/ApfPackTool", "Aetherfront-Source/ApfProtocol.Tests", "Aetherfront-Source/ApfUpdater", "Aetherfront-Source/ApfUpdater.Tests", "Aetherfront-Source/ApfUpdateTool", "Aetherfront-Source/Lidgren", "Aetherfront-Source/Lidgren.Core", "Aetherfront-Source/Lidgren.Net", "Aetherfront-Source/LmpClient", "Aetherfront-Source/LmpCommon", "Aetherfront-Source/LmpCommonTest", "Aetherfront-Source/LmpGlobal", "Aetherfront-Source/LmpMasterServer", "Aetherfront-Source/LmpMasterServerTest", "Aetherfront-Source/LmpUpdater", "Aetherfront-Source/MasterServer", "Aetherfront-Source/MasterServersList", "Aetherfront-Source/Server", "Aetherfront-Source/ServerTest", "Aetherfront-Source/uhttpsharp", "Aetherfront-Source/Documentation", "Aetherfront-Source/Scripts", "Aetherfront-Source/.nuget"],
       "extensions": [".cs", ".csproj", ".shproj", ".projitems", ".props", ".targets", ".config", ".xml", ".resx", ".md", ".txt", ".ps1", ".bat", ".cmd", ".sh", ".json"]
@@ -52,6 +57,15 @@
     }
   ],
   "explicitFiles": [
+    {"source":"Aetherfront-RC25-Work/Build-Release.ps1","role":"RC25 build recipe from the authenticated RC24 template"},
+    {"source":"Aetherfront-RC25-Work/Build-Code.ps1","role":"RC25 targeted binary graft and audit build recipe"},
+    {"source":"Aetherfront-RC25-Work/APFApplyUpdate.ps1","role":"RC25 hidden post-exit commit helper; no desktop installer"},
+    {"source":"Aetherfront-RC25-Work/PLAYER-INSTALL.txt","role":"RC25 player installation instructions"},
+    {"source":"Aetherfront-RC25-Work/Build-ModFixes.ps1","role":"RC25 immutable compatibility media preparation"},
+    {"source":"Aetherfront-RC25-Work/Test-ModFixes.ps1","role":"RC25 compatibility regression checks"},
+    {"source":"Aetherfront-RC25-Work/Test-Helper.ps1","role":"RC25 production hidden PowerShell helper regression"},
+    {"source":"Aetherfront-RC25-Work/ModFixes/Patch-Waterfall.ps1","role":"RC25 two-method GameData asset-loader restriction"},
+    {"source":"Aetherfront-RC25-Work/ModFixes/Dependencies.lock.json","role":"Checksum-pinned public upstream dependency"},
     {"source":"Aetherfront-RC24-Work/Build-Release.ps1","role":"RC24 build from authenticated RC23 template"},
     {"source":"Aetherfront-RC24-Work/APFApplyUpdate.ps1","role":"RC24 shadow-loaded native helper and explicit completion window"},
     {"source":"Aetherfront-RC24-Work/PLAYER-INSTALL.txt","role":"RC24 player installation and permanent-removal instructions"},

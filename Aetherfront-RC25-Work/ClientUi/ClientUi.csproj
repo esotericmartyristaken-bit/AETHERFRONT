@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework><LangVersion>10</LangVersion>
+    <AssemblyName>AetherfrontConnectSource</AssemblyName><GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Optimize>true</Optimize><DebugType>none</DebugType><NoWarn>0436</NoWarn>
+    <AutomaticallyUseReferenceAssemblyPackages>false</AutomaticallyUseReferenceAssemblyPackages>
+    <BaselinePlugins>$(MSBuildThisFileDirectory)../../Aetherfront-RC24-Work/Candidate/Client/GameData/LunaMultiplayer/Plugins</BaselinePlugins>
+    <EngineAssembly Condition="'$(EngineAssembly)' == ''">$(MSBuildThisFileDirectory)../Engine/bin/Release/net472/KesasInstall.dll</EngineAssembly>
+    <UnityManaged>$(MSBuildThisFileDirectory)../../Aetherfront-KSP-Smoke/KSP_x64_Data/Managed</UnityManaged>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Tests/**/*.cs" />
+    <Reference Include="LmpClient"><HintPath>$(BaselinePlugins)/LmpClient.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="ApfCore"><HintPath>$(BaselinePlugins)/ApfCore.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="KesasInstall"><HintPath>$(EngineAssembly)</HintPath><Private>false</Private></Reference>
+    <Reference Include="0Harmony"><HintPath>$(BaselinePlugins)/../../000_Harmony/0Harmony.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Assembly-CSharp"><HintPath>$(UnityManaged)/Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(UnityManaged)/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.IMGUIModule"><HintPath>$(UnityManaged)/UnityEngine.IMGUIModule.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

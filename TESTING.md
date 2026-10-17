@@ -1,4 +1,44 @@
-# RC24 verification
+# RC25 verification in progress
+
+RC25 replaces the RC24 desktop installation window with in-game staging and an
+explicit Restart & apply button. A hidden post-exit helper remains necessary to
+replace loaded assemblies. A client already running RC24 or earlier must still
+use its loaded legacy updater for its initial migration; the new flow begins
+once RC25 is loaded. Combined updates plan client, pack and removals before one
+restart. Reconnect receipts are accepted only for completed matching revisions
+and profiles, never incomplete, failed or changed-profile installations.
+
+Runtime settings have a narrow mutable-file policy. Assemblies, part
+definitions and textures remain verified. The final installation verification
+does not use the connection-only receipt fast path. The server manifest keeps
+empty managedPackages and its client-only allowances so it does not impose
+Regular graphical content on Potato.
+
+Candidate execution evidence:
+
+- Sixty-one native installation/rollback checks passed on Windows CLR and the
+  actual KSP Mono runtime with the starter's unchanged runtime DLLs. Coverage
+  includes prepared-file corruption, execution locks, permanent approved mod
+  removal, recovery of replacements, approved duplicate-client disable and
+  narrow generated-settings/cache exceptions.
+- Seventy-one installer harness checks and thirteen combined NativeRun commit
+  assertions passed on each runtime. A synthetic RC25-to-RC26 client/pack bundle
+  committed client files, prepared packages, duplicate repair and a rich receipt
+  before explicit GameStub restart. Invalid metadata/receipt cases fall back
+  without treating an incomplete install as current.
+- The production Windows PowerShell helper passed without any desktop UI
+  payload. It loaded shadow dependencies, authenticated/applied a prepared pack,
+  published readiness/completion and released executable locks.
+- The compatibility media suite passed 3,323 checks. Four new immutable assets
+  were downloaded anonymously from GitHub and matched their declared hashes.
+- Full-size fresh Potato-to-Regular-to-Potato execution remains in progress.
+
+Tests using the actual KSP
+Mono runtime are runtime/API tests, not a Unity scene, rendered game, B9 fuel
+selection or real remote player connection. No clean post-update KSP.log is
+claimed before that game has actually been run.
+
+## Historical RC24 verification
 
 RC24 keeps all RC23 Regular and Potato package declarations. Native installation
 now has a visible, responsive progress window and a success-only Restart KSP

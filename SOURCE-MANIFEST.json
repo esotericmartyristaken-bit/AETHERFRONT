@@ -1,22 +1,23 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-17T06:53:44.0663320Z",
-  "publication": "STAGED ONLY; not pushed",
+  "createdUtc": "2026-10-17T08:58:03.3305538Z",
+  "publication": "Reviewed source-only snapshot. Git publication and runtime deployment are separate operations.",
   "sourceBase": {
     "tree": "Aetherfront-Source",
     "upstream": "LunaMultiplayer",
     "tag": "0.29.2",
     "commit": "60a2ed5dbfdddc08536a98b999c781e3c12b0649",
-    "commitEvidence": "Sibling LunaMultiplayer-Source git metadata and existing handoff documentation; not a commit identity for the modified export."
+    "commitEvidence": "Sibling upstream Git metadata and existing handoff; not a commit identity for modified source."
   },
-  "rebuildStatus": "NOT independently rebuildable as shipping RC24 from this export alone; authenticated RC23 baseline and licensed game dependencies are required; see SOURCE-PROVENANCE.md",
+  "rebuildStatus": "NOT independently rebuildable as shipping RC25 from source export alone; authenticated historical baselines and licensed KSP/Unity dependencies are required. See SOURCE-PROVENANCE.md.",
   "concurrentSourceReviewPending": false,
   "integrationGates": [
-    "Unity gameplay and mixed-profile landing validation remain user-run; automated checks are documented in TESTING.md"
+    "Targeted client/core grafts reviewed; unrelated method audit and CLR/KSP Mono runtime checks passed",
+    "Full-size profile-chain execution status is recorded separately in TESTING.md",
+    "Real Unity scenes, graphical rendering and remote-player gameplay require post-update in-game validation",
+    "Refresh source or metadata and rerun privacy checks after further changes"
   ],
-  "excludedDirectoryCount": 216,
-  "excludedReparsePointCount": 0,
   "files": [
     {
       "path": "Aetherfront-RC18-Work/BinaryChecks/BinaryChecks.csproj",
@@ -1664,6 +1665,396 @@
       "sha256": "8cec816b1a117e1997190fe0d6085268dfe5bdf12bbbd81f4ce524c8e0bdde9e",
       "sourceSha256": "8cec816b1a117e1997190fe0d6085268dfe5bdf12bbbd81f4ce524c8e0bdde9e",
       "sourceModifiedUtc": "2026-10-16T23:39:48.926777Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/APFApplyUpdate.ps1",
+      "source": "Aetherfront-RC25-Work/APFApplyUpdate.ps1",
+      "role": "RC25 hidden post-exit commit helper; no desktop installer",
+      "bytes": 2456,
+      "sha256": "f4e3fdb6e778151dfba199e9e4f41ce73a837dd4fdf5c5805db312c3ec88ad35",
+      "sourceSha256": "f4e3fdb6e778151dfba199e9e4f41ce73a837dd4fdf5c5805db312c3ec88ad35",
+      "sourceModifiedUtc": "2026-10-17T08:14:45.5626Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/Build-Code.ps1",
+      "source": "Aetherfront-RC25-Work/Build-Code.ps1",
+      "role": "RC25 targeted binary graft and audit build recipe",
+      "bytes": 10134,
+      "sha256": "89609526ea024db2f6e163112d57043a2fafaefa6af1d7cca183ebb8e0eb507c",
+      "sourceSha256": "89609526ea024db2f6e163112d57043a2fafaefa6af1d7cca183ebb8e0eb507c",
+      "sourceModifiedUtc": "2026-10-17T08:40:59.1709733Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/Build-ModFixes.ps1",
+      "source": "Aetherfront-RC25-Work/Build-ModFixes.ps1",
+      "role": "RC25 immutable compatibility media preparation",
+      "bytes": 14851,
+      "sha256": "36f9b748ad6095ddc836803db174e11bb0d154fb64c72ec45425996d2229daa7",
+      "sourceSha256": "36f9b748ad6095ddc836803db174e11bb0d154fb64c72ec45425996d2229daa7",
+      "sourceModifiedUtc": "2026-10-17T08:18:10.5220126Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/Build-Release.ps1",
+      "source": "Aetherfront-RC25-Work/Build-Release.ps1",
+      "role": "RC25 build recipe from the authenticated RC24 template",
+      "bytes": 23041,
+      "sha256": "4fa9a5a5e04fdb1263b43a04161e8949f5c02d5cc365af2e7f87e1511014bd4e",
+      "sourceSha256": "4fa9a5a5e04fdb1263b43a04161e8949f5c02d5cc365af2e7f87e1511014bd4e",
+      "sourceModifiedUtc": "2026-10-17T08:36:06.1488132Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/ClientPatcher/ClientPatcher.csproj",
+      "source": "Aetherfront-RC25-Work/ClientPatcher/ClientPatcher.csproj",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 434,
+      "sha256": "020dad303067205fbde33208969a9382a6de52b26236cc45cd28a08c9a75c8ec",
+      "sourceSha256": "020dad303067205fbde33208969a9382a6de52b26236cc45cd28a08c9a75c8ec",
+      "sourceModifiedUtc": "2026-10-17T08:19:34.4915403Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/ClientPatcher/Program.cs",
+      "source": "Aetherfront-RC25-Work/ClientPatcher/Program.cs",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 20040,
+      "sha256": "197d898d6954eba000958663edd42f82eff13ad0ae009efc2719a3b576d57a1b",
+      "sourceSha256": "197d898d6954eba000958663edd42f82eff13ad0ae009efc2719a3b576d57a1b",
+      "sourceModifiedUtc": "2026-10-17T08:34:44.786565Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/ClientPatcher/Tests/Program.cs",
+      "source": "Aetherfront-RC25-Work/ClientPatcher/Tests/Program.cs",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 10303,
+      "sha256": "3b645f9a9b9639ef30918ba79da9a4417f320dcb100ff664366809fcbfc22089",
+      "sourceSha256": "3b645f9a9b9639ef30918ba79da9a4417f320dcb100ff664366809fcbfc22089",
+      "sourceModifiedUtc": "2026-10-17T08:34:44.7941883Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/ClientPatcher/Tests/RegistryTests.csproj",
+      "source": "Aetherfront-RC25-Work/ClientPatcher/Tests/RegistryTests.csproj",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 403,
+      "sha256": "b0a62f3c53d775538892041ddbc8e7ce41afd31f39c134bc57ae06765e5ad36f",
+      "sourceSha256": "b0a62f3c53d775538892041ddbc8e7ce41afd31f39c134bc57ae06765e5ad36f",
+      "sourceModifiedUtc": "2026-10-17T08:19:34.4945389Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/ClientUi/CanonicalStartup.cs",
+      "source": "Aetherfront-RC25-Work/ClientUi/CanonicalStartup.cs",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 4269,
+      "sha256": "c70027c3d340ab70f50f5bfc6f952bb3500660705c0012417cc055c8914c585f",
+      "sourceSha256": "c70027c3d340ab70f50f5bfc6f952bb3500660705c0012417cc055c8914c585f",
+      "sourceModifiedUtc": "2026-10-17T08:25:53.8492939Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/ClientUi/ClientUi.csproj",
+      "source": "Aetherfront-RC25-Work/ClientUi/ClientUi.csproj",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 1841,
+      "sha256": "336608c3e22233d75e2aa2b23d3ae24d1a6e95ab8fc0e1615d0eea11cdc3f42e",
+      "sourceSha256": "336608c3e22233d75e2aa2b23d3ae24d1a6e95ab8fc0e1615d0eea11cdc3f42e",
+      "sourceModifiedUtc": "2026-10-17T08:24:34.9232056Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/ClientUi/ConnectionInstall.cs",
+      "source": "Aetherfront-RC25-Work/ClientUi/ConnectionInstall.cs",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 11626,
+      "sha256": "2186e05a69ab0b936b3ad47e155588d91dd8cd79237d81534f7b799540e42387",
+      "sourceSha256": "2186e05a69ab0b936b3ad47e155588d91dd8cd79237d81534f7b799540e42387",
+      "sourceModifiedUtc": "2026-10-17T08:14:55.2643598Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/ClientUi/ConnectionWindow.cs",
+      "source": "Aetherfront-RC25-Work/ClientUi/ConnectionWindow.cs",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 12830,
+      "sha256": "ede332a70a56bf1b9098416ad38894ca65ea0365e90c0339dff316e7cb86a1ba",
+      "sourceSha256": "ede332a70a56bf1b9098416ad38894ca65ea0365e90c0339dff316e7cb86a1ba",
+      "sourceModifiedUtc": "2026-10-17T08:14:55.2678966Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/ClientUi/Tests/FlowTests.csproj",
+      "source": "Aetherfront-RC25-Work/ClientUi/Tests/FlowTests.csproj",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 355,
+      "sha256": "2c09b86cf7a348a66c6e4720e84fb4e3f67da90a5f0834c43f574ce78949f82d",
+      "sourceSha256": "2c09b86cf7a348a66c6e4720e84fb4e3f67da90a5f0834c43f574ce78949f82d",
+      "sourceModifiedUtc": "2026-10-17T08:25:40.0355261Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/ClientUi/Tests/Program.cs",
+      "source": "Aetherfront-RC25-Work/ClientUi/Tests/Program.cs",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 7065,
+      "sha256": "3571fe75d2f39157a7a67f64b3d18a7e8f807fe801d97564312e05d76884468e",
+      "sourceSha256": "3571fe75d2f39157a7a67f64b3d18a7e8f807fe801d97564312e05d76884468e",
+      "sourceModifiedUtc": "2026-10-17T08:17:35.7184904Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/ClientUi/Tests/StartupTests/Program.cs",
+      "source": "Aetherfront-RC25-Work/ClientUi/Tests/StartupTests/Program.cs",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 5897,
+      "sha256": "fe9696c3341c1ff286c82d37f5d47cf1b38b22ca17e133a5500a7001d2daca7b",
+      "sourceSha256": "fe9696c3341c1ff286c82d37f5d47cf1b38b22ca17e133a5500a7001d2daca7b",
+      "sourceModifiedUtc": "2026-10-17T08:25:40.0467516Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/ClientUi/Tests/StartupTests/StartupTests.csproj",
+      "source": "Aetherfront-RC25-Work/ClientUi/Tests/StartupTests/StartupTests.csproj",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 554,
+      "sha256": "b919905111b40fdd3ec462661d082f6d87e091ef11b34051d5d3c06c0ae03bfa",
+      "sourceSha256": "b919905111b40fdd3ec462661d082f6d87e091ef11b34051d5d3c06c0ae03bfa",
+      "sourceModifiedUtc": "2026-10-17T08:26:13.1498705Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/ClientUi/Tests/StartupTests/Stubs.cs",
+      "source": "Aetherfront-RC25-Work/ClientUi/Tests/StartupTests/Stubs.cs",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 2006,
+      "sha256": "cc1048636f0a6bd12b5278ff497545b104d3b457aca4a50a3613fb65088f09f3",
+      "sourceSha256": "cc1048636f0a6bd12b5278ff497545b104d3b457aca4a50a3613fb65088f09f3",
+      "sourceModifiedUtc": "2026-10-17T08:25:40.0457507Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/ClientUi/Tests/Stubs.cs",
+      "source": "Aetherfront-RC25-Work/ClientUi/Tests/Stubs.cs",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 5238,
+      "sha256": "b2d4abf26d3a147b815e94663d34a15340e13a8e53b3283596b03534e89960c4",
+      "sourceSha256": "b2d4abf26d3a147b815e94663d34a15340e13a8e53b3283596b03534e89960c4",
+      "sourceModifiedUtc": "2026-10-17T08:17:35.7169891Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/CorePatcher/Patcher.csproj",
+      "source": "Aetherfront-RC25-Work/CorePatcher/Patcher.csproj",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 400,
+      "sha256": "5b800bb3edd433c49f4eeccdf57105d3a1d175c59b148e26d9df23cf1656c55d",
+      "sourceSha256": "5b800bb3edd433c49f4eeccdf57105d3a1d175c59b148e26d9df23cf1656c55d",
+      "sourceModifiedUtc": "2026-10-17T08:14:45.5679705Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/CorePatcher/Program.cs",
+      "source": "Aetherfront-RC25-Work/CorePatcher/Program.cs",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 6136,
+      "sha256": "15f8de39d017881af474717f660fd4cd054c21c76c60bb117e94f84f74098f0c",
+      "sourceSha256": "15f8de39d017881af474717f660fd4cd054c21c76c60bb117e94f84f74098f0c",
+      "sourceModifiedUtc": "2026-10-17T08:20:31.4763784Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/Engine/Engine.csproj",
+      "source": "Aetherfront-RC25-Work/Engine/Engine.csproj",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 839,
+      "sha256": "800a35b1453ead6642a6ce6f8ef72c6d8c3f26d4ee05eaf180f59a00d39ed7a8",
+      "sourceSha256": "800a35b1453ead6642a6ce6f8ef72c6d8c3f26d4ee05eaf180f59a00d39ed7a8",
+      "sourceModifiedUtc": "2026-10-17T08:26:49.7546909Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/Engine/Installer.cs",
+      "source": "Aetherfront-RC25-Work/Engine/Installer.cs",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 56964,
+      "sha256": "2da3106d20eecec227db0be1574186167f60e3753a957dd29f46de6dc3ceb522",
+      "sourceSha256": "2da3106d20eecec227db0be1574186167f60e3753a957dd29f46de6dc3ceb522",
+      "sourceModifiedUtc": "2026-10-17T08:39:11.29809Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/Engine/NativeInstall.cs",
+      "source": "Aetherfront-RC25-Work/Engine/NativeInstall.cs",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 13261,
+      "sha256": "c63dbd185003fb61641b8ec6b9b1455e3ac68dadb0c3ad95e99125c2f24c62e3",
+      "sourceSha256": "c63dbd185003fb61641b8ec6b9b1455e3ac68dadb0c3ad95e99125c2f24c62e3",
+      "sourceModifiedUtc": "2026-10-17T08:36:21.4281213Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/Engine/PostExit.cs",
+      "source": "Aetherfront-RC25-Work/Engine/PostExit.cs",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 2499,
+      "sha256": "4d042158deba0b73122795bb121bcbb34ccd1278127e6fbd4a29a181df1c2a6b",
+      "sourceSha256": "4d042158deba0b73122795bb121bcbb34ccd1278127e6fbd4a29a181df1c2a6b",
+      "sourceModifiedUtc": "2026-10-17T08:16:19.8293614Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/Engine/PreparedPack.cs",
+      "source": "Aetherfront-RC25-Work/Engine/PreparedPack.cs",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 18898,
+      "sha256": "0bf3832132245f35a460d600639203d25f1333065b3cb3b79973a53256df8216",
+      "sourceSha256": "0bf3832132245f35a460d600639203d25f1333065b3cb3b79973a53256df8216",
+      "sourceModifiedUtc": "2026-10-17T08:45:51.484695Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/Engine/RuntimeFiles.cs",
+      "source": "Aetherfront-RC25-Work/Engine/RuntimeFiles.cs",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 2617,
+      "sha256": "f1806ebba48ad105943727c5292608190509a6f63d285d21703d10b640157dc2",
+      "sourceSha256": "f1806ebba48ad105943727c5292608190509a6f63d285d21703d10b640157dc2",
+      "sourceModifiedUtc": "2026-10-17T08:40:04.6389122Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/InstallerTests/InstallerTests.csproj",
+      "source": "Aetherfront-RC25-Work/InstallerTests/InstallerTests.csproj",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 1097,
+      "sha256": "3ca8d3ab31aa55b3b2e6e0eb2183bc7cbe01b40da34fceac3a4022672924b247",
+      "sourceSha256": "3ca8d3ab31aa55b3b2e6e0eb2183bc7cbe01b40da34fceac3a4022672924b247",
+      "sourceModifiedUtc": "2026-10-17T08:18:14.1600223Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/InstallerTests/Program.cs",
+      "source": "Aetherfront-RC25-Work/InstallerTests/Program.cs",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 38261,
+      "sha256": "55586e1cfb37b0aabf56dba6440fa761c3b5b65b255cfa375f5d2347ec9edb93",
+      "sourceSha256": "55586e1cfb37b0aabf56dba6440fa761c3b5b65b255cfa375f5d2347ec9edb93",
+      "sourceModifiedUtc": "2026-10-17T08:34:44.1356134Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/ModFixes/Dependencies.lock.json",
+      "source": "Aetherfront-RC25-Work/ModFixes/Dependencies.lock.json",
+      "role": "Checksum-pinned public upstream dependency",
+      "bytes": 793,
+      "sha256": "a4c3e3fa5df413ac5713ad27b4b6ece2b34ddbaa26a3027b46b9b4f89f99b5d3",
+      "sourceSha256": "a4c3e3fa5df413ac5713ad27b4b6ece2b34ddbaa26a3027b46b9b4f89f99b5d3",
+      "sourceModifiedUtc": "2026-10-17T08:16:24.2306182Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/ModFixes/Patch-Waterfall.ps1",
+      "source": "Aetherfront-RC25-Work/ModFixes/Patch-Waterfall.ps1",
+      "role": "RC25 two-method GameData asset-loader restriction",
+      "bytes": 5274,
+      "sha256": "b5b999fba11dfe3cc367181944fe0d0ac307246bd9bc90094b04cbc866159a52",
+      "sourceSha256": "b5b999fba11dfe3cc367181944fe0d0ac307246bd9bc90094b04cbc866159a52",
+      "sourceModifiedUtc": "2026-10-17T08:18:10.4979283Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/ModFixes/Source/ZZZ_KESASModFixes/OptionalVisualModules.cfg",
+      "source": "Aetherfront-RC25-Work/ModFixes/Source/ZZZ_KESASModFixes/OptionalVisualModules.cfg",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 630,
+      "sha256": "f09e919e1256d43bf725c8319550f992bff75297a5ec2160148c8579b2a114ce",
+      "sourceSha256": "f09e919e1256d43bf725c8319550f992bff75297a5ec2160148c8579b2a114ce",
+      "sourceModifiedUtc": "2026-10-17T08:15:58.5280133Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/ModFixes/Source/ZZZ_KESASPotato/DisableExhaust.cfg",
+      "source": "Aetherfront-RC25-Work/ModFixes/Source/ZZZ_KESASPotato/DisableExhaust.cfg",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 1018,
+      "sha256": "626f381a920cee9758d9775c7e65236eb101aa09f213afce79e47251c1e9e891",
+      "sourceSha256": "626f381a920cee9758d9775c7e65236eb101aa09f213afce79e47251c1e9e891",
+      "sourceModifiedUtc": "2026-10-17T08:15:58.5240971Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/NativeTests/NativeTests.csproj",
+      "source": "Aetherfront-RC25-Work/NativeTests/NativeTests.csproj",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 724,
+      "sha256": "9c6e2e5d9eb7e54ac3eb70e810d0e809144b04cbf30a51acd4bb89e4c28b0993",
+      "sourceSha256": "9c6e2e5d9eb7e54ac3eb70e810d0e809144b04cbf30a51acd4bb89e4c28b0993",
+      "sourceModifiedUtc": "2026-10-17T06:26:53.5924419Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/NativeTests/Program.cs",
+      "source": "Aetherfront-RC25-Work/NativeTests/Program.cs",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 22462,
+      "sha256": "4bd497df1103dd0ae2b75be38be191ac6e99b19db1cc318adbed6bb020cc5e89",
+      "sourceSha256": "4bd497df1103dd0ae2b75be38be191ac6e99b19db1cc318adbed6bb020cc5e89",
+      "sourceModifiedUtc": "2026-10-17T08:45:51.4881423Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/PLAYER-INSTALL.txt",
+      "source": "Aetherfront-RC25-Work/PLAYER-INSTALL.txt",
+      "role": "RC25 player installation instructions",
+      "bytes": 3024,
+      "sha256": "0fd68cd42f955010d5a522dbf76bd36e7bce1c8104bf91f92aa393125dd15f46",
+      "sourceSha256": "0fd68cd42f955010d5a522dbf76bd36e7bce1c8104bf91f92aa393125dd15f46",
+      "sourceModifiedUtc": "2026-10-17T08:22:56.5795802Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/ProfileTests/ProfileTests.csproj",
+      "source": "Aetherfront-RC25-Work/ProfileTests/ProfileTests.csproj",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 724,
+      "sha256": "b847c363fc074a556511f553c73c573f7c5c0d738e008b5c58fb4c919638af20",
+      "sourceSha256": "b847c363fc074a556511f553c73c573f7c5c0d738e008b5c58fb4c919638af20",
+      "sourceModifiedUtc": "2026-10-17T08:25:25.0235335Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/ProfileTests/Program.cs",
+      "source": "Aetherfront-RC25-Work/ProfileTests/Program.cs",
+      "role": "RC25 in-game preparation, authenticated combined updates, client UI and regression sources",
+      "bytes": 9361,
+      "sha256": "a876c8f60b88d8dd020b5bf623e1404c11509f2d489edc0ebec4ec7ed348ca82",
+      "sourceSha256": "a876c8f60b88d8dd020b5bf623e1404c11509f2d489edc0ebec4ec7ed348ca82",
+      "sourceModifiedUtc": "2026-10-17T08:46:30.8305733Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/Test-Helper.ps1",
+      "source": "Aetherfront-RC25-Work/Test-Helper.ps1",
+      "role": "RC25 production hidden PowerShell helper regression",
+      "bytes": 5387,
+      "sha256": "7c2490280c77386bdf78c630231853fabe7a83c41c81c805a9fb93f31d3ac69a",
+      "sourceSha256": "7c2490280c77386bdf78c630231853fabe7a83c41c81c805a9fb93f31d3ac69a",
+      "sourceModifiedUtc": "2026-10-17T08:43:55.0879837Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC25-Work/Test-ModFixes.ps1",
+      "source": "Aetherfront-RC25-Work/Test-ModFixes.ps1",
+      "role": "RC25 compatibility regression checks",
+      "bytes": 15988,
+      "sha256": "c0789898ea02edce0435fb418cacd1c26bdcab6d6734d7c32515d939ac36b03a",
+      "sourceSha256": "c0789898ea02edce0435fb418cacd1c26bdcab6d6734d7c32515d939ac36b03a",
+      "sourceModifiedUtc": "2026-10-17T08:21:22.3625153Z",
       "transformations": []
     },
     {
@@ -26087,7 +26478,7 @@
       "source": null,
       "role": "publication metadata, license or export tooling",
       "bytes": 29470,
-      "sha256": "f33cbe95249da0ea8d1fd6644e64c51449a0feacb2e6a926295b0f935fae14cf",
+      "sha256": "2a2e983e4d99fad21f5c67842149f2fabd42a79bc053f5ed92f00b35d277cb8d",
       "sourceSha256": null,
       "transformations": []
     },
@@ -26113,8 +26504,8 @@
       "path": "SOURCE-PROVENANCE.md",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 14059,
-      "sha256": "3f8a18a69811975611a2c41529168b44f41766d13d36406e5bf7e0e2fef3ff5a",
+      "bytes": 14620,
+      "sha256": "1c6049d3d14e039334dfe43a0a5692eb80703466c8518ae3d3b768f93f750082",
       "sourceSha256": null,
       "transformations": []
     },
@@ -26131,8 +26522,8 @@
       "path": "export-policy.json",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 16796,
-      "sha256": "085b0e2edbb65854bc00591f67b0bcee1d133fee0d964504f4d833efde9adb44",
+      "bytes": 18341,
+      "sha256": "e2cc424a579d67c62ba4f27a5560c8af6f011556f7ca12b9ef2d73df686375ba",
       "sourceSha256": null,
       "transformations": []
     },
@@ -26158,8 +26549,8 @@
       "path": "TESTING.md",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 13841,
-      "sha256": "1c3acd6044431bc41fdf804631712981fed72650a15750ca16ba73e6b6bd21ed",
+      "bytes": 16209,
+      "sha256": "b84128b3d49b7411c4544a4ecf43d7baaf4d6c0c7fb4e40907f8933a33837ddc",
       "sourceSha256": null,
       "transformations": []
     },
@@ -26191,7 +26582,7 @@
       "transformations": []
     }
   ],
-  "totalFileBytes": 13384539,
+  "totalFileBytes": 13728713,
   "exclusions": [
     "All Git history and Git metadata; CI workflows and operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",

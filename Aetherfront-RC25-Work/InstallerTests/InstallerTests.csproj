@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net472</TargetFramework><LangVersion>10</LangVersion><AssemblyName>KesasInstall</AssemblyName><Optimize>true</Optimize><DebugType>none</DebugType></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../Engine/*.cs" Link="Engine/%(Filename)%(Extension)" />
+    <Compile Include="../../Aetherfront-RC22-Work/Engine/Transfer.cs" Link="Engine/Transfer.cs" />
+    <Compile Include="../../Aetherfront-RC22-Work/Engine/DownloadFiles.cs" Link="Engine/DownloadFiles.cs" />
+    <Compile Include="../../Aetherfront-RC22-Work/Engine/GitHub.cs" Link="Engine/GitHub.cs" />
+    <Reference Include="ApfCore"><HintPath>../../Aetherfront-RC24-Work/Candidate/Client/GameData/LunaMultiplayer/Plugins/ApfCore.dll</HintPath></Reference>
+    <Reference Include="JsonFx"><HintPath>../../Aetherfront-RC24-Work/Candidate/Client/GameData/LunaMultiplayer/Plugins/JsonFx.dll</HintPath></Reference>
+    <Reference Include="System.IO.Compression" /><Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+</Project>
