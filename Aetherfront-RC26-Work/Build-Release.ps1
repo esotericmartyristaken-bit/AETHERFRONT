@@ -6,6 +6,8 @@ param(
     [Parameter(Mandatory)][string]$CompatibilityEvidencePath,
     [Parameter(Mandatory)][ValidatePattern('^[a-f0-9]{64}$')][string]$CompatibilityEvidenceSha256,
     [Parameter(Mandatory)][string]$Notes,
+    [Parameter(Mandatory)][string]$PotatoPolicyPlanPath,
+    [Parameter(Mandatory)][ValidatePattern('^[a-f0-9]{64}$')][string]$PotatoPolicyPlanSha256,
     [string]$CatalogPath,
     [string]$AssetStage,
     [string]$AssetPlanName = 'ASSET-PLAN.json',
@@ -30,10 +32,12 @@ if ($AssetStage) {
     $assetReview = Get-RC26AssetStage $AssetStage $AssetPlanName $AssetPlanSha256 $AssetTestResultPath $AssetTestResultSha256 $baseline.catalog
     $assetDeclarations = $assetReview.declarations; $newMedia = $assetReview.files
 }
-$catalog = Get-RC26VersionCatalog $baseline.catalog $assetDeclarations
+$policyReview = Get-RC26PotatoPolicyPlan $PotatoPolicyPlanPath $PotatoPolicyPlanSha256 $baseline.catalog
+$newMedia += $policyReview.file
+$catalog = Get-RC26VersionCatalog $baseline.catalog $assetDeclarations $policyReview.declaration
 if ($CatalogPath) {
     $supplied = Read-UpdateText $CatalogPath | ConvertFrom-Json
-    if ((ConvertTo-RC26Json $supplied) -cne (ConvertTo-RC26Json $catalog)) { throw 'Catalog may change only revision routing, four repair package versions, and the five reviewed asset archive declarations.' }
+    if ((ConvertTo-RC26Json $supplied) -cne (ConvertTo-RC26Json $catalog)) { throw 'Catalog may change only revision routing, four repair package versions, five reviewed asset archives, and the independently reviewed Potato-only policy archive.' }
 }
 $pack = ConvertTo-RC26Json $baseline.pack | ConvertFrom-Json
 $pack.packVersion = 'kesas-rc26'; $pack.requiredClientVersion = 'kesas-rc26'
@@ -49,6 +53,7 @@ if ($assetReview) {
     $inputPaths += @($assetReview.planPath,$assetReview.testResultPath)
     $inputPaths += @($assetReview.files.source)
 }
+$inputPaths += @(foreach ($file in $policyReview.snapshotFiles) { Get-UpdateChildPath $policyReview.directory $file.path })
 $inputs = @(foreach ($path in $inputPaths) { [ordered]@{ path = Assert-UpdatePath $path; sha256 = Get-RC26Hash $path } })
 $protected = @(foreach ($relative in @('Server/Config/GeneralSettings.xml','Server/Server.exe','PackHost/ApfPackHost.dll','deployment.json','Server/Config/AetherfrontTechnology.json')) {
     [ordered]@{ path = $relative; sha256 = Get-RC26Hash "$RC26Root/$relative" }
@@ -80,12 +85,22 @@ if ($assetReview) {
         Assert-RC26Hash $destination $file.sha256
     }
     New-UpdateDirectory "$candidate/Media"
-    foreach ($file in $newMedia) {
+    foreach ($file in $assetReview.files) {
         $destination = Get-UpdateChildPath $candidate $file.path
         [IO.File]::Copy($file.source,$destination,$false)
         Assert-RC26Hash $destination $file.sha256
     }
 }
+New-UpdateDirectory "$candidate/Policy"
+foreach ($file in $policyReview.snapshotFiles) {
+    $destination = Get-UpdateChildPath "$candidate/Policy" $file.path
+    New-UpdateDirectory ([IO.Path]::GetDirectoryName($destination))
+    [IO.File]::Copy((Get-UpdateChildPath $policyReview.directory $file.path),$destination,$false)
+    Assert-RC26Hash $destination $file.sha256
+}
+New-UpdateDirectory "$candidate/Media"
+[IO.File]::Copy($policyReview.file.source,(Get-UpdateChildPath $candidate $policyReview.file.path),$false)
+Assert-RC26Hash (Get-UpdateChildPath $candidate $policyReview.file.path) $policyReview.file.sha256
 $client = Get-UpdateChildPath $candidate 'Client'
 Expand-UpdateArchive "$RC26Root/ClientTemplate.zip" $client
 Assert-RC26TreeInventory $client $baseline.feed.files
@@ -134,7 +149,12 @@ New-UpdateDirectory "$candidate/Published"
 Invoke-UpdateTool $RC26Root @('--root-overlay','--source-root',$client,'--output',"$candidate/Published",'--version','kesas-rc26',
     '--package-base-url',"$($deployment.packOrigin)/updates/kesas-rc26/",'--private-key-xml',"$RC26Root/secrets/update-signing-private.xml",'--ksp-version','1.12.5','--release-notes',$Notes)
 $signed = Get-RC26SignedFeed "$candidate/Published/APFClientUpdate.json" "$candidate/Published/APFClient-kesas-rc26.zip" 'kesas-rc26'
-if ((ConvertTo-RC26Json @($signed.files | Sort-Object path)) -cne (ConvertTo-RC26Json @($nextFiles | Sort-Object path))) { throw 'Native tool signed an unexpected candidate inventory.' }
+# Normalize dictionary/PSCustomObject representation before comparing. Raw JSON
+# property ordering is not an inventory difference; paths, hashes and sizes are.
+$canonicalSigned = @($signed.files | ForEach-Object { [pscustomobject][ordered]@{ path=[string]$_.path; sha256=[string]$_.sha256; sizeBytes=[long]$_.sizeBytes } } | Sort-Object path)
+$canonicalExpected = @($nextFiles | ForEach-Object { [pscustomobject][ordered]@{ path=[string]$_.path; sha256=[string]$_.sha256; sizeBytes=[long]$_.sizeBytes } } | Sort-Object path)
+if ((ConvertTo-RC26Json $canonicalSigned) -cne (ConvertTo-RC26Json $canonicalExpected)) { throw 'Native tool signed an unexpected candidate inventory.' }
+Assert-RC26TreeInventory $client $signed.files
 $starter = "$candidate/Aetherfront-Starter-kesas-rc26.zip"
 [IO.File]::Copy("$release/ClientTemplate.zip",$starter,$false)
 $public = Read-UpdateText "$RC26Root/secrets/update-signing-public.xml" 32768
@@ -166,6 +186,7 @@ try {
 [IO.File]::WriteAllText("$starter.sha256","$(Get-RC26Hash $starter)  $([IO.Path]::GetFileName($starter))`n",$RC26Utf8)
 Write-RC26Json "$candidate/MEDIA-PREPARATION.json" ([ordered]@{ version = 'kesas-rc26'; mode = $MediaMode; newMedia = @($newMedia | Select-Object path,destination,sha256,sizeBytes); newMediaCount = $newMedia.Count
     requiredBeforePublication = ($newMedia.Count -gt 0); preparationExecuted = $false; existingMedia = @($media.Values | Sort-Object name); repairPackageIds = @(Get-RC26RepairIds)
+    potatoPolicyPlanSha256 = $PotatoPolicyPlanSha256; potatoPolicyPackageId = 'kesas-potato-policy'; potatoPolicyProfile = 'potato'
     instructions = 'Preserve every historical asset. New Candidate/Media ZIPs need a SEPARATE main-approved exact-hash preparation into native Server/Config before publication; this build never does that. The unchanged native publisher imports no release-root media. Never overwrite a different immutable file. The native publisher must publish its own exact signed bytes, not this independently signed local preview.' })
 foreach ($inputFile in $inputs) { Assert-RC26Hash $inputFile.path $inputFile.sha256 }
 if ($assetReview) {
@@ -182,7 +203,11 @@ Write-RC26Json "$stage/BUILD-RESULT.json" ([ordered]@{ schemaVersion = 1; versio
     compatibilityEvidenceSha256 = $CompatibilityEvidenceSha256; releaseNotes = $Notes; releaseSha256 = Get-RC26Hash $releaseZip; starterSha256 = Get-RC26Hash $starter
     catalogSha256 = Get-RC26Hash $catalogFile; packTemplateSha256 = Get-RC26Hash "$release/APFPack-template.json"
     clientOnlyAllowancesUnchanged = $true; serverManagedPackagesPreservedEmpty = $true; profilePolicyUnchanged = $true; unrelatedArchiveDeclarationsUnchanged = $true
-    reviewedAssetPlanSha256 = $AssetPlanSha256; assetTestResultSha256 = $AssetTestResultSha256; assetMedia = @($newMedia | Select-Object path,destination,sha256,sizeBytes)
+    reviewedAssetPlanSha256 = $AssetPlanSha256; assetTestResultSha256 = $AssetTestResultSha256; assetMedia = @($assetReview.files | Select-Object path,destination,sha256,sizeBytes)
+    reviewedPotatoPolicyPlanSha256 = $PotatoPolicyPlanSha256; potatoPolicyTestEvidenceSha256 = $policyReview.testEvidenceSha256
+    potatoPolicyReviewed = $true; potatoPolicyProfile = 'potato'; potatoPolicyDeclaration = $policyReview.declaration
+    potatoPolicyMedia = $policyReview.file | Select-Object path,destination,sha256,sizeBytes
+    potatoPolicySnapshotFiles = @(foreach ($file in $policyReview.snapshotFiles) { [ordered]@{ path = "Candidate/Policy/$($file.path)"; sha256 = $file.sha256 } })
     exactNativePublisherBytesRequired = $true; nativeStagingExecuted = $false; liveWrites = $false; notActivated = $true })
 Complete-RC26Attempt $attempt
 Write-Output "BUILD-RESULT: $($attempt.complete)/BUILD-RESULT.json"

@@ -16,9 +16,10 @@ rejected by both the runner and executable.
 
 The migration uses the final signed candidate directly. Both catalogs must match
 the original RC25 manifests with only revision routing, four `-repair26` runtime
-repair versions, and the five exact reviewed AssetPlan declarations applied.
-All other package fields and policy must remain identical. The initial replacement
-set is the exact union of those declarations (nine distinct packages in this plan),
+repair versions, the five exact reviewed AssetPlan declarations, and the explicitly
+reviewed Potato-only policy replacement applied. Full has no policy replacement.
+All other package fields remain identical. The initial Potato replacement
+set is the exact union of those declarations (ten distinct packages),
 not an unrestricted media exception and not a full-pack reinstall.
 
 `-AssetStage` explicitly selects either the stage directory or its AssetPlan JSON.
@@ -29,14 +30,23 @@ IDs, seven byte-identical texture aliases and eight precise Static bindings, wit
 per-package preservation of all original entries and ZIP metadata. Archive SHA256,
 URL, size, old declaration and profile mapping are bound to that exact plan.
 
+Execution also requires explicit `-PotatoPolicyPlanPath` and
+`-PotatoPolicyPlanSha256`. Compile-only can omit both and never creates a fixture.
+The schema-1 RC26 Potato plan must be sealed in `ModFixes/Staged-RC26*`, bind the
+signed RC25 baseline and exactly `kesas-potato-policy`, and preserve Full. Its
+source, archive and passing non-synthetic MM evidence are hash-bound. Both actual
+ZIPs are inspected: only the existing `ZZZ_KESASPotato/DisableExhaust.cfg` may
+change; every other entry's bytes and metadata must remain identical. Installed
+Potato bytes are checked against the source; Full must contain no policy root.
+
 ```powershell
 & ./Aetherfront-RC26-Work/ProfileTests/Test-Profile.ps1 -CodeResult <absolute-CODE-RESULT.json> -AssetStage <absolute-ASSET-PLAN.json> -AssetPlanSha256 <reviewed-plan-hash> -AssetTestResultSha256 <reviewed-TestAssets-result-hash>
 
 # Run only after MAIN confirms the candidate is frozen.
-& ./Aetherfront-RC26-Work/ProfileTests/Test-Profile.ps1 -CodeResult <absolute-CODE-RESULT.json> -AssetStage <absolute-ASSET-PLAN.json> -AssetPlanSha256 <reviewed-plan-hash> -AssetTestResultSha256 <reviewed-TestAssets-result-hash> -CandidateRoot <absolute-final-Candidate> -Run
+& ./Aetherfront-RC26-Work/ProfileTests/Test-Profile.ps1 -CodeResult <absolute-CODE-RESULT.json> -AssetStage <absolute-ASSET-PLAN.json> -AssetPlanSha256 <reviewed-plan-hash> -AssetTestResultSha256 <reviewed-TestAssets-result-hash> -PotatoPolicyPlanPath <absolute-POLICY-PLAN.json> -PotatoPolicyPlanSha256 <reviewed-policy-plan-hash> -CandidateRoot <absolute-final-Candidate> -Run
 
 # Separate, optional long profile cycle; do not start automatically.
-& ./Aetherfront-RC26-Work/ProfileTests/Test-Profile.ps1 -CodeResult <absolute-CODE-RESULT.json> -AssetStage <absolute-ASSET-PLAN.json> -AssetPlanSha256 <reviewed-plan-hash> -AssetTestResultSha256 <reviewed-TestAssets-result-hash> -CandidateRoot <absolute-final-Candidate> -Run -FullCycle
+& ./Aetherfront-RC26-Work/ProfileTests/Test-Profile.ps1 -CodeResult <absolute-CODE-RESULT.json> -AssetStage <absolute-ASSET-PLAN.json> -AssetPlanSha256 <reviewed-plan-hash> -AssetTestResultSha256 <reviewed-TestAssets-result-hash> -PotatoPolicyPlanPath <absolute-POLICY-PLAN.json> -PotatoPolicyPlanSha256 <reviewed-policy-plan-hash> -CandidateRoot <absolute-final-Candidate> -Run -FullCycle
 ```
 
 `-Runtime KSP-Mono` uses the existing exact KSP MonoHost. All runs use the exact
@@ -55,7 +65,8 @@ results remain under this test directory, not the user's home.
    cache paths. These payloads are synthetic; the package archive bytes are real.
 3. Load the actual signed RC25 Engine/core in a separate private worker. Prepare
    and authenticate a combined real signed RC26 client update plus the exact union
-   of four runtime repair archives and five reviewed additive media archives.
+   of four runtime repair archives, five reviewed additive media archives and the
+   one explicit Potato-only policy archive: exactly ten initial replacements.
    Installed RC25 data remains unchanged until commit.
 4. Commit through that already-loaded old helper. Assert successful target state,
    no hidden rollback, one explicit GameStub restart, and rejection of a second.
@@ -74,6 +85,9 @@ results remain under this test directory, not the user's home.
    sentinel, opposite-profile rejection, and preserved identity, saves and controls.
    Recheck original baseline metadata and every source file in all runtime/media
    replacement roots, not only the four runtime roots.
+8. Verify the installed Potato policy's exact source bytes and package state;
+   verify the policy package/root is absent from Full. MM behavioral correctness
+   is attributed to the separately approved hash-bound MM evidence, not Unity.
 
 ## Optional long cycle and limitations
 

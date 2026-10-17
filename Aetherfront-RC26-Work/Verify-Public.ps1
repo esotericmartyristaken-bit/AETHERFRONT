@@ -5,7 +5,7 @@ param([Parameter(Mandatory)][string]$BuildResultPath)
 $review = Get-RC26ReviewedRelease $BuildResultPath
 $version = 'kesas-rc26'
 $nativeFeed = Get-RC26SignedFeed "$RC26Root/Updates/APFClientUpdate.json" "$RC26Root/Updates/$version/APFClient-$version.zip" $version
-if (@($nativeFeed.files).Count -ne 464 -or (ConvertTo-RC26Json @($nativeFeed.files | Sort-Object path)) -cne (ConvertTo-RC26Json @($review.feed.files | Sort-Object path))) { throw 'Native signed candidate inventory mismatch.' }
+if (@($nativeFeed.files).Count -ne 464 -or (ConvertTo-RC26InventoryJson $nativeFeed.files) -cne (ConvertTo-RC26InventoryJson $review.feed.files)) { throw 'Native signed candidate inventory mismatch.' }
 $catalogRecord = @($nativeFeed.files | Where-Object path -CEQ $RC26CatalogRelative)
 if ($catalogRecord.Count -ne 1 -or $catalogRecord[0].sha256 -cne $review.report.catalogSha256) { throw 'Native catalog does not match reviewed signed catalog.' }
 $catalog = Get-RC26ZipJson "$RC26Root/Updates/$version/APFClient-$version.zip" $catalogRecord[0]

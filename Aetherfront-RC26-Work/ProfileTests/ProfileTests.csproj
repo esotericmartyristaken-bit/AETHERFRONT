@@ -3,7 +3,7 @@
     <OutputType>Exe</OutputType><TargetFramework>net472</TargetFramework><LangVersion>10</LangVersion>
     <Optimize>true</Optimize><DebugType>none</DebugType><UseSharedCompilation>false</UseSharedCompilation>
     <AutomaticallyUseReferenceAssemblyPackages>false</AutomaticallyUseReferenceAssemblyPackages>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultItems>false</EnableDefaultItems><EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <GameManaged Condition="'$(GameManaged)' == ''">$(MSBuildProjectDirectory)/../../Aetherfront-KSP-Smoke/KSP_x64_Data/Managed</GameManaged>
     <BaselineClient>$(MSBuildProjectDirectory)/../../Aetherfront-RC25-Work/Candidate/Client</BaselineClient>
   </PropertyGroup>
@@ -12,6 +12,7 @@
   </Target>
   <ItemGroup>
     <Compile Include="Program.cs" />
+    <Compile Include="PotatoPolicyContract.cs" />
     <Reference Include="ApfCore"><HintPath>$(Rc26CodeRoot)/Patched/ApfCore.dll</HintPath></Reference>
     <Reference Include="KesasInstall"><HintPath>$(Rc26CodeRoot)/Engine/KesasInstall.dll</HintPath></Reference>
     <Reference Include="JsonFx"><HintPath>$(BaselineClient)/GameData/LunaMultiplayer/Plugins/JsonFx.dll</HintPath></Reference>

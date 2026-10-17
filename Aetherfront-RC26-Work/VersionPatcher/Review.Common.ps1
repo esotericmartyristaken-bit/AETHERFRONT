@@ -13,6 +13,10 @@ $RC26Utf8 = [Text.UTF8Encoding]::new($false)
 $RC26CatalogRelative = 'GameData/LunaMultiplayer/Launcher/install-catalog.json'
 function Get-RC26Hash([string]$Path) { (Get-FileHash -LiteralPath (Assert-UpdatePath $Path) -Algorithm SHA256).Hash.ToLowerInvariant() }
 function ConvertTo-RC26Json($Value) { ConvertTo-Json -InputObject $Value -Depth 80 -Compress }
+function ConvertTo-RC26InventoryJson($Files) {
+    $values = @($Files | ForEach-Object { [pscustomobject][ordered]@{ path=[string]$_.path; sha256=[string]$_.sha256; sizeBytes=[long]$_.sizeBytes } } | Sort-Object path)
+    ConvertTo-RC26Json $values
+}
 function Assert-RC26Hash([string]$Path, [string]$Expected) {
     if ($Expected -cnotmatch '^[a-f0-9]{64}$' -or (Get-RC26Hash $Path) -cne $Expected) { throw "Input hash mismatch: $Path" }
 }
@@ -79,7 +83,7 @@ function Get-RC26Baseline {
 function Get-RC26RepairIds {
     @('kesas-contractconfigurator-3179517d','kesas-kerbalengineer-f43a5d95','kesas-kspcommunityfixes-06405f0a','kesas-zzz-kesasperformancefixes-c43001de')
 }
-function Get-RC26VersionCatalog($Catalog, $AssetDeclarations = @()) {
+function Get-RC26VersionCatalog($Catalog, $AssetDeclarations = @(), $PotatoPolicyDeclaration = $null) {
     $next = ConvertTo-RC26Json $Catalog | ConvertFrom-Json
     $next.version = 'kesas-rc26'
     foreach ($name in @('full','potato')) {
@@ -100,7 +104,75 @@ function Get-RC26VersionCatalog($Catalog, $AssetDeclarations = @()) {
             if ((ConvertTo-RC26Json $package[0]) -cne (ConvertTo-RC26Json $declaration)) { throw 'Asset declaration changed a package identity, install root or policy field.' }
         }
     }
+    if ($null -ne $PotatoPolicyDeclaration) {
+        if ($PotatoPolicyDeclaration.id -cne 'kesas-potato-policy') { throw 'Only the Potato policy package may receive a policy replacement.' }
+        $policy = @($next.potato.managedPackages | Where-Object id -CEQ 'kesas-potato-policy')
+        if ($policy.Count -ne 1 -or @($next.full.managedPackages | Where-Object id -CEQ 'kesas-potato-policy').Count -ne 0) { throw 'Potato policy must occur exactly once in Potato and never in Full.' }
+        foreach ($property in @('version','archiveUrl','sha256','sizeBytes')) { $policy[0].$property = $PotatoPolicyDeclaration.$property }
+        if ((ConvertTo-RC26Json $policy[0]) -cne (ConvertTo-RC26Json $PotatoPolicyDeclaration)) { throw 'Policy replacement changed identity, destination or profile policy.' }
+    }
     return $next
+}
+function Assert-RC26PotatoPolicyZipDelta([string]$OldArchive,[string]$NewArchive,$Change) {
+    $old = Get-RC26ZipInventory $OldArchive; $next = Get-RC26ZipInventory $NewArchive
+    if ($Change.path -cne 'ZZZ_KESASPotato/DisableExhaust.cfg' -or !$old.ContainsKey($Change.path) -or !$next.ContainsKey($Change.path) -or
+        (ConvertTo-RC26Json @($old.Keys | Sort-Object)) -cne (ConvertTo-RC26Json @($next.Keys | Sort-Object))) { throw 'Policy archive may replace only the existing DisableExhaust.cfg; no added/removed entries.' }
+    foreach ($name in $old.Keys) {
+        if ($name -cne $Change.path -and (ConvertTo-RC26Json $old[$name]) -cne (ConvertTo-RC26Json $next[$name])) { throw 'Unreviewed policy archive entry/metadata change.' }
+    }
+    if ($old[$Change.path].sha256 -cne $Change.oldSha256 -or $old[$Change.path].sizeBytes -ne $Change.oldSizeBytes -or
+        $next[$Change.path].sha256 -cne $Change.sha256 -or $next[$Change.path].sizeBytes -ne $Change.sizeBytes -or
+        $Change.sha256 -ceq $Change.oldSha256 -or $Change.sizeBytes -le 0 -or $Change.sizeBytes -gt 64KB) { throw 'Policy changed-entry proof mismatch or oversized/no-op replacement.' }
+}
+function Get-RC26PotatoPolicyPlan([string]$PlanPath,[string]$PlanSha256,$BaselineCatalog) {
+    $PlanPath = Assert-UpdatePath $PlanPath
+    $directory = [IO.Path]::GetDirectoryName($PlanPath)
+    if (!$directory.StartsWith((Get-RC26Output 'ModFixes') + '\',[StringComparison]::OrdinalIgnoreCase) -or
+        [IO.Path]::GetFileName($directory) -cnotmatch '^Staged-RC26(?:-[A-Za-z0-9-]+)?$') { throw 'Use an explicitly reviewed immutable ModFixes/Staged-RC26 policy plan.' }
+    Assert-UpdateTree $directory
+    Assert-RC26Hash $PlanPath $PlanSha256
+    $plan = Read-UpdateText $PlanPath | ConvertFrom-Json
+    if ($plan.schemaVersion -ne 1 -or $plan.version -cne 'kesas-rc26' -or $plan.profile -cne 'potato') { throw 'Policy plan must explicitly target RC26 Potato only.' }
+    Assert-RC26Hash "$RC26Root/Updates/APFClientUpdate.json" 'f249dc0712ad4599ea74d9b213283321024808ead3884f98ec1c9e41e714d22f'
+    $record = @((Read-UpdateText "$RC26Root/Updates/APFClientUpdate.json" | ConvertFrom-Json).files | Where-Object path -CEQ $RC26CatalogRelative)
+    if ($record.Count -ne 1 -or $plan.sourceCatalogSha256 -cne $record[0].sha256) { throw 'Policy plan does not match the signed active RC25 catalog.' }
+    $old = @($BaselineCatalog.potato.managedPackages | Where-Object id -CEQ 'kesas-potato-policy')
+    $package = $plan.declaration
+    if ($old.Count -ne 1 -or @($BaselineCatalog.full.managedPackages | Where-Object id -CEQ 'kesas-potato-policy').Count -ne 0 -or
+        (ConvertTo-RC26Json $plan.oldDeclaration) -cne (ConvertTo-RC26Json $old[0]) -or $package.id -cne 'kesas-potato-policy' -or
+        $package.sha256 -cnotmatch '^[a-f0-9]{64}$' -or $package.sha256 -ceq $old[0].sha256 -or $package.version -ceq $old[0].version -or
+        $package.version -cnotmatch '^[A-Za-z0-9._-]{1,64}$' -or $package.sizeBytes -le 0 -or $package.sizeBytes -gt 1MB) { throw 'Invalid Potato-only policy baseline/replacement declaration.' }
+    $expected = ConvertTo-RC26Json $old[0] | ConvertFrom-Json
+    foreach ($property in @('version','archiveUrl','sha256','sizeBytes')) { $expected.$property = $package.$property }
+    if ((ConvertTo-RC26Json $expected) -cne (ConvertTo-RC26Json $package)) { throw 'Policy replacement may change only version, URL, SHA256 and size.' }
+    $deployment = Get-UpdateDeployment $RC26Root
+    $name = [uri]::UnescapeDataString((([uri]$package.archiveUrl).AbsolutePath -split '/')[-1])
+    $null = Get-UpdateRelativePath $name
+    if ($name -cnotmatch ('^kesas-rc26-[a-z0-9-]+-' + [regex]::Escape($package.sha256) + '\.zip$') -or
+        $package.archiveUrl -cne "$($deployment.packOrigin)/$name" -or $plan.archive.path -cne "Media/$name" -or
+        $plan.archive.sha256 -cne $package.sha256 -or $plan.archive.sizeBytes -ne $package.sizeBytes) { throw 'Policy archive requires an exact full-SHA256 content-addressed pinned-origin URL.' }
+    if ($plan.source.path -cnotmatch '^Source/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_.-]+\.cfg$' -or
+        $plan.source.sha256 -cne $plan.changedEntry.sha256 -or $plan.source.sizeBytes -ne $plan.changedEntry.sizeBytes) { throw 'Policy source must exactly match the reviewed changed archive entry.' }
+    $archive = Get-UpdateChildPath $directory $plan.archive.path
+    $source = Get-UpdateChildPath $directory $plan.source.path
+    $evidence = Get-UpdateChildPath $directory $plan.testEvidence.path
+    Assert-RC26Hash $archive $plan.archive.sha256; Assert-RC26Hash $source $plan.source.sha256; Assert-RC26Hash $evidence $plan.testEvidence.sha256
+    if (([IO.FileInfo]$archive).Length -ne $package.sizeBytes -or ([IO.FileInfo]$source).Length -ne $plan.source.sizeBytes) { throw 'Policy source/archive size mismatch.' }
+    $proof = Read-UpdateText $evidence | ConvertFrom-Json
+    if ($proof.schemaVersion -ne 1 -or $proof.version -cne 'kesas-rc26' -or $proof.profile -cne 'potato' -or !$proof.passed -or
+        $proof.sourceCatalogSha256 -cne $plan.sourceCatalogSha256 -or $proof.oldArchiveSha256 -cne $old[0].sha256 -or
+        $proof.newArchiveSha256 -cne $package.sha256 -or $proof.sourceSha256 -cne $plan.source.sha256 -or
+        !$proof.unchangedOtherEntries -or !$proof.fullProfileUnchanged) { throw 'Passing policy/MM evidence must bind the exact source, baseline and new archive; Full must stay unchanged.' }
+    $oldName = [uri]::UnescapeDataString((([uri]$old[0].archiveUrl).AbsolutePath -split '/')[-1])
+    $oldArchive = Get-UpdateChildPath $RC26Root "Server/Config/$oldName"
+    Assert-RC26Hash $oldArchive $old[0].sha256
+    Assert-RC26PotatoPolicyZipDelta $oldArchive $archive $plan.changedEntry
+    $paths = @([IO.Path]::GetFileName($PlanPath),$plan.archive.path,$plan.source.path,$plan.testEvidence.path)
+    if (@($paths | Sort-Object -Unique).Count -ne 4) { throw 'Policy plan/source/archive/evidence paths must be distinct.' }
+    $snapshot = @(foreach ($relative in $paths) { [ordered]@{ path = $relative; sha256 = Get-RC26Hash (Get-UpdateChildPath $directory $relative) } })
+    [pscustomobject]@{ directory = $directory; planPath = $PlanPath; planSha256 = $PlanSha256; declaration = $package; source = $plan.source
+        changedEntry = $plan.changedEntry; testEvidenceSha256 = $plan.testEvidence.sha256; snapshotFiles = $snapshot
+        file = [pscustomobject]@{ path = "Media/$name"; source = $archive; destination = "Server/Config/$name"; sha256 = $package.sha256; sizeBytes = $package.sizeBytes } }
 }
 function Assert-RC26TreeInventory([string]$Directory, $Files) {
     Assert-UpdateTree $Directory
@@ -329,8 +401,11 @@ function Get-RC26ReviewedRelease([string]$ResultPath) {
         [IO.Path]::GetFileName($directory) -cnotmatch '^Release-[a-f0-9]{32}$' -or [IO.Path]::GetFileName($ResultPath) -cne 'BUILD-RESULT.json') { throw 'Use a completed RC26 Release attempt.' }
     $report = Read-UpdateText $ResultPath | ConvertFrom-Json
     if ($report.schemaVersion -ne 1 -or !$report.completed -or $report.version -cne 'kesas-rc26' -or $report.signedFiles -ne 464 -or
-        $report.fullPackages -ne 211 -or $report.potatoPackages -ne 177 -or $report.newMediaCount -ne 5 -or
+        $report.fullPackages -ne 211 -or $report.potatoPackages -ne 177 -or $report.newMediaCount -ne 6 -or
         $report.purpose -cne 'FinalRelease' -or $report.mediaMode -cne 'ReviewedAssets' -or !$report.exactNativePublisherBytesRequired) { throw 'Unexpected final release evidence; test-only/no-assets variants cannot verify as a final release.' }
+    if (!$report.potatoPolicyReviewed -or $report.potatoPolicyProfile -cne 'potato' -or $report.reviewedPotatoPolicyPlanSha256 -cnotmatch '^[a-f0-9]{64}$' -or
+        $report.potatoPolicyDeclaration.id -cne 'kesas-potato-policy' -or @($report.potatoPolicySnapshotFiles).Count -ne 4) { throw 'Final RC26 requires the independently reviewed Potato-only policy replacement; prior five-media candidates are not final.' }
+    foreach ($file in $report.potatoPolicySnapshotFiles) { Assert-RC26Hash (Get-UpdateChildPath $directory $file.path) $file.sha256 }
     Assert-RC26Hash "$directory/Aetherfront-Release-kesas-rc26.zip" $report.releaseSha256
     Assert-RC26Hash "$directory/Candidate/Client/$RC26CatalogRelative" $report.catalogSha256
     Assert-RC26Hash "$directory/Release/APFPack-template.json" $report.packTemplateSha256
@@ -338,5 +413,11 @@ function Get-RC26ReviewedRelease([string]$ResultPath) {
     $feed = Get-RC26SignedFeed "$directory/Candidate/Published/APFClientUpdate.json" "$directory/Candidate/Published/APFClient-kesas-rc26.zip" 'kesas-rc26'
     if (@($feed.files).Count -ne 464) { throw 'Reviewed candidate signed inventory must contain 464 files.' }
     Assert-RC26TreeInventory "$directory/Candidate/Client" $feed.files
+    $catalogRecord = @($feed.files | Where-Object path -CEQ $RC26CatalogRelative)
+    if ($catalogRecord.Count -ne 1) { throw 'Signed candidate catalog missing.' }
+    $catalog = Get-RC26ZipJson "$directory/Candidate/Published/APFClient-kesas-rc26.zip" $catalogRecord[0]
+    $policy = @($catalog.potato.managedPackages | Where-Object id -CEQ 'kesas-potato-policy')
+    if ($policy.Count -ne 1 -or @($catalog.full.managedPackages | Where-Object id -CEQ 'kesas-potato-policy').Count -ne 0 -or
+        (ConvertTo-RC26Json $policy[0]) -cne (ConvertTo-RC26Json $report.potatoPolicyDeclaration)) { throw 'Signed catalog does not contain the exact Potato-only policy replacement.' }
     [pscustomobject]@{ directory = $directory; report = $report; feed = $feed }
 }

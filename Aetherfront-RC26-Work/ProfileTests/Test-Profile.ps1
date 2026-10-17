@@ -6,6 +6,8 @@ param(
     [Parameter(Mandatory)][ValidatePattern('^[a-f0-9]{64}$')][string]$AssetPlanSha256,
     [string]$AssetTestResult='',
     [Parameter(Mandatory)][ValidatePattern('^[a-f0-9]{64}$')][string]$AssetTestResultSha256,
+    [string]$PotatoPolicyPlanPath='',
+    [ValidatePattern('^(?:[a-f0-9]{64})?$')][string]$PotatoPolicyPlanSha256='',
     [string]$CandidateRoot='',
     [switch]$Run,
     [switch]$FullCycle,
@@ -19,6 +21,7 @@ $workspace=Split-Path $work
 if($owned -ine [IO.Path]::GetFullPath((Join-Path $workspace 'Aetherfront-RC26-Work/ProfileTests'))){throw 'Run only from the owned RC26 ProfileTests directory.'}
 if($FullCycle -and !$Run){throw 'FullCycle requires explicit Run.'}
 if($Run -and !$CandidateRoot){throw 'A frozen signed CandidateRoot is required; no fixture or test will be launched without it.'}
+if($Run -and (!$PotatoPolicyPlanPath -or !$PotatoPolicyPlanSha256)){throw 'Run requires explicit -PotatoPolicyPlanPath and -PotatoPolicyPlanSha256; no old-candidate fallback.'}
 $codeFile=[IO.Path]::GetFullPath($CodeResult)
 $codeRoot=Split-Path $codeFile
 if(!$codeRoot.StartsWith([IO.Path]::GetFullPath((Join-Path $work 'BuildAttempts/Code-')),[StringComparison]::OrdinalIgnoreCase)){throw 'CodeResult must be an immutable RC26 Code attempt.'}
@@ -56,6 +59,34 @@ $assetArchives=@(foreach($item in $assetPlan.media){
     if(!$path.StartsWith($assetDirectory+'\',[StringComparison]::OrdinalIgnoreCase) -or (Get-Item -LiteralPath $path).Length -ne $item.declaration.sizeBytes -or (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash -ine $item.declaration.sha256){throw 'Reviewed AssetStage archive hash/size mismatch.'}
     [pscustomobject]@{path=$path;sha256=$item.declaration.sha256}
 })
+$policyInputs=@()
+$policyPlanFile=''
+if($PotatoPolicyPlanPath -or $PotatoPolicyPlanSha256){
+    if(!$PotatoPolicyPlanPath -or !$PotatoPolicyPlanSha256 -or ![IO.Path]::IsPathRooted($PotatoPolicyPlanPath)){throw 'Policy plan requires both an explicit absolute path and reviewed SHA256.'}
+    $policyPlanFile=[IO.Path]::GetFullPath($PotatoPolicyPlanPath)
+    $policyDirectory=Split-Path $policyPlanFile
+    $modFixes=[IO.Path]::GetFullPath((Join-Path $work 'ModFixes'))
+    if((Split-Path $policyDirectory) -ine $modFixes -or [IO.Path]::GetFileName($policyDirectory) -cnotmatch '^Staged-RC26(?:-[A-Za-z0-9-]+)?$'){throw 'Policy plan must be in an explicitly reviewed immutable ModFixes/Staged-RC26 stage.'}
+    if((Get-FileHash -LiteralPath $policyPlanFile -Algorithm SHA256).Hash -ine $PotatoPolicyPlanSha256){throw 'Policy plan differs from its explicitly approved SHA256.'}
+    $policyPlan=Get-Content -LiteralPath $policyPlanFile -Raw|ConvertFrom-Json
+    if($policyPlan.schemaVersion -ne 1 -or $policyPlan.version -cne 'kesas-rc26' -or $policyPlan.profile -cne 'potato' -or $policyPlan.sourceCatalogSha256 -cne $assetPlan.sourceCatalogSha256 -or $policyPlan.declaration.id -cne 'kesas-potato-policy' -or $policyPlan.oldDeclaration.id -cne 'kesas-potato-policy'){throw 'Policy plan must bind the same signed RC25 catalog and the sole Potato-only policy package.'}
+    if($policyPlan.archive.sha256 -cne $policyPlan.declaration.sha256 -or $policyPlan.archive.sizeBytes -ne $policyPlan.declaration.sizeBytes -or $policyPlan.source.sha256 -cne $policyPlan.changedEntry.sha256 -or $policyPlan.source.sizeBytes -ne $policyPlan.changedEntry.sizeBytes -or $policyPlan.changedEntry.path -cne 'ZZZ_KESASPotato/DisableExhaust.cfg'){throw 'Policy source/archive/changed-entry byte records disagree.'}
+    $policyInputs=@([pscustomobject]@{path=$policyPlanFile;sha256=$PotatoPolicyPlanSha256})
+    foreach($name in @('archive','source','testEvidence')){
+        $record=$policyPlan.$name
+        if($record.path -cmatch '\\' -or [IO.Path]::IsPathRooted($record.path) -or @($record.path -split '/'|Where-Object{$_ -in @('','.','..')}).Count -ne 0 -or $record.sha256 -cnotmatch '^[a-f0-9]{64}$'){throw 'Unsafe or unbound policy input path/hash.'}
+        $path=[IO.Path]::GetFullPath((Join-Path $policyDirectory $record.path))
+        if(!$path.StartsWith($policyDirectory+'\',[StringComparison]::OrdinalIgnoreCase) -or (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash -ine $record.sha256){throw 'Policy input escaped its stage or changed from the reviewed bytes.'}
+        $probe=$path
+        while($probe.Length -ge $work.Length){if(((Get-Item -LiteralPath $probe -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0){throw 'Policy input has a reparse-point ancestor.'};if($probe -ieq $work){break};$probe=Split-Path $probe}
+        if($name -ne 'testEvidence' -and (Get-Item -LiteralPath $path).Length -ne $record.sizeBytes){throw 'Policy input size mismatch.'}
+        $policyInputs+=[pscustomobject]@{path=$path;sha256=$record.sha256}
+    }
+    if(@($policyInputs.path|Sort-Object -Unique).Count -ne 4){throw 'Policy plan/source/archive/evidence paths must be distinct.'}
+    $policyEvidencePath=[IO.Path]::GetFullPath((Join-Path $policyDirectory $policyPlan.testEvidence.path))
+    $policyEvidence=Get-Content -LiteralPath $policyEvidencePath -Raw|ConvertFrom-Json
+    if($policyEvidence.schemaVersion -ne 1 -or $policyEvidence.version -cne 'kesas-rc26' -or $policyEvidence.profile -cne 'potato' -or !$policyEvidence.passed -or !$policyEvidence.unchangedOtherEntries -or !$policyEvidence.fullProfileUnchanged -or $policyEvidence.sourceCatalogSha256 -cne $policyPlan.sourceCatalogSha256 -or $policyEvidence.oldArchiveSha256 -cne $policyPlan.oldDeclaration.sha256 -or $policyEvidence.newArchiveSha256 -cne $policyPlan.declaration.sha256 -or $policyEvidence.sourceSha256 -cne $policyPlan.source.sha256 -or ('fixturesOnly' -in $policyEvidence.PSObject.Properties.Name -and $policyEvidence.fixturesOnly)){throw 'Passing non-synthetic policy/MM evidence must bind exact source, baseline/new archive and unchanged Full.'}
+}
 if($CandidateRoot){
     if(![IO.Path]::IsPathRooted($CandidateRoot)){throw 'CandidateRoot must be absolute.'}
     $CandidateRoot=[IO.Path]::GetFullPath($CandidateRoot)
@@ -73,7 +104,8 @@ $environment=@{
     DOTNET_CLI_HOME=(Join-Path $attempt 'cli-home');NUGET_PACKAGES=(Join-Path $attempt 'packages');
     NUGET_HTTP_CACHE_PATH=(Join-Path $attempt 'http-cache');DOTNET_CLI_TELEMETRY_OPTOUT='1';
     DOTNET_SKIP_FIRST_TIME_EXPERIENCE='1';DOTNET_CLI_USE_MSBUILD_SERVER='0';
-    DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE='true';MSBUILDDISABLENODEREUSE='1'
+    DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE='true';MSBUILDDISABLENODEREUSE='1';
+    DOTNET_GENERATE_ASPNET_CERTIFICATE='false';DOTNET_ADD_GLOBAL_TOOLS_TO_PATH='0';DOTNET_NOLOGO='1'
 }
 $previousEnvironment=@{}
 foreach($name in $environment.Keys){$previousEnvironment[$name]=[Environment]::GetEnvironmentVariable($name,'Process');[Environment]::SetEnvironmentVariable($name,$environment[$name],'Process')}
@@ -94,15 +126,22 @@ try{
         if($targetHash -cne $sourceHash){throw "Harness must use exact starter BCL: $name"}
         [pscustomobject]@{name=$name;source=$source;sha256=$sourceHash}
     })
+    $runtimeAssemblies=@(foreach($record in @(@{name='KesasInstall.dll';source=(Join-Path $codeRoot 'Engine/KesasInstall.dll');sha256=$expectedEngine},@{name='ApfCore.dll';source=(Join-Path $codeRoot 'Patched/ApfCore.dll');sha256=$expectedCore})){
+        $target=Join-Path $output $record.name
+        $actual=(Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash.ToLowerInvariant()
+        if($actual -cne $record.sha256){throw "Compiled harness copied the wrong runtime assembly: $($record.name)"}
+        [pscustomobject]@{name=$record.name;source=$record.source;target=$target;sha256=$actual}
+    })
     $executable=Join-Path $output 'ProfileTests.exe'
-    $inputs=@(foreach($path in @((Join-Path $owned 'Program.cs'),(Join-Path $owned 'ProfileTests.csproj'),$PSCommandPath,$codeFile,(Join-Path $codeRoot 'Engine/KesasInstall.dll'),(Join-Path $codeRoot 'Patched/ApfCore.dll'),$assetPlanPath,$assetTestPath,$executable)){
+    $inputs=@(foreach($path in @((Join-Path $owned 'Program.cs'),(Join-Path $owned 'PotatoPolicyContract.cs'),(Join-Path $owned 'ProfileTests.csproj'),$PSCommandPath,$codeFile,(Join-Path $codeRoot 'Engine/KesasInstall.dll'),(Join-Path $codeRoot 'Patched/ApfCore.dll'),$assetPlanPath,$assetTestPath,$executable)){
         [pscustomobject]@{path=$path;sha256=(Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()}
     })
     $inputs+=@($assetArchives)
-    $proof=[ordered]@{compiled=$true;executed=$false;fullCycleRequested=$FullCycle.IsPresent;runtime=$Runtime;codeResult=$codeFile;candidate=$CandidateRoot;assetPlan=$assetPlanPath;assetPlanSha256=$AssetPlanSha256;assetTest=$assetTestPath;assetTestSha256=$AssetTestResultSha256;inputs=$inputs;exactStarterBcl=$bcl;attempt=$attempt}
+    $inputs+=@($policyInputs)
+    $proof=[ordered]@{compiled=$true;executed=$false;fullCycleRequested=$FullCycle.IsPresent;runtime=$Runtime;codeResult=$codeFile;candidate=$CandidateRoot;assetPlan=$assetPlanPath;assetPlanSha256=$AssetPlanSha256;assetTest=$assetTestPath;assetTestSha256=$AssetTestResultSha256;potatoPolicyPlan=$policyPlanFile;potatoPolicyPlanSha256=$PotatoPolicyPlanSha256;policyRequiredForExecution=$true;inputs=$inputs;exactStarterBcl=$bcl;runtimeAssemblies=$runtimeAssemblies;attempt=$attempt}
     [IO.File]::WriteAllText((Join-Path $attempt 'runner-result.json'),($proof|ConvertTo-Json -Depth 8))
     if(!$Run){$proof|ConvertTo-Json -Depth 8;return}
-    $arguments=@($CandidateRoot,$codeFile,$assetPlanPath,$AssetPlanSha256,$assetTestPath,$AssetTestResultSha256)
+    $arguments=@($CandidateRoot,$codeFile,$assetPlanPath,$AssetPlanSha256,$assetTestPath,$AssetTestResultSha256,$policyPlanFile,$PotatoPolicyPlanSha256)
     if($FullCycle){$arguments+='--chain'}
     Push-Location $workspace
     try{

@@ -7,7 +7,7 @@ $version = 'kesas-rc26'
 $feedPath = "$RC26Root/Updates/APFClientUpdate.json"
 $archive = "$RC26Root/Updates/$version/APFClient-$version.zip"
 $feed = Get-RC26SignedFeed $feedPath $archive $version
-if (@($feed.files).Count -ne 464 -or (ConvertTo-RC26Json @($feed.files | Sort-Object path)) -cne (ConvertTo-RC26Json @($review.feed.files | Sort-Object path))) { throw 'Native signed inventory differs from the reviewed 464-file candidate.' }
+if (@($feed.files).Count -ne 464 -or (ConvertTo-RC26InventoryJson $feed.files) -cne (ConvertTo-RC26InventoryJson $review.feed.files)) { throw 'Native signed inventory differs from the reviewed 464-file candidate.' }
 $deployment = Get-UpdateDeployment $RC26Root
 if ($feed.packageUrl -cne "$($deployment.packOrigin)/updates/$version/APFClient-$version.zip") { throw 'Native package URL changed.' }
 $pack = Read-UpdateText "$RC26Root/Server/Config/APFPack.json" | ConvertFrom-Json

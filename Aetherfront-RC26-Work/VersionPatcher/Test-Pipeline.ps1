@@ -49,7 +49,7 @@ try {
     try { & "$RC26Work/Build-Code.ps1" -Mode All } catch { $gateFailed = $_.Exception.Message -ceq 'Main must freeze Engine edits before using -Mode All -EngineFrozen.' }
     Check $gateFailed 'Engine freeze gate did not fail before build.'
     $gateFailed = $false
-    try { & "$RC26Work/Build-Release.ps1" -CodeResultPath $CodeResultPath -MediaMode ReuseRC25 -CompatibilityEvidencePath $CodeResultPath -CompatibilityEvidenceSha256 (Get-RC26Hash $CodeResultPath) -Notes 'Gate test only; no release authorized.' }
+    try { & "$RC26Work/Build-Release.ps1" -CodeResultPath $CodeResultPath -MediaMode ReuseRC25 -CompatibilityEvidencePath $CodeResultPath -CompatibilityEvidenceSha256 (Get-RC26Hash $CodeResultPath) -Notes 'Gate test only; no release authorized.' -PotatoPolicyPlanPath $CodeResultPath -PotatoPolicyPlanSha256 (Get-RC26Hash $CodeResultPath) }
     catch { $gateFailed = $_.Exception.Message -ceq 'Release preparation requires main approval; use -ReleaseApproved only after the final media/baseline decision.' }
     Check $gateFailed 'Release gate did not fail before candidate creation.'
 } finally { [Environment]::SetEnvironmentVariable('APF_RC26_UNITY_MANAGED',$savedManaged,'Process') }

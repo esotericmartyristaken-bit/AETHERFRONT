@@ -106,7 +106,7 @@ internal static class ModuleManagerProbe
     {
         SmokeTest();
         string catalogPath = Path.Combine(root, "Aetherfront-RC25-Work/ModFixes/Staged-RC25/install-catalog.json");
-        string policyPath = Path.Combine(root, "Aetherfront-RC25-Work/ModFixes/Source/ZZZ_KESASPotato/DisableExhaust.cfg");
+        string policyPath = Path.Combine(root, "Aetherfront-RC26-Work/ModFixes/Source/ZZZ_KESASPotato/DisableExhaust.cfg");
         string catalogHash = HashFile(catalogPath), policyHash = HashFile(policyPath);
         Catalog catalog = json.Deserialize<Catalog>(File.ReadAllText(catalogPath));
         Regex warning = new Regex(@"Warning on PartSubtype (.*?) on module ModuleB9PartSwitch \(moduleID='(.*?)'\) on part ([^:]+): Could not find matching module");
@@ -138,7 +138,7 @@ internal static class ModuleManagerProbe
         var file = (UrlDir.UrlFile)FormatterServices.GetUninitializedObject(typeof(UrlDir.UrlFile));
         Set(file, "_name", "smoke"); Set(file, "_fileExtension", "cfg"); Set(file, "_parent", directory);
         ConfigNode part = ConfigNode.Load(Path.Combine(root, "Aetherfront-RC25-Work/P3e9e2e69/GameData/farfuturetechnologies/Parts/Control/RCS/fft-rcs-arcjet-1.cfg")).GetNode("PART");
-        ConfigNode policy = ConfigNode.Load(Path.Combine(root, "Aetherfront-RC25-Work/ModFixes/Source/ZZZ_KESASPotato/DisableExhaust.cfg"));
+        ConfigNode policy = ConfigNode.Load(Path.Combine(root, "Aetherfront-RC26-Work/ModFixes/Source/ZZZ_KESASPotato/DisableExhaust.cfg"));
         using (var logger = new FileLogger(Path.Combine(output, "Smoke-ModuleManager.log")))
         {
             var progress = new PatchProgress(logger);
@@ -202,11 +202,14 @@ internal static class ModuleManagerProbe
                 bool subtypeExists = parts.Any(p => KspName(p) == warning.Part && p.GetNodes("MODULE").Any(m => m.GetValue("name") == "ModuleB9PartSwitch" && m.GetValue("moduleID") == warning.Module && m.GetNodes("SUBTYPE").Any(t => t.GetValue("name") == warning.Subtype)));
                 Check(subtypeExists, name + " retained switch/subtype " + warning.Part + "/" + warning.Module + "/" + warning.Subtype);
                 if (legacy)
-                    Check(selected.Any(s => IsWaterfall(s) && MatchCount(s) == 0), "Legacy negative control reproduces " + warning.Part + "/" + warning.Subtype);
+                    Check(selected.Any(s => MatchCount(s) == 0), "Legacy negative control reproduces " + warning.Part + "/" + warning.Subtype);
                 else if (name == "potato")
-                    Check(!selected.Any(IsWaterfall), "RC25 removes dangling renderer selector " + warning.Part + "/" + warning.Subtype);
+                {
+                    Check(!selected.Any(IsWaterfall), "RC26 removes dangling renderer selector " + warning.Part + "/" + warning.Subtype);
+                    Check(selected.All(s => MatchCount(s) > 0), "RC26 preserves matching physics selectors " + warning.Part + "/" + warning.Subtype);
+                }
                 else
-                    Check(selected.Any(s => IsWaterfall(s) && MatchCount(s) > 0), "Full retains working renderer selector " + warning.Part + "/" + warning.Subtype);
+                    Check(selected.Length > 0 && selected.All(s => MatchCount(s) > 0), "Full retains working selectors " + warning.Part + "/" + warning.Subtype);
                 covered++;
             }
             Check(parts.Any(p => p.GetValue("name") == "fft-antimatter-beam-1"), name + " includes the antimatter beam engine.");
@@ -221,7 +224,8 @@ internal static class ModuleManagerProbe
                 Check(final.Count(c => c.Node.name == "KESAS_POTATO_COMPAT") == 1, "One clean profile marker remains.");
             }
             if (name == "full") Check(observer.Applications == 0 && water.Length > 0 && water.All(s => MatchCount(s) == 1), "Full retains uniquely matching renderer selectors without Potato cleanup.");
-            if (legacy) Check(missingWater == 112, "Legacy negative control has exactly the 112 observed dangling selectors.");
+            if (legacy) Check(missingWater == 28 && invalidPhysics == 84, "Legacy negative control reproduces 28 Waterfall and 84 RCS identifier mismatches.");
+            if (!legacy) Check(invalidPhysics == 0, name + " retains all matching physics selectors.");
             var report = new { profile = name, packageCount = profile.managedPackages.Length, configFiles = input.Files.Count, inputNodes = input.Configs.Count, compiledNodes = patches.Length, parts = parts.Length, selectors = selectors.Length, waterfallSelectors = water.Length, missingWaterfallSelectors = missingWater, unmatchedOtherSelectors = invalidPhysics, observedWarningsCovered = covered, policyApplications = observer.Applications, preservedParts = observer.PreservedParts, preservedModifiers = observer.PreservedModifiers, errors = (int)progress.Counter.errors, exceptions = (int)progress.Counter.exceptions, warnings = (int)progress.Counter.warnings, policyErrors = logger.PolicyErrors };
             WriteJson(Path.Combine(directory, "Report.json"), report);
             reports.Add(report);
@@ -252,12 +256,13 @@ internal static class ModuleManagerProbe
         string policyKey = input.Files.Keys.FirstOrDefault(k => k.Equals("ZZZ_KESASPotato/DisableExhaust.cfg", StringComparison.OrdinalIgnoreCase));
         if (policyKey != null)
         {
-            Check(input.Files[policyKey] == File.ReadAllText(policyPath), "Catalog policy bytes match reviewed RC25 source.");
+            Check(input.Files[policyKey] == File.ReadAllText(Path.Combine(root, "Aetherfront-RC25-Work/ModFixes/Source/ZZZ_KESASPotato/DisableExhaust.cfg")), "Baseline catalog policy bytes match reviewed RC25 source.");
             if (legacy)
             {
                 string old = Path.Combine(root, "KESAS-VPS-Server/Server/Config/kesas-potato-policy-95941eedff917252.zip");
                 input.Files[policyKey] = ReadArchive(old, "95941eedff917252f10554c727ee3b1002364c5dcdd2284a4ac30fa60c9a9dc4").Configs["ZZZ_KESASPotato/DisableExhaust.cfg"];
             }
+            else input.Files[policyKey] = File.ReadAllText(policyPath);
         }
         foreach (string protectedRoot in profile.protectedRoots)
         {
@@ -494,10 +499,9 @@ internal static class ModuleManagerProbe
                             else PreservedModifiers++;
                 foreach (ConfigNode node in expected.GetNodes())
                 {
-                    if (node.name == "EFFECTS" || node.name == "MODULE" && node.GetValue("name") == "ModuleWaterfallFX" || node.name == "MODEL" && (node.GetValue("model") ?? "").StartsWith("StockWaterfallEffects/", StringComparison.Ordinal)) expected.nodes.Remove(node);
-                    else if (node.name == "MODULE" && node.GetValue("name") == "ModuleEnginesFX")
-                        foreach (string key in new[] { "runningEffectName", "powerEffectName", "directThrottleEffectName", "engageEffectName", "disengageEffectName", "flameoutEffectName" }) node.SetValue(key, "", true);
-                    else if (node.name == "MODULE" && node.GetValue("name") == "ModuleRCSFX") node.SetValue("runningEffectName", "", true);
+                    if (node.name == "MODULE" && node.GetValue("name") == "ModuleWaterfallFX" || node.name == "MODEL" && (node.GetValue("model") ?? "").StartsWith("StockWaterfallEffects/", StringComparison.Ordinal)) expected.nodes.Remove(node);
+                    else if (node.name == "EFFECTS")
+                        foreach (ConfigNode group in node.GetNodes()) { group.nodes.Clear(); group.values.Clear(); }
                 }
                 foreach (ConfigNode.Value value in expected.values.Cast<ConfigNode.Value>().ToArray())
                     if (value.name.StartsWith("fx_", StringComparison.Ordinal) || value.name.StartsWith("sound_", StringComparison.Ordinal)) expected.values.Remove(value);
