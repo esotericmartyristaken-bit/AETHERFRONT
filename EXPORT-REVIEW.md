@@ -1,6 +1,6 @@
 # Publication review
 
-Status: local staging only. No Git initialization, authentication, push, release publication, game launch or service/process changes are authorized by this export.
+Status: reviewed source export for publication. The export itself performs no Git initialization, authentication, push, release publication, game launch or service/process changes. These are separate authorized operator actions.
 
 Before integration:
 
@@ -13,7 +13,7 @@ Before integration:
 
 ## Final refresh workflow
 
-Do not wait for all concurrent RC22 work to finish before preparing staging. After the native/GitHub publisher review, current PublicTransferProbe/LiveProfileTests edits and forthcoming recovery tests are ready:
+Staging can be prepared before a release finishes. After publisher, recovery and profile-test source edits are ready:
 
 1. Add any new reviewed source file/directory paths to `export-policy.json`. Only named source extensions are copied; generated fixtures remain excluded. Do not add release payloads or live configuration.
 2. Run `Aetherfront-RC22-Work/Export-GitHubSource.ps1 -WorkspaceRoot $PWD -Refresh` from the original workspace. This updates exported source copies and regenerates fingerprints, dependencies, the privacy report and source manifest. Original files remain untouched.
@@ -21,6 +21,6 @@ Do not wait for all concurrent RC22 work to finish before preparing staging. Aft
 4. If the main repository README becomes an installation guide, keep this staging README as `SOURCE-PROVENANCE.md`. That destination is allowlisted for metadata; other new metadata paths require an explicit `metadataFiles` entry. Run the exporter with `-RefreshMetadata` to rescan/rehash the changed documents without changing copied source.
 5. Run the exporter with `-VerifyOnly`. Only then copy reviewed staging into the normal checkout. Any later source/document edits require another appropriate refresh and scan.
 
-Default repeat runs are verification-only. Explicit refresh never publishes, authenticates or invokes retained build/test/deployment scripts. `concurrentSourceReviewPending` remains true in staging metadata until the main reviewer clears those gates in their integration workflow.
+Default repeat runs are verification-only. Explicit refresh never publishes, authenticates or invokes retained build/test/deployment scripts. The final reviewer clears `concurrentSourceReviewPending` only after original-source drift, privacy and selected source areas have been checked; new edits require another refresh.
 
 The available full fork's provenance is supported by the old handoff and sibling upstream Git metadata, not by a clean commit for all later modifications. The deployed server assembly is fingerprinted only; equivalence to the staged older source has not been established. Main RC22 work may change concurrently after this snapshot: compare source hashes before final integration. Do not overwrite its release artifacts or scripts.

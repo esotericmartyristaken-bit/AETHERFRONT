@@ -1,24 +1,26 @@
 Aetherfront GitHub distribution setup
 
 Status
-The client transport, signed Connect-time checks, release publisher and staged
-deployment hooks are implemented locally. RC21 remains live. RC22 is an
-unconfigured test candidate, not a starter to distribute. No GitHub repository
-has been changed and no running download or server has been restarted.
+Repository: https://github.com/esotericmartyristaken-bit/AETHERFRONT
+Source main: 3dab2f6c73efcb772cf174e5d3921840a220e0ee
+All 217 immutable media packages (11,899,789,172 bytes) are uploaded, with
+remote sizes and SHA256 digests verified. RC22 is configured and signed.
+RC22 activated through the normal 15-minute workflow at 2026-10-17 01:50 UTC.
+Anonymous signed feed/client/starter downloads exactly match the native release.
+Unmodified RC21 performed its automatic network update successfully. Full
+profile-chain tests are running; final operator client preparation is pending.
 
-Information required
-1. Create a PUBLIC GitHub repository, for example aetherfront-downloads.
-   Initialize it with a README so a default branch exists. Send its full URL,
-   such as https://github.com/YOUR-ACCOUNT/aetherfront-downloads.
-2. Authenticate GitHub CLI on this Windows server. It is already installed:
+Publishing access
+Existing GitHub CLI authentication on this server has push access to the
+public repository. No further account information is required. If the local
+credential is lost, authenticate interactively:
 
    & "C:\Program Files\GitHub CLI\gh.exe" auth login --hostname github.com --git-protocol https --web
 
-   Complete the browser/device-code flow yourself, then say authentication is
-   complete. Do not send your password, personal access token or device code
-   in chat. The publisher uses the CLI's local authentication; clients receive
-   no credentials and need no GitHub account.
-3. For a repository-scoped alternative, a fine-grained personal access token
+Complete the browser/device-code flow yourself. Do not send your password,
+personal access token or device code in chat. The publisher uses the CLI's
+local authentication; clients receive no credentials and need no GitHub account.
+For a repository-scoped alternative, a fine-grained personal access token
    needs access only to that repository and Contents: Read and write. Metadata
    read access is automatic. Organization approval may be required. Store any
    token locally, never in this project, release assets or client settings.
@@ -37,34 +39,56 @@ Publication design
 - On network/CDN unavailability, the client can resume from the original
   pinned server. Redirect, signature and hash failures never become trusted.
 
-Operator steps after repository and authentication are available
-1. Run Configure-GitHubRelease.ps1 -Repository OWNER/REPO -Apply in PowerShell7.
-   It preserves earlier unpublished test artifacts and builds the configured
-   signed RC22 candidate. Re-run candidate/runtime/upgrade verification.
-2. Run Install-GitHubPublisher.ps1 -Apply after its preflight. This installs only
-   future release hooks, with recovery copies of the original scripts. No
-   running service is restarted by this installation.
-3. When the current download can safely tolerate a normal staged restart,
-   stage and queue the configured release through the existing 15-minute bot
-   workflow. Do not force an early restart of an active download.
-   For the first large upload, Prepare-GitHubMedia -Plan can preload only media
-   before queueing the timed deployment. It creates no client version release
-   and changes no latest channel, local service, or stable feed. Do not prepare
-   a version draft from a separately rebuilt candidate: native publication
-   must upload its own exact signed archive bytes.
-4. Before stopping services, hooks verify/upload missing immutable media and
+Future release workflow
+1. Build a NEW version using the current configured template. Preserve
+   universe/configuration/private keys. Re-run release/runtime/upgrade tests.
+2. Stage the release archive and queue it through the existing 15-minute bot
+   workflow. Existing client and pack transfers must be considered before
+   authorizing a restart. The workflow can deploy early on an empty server.
+3. Before stopping services, installed hooks verify/upload missing media and
    a draft of the exact native signed feed/client/starter. Existing assets are
    reused only when remote size and SHA256 digest match. Published bytes are
    never clobbered. The first media upload is large and must not compete with
    the protected current transfer; schedule it accordingly.
-5. After server health and the native stable feed are ready, the version release
+   Preparation retains its exact native signed archive/feed/starter bytes.
+   Never create a version draft from a separately rebuilt candidate ZIP.
+   Immediately before stopping, a fresh authoritative bridge snapshot must
+   show zero players AND zero connections. Unknown/stale counts fail closed.
+4. After server health and the native stable feed are ready, the version release
    becomes GitHub latest. An unknown API outcome is read back before retrying.
    Native activation failures use the existing recovery path. A conflicting
    already-published tag requires a new version, not destructive replacement.
-6. New release builds inherit the enabled repository/media settings from the
+   If GitHub completion becomes uncertain AFTER native activation, do not
+   restart or roll back healthy services. Preserve the transaction journal and
+   retry the EXACT release archive and notes. Completion-only recovery checks
+   native identity/ownership/listeners/signatures before finishing GitHub.
+   Completed exact publications are read-only. Newer or conflicting latest
+   releases fail closed; uncertain PATCH outcomes receive bounded reads, not
+   another PATCH. Use one coordinated publisher: GitHub read/PATCH is not
+   atomic against independent simultaneous publishers.
+5. New release builds inherit the enabled repository/media settings from the
    current public template unless explicitly overridden. Existing skipped-
    revision clients receive the compatibility update from the original origin
    before using GitHub. Keep that origin available during migration.
 
-First live GitHub publication and actual KSP-to-GitHub integration remain
-pending the repository, authentication and an approved deployment window.
+Public installation
+Download Aetherfront-Starter-kesas-rc22.zip from the kesas-rc22 release, not
+the source-code ZIP or pack-media release. Extract into vanilla KSP 1.12.5.
+Launch KSP, select Regular or Potato, enter 217.216.49.250 port 18865, Connect.
+Bundled trust is retained; no fingerprint entry or GitHub login is required.
+The client checks signed updates on every Connect, stages missing content,
+then uses the post-exit helper to apply changes and restart. Saves and player
+identity are preserved. Changing profiles downloads only the needed delta.
+
+Testing boundaries
+Real Unity/Mono verified GitHub TLS, pinned-origin signatures, tamper rejection
+and archive/deflate APIs. Full profile-chain verification uses shipped binaries
+and the real native helper with a test game placeholder. Headless checks do
+not establish UI appearance, rendering, gameplay or representative main-menu
+shutdown; final interactive KSP testing is separate.
+
+Source reproducibility
+The published full fork predates some historical binary patches. Later overlay
+sources and build scripts are included with provenance. Licensed KSP files,
+historical binary inputs, runtime state and private keys are excluded. This
+snapshot alone is not an exact clean rebuild of every shipping binary.

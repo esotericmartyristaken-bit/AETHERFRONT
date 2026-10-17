@@ -6,13 +6,14 @@ historical baseline binaries and separately licensed KSP/Unity dependencies are 
 
 Aetherfront is a Kerbal Space Program multiplayer fork with an in-game installer
 and signed updates. This repository hosts source code and public download
-releases. Release publication is being initialized; use only a completed client
-release, not the `pack-media` release, as an installation entry point.
+releases. Current release: [kesas-rc22](https://github.com/esotericmartyristaken-bit/AETHERFRONT/releases/tag/kesas-rc22).
+Use the starter asset, not the source-code ZIP or `pack-media` release.
+Verification evidence and explicit limits are listed in [Testing](TESTING.md).
 
 ## Install
 
 1. Start with a clean Windows KSP 1.12.5 installation that you own.
-2. Download the Aetherfront starter ZIP from the latest completed client release.
+2. Download [Aetherfront-Starter-kesas-rc22.zip](https://github.com/esotericmartyristaken-bit/AETHERFRONT/releases/download/kesas-rc22/Aetherfront-Starter-kesas-rc22.zip).
 3. Extract it beside `KSP_x64.exe`.
 4. Launch KSP, select Regular or Potato, enter the server address, and connect.
 5. The installer verifies and downloads the selected pack, applies it after KSP

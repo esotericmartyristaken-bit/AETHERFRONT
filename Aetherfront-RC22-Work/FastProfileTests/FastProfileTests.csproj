@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>10</LangVersion>
+    <Optimize>true</Optimize>
+    <StarterZip>$(MSBuildProjectDirectory)\..\..\client-artifacts\Aetherfront-RC22\Aetherfront-Starter-rc22.zip</StarterZip>
+    <ShippedRoot>$(MSBuildProjectDirectory)\obj\shipped-rc22</ShippedRoot>
+    <ShippedPlugins>$(ShippedRoot)\GameData\LunaMultiplayer\Plugins</ShippedPlugins>
+  </PropertyGroup>
+  <Target Name="ExtractShippedReferences" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="!Exists('$(StarterZip)')" Text="The public configured RC22 starter is required." />
+    <Unzip SourceFiles="$(StarterZip)" DestinationFolder="$(ShippedRoot)" SkipUnchangedFiles="false" />
+  </Target>
+  <ItemGroup>
+    <Reference Include="KesasInstall"><HintPath>$(ShippedPlugins)\KesasInstall.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="ApfCore"><HintPath>$(ShippedPlugins)\ApfCore.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="JsonFx"><HintPath>$(ShippedPlugins)\JsonFx.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Management" />
+  </ItemGroup>
+</Project>

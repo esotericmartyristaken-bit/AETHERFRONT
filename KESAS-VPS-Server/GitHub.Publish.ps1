@@ -3,7 +3,7 @@
 
 function Invoke-GitHubCli {
     [CmdletBinding()]
-    param([Parameter(Mandatory)][string[]]$Arguments, [Parameter(Mandatory)][string]$Context)
+    param([Parameter(Mandatory)][string[]]$Arguments, [Parameter(Mandatory)][string]$Context, [switch]$AllowNotFound)
     $ErrorActionPreference = 'Continue'
     $PSNativeCommandUseErrorActionPreference = $false
     try {
@@ -11,7 +11,13 @@ function Invoke-GitHubCli {
         $code = $LASTEXITCODE
     } catch { throw "GitHub CLI failed ($Context). Check local gh installation and authentication." }
     # Never include CLI output, arguments, environment, or credentials in an error.
-    if ($code -ne 0) { throw "GitHub CLI failed ($Context). Check local gh access and retry." }
+    if ($code -ne 0) {
+        # Only an explicit included HTTP status can establish absence. A CLI,
+        # authentication, or network error must never masquerade as no latest.
+        if ($AllowNotFound -and $Arguments -contains '--include' -and
+            ($output -join "`n") -match '\AHTTP/[0-9.]+ 404(?:[ \r\n]|$)') { return ($output -join "`n") }
+        throw "GitHub CLI failed ($Context). Check local gh access and retry."
+    }
     return ($output -join "`n")
 }
 
@@ -56,6 +62,16 @@ function Get-GhpUrlName {
     return $name
 }
 
+function Get-GhpSha256 {
+    param([string]$Path)
+    # Large sequential reads avoid thousands of 4 KiB operations per second on
+    # IOPS-limited hosts. Every byte is still SHA256-verified; no metadata cache.
+    $inputStream=[IO.FileStream]::new($Path,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read,1MB,[IO.FileOptions]::SequentialScan)
+    $sha=[Security.Cryptography.SHA256]::Create()
+    try { return [BitConverter]::ToString($sha.ComputeHash($inputStream)).Replace('-','').ToLowerInvariant() }
+    finally { $sha.Dispose();$inputStream.Dispose() }
+}
+
 function Get-GhpAsset {
     param([string]$Path, [string]$Kind, [string]$Tag, [string]$Repository)
     $full = Assert-GhpPath $Path
@@ -64,7 +80,7 @@ function Get-GhpAsset {
     if ($item.Length -le 0 -or $item.Length -ge 2GB) { throw 'Public asset must be nonempty and smaller than 2 GiB.' }
     [pscustomobject]@{
         Path = $full; Name = $item.Name; Size = [long]$item.Length
-        Sha256 = (Get-FileHash -LiteralPath $full -Algorithm SHA256 -ErrorAction Stop).Hash.ToLowerInvariant()
+        Sha256 = Get-GhpSha256 $full
         Kind = $Kind; ReleaseTag = $Tag
         Url = "https://github.com/$Repository/releases/download/$Tag/$([Uri]::EscapeDataString($item.Name))"
     }
@@ -308,6 +324,40 @@ function Get-GhpReleaseAssets {
     return $assets
 }
 
+function Get-GhpLatestRelease {
+    param([string]$Repository)
+    try {
+        $response = Invoke-GitHubCli -Arguments @('api', "repos/$Repository/releases/latest", '--hostname', 'github.com', '--method', 'GET',
+            '--header', 'Accept: application/vnd.github+json', '--header', 'X-GitHub-Api-Version: 2022-11-28', '--include') -Context 'latest publication metadata' -AllowNotFound
+        $http = [regex]::Match($response, '\AHTTP/[0-9.]+ (?<status>200|404)(?: [^\r\n]*)?\r?\n(?:[^\r\n]+\r?\n)*\r?\n(?<body>[\s\S]*)\z')
+        if (-not $http.Success) { throw 'Invalid HTTP metadata.' }
+        if ($http.Groups['status'].Value -ceq '404') { return $null }
+        $latest = $http.Groups['body'].Value | ConvertFrom-Json -ErrorAction Stop
+        if ($null -eq $latest -or $latest -is [array] -or [string]$latest.id -notmatch '^[1-9][0-9]*$' -or
+            [string]::IsNullOrWhiteSpace([string]$latest.tag_name) -or $latest.draft -isnot [bool] -or $latest.draft -or
+            $latest.prerelease -isnot [bool] -or $latest.prerelease) { throw 'Invalid latest metadata.' }
+        return $latest
+    } catch { throw 'GitHub latest publication metadata request failed (GET). Confirm readback before any publication write.' }
+}
+
+function Assert-GhpLatestOrder {
+    param($Plan, $Media, $Release, $Latest)
+    if ($null -eq $Latest) { return }
+    if ($Latest.tag_name -ceq $Plan.Version) {
+        if ($Latest.id -ne $Release.id) { throw 'Conflicting latest release identity; no publication write is safe.' }
+        return
+    }
+    if ($Latest.id -eq $Release.id) { throw 'Conflicting latest release tag; no publication write is safe.' }
+    # The initial non-latest media release may be the only published release.
+    if ($Latest.tag_name -ceq $Plan.MediaTag -and $Latest.id -eq $Media.id) { return }
+    if ($Latest.tag_name -cnotmatch '^kesas-rc[1-9][0-9]*$') { throw 'Conflicting latest release tag; no publication write is safe.' }
+    $current = $Latest.tag_name.Substring(8); $target = $Plan.Version.Substring(8)
+    if ($current.Length -gt $target.Length -or
+        ($current.Length -eq $target.Length -and [string]::CompareOrdinal($current, $target) -ge 0)) {
+        throw 'Newer or conflicting latest release; refusing to demote it.'
+    }
+}
+
 function Assert-GhpRemoteAsset {
     param($Expected, $Actual)
     if ($null -eq $Actual) { throw 'Required release asset is missing. Run preparation before completing publication.' }
@@ -346,7 +396,13 @@ function Ensure-GhpRelease {
             $null = Invoke-GhpApi $Repository '/releases' 'POST' @('--raw-field', "tag_name=$Tag", '--raw-field', "name=$Tag",
                 '--field', "draft=$($Draft.ToString().ToLowerInvariant())", '--field', 'prerelease=false', '--raw-field', 'make_latest=false')
         } catch { } # A timed-out create may have succeeded. Read back; never create twice blindly.
-        $release = Find-GhpRelease $Repository $Tag
+        # List endpoints can briefly lag a successful create. Repeat reads only;
+        # never repeat the write when its outcome is uncertain.
+        foreach($delay in @(0,1,2,4)){
+            if($delay){Start-Sleep -Seconds $delay}
+            $release = Find-GhpRelease $Repository $Tag
+            if($release){break}
+        }
         if (-not $release) { throw 'Could not create or recover the publication release. Retry safely.' }
     }
     return $release
@@ -412,15 +468,43 @@ function Complete-GitHubPublication {
     if (-not $media -or $media.draft -or $media.prerelease -or -not $release) { throw 'Publication has not been prepared.' }
     $null = Test-GhpAssetSet -Expected $plan.MediaAssets -Actual @(Get-GhpReleaseAssets $plan.Repository $media) -RequireAll
     $null = Test-GhpAssetSet -Expected $plan.ReleaseAssets -Actual @(Get-GhpReleaseAssets $plan.Repository $release) -Exact -RequireAll
+    $latest = Get-GhpLatestRelease $plan.Repository
+    Assert-GhpLatestOrder $plan $media $release $latest
+    $result = [pscustomobject]@{ Repository = $plan.Repository; Version = $plan.Version; ReleaseId = $release.id; Published = $true; Url = "https://github.com/$($plan.Repository)/releases/tag/$($plan.Version)" }
+    if (-not $release.draft) {
+        # A published target may be an earlier uncertain success. Never replay
+        # its PATCH, even if latest metadata has not caught up or has changed.
+        if ($release.prerelease -or $null -eq $latest -or $latest.tag_name -cne $plan.Version -or $latest.id -ne $release.id) {
+            throw 'Publication is not confirmed as the latest stable version. Preserve completion state and retry readback.'
+        }
+        return $result
+    }
+    if ($release.prerelease -or ($null -ne $latest -and $latest.id -eq $release.id)) { throw 'Conflicting prepared draft publication state; no publication write is safe.' }
+    if ($null -eq $latest -or $latest.tag_name -ceq $plan.MediaTag) {
+        # Confirm a first version release, not an unknown latest read or a
+        # disappeared channel with an already-published stable version.
+        $stable = @(Get-GhpList $plan.Repository '/releases' | Where-Object {
+            -not $_.draft -and -not $_.prerelease -and -not ($_.tag_name -ceq $plan.MediaTag -and $_.id -eq $media.id)
+        })
+        if ($stable.Count) { throw 'Latest stable publication is not confirmed despite published versions; no publication write is safe.' }
+    }
     try {
         $null = Invoke-GhpApi $plan.Repository "/releases/$($release.id)" 'PATCH' @('--field', 'draft=false', '--field', 'prerelease=false', '--raw-field', 'make_latest=true')
     } catch { } # Always verify server state, including an unknown publish outcome.
-    $published = Find-GhpRelease $plan.Repository $plan.Version
-    $latest = Invoke-GhpApi $plan.Repository '/releases/latest'
-    if (-not $published -or $published.draft -or $published.prerelease -or $published.id -ne $release.id -or
-        $latest.tag_name -cne $plan.Version -or $latest.id -ne $release.id -or $latest.draft -or $latest.prerelease) {
-        throw 'Publication is not confirmed as the latest stable version. Retry completion safely.'
+    foreach ($delay in @(0,1,2,4)) {
+        if ($delay) { Start-Sleep -Seconds $delay }
+        try {
+            $published = Find-GhpRelease $plan.Repository $plan.Version
+            $latest = Get-GhpLatestRelease $plan.Repository
+        } catch { continue } # Reads only: never repeat an uncertain PATCH.
+        Assert-GhpLatestOrder $plan $media $release $latest
+        if ($published -and $published.id -ne $release.id) { throw 'Conflicting published release identity; preserve completion state.' }
+        if ($published -and -not $published.draft -and -not $published.prerelease -and $null -ne $latest -and
+            $latest.tag_name -ceq $plan.Version -and $latest.id -eq $release.id) {
+            try { $assets = @(Get-GhpReleaseAssets $plan.Repository $published) } catch { continue }
+            $null = Test-GhpAssetSet -Expected $plan.ReleaseAssets -Actual $assets -Exact -RequireAll
+            return $result
+        }
     }
-    $null = Test-GhpAssetSet -Expected $plan.ReleaseAssets -Actual @(Get-GhpReleaseAssets $plan.Repository $published) -Exact -RequireAll
-    [pscustomobject]@{ Repository = $plan.Repository; Version = $plan.Version; ReleaseId = $release.id; Published = $true; Url = "https://github.com/$($plan.Repository)/releases/tag/$($plan.Version)" }
+    throw 'Publication is not confirmed as the latest stable version. Preserve completion state and retry readback.'
 }

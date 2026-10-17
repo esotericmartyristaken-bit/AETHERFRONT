@@ -10,7 +10,11 @@ foreach($file in $live.files){if($expected[$file.path]-ne $file.sha256){throw "P
 Invoke-UpdateTool $root @('--verify','--manifest',$manifestPath,'--archive',"$root/Updates/kesas-rc22/APFClient-kesas-rc22.zip",'--public-key-xml',"$root/secrets/update-signing-public.xml")
 $pack=Get-Content -LiteralPath "$root/Server/Config/APFPack.json" -Raw|ConvertFrom-Json
 if($pack.requiredClientVersion-ne 'kesas-rc22'-or $pack.serverId-ne 'kesas-b6286df413b9426f'){throw 'Live pack version/identity mismatch.'}
-$stream=[IO.FileStream]::new("$root/Server/APFDiscordBridge/status.json",[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::ReadWrite)
+$stream=$null
+for($readAttempt=0;$readAttempt-lt 20;$readAttempt++){
+ try{$stream=[IO.FileStream]::new("$root/Server/APFDiscordBridge/status.json",[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::ReadWrite);break}
+ catch [IO.IOException]{if($readAttempt-eq 19){throw};Start-Sleep -Milliseconds 100}
+}
 $reader=[IO.StreamReader]::new($stream);try{$status=$reader.ReadToEnd()|ConvertFrom-Json}finally{$reader.Dispose()}
 $ready=Get-Content -LiteralPath "$root/Server/APFDiscordBridge/ready.json" -Raw|ConvertFrom-Json
 if(([DateTime]::UtcNow-([DateTime]$status.updatedAt).ToUniversalTime()).TotalSeconds-gt 8-or $ready.pid-ne $status.serverPid){throw 'Bridge is not fresh/ready.'}

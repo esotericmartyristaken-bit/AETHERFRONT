@@ -1,16 +1,16 @@
 {
-  "scannedUtc": "2026-10-17T00:58:48.2651341Z",
-  "filesScanned": 2581,
-  "elapsedSeconds": 21.9424623,
+  "scannedUtc": "2026-10-17T04:10:07.8330305Z",
+  "filesScanned": 2586,
+  "elapsedSeconds": 12.1343617,
   "ruleMilliseconds": {
-    "private-host": 3509.1322999999998,
-    "credential-url": 825.2456000000003,
-    "private-key": 910.4443999999994,
-    "discord-token": 3420.1021000000005,
-    "github-token": 943.9019999999997,
-    "cloud-key": 768.0334999999997,
-    "credential-literal": 2723.7219000000014,
-    "user-home": 954.7075000000002
+    "private-key": 607.5474000000012,
+    "private-host": 1702.4881999999986,
+    "credential-url": 616.4934000000002,
+    "user-home": 692.4370999999986,
+    "github-token": 569.8431000000007,
+    "cloud-key": 531.1315000000001,
+    "discord-token": 1656.0806000000007,
+    "credential-literal": 1764.5886999999989
   },
   "regexTimeoutSecondsPerFileRule": 2,
   "findingCount": 0,
@@ -31,8 +31,8 @@
     {
       "path": "Aetherfront-RC22-Work/Test-GitHubPublisher.ps1",
       "rule": "private-key",
-      "matchSha256": "5a1cb9e60fd9e4c9eb8fb7bf5f8ce594f2c3d547a4e0606dc602286bbc286fbe",
-      "reason": "Synthetic malicious ZIP/content fixture in publisher security tests; not an actual private key."
+      "matchSha256": "969defd36916855b9f2666ffb211c32e9150c3d761c1b6100d951a8d71ccc4a7",
+      "reason": "Scanner spans synthetic public RSA XML and a separate rejected fake D-value fixture across test source; neither contains a real key. Exact 11972-character match fingerprint reviewed after publication-recovery mock/test additions."
     },
     {
       "path": "Aetherfront-RC22-Work/Test-GitHubPublisher.ps1",

@@ -1,6 +1,6 @@
-# Aetherfront source staging
+# Aetherfront source provenance
 
-Source-only maintenance snapshot for `esotericmartyristaken-bit/AETHERFRONT`. This directory is prepared for review and later integration into a normal repository checkout. Nothing here initializes Git, authenticates, pushes, publishes a release, or changes a running server/client.
+Source-only maintenance snapshot for `esotericmartyristaken-bit/AETHERFRONT`. The export scripts prepare and verify this snapshot; they do not initialize Git, authenticate, push, publish a release or change a running server/client. Publication and deployment are separate operator actions.
 
 ## Contents and provenance
 
@@ -76,7 +76,7 @@ An identical exporter is retained in `scripts/`. A fresh export needs the review
 
 An interrupted, inspected staging directory can be resumed with `-ResumeIncomplete`; existing source must match the recomputed expected content. A selective update requires explicit `-RefreshSource` paths plus `-ResumeIncomplete`; `-Refresh` instead refreshes all reviewed selections. Existing completed source copies must still match their prior manifest before refresh. This does not authorize overwriting unrelated files. `-RefreshMetadata` rescans and rehashes authored metadata while requiring copied sources to remain unchanged; approved metadata paths are declared in `metadataFiles`.
 
-The reviewed native/GitHub publishers, installed publication helper, `Test-GitHubRecovery.ps1`, current PublicTransferProbe, UpdaterFixture and LiveProfileTests are explicitly allowlisted. Refresh after any further edits. UnityTlsSmoke is still changing and intentionally deferred to a later source commit; add its exact reviewed source paths before that refresh. New/unlisted files are not silently included. A manifest records a snapshot, not proof that all concurrent work has finished.
+The reviewed native/GitHub publishers, installed publication helper, `Test-GitHubRecovery.ps1`, PublicTransferProbe, UpdaterFixture and LiveProfileTests are explicitly allowlisted. Refresh after any further edits. The private operator reset helper and isolated licensed-game smoke fixtures are excluded; their verification boundaries are documented in `TESTING.md`. New/unlisted files are not silently included. A manifest records a snapshot, not proof of shipping-source equivalence.
 
 The scan checks private key material, GitHub/cloud/Discord token shapes, credential-bearing URLs, literal credential assignments, private host paths, user-home paths, binary data and oversize text. Obvious placeholders are distinguished from actual values. Explicit exceptions for synthetic negative-test inputs are restricted by path, rule and matched-text SHA-256, with reasons recorded in the policy/report; no matched values are printed. Scanner pattern definitions are not credentials. Each file/rule has a two-second regex timeout; a timeout fails review rather than dropping a security check. Per-rule scan timings are recorded to identify expensive patterns safely. It is heuristic, not a guarantee: a human must review `EXPORT-REVIEW.md`, staged changes and licensing before publication. Never integrate a partially completed export or a nonzero-finding scan.
 
