@@ -28,13 +28,15 @@ Current local evidence, before publication:
   with unchanged archive hashes, commits, and performs one approved GameStub
   restart: ten migration assertions passed. This tests the loaded old updater,
   not just the new code after installation.
-- Final RC26 binaries pass 85 native checks on Windows CLR and 85 on the actual
+- Final RC26 binaries pass 90 native checks on Windows CLR and 90 on the actual
   KSP embedded Mono runtime. These include generated logs/caches, an exclusively
   locked raw texture cache, required CFG and added-DLL negative controls,
   corruption/rollback, execution locks, permanent approved extra-mod removal,
   recoverable replacements, and rejection of an empty child junction before
   recursive traversal. The final candidate was rerun after independent review
   identified that directory-walk edge case.
+  The extended checks additionally authenticate flat GameData file packages,
+  detect changed root DLL bytes, and distinguish genuinely missing file packages.
 - The targeted core graft changes one scanner call site; 689 other core methods
   are preserved. The client graft changes only its two version constants;
   6,326 unrelated client methods are preserved.
@@ -65,6 +67,11 @@ Current local evidence, before publication:
 Final dirty-profile migration, native activation and anonymous complete-release
 download verification are still pending in this staged
 documentation. No clean Unity gameplay or error-free KSP log is claimed.
+The first complete-catalog fixture run failed because its directory-only clone
+omitted five flat GameData files, including ModuleManager. This was a test setup
+failure, not accepted release evidence. The clone now copies and authenticates
+those files and checks all required installed paths before launching the helper;
+the exact signed candidate is being rerun without changing product binaries.
 
 Known residual diagnostics from the captured pre-repair log include upstream
 model texture inputs without a verified source replacement, a TGA loader

@@ -70,6 +70,7 @@ internal static class Program
             InFixture("approved-duplicate",TestDuplicateRepair);
             InFixture("directory-leases",TestDirectoryLeases);
             InFixture("runtime-generated",TestGeneratedRuntimeFiles);
+            InFixture("flat-file-packages",TestFlatFilePackages);
             Check(RuntimeFiles.IsMutable("GameData/SCANsat/PluginData/Settings.cfg"),"SCANsat runtime settings allowed");
             Check(!RuntimeFiles.IsMutable("GameData/FarFutureTechnologies/Parts/Engines/part.cfg"),"Part definitions remain immutable");
             Check(!RuntimeFiles.IsMutable("GameData/SCANsat/PluginData/plugin.dll"),"PluginData assemblies remain immutable");
@@ -338,6 +339,22 @@ internal static class Program
         foreach(string path in new[]{"GameData/ContractConfigurator/log/injected.cfg","GameData/KSPCommunityFixes/PluginData/TextureCache/4294967296","GameData/KSPCommunityFixes/PluginData/TextureCache/sub/123","GameData/KSPCommunityFixes/PluginData/TextureCache/123.dll","GameData/KSPCommunityFixes/PluginData/arbitrary.cfg","GameData/ZZZ_KESASPerformanceFixes/PluginData/plugin.dll","GameData/ZZZ_KESASPerformanceFixes/PluginData/arbitrary.cache"})
             Check(!RuntimeFiles.IsMutable(path),"Runtime rule remains narrow: "+path);
     }
+    private static void TestFlatFilePackages()
+    {
+        string gameData=Path.Combine(root,"GameData"),path=Path.Combine(gameData,"ModuleManager.4.2.3.dll");
+        File.WriteAllText(path,"flat-file package content");
+        var files=ScanFlatPackage(gameData,path);
+        Check(files.Count==1&&files[0].Path=="GameData/modulemanager.4.2.3.dll","Flat GameData file packages are scanned, not treated as missing directories");
+        Check(files[0].Sha256==ApfJson.Sha256File(path),"Flat file package bytes remain hashed");
+        File.AppendAllText(path," modified");
+        Check(!RuntimeFiles.SameFiles(files,ScanFlatPackage(gameData,path)),"Flat root DLL modifications remain detectable");
+        File.Delete(path);
+        Check(ScanFlatPackage(gameData,path).Count==0,"A genuinely missing flat package is reported missing");
+    }
+    // Reflection preserves compilation against the unchanged old helper for
+    // --runtime-repro controls; those modes do not execute this new scanner test.
+    private static List<ApfFileState> ScanFlatPackage(string gameData,string path)
+    {return (List<ApfFileState>)typeof(RuntimeFiles).GetMethod("ScanFiles").Invoke(null,new object[]{gameData,path});}
     private static ApfSyncTransaction MakeTransaction(bool remove)
     {
         string stage=Path.Combine(root,"APF/.staging",Guid.NewGuid().ToString("N"));Directory.CreateDirectory(stage);string archive=Path.Combine(stage,"test.zip");

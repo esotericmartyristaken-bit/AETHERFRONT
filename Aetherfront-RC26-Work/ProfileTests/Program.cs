@@ -200,6 +200,13 @@ internal static class Program
         var profile=ApfJson.Deserialize<Dictionary<string,string>>(File.ReadAllText(Path.Combine(Baseline,Data,"KesasInstallProfile.json")));
         Check(state.PackVersion=="kesas-rc25"&&state.Packages.Count==177&&profile["mode"]=="potato"&&profile["catalogVersion"]=="kesas-rc25","Existing baseline is the completed RC25 Potato177 fixture, not a fresh-stock installation");
         string gameData=Path.Combine(Baseline,"GameData");Directory.CreateDirectory(Owned("GameData/Squad"));
+        foreach(string file in Directory.GetFiles(gameData)){
+            if((File.GetAttributes(file)&FileAttributes.ReparsePoint)!=0)throw new InvalidDataException("Fixture input has a linked root file.");
+            string relative="GameData/"+Path.GetFileName(file);
+            CopyPrivate(file,relative);
+            var expected=state.Packages.SelectMany(p=>p.Files).SingleOrDefault(f=>string.Equals(f.Path,relative,StringComparison.OrdinalIgnoreCase));
+            if(expected!=null)HashIs(Owned(relative),expected.Sha256,"Cloned GameData root-file package differs from its completed baseline state.");
+        }
         foreach(string directory in Directory.GetDirectories(gameData)){
             string name=Path.GetFileName(directory);if(name=="LunaMultiplayer"||name=="000_Harmony")continue;
             foreach(string source in PlainFiles(directory)){
@@ -221,6 +228,8 @@ internal static class Program
         ApfTransactionSecurity.LoadOrCreateKey(Owned(Data+"APFHelper.key"));
         Check(ApfClientUpdateApproval.Capture(root)!=null,"Private fixture supplies every required RC25 client-approval input without bypassing capture");
         Check(State().Packages.All(p=>sourceCatalog.Potato.ManagedPackages.Any(n=>n.Id==p.Id&&n.Version==p.Version&&n.Sha256==p.ArchiveSha256)),"Reused state retains the original RC25 package versions and archive hashes before the reviewed migration");
+        var missing=State().Packages.SelectMany(p=>p.Files).Where(f=>!RuntimeFiles.IsMutable(f.Path)&&!File.Exists(Owned(f.Path))).Select(f=>f.Path).ToArray();
+        Check(missing.Length==0,"Cloned required content is complete, including every GameData root-file package; missing="+string.Join(",",missing.Take(8)));
         WritePrivate("clone-proof.json",ApfJson.Serialize(new{source=Baseline,linked,copied,linkedBytes,freshStock=false,fullPackReextracted=false}));
     }
     private static void Dirty(string phase)

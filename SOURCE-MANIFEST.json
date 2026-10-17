@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-17T22:58:33.2865037Z",
+  "createdUtc": "2026-10-17T23:21:52.4689075Z",
   "publication": "STAGED ONLY; not pushed",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -2276,10 +2276,10 @@
       "path": "Aetherfront-RC26-Work/NativeTests/Program.cs",
       "source": "Aetherfront-RC26-Work/NativeTests/Program.cs",
       "role": "RC26 generated-runtime verification repair, targeted scanner/version grafts and regression proofs",
-      "bytes": 35216,
-      "sha256": "75c9c2024db21928f20f596c180cf850151e4698bf21a51c1d31ecd713a44063",
-      "sourceSha256": "75c9c2024db21928f20f596c180cf850151e4698bf21a51c1d31ecd713a44063",
-      "sourceModifiedUtc": "2026-10-17T22:13:17.6238803Z",
+      "bytes": 36491,
+      "sha256": "2c81f8da42165b6c22c3b0e72853ea5a56ddb7d5d8666ec328a8a4c79ae02cf3",
+      "sourceSha256": "2c81f8da42165b6c22c3b0e72853ea5a56ddb7d5d8666ec328a8a4c79ae02cf3",
+      "sourceModifiedUtc": "2026-10-17T23:18:04.1183362Z",
       "transformations": []
     },
     {
@@ -2340,13 +2340,12 @@
       "path": "Aetherfront-RC26-Work/ProfileTests/Program.cs",
       "source": "Aetherfront-RC26-Work/ProfileTests/Program.cs",
       "role": "RC26 generated-runtime verification repair, targeted scanner/version grafts and regression proofs",
-      "bytes": 46727,
-      "sha256": "617eecc83833210137d5abdfa2fa5485e7702b3c634942fd580b3323ed3720f5",
-      "sourceSha256": "56995fd205027577242b1940a5b5af99ed7d13edec83826ff53a19d90fb1666f",
-      "sourceModifiedUtc": "2026-10-17T22:52:44.2869457Z",
+      "bytes": 47668,
+      "sha256": "03131b04ff31c92e2b797ba4271b07b8664ca44728199219e6e3308c504388ce",
+      "sourceSha256": "3b8aa1c69a07788757aa28350ae1de16da24d46b84d388242cb5fe3fecec8646",
+      "sourceModifiedUtc": "2026-10-17T23:15:18.3948574Z",
       "transformations": [
-        "absolute workspace root replaced by .",
-        "explicitly refreshed after source review"
+        "absolute workspace root replaced by ."
       ]
     },
     {
@@ -26985,8 +26984,8 @@
       "path": "TESTING.md",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 23617,
-      "sha256": "0cd44a4be6085ac837b44278a179eda52cbb17c5372bb7f07188bead52165daf",
+      "bytes": 24173,
+      "sha256": "10e349b82cc330045af8a7e67e3b61e1cf509f7235fb1cf4fee392ac66dd9e33",
       "sourceSha256": null,
       "transformations": []
     },
@@ -27018,7 +27017,7 @@
       "transformations": []
     }
   ],
-  "totalFileBytes": 14223317,
+  "totalFileBytes": 14226089,
   "exclusions": [
     "All Git history and Git metadata; CI workflows and operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",
