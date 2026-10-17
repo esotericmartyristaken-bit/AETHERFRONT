@@ -2,13 +2,16 @@ Aetherfront GitHub distribution setup
 
 Status
 Repository: https://github.com/esotericmartyristaken-bit/AETHERFRONT
-Source main: 3dab2f6c73efcb772cf174e5d3921840a220e0ee
+Distribution implementation commit: 49dcf581c14cd4b29211efc42887e5c6be590700
 All 217 immutable media packages (11,899,789,172 bytes) are uploaded, with
 remote sizes and SHA256 digests verified. RC22 is configured and signed.
 RC22 activated through the normal 15-minute workflow at 2026-10-17 01:50 UTC.
 Anonymous signed feed/client/starter downloads exactly match the native release.
-Unmodified RC21 performed its automatic network update successfully. Full
-profile-chain tests are running; final operator client preparation is pending.
+Unmodified RC21 performed its automatic network update successfully. The live
+headless chain passed: fresh Potato, cancellation/range resume, 41-package
+Regular delta, seven-package cached Potato return, every installed file hash,
+preservation and clean reconnects in both profiles. Final matching signed feeds
+passed at 2026-10-17 04:57 UTC. Interactive rendering/gameplay remains separate.
 
 Publishing access
 Existing GitHub CLI authentication on this server has push access to the

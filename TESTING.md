@@ -36,14 +36,24 @@ The native helper completed installation, and an independent check verified all
 28,674 installed files (11,211,717,503 bytes), package inventories and profile
 roots. Fresh-install preservation and archive hashes passed.
 
-Regular/Potato switching and complete clean-reconnect verification are still
-running. Results will be recorded after execution.
+The remaining live headless chain completed successfully at 2026-10-17 04:57 UTC:
+
+- Potato to Regular fetched exactly 41 new GitHub archives (6,518,557,972 bytes), without origin archive fallback. The native helper completed; independent checks verified all 210 packages, 31,282 files and 19,279,193,750 expanded bytes.
+- Regular to Potato reused all seven cached policy archives with zero archive HTTP requests. The native helper removed 35 Regular-only roots; independent checks verified all 176 packages, 28,674 files and 11,211,717,503 expanded bytes. No excluded graphical roots remained.
+- Clean reconnects in both profiles, including the final Potato reconnect, requested no archive download or restart. State, settings, saved selection, identity, test save and verified cache remained unchanged.
+- Shared package state/content, profile graphics policy/restoration, all original evidence and the final matching signed GitHub/native RC22 feeds passed validation. The continuation process exited successfully.
 
 ## Explicit limits and retained failures
 
 Headless profile-chain tests use shipped binaries and the real post-exit helper,
 but a test executable replaces KSP. They do not prove rendering, UI appearance,
 multiplayer gameplay or end-user download speed.
+
+Initial continuation attempts rejected completed transaction markers, stale
+constant-field metadata and an overly long generated evidence filename. Test-only
+guards/names were corrected against the authenticated completed transaction and
+exact shipped method bytes. Shipping binaries were not changed; failed attempts
+and original cancellation/fresh-install evidence remain retained.
 
 The helper hashes all managed content after installation; the independent test
 harness also checks every installed file. Production fast reconnect hashes
@@ -77,6 +87,12 @@ One direct-upgrade test initially exceeded its 60-second test-helper bound under
 host load, although the helper completed successfully. The remaining matrix
 passed with a five-minute owned-helper bound. Production timeout settings were
 not changed.
+
+The fixed three-second HTTPS health diagnostic occasionally timed out during
+the extended test run. Identical pinned retries and subsequent full service
+checks passed with unchanged processes/listeners/configuration. These misses
+remain recorded; their cause was not established and no production timeout was
+raised to hide them.
 
 All real KSP processes were isolated, owned and resource-guarded. No graphical
 KSP test is launched on the shared production host. Final interactive testing
