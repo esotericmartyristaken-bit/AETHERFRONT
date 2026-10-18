@@ -65,6 +65,7 @@ namespace KesasInstall
             if(manifest==null || manifest.PackVersion!=feed.Version || manifest.RequiredClientVersion!=feed.Version || manifest.ManagedPackages==null)
                 throw new InvalidDataException("Startup profile does not match the signed release.");
             LegacySettingsRecovery.Apply(root,manifest,receipt);
+            TerrainPolicy.AtStartup(root);
             string apf=Path.Combine(root,"APF");
             ApfPaths.EnsureNoReparsePoints(root,apf);
             string journal=Path.Combine(apf,"RootCasingRepair.json");

@@ -655,6 +655,8 @@ namespace KesasInstall
             string settings=Path.Combine(Root,"settings.cfg"); string backup=Path.Combine(Data,"KESASGraphicsBeforePotato.cfg");
             ApfPaths.EnsureNoReparsePoints(Root,settings);ApfPaths.EnsureNoReparsePoints(Root,backup);
             string current=File.Exists(settings)?File.ReadAllText(settings):"";
+            string terrain=TerrainPolicy.HighSettings(current);
+            if(terrain!=current){AtomicText(settings,terrain);current=terrain;}
             if(mode=="full")
             {
                 if(File.Exists(backup)) {

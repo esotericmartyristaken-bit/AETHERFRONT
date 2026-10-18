@@ -33,9 +33,18 @@ assemblies. The release builder changes only two DLLs, catalog, client version
 configuration and patch inventory. Production signing stays on the host.
 
 Sandbox is an existing server-selected KSP mode. Host configuration maintenance
-must preserve Science backups and use a distinct Sandbox client save namespace;
+uses a distinct Sandbox client save namespace. The user confirms the old empty
+Science world needs no backup. Beta remains Sandbox until validation;
 protected server Config/Universe must never be placed in native ServerPayload.
 No server runtime changes are bundled.
+
+Fresh stock KSP selects Default terrain, while the multiplayer server requires
+High terrain geometry. RC30 surgically changes only TERRAIN/preset and selects
+the checked High PQS preset by integer index during authenticated early startup,
+before bodies load. This supports old already-loaded helpers in one restart.
+Graphics profiles remain independent of shared multiplayer geometry. Duplicate
+or malformed terrain settings fail closed; unrelated text remains unchanged.
+CLR and actual KSP Mono policy probes cover serialized settings and idempotence.
 
 Validation results and gameplay evidence are recorded separately. Synthetic
 CLR/actual KSP Mono probes do not establish a fresh vanilla end-to-end install

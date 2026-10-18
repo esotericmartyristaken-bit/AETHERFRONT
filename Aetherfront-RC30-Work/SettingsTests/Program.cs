@@ -82,6 +82,7 @@ internal static class Program
         if (mode == "old27") Case("old27-eight-rejections", NegativeControl);
         else if (mode == "migration26" || mode == "migration27" || mode == "migration28" || mode == "migration29" || mode == "fresh26" || mode == "fresh27" || mode == "fresh28" || mode == "fresh29") Case(mode + "-signed-one-restart", Migration);
         else if (mode == "new") {
+            Case("terrain-physics-policy", TerrainPolicyContract);
             Case("prepared-directory-rename-retry", DirectoryRetry);
             Case("exact-sixteen-contract", Contract);
             Case("unchanged-sixteen-clean", Unchanged);
@@ -106,6 +107,28 @@ internal static class Program
         }));
         Console.WriteLine("RESULT mode=" + mode + " cases=" + cases + " checks=" + checks + " failures=" + Failures.Count);
         signingKey.Dispose(); return Failures.Count == 0 ? 0 : 1;
+    }
+    private static void TerrainPolicyContract()
+    {
+        var policy=typeof(NativeInstall).Assembly.GetType("KesasInstall.TerrainPolicy",true);
+        var method=policy.GetMethod("HighSettings",BindingFlags.Static|BindingFlags.NonPublic);
+        Func<string,string> apply=text=>(string)method.Invoke(null,new object[]{text});
+        string original="KEY_BINDING = retained\r\nTERRAIN_SHADER_QUALITY = 0\r\nTERRAIN\r\n{\r\n\tpreset = Default // preserve comment\r\n\tPRESET { preset = nested }\r\n}\r\n";
+        string expected=original.Replace("preset = Default","preset = High");
+        Check(apply(original)==expected,"Only top-level terrain selection changes, graphics/bindings/comments/newlines preserved");
+        Check(apply(expected)==expected,"High terrain policy is idempotent");
+        Check(apply(original.Replace("preset = Default","preset = Low"))==expected,"Low terrain upgrades to shared High physics");
+        Check(apply("KEY_BINDING = retained\n")=="KEY_BINDING = retained\n","Missing terrain block does not invent incomplete presets");
+        Check(apply("// TERRAIN { }\nLABEL = \"{ }\"\n"+original)=="// TERRAIN { }\nLABEL = \"{ }\"\n"+expected,"Comments and quoted braces do not affect depth");
+        Check(apply(original.Replace("TERRAIN\r\n{","TERRAIN // comment\r\n\r\n{"))==expected.Replace("TERRAIN\r\n{","TERRAIN // comment\r\n\r\n{"),"Comment and whitespace between header and brace accepted");
+        string real=Environment.GetEnvironmentVariable("APF_TERRAIN_SETTINGS_FIXTURE");
+        if(!string.IsNullOrEmpty(real)) {
+            string contents=File.ReadAllText(real);
+            Check(contents.Contains("\tpreset = Default"),"Actual serialized game fixture starts at Default terrain");
+            Check(apply(contents)==contents.Replace("\tpreset = Default","\tpreset = High"),"Actual settings preserve every other serialized preference byte");
+        }
+        foreach(string malformed in new[]{original+original,original.Replace("preset = Default","other = Default"),original.Replace("preset = Default","preset = Low\r\npreset = Default"),original.Substring(0,original.LastIndexOf('}'))})
+            Rejected(()=>apply(malformed),"Ambiguous/malformed terrain block rejected without rewriting input");
     }
     private static string RuntimeName() { return Type.GetType("Mono.Runtime") == null ? "CLR" : "KSP-Mono"; }
     [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet=System.Runtime.InteropServices.CharSet.Unicode, SetLastError=true)]
