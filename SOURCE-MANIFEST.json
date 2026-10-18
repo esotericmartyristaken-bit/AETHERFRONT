@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-18T02:57:55.4074939Z",
+  "createdUtc": "2026-10-18T03:09:29.8807081Z",
   "publication": "STAGED ONLY; not pushed",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -2668,10 +2668,10 @@
       "path": "Aetherfront-RC27-Work/Verify-Deployment.ps1",
       "source": "Aetherfront-RC27-Work/Verify-Deployment.ps1",
       "role": "Read-only native, public-download, preservation and historical-asset verification",
-      "bytes": 39928,
-      "sha256": "fca32fd09c382a73654c641d70685394bdfdeb859d9213717589ae5074a15827",
-      "sourceSha256": "fca32fd09c382a73654c641d70685394bdfdeb859d9213717589ae5074a15827",
-      "sourceModifiedUtc": "2026-10-18T02:44:21.978184Z",
+      "bytes": 41664,
+      "sha256": "86040cfd81f392d91a1ac68eb07731b1780341e0e5699cd29c4f9a0b2de9459d",
+      "sourceSha256": "86040cfd81f392d91a1ac68eb07731b1780341e0e5699cd29c4f9a0b2de9459d",
+      "sourceModifiedUtc": "2026-10-18T03:07:27.1244588Z",
       "transformations": []
     },
     {
@@ -27106,7 +27106,7 @@
       "source": null,
       "role": "publication metadata, license or export tooling",
       "bytes": 3584,
-      "sha256": "f29379ffbf7de947243503c118dc4aa7836ecb82327ef859321711460a03b802",
+      "sha256": "143114793a59fc045314b05395516acc1d7d37b16c817fd06bbe76bbf017da35",
       "sourceSha256": null,
       "transformations": []
     },
@@ -27186,8 +27186,8 @@
       "path": "TESTING.md",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 28711,
-      "sha256": "bc2cb10c607df7c3ea908589a6b947e0540e0dea70d366ed32a59e70c3d79a47",
+      "bytes": 29156,
+      "sha256": "f24d9d2339ebfafeb5c8b5c3da4c9c23f5f5f725d82a81b0e8c97a264e604688",
       "sourceSha256": null,
       "transformations": []
     },
@@ -27219,7 +27219,7 @@
       "transformations": []
     }
   ],
-  "totalFileBytes": 14556558,
+  "totalFileBytes": 14558739,
   "exclusions": [
     "All Git history and Git metadata; CI workflows and operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",

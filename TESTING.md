@@ -48,8 +48,15 @@ These are headless and static proofs, not a completed Unity gameplay test.
 Real RC27 startup, facility access and Regular-to-Potato switching still require
 the local client test. No entirely error-free KSP log is claimed: inherited
 optional-integration/schema/texture warnings are separate from the repaired
-model failures. Native RC27 activation and public-download parity are checked
-separately after publication.
+model failures.
+
+Post-publication checks passed: native RC27 activation, fresh server bridge,
+owned game/HTTPS listeners and pinned HTTPS health. All three public assets
+were downloaded anonymously with normal TLS validation and matched the native
+prepared files byte-for-byte. The starter also contains exactly four reviewed
+public connection/trust settings beyond the 464 signed template files. All 228
+existing media assets and six historical release tags remain present. Nine
+protected deployment files and the running vanilla server are unchanged.
 
 # RC26 validation status
 

@@ -149,8 +149,9 @@ function Inventory($Records) {
     })
     Canonical @($items | Sort-Object -Property path -CaseSensitive)
 }
-function ZipInventory([string]$Path,$Records) {
+function ZipInventory([string]$Path,$Records,[Collections.IDictionary]$ExtraText=@{}) {
     $null=Inventory $Records
+    Require ($ExtraText.Count -in @(0,4)) 'bootstrap-settings-count'
     $zip=[IO.Compression.ZipFile]::OpenRead((Plain $Path))
     try {
         Require ($zip.Entries.Count -le 2048) 'zip-entry-count'
@@ -163,13 +164,24 @@ function ZipInventory([string]$Path,$Records) {
             Require ($seen.Add($name)) 'duplicate-zip-file'
             $entries.Add($name,$entry)
         }
-        Require ($entries.Count -eq 464) 'zip-file-inventory-count'
+        Require ($entries.Count -eq (464+$ExtraText.Count)) 'zip-file-inventory-count'
         foreach ($record in $Records) {
             Require ($entries.ContainsKey([string]$record.path)) 'zip-canonical-path-mismatch'
             $entry=$entries[[string]$record.path]
             Require ($entry.Length -eq [long]$record.sizeBytes) 'zip-file-size-mismatch'
             $inputStream=$entry.Open()
             try { Require ((StreamHash $inputStream) -ceq [string]$record.sha256) 'zip-file-hash-mismatch' } finally { $inputStream.Dispose() }
+        }
+        foreach ($name in $ExtraText.Keys) {
+            $null=Relative ([string]$name)
+            Require ($entries.ContainsKey([string]$name)) 'bootstrap-setting-path'
+            $expectedBytes=$utf8.GetBytes([string]$ExtraText[$name])
+            $entry=$entries[[string]$name]
+            Require ($entry.Length -eq $expectedBytes.Length -and $entry.Length -le 32768) 'bootstrap-setting-size'
+            $expectedStream=[IO.MemoryStream]::new($expectedBytes,$false)
+            $inputStream=$entry.Open()
+            try { Require ((StreamHash $inputStream) -ceq (StreamHash $expectedStream)) 'bootstrap-setting-content' }
+            finally { $inputStream.Dispose();$expectedStream.Dispose() }
         }
     } finally { $zip.Dispose() }
 }
@@ -462,7 +474,20 @@ try {
     $checksumPath=Child $prepared 'KESAS-Client-Bootstrap.zip.sha256'
     Require ((Text $checksumPath 1024).TrimEnd("`r","`n") -ceq "$bootstrapHash  KESAS-Client-Bootstrap.zip") 'prepared-bootstrap-checksum'
     Bind (Child $root 'KESAS-Client-Bootstrap.zip.sha256') (Hash $checksumPath)
-    ZipInventory $bootstrap $feed.files
+    # Export-Client adds exactly four public server-trust settings to the
+    # signed 464-file template. They are not files in the generic update ZIP.
+    $rsa=[Security.Cryptography.RSACryptoServiceProvider]::new()
+    try {
+        $rsa.PersistKeyInCsp=$false;$rsa.FromXmlString((Text $publicKey 32768))
+        $bootstrapPublicKey=$rsa.ToXmlString($false)
+    } finally { $rsa.Dispose() }
+    $bootstrapSettings=[ordered]@{
+        'GameData/LunaMultiplayer/Data/APFServer.txt'="$($deployment.address):$($deployment.gamePort)`n"
+        'GameData/LunaMultiplayer/Data/APFTlsCertificatePins.txt'="$($deployment.certificateSha256)`n"
+        'GameData/LunaMultiplayer/Data/APFClientUpdateManifestUrl.txt'="$($deployment.packOrigin)/updates/APFClientUpdate.json`n"
+        'GameData/LunaMultiplayer/Data/APFClientUpdatePublicKey.xml'=$bootstrapPublicKey
+    }
+    ZipInventory $bootstrap $feed.files $bootstrapSettings
     $initialHealth=Healthy;VanillaPreserved;PrivatePreserved
 
     $stage='public-release-metadata'
@@ -506,7 +531,7 @@ try {
     $releases=@(GhList '/releases');$tags=@(GhList '/tags')
     $historical=[Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
     foreach ($tag in $snapshot.historicalVersions) {
-        Require ([string]$tag -cmatch '^kesas-rc[1-9][0-9]*$' -and $historical.Add([string]$tag)) 'historical-tag-snapshot'
+        Require ([string]$tag -cmatch '^(?:kesas-rc[1-9][0-9]*|pack-media)$' -and $historical.Add([string]$tag)) 'historical-tag-snapshot'
         $release=@($releases | Where-Object tag_name -CEQ ([string]$tag));$gitTag=@($tags | Where-Object name -CEQ ([string]$tag))
         Require ($release.Count -eq 1 -and $release[0].draft -is [bool] -and !$release[0].draft -and $gitTag.Count -eq 1) 'historical-public-release-and-tag-preservation'
     }
