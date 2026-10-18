@@ -1,0 +1,29 @@
+name: Windows bot and release preflight checks
+on:
+  push:
+    branches: [main]
+    paths: ['APFDiscordBot/**', '.github/workflows/windows-bot-checks.yml']
+  pull_request:
+    paths: ['APFDiscordBot/**', '.github/workflows/windows-bot-checks.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-windows-tests:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: APFDiscordBot
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: APFDiscordBot/package-lock.json
+      - run: npm ci --ignore-scripts --no-audit
+      - run: npm test
+      - run: npm audit --omit=dev

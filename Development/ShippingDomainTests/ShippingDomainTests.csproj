@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><LangVersion>10</LangVersion><EnableDefaultCompileItems>false</EnableDefaultCompileItems><GenerateAssemblyInfo>false</GenerateAssemblyInfo><StartupObject>ShippingDomainRunner</StartupObject></PropertyGroup>
+ <ItemGroup><Compile Include="Runner.cs" />
+  <Compile Include="Program.cs" /><Compile Include="SecurityCases.cs" />
+  <Reference Include="AetherfrontCore"><HintPath>$(TestRuntime)/AetherfrontCore.dll</HintPath></Reference>
+  <Reference Include="JsonFx"><HintPath>$(TestRuntime)/JsonFx.dll</HintPath></Reference>
+ </ItemGroup>
+</Project>

@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+<PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><LangVersion>10</LangVersion><GenerateAssemblyInfo>false</GenerateAssemblyInfo></PropertyGroup>
+<ItemGroup>
+<Reference Include="Server"><HintPath>$(TestRuntime)/Server.dll</HintPath></Reference>
+<Reference Include="AetherfrontCore"><HintPath>$(TestRuntime)/AetherfrontCore.dll</HintPath></Reference>
+<Reference Include="ApfCore"><HintPath>$(TestRuntime)/ApfCore.dll</HintPath></Reference>
+<Reference Include="Lidgren.Core"><HintPath>$(TestRuntime)/Lidgren.Core.dll</HintPath></Reference>
+<Reference Include="JsonFx"><HintPath>$(TestRuntime)/JsonFx.dll</HintPath></Reference>
+</ItemGroup>
+</Project>

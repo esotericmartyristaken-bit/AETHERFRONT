@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net472</TargetFramework><LangVersion>10</LangVersion><EnableDefaultCompileItems>false</EnableDefaultCompileItems><GenerateAssemblyInfo>false</GenerateAssemblyInfo></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" /><Compile Include="ShippingTestLinks.cs" />
+<Reference Include="System.IO.Compression" /><Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="ApfCore"><HintPath>$(TestPlugins)/ApfCore.dll</HintPath></Reference>
+    <Reference Include="JsonFx"><HintPath>$(TestPlugins)/JsonFx.dll</HintPath></Reference>
+
+  </ItemGroup>
+</Project>

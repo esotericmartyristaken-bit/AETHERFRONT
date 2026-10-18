@@ -1,0 +1,20 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { fileURLToPath } from 'node:url';
+const execute = promisify(execFile);
+test('Windows native release preflight rejects unsafe paths and bounded archive attacks', { skip: process.platform !== 'win32', timeout: 60000 }, async t => {
+  const owner = await fs.mkdtemp(path.join(os.tmpdir(), 'apf-release-preflight-'));
+  t.after(() => fs.rm(owner, { recursive: true, force: true }));
+  const executable = path.join(process.env.SystemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+  const script = fileURLToPath(new URL('../scripts/Test-KesasReleasePreflight.ps1', import.meta.url));
+  const { stdout } = await execute(executable, ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', script, '-TestRoot', path.join(owner, 'fixtures')], { windowsHide: true, maxBuffer: 256 * 1024 });
+  assert.match(stdout, /Release preflight: (\d+)\/\1 passed/);
+  const rows = JSON.parse(await fs.readFile(path.join(owner, 'fixtures', 'results.json'), 'utf8'));
+  assert(rows.length >= 30);
+  assert(rows.every(row => row.passed));
+});
