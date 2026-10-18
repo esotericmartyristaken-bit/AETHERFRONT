@@ -16,6 +16,11 @@
   "deniedFilePattern": "(?i)(?:^|/)(?:Aetherfront-Client-Handoff\\.md|SetDirectories\\.bat|CopyToKSPDirectory\\.bat|Publish-Release\\.before\\.ps1|config\\.json|WORK-STATE\\.json|TEST-RESULTS\\.json|EVIDENCE\\.json|LIVE-RESULT\\.json)|\\.(?:user|suo|log|cache|pem|key|pfx|p12|crt|cer|snk)$|^Aetherfront-Source/(?:LmpMasterServer|MasterServer)/app\\.config$",
   "groups": [
     {
+      "role": "RC27 case-preserving prepared commits, authenticated early startup repair, targeted version graft and casing regressions",
+      "directories": ["Aetherfront-RC27-Work/Engine", "Aetherfront-RC27-Work/NativeTests", "Aetherfront-RC27-Work/CasingTests", "Aetherfront-RC27-Work/VersionPatcher"],
+      "extensions": [".cs", ".csproj", ".ps1", ".md", ".config"]
+    },
+    {
       "role": "RC26 Potato policy preserving effect-group and physics-selector identities",
       "directories": ["Aetherfront-RC26-Work/ModFixes/Source"],
       "extensions": [".cfg"]
@@ -72,6 +77,13 @@
     }
   ],
   "explicitFiles": [
+    {"source":"Aetherfront-RC27-Work/Build-Engine.ps1","role":"RC27 isolated Engine build from the authenticated RC26 baseline"},
+    {"source":"Aetherfront-RC27-Work/Build-Code.ps1","role":"RC27 canonical early-startup hook and minimal authenticated client-version graft"},
+    {"source":"Aetherfront-RC27-Work/Build-Release.ps1","role":"RC27 immutable client release and narrowly scoped old-helper tech-tree repair migration"},
+    {"source":"Aetherfront-RC27-Work/Test-Native.ps1","role":"RC27 native commit, runtime-file, recovery and path-casing regression checks"},
+    {"source":"Aetherfront-RC27-Work/Test-ModelPaths.ps1","role":"Ordinal model URL validation against authenticated archive inventories"},
+    {"source":"Aetherfront-RC27-Work/Test-Casing.ps1","role":"Authentic old-helper/new-startup, journal recovery and Mono casing regression matrix"},
+    {"source":"Aetherfront-RC27-Work/Verify-Deployment.ps1","role":"Read-only native, public-download, preservation and historical-asset verification"},
     {"source":"Aetherfront-RC26-Work/Build-Code.ps1","role":"RC26 authenticated RC25 scanner/version graft and Engine build"},
     {"source":"Aetherfront-RC26-Work/Build-Release.ps1","role":"RC26 immutable release and four-root legacy-helper migration recipe"},
     {"source":"Aetherfront-RC26-Work/Test-Native.ps1","role":"RC25 failure reproduction, old-helper migration and RC26 verification regressions"},

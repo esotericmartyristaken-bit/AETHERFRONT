@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-18T00:42:50.1141738Z",
+  "createdUtc": "2026-10-18T02:57:55.4074939Z",
   "publication": "STAGED ONLY; not pushed",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -13,11 +13,11 @@
   "rebuildStatus": "NOT independently rebuildable as shipping RC22 from this export alone; see README.md",
   "concurrentSourceReviewPending": false,
   "integrationGates": [
-    "Final signed-candidate dirty migration and profile cycle must pass before activation",
-    "Native and anonymous public release bytes must verify after activation",
-    "Real client Unity loading, rendering and gameplay require local tester validation"
+    "Refresh after native/GitHub publisher review completes",
+    "Add forthcoming recovery-test source paths to export-policy.json and refresh",
+    "Review source drift, privacy and licenses before publication"
   ],
-  "excludedDirectoryCount": 251,
+  "excludedDirectoryCount": 253,
   "excludedReparsePointCount": 0,
   "files": [
     {
@@ -2300,9 +2300,7 @@
       "sha256": "11e6fff7e8b73cd4020356a2a779c985273863d97ab3f76d0dcb9aaf35e81425",
       "sourceSha256": "11e6fff7e8b73cd4020356a2a779c985273863d97ab3f76d0dcb9aaf35e81425",
       "sourceModifiedUtc": "2026-10-17T22:51:03.8923353Z",
-      "transformations": [
-        "explicitly refreshed after source review"
-      ]
+      "transformations": []
     },
     {
       "path": "Aetherfront-RC26-Work/ProfileTests/NuGet.Config",
@@ -2332,9 +2330,7 @@
       "sha256": "9ea838246296bcb3eeaba303a4724d1ce5bbc92bfbe000e88858316905038460",
       "sourceSha256": "9ea838246296bcb3eeaba303a4724d1ce5bbc92bfbe000e88858316905038460",
       "sourceModifiedUtc": "2026-10-17T22:51:51.8139282Z",
-      "transformations": [
-        "explicitly refreshed after source review"
-      ]
+      "transformations": []
     },
     {
       "path": "Aetherfront-RC26-Work/ProfileTests/Program.cs",
@@ -2486,6 +2482,216 @@
       "sha256": "297657c56fcab562c6cedc8d3dac68f816b3d254fb97b6a4b22facfdf2b92450",
       "sourceSha256": "297657c56fcab562c6cedc8d3dac68f816b3d254fb97b6a4b22facfdf2b92450",
       "sourceModifiedUtc": "2026-10-17T21:54:15.9438254Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC27-Work/Build-Code.ps1",
+      "source": "Aetherfront-RC27-Work/Build-Code.ps1",
+      "role": "RC27 canonical early-startup hook and minimal authenticated client-version graft",
+      "bytes": 9395,
+      "sha256": "0bb342ed982c712a9da1721d09a07876f1fa5be37eaf41f1bfd322d156dd47be",
+      "sourceSha256": "0bb342ed982c712a9da1721d09a07876f1fa5be37eaf41f1bfd322d156dd47be",
+      "sourceModifiedUtc": "2026-10-18T02:50:20.7236866Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC27-Work/Build-Engine.ps1",
+      "source": "Aetherfront-RC27-Work/Build-Engine.ps1",
+      "role": "RC27 isolated Engine build from the authenticated RC26 baseline",
+      "bytes": 5029,
+      "sha256": "dcdac8fe9b11dab5f76f7c13f172d18294da69a2c1448ff718bcdd29b54ed8cb",
+      "sourceSha256": "dcdac8fe9b11dab5f76f7c13f172d18294da69a2c1448ff718bcdd29b54ed8cb",
+      "sourceModifiedUtc": "2026-10-18T02:32:16.6473689Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC27-Work/Build-Release.ps1",
+      "source": "Aetherfront-RC27-Work/Build-Release.ps1",
+      "role": "RC27 immutable client release and narrowly scoped old-helper tech-tree repair migration",
+      "bytes": 19235,
+      "sha256": "1089ac6f69ba8397c8647189fcab84bbbb2b9ece246d2626be9783c4639a4a65",
+      "sourceSha256": "1089ac6f69ba8397c8647189fcab84bbbb2b9ece246d2626be9783c4639a4a65",
+      "sourceModifiedUtc": "2026-10-18T02:26:11.1729745Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC27-Work/CasingTests/CasingTests.csproj",
+      "source": "Aetherfront-RC27-Work/CasingTests/CasingTests.csproj",
+      "role": "RC27 case-preserving prepared commits, authenticated early startup repair, targeted version graft and casing regressions",
+      "bytes": 758,
+      "sha256": "727d5402b9f18d2d3160cb60c5b434f40d66d2f4b8b1bd25259a7295f4c5abfe",
+      "sourceSha256": "727d5402b9f18d2d3160cb60c5b434f40d66d2f4b8b1bd25259a7295f4c5abfe",
+      "sourceModifiedUtc": "2026-10-18T02:28:11.3441833Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC27-Work/CasingTests/Program.cs",
+      "source": "Aetherfront-RC27-Work/CasingTests/Program.cs",
+      "role": "RC27 case-preserving prepared commits, authenticated early startup repair, targeted version graft and casing regressions",
+      "bytes": 42091,
+      "sha256": "f994a57dfa7b3747dea25a860392d97087e998abdb233f9736045b830ff5f9cb",
+      "sourceSha256": "f994a57dfa7b3747dea25a860392d97087e998abdb233f9736045b830ff5f9cb",
+      "sourceModifiedUtc": "2026-10-18T02:51:03.3256947Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC27-Work/Engine/Engine.csproj",
+      "source": "Aetherfront-RC27-Work/Engine/Engine.csproj",
+      "role": "RC27 case-preserving prepared commits, authenticated early startup repair, targeted version graft and casing regressions",
+      "bytes": 839,
+      "sha256": "800a35b1453ead6642a6ce6f8ef72c6d8c3f26d4ee05eaf180f59a00d39ed7a8",
+      "sourceSha256": "800a35b1453ead6642a6ce6f8ef72c6d8c3f26d4ee05eaf180f59a00d39ed7a8",
+      "sourceModifiedUtc": "2026-10-17T08:26:49.7546909Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC27-Work/Engine/Installer.cs",
+      "source": "Aetherfront-RC27-Work/Engine/Installer.cs",
+      "role": "RC27 case-preserving prepared commits, authenticated early startup repair, targeted version graft and casing regressions",
+      "bytes": 56965,
+      "sha256": "d97af2306dac29c1d7433dc362a26fbe6c857d649fbb31bef70726cf17b25a36",
+      "sourceSha256": "d97af2306dac29c1d7433dc362a26fbe6c857d649fbb31bef70726cf17b25a36",
+      "sourceModifiedUtc": "2026-10-18T02:32:16.6386684Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC27-Work/Engine/NativeInstall.cs",
+      "source": "Aetherfront-RC27-Work/Engine/NativeInstall.cs",
+      "role": "RC27 case-preserving prepared commits, authenticated early startup repair, targeted version graft and casing regressions",
+      "bytes": 13297,
+      "sha256": "eae01b9dbbc9e859de130d37bff254aa3b8c5f02a3b9e914a362ebd01ff62a93",
+      "sourceSha256": "eae01b9dbbc9e859de130d37bff254aa3b8c5f02a3b9e914a362ebd01ff62a93",
+      "sourceModifiedUtc": "2026-10-17T09:14:45.4374726Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC27-Work/Engine/PackageCasing.cs",
+      "source": "Aetherfront-RC27-Work/Engine/PackageCasing.cs",
+      "role": "RC27 case-preserving prepared commits, authenticated early startup repair, targeted version graft and casing regressions",
+      "bytes": 1477,
+      "sha256": "cd12756ff56732becd59a7f3a227a9fce8039dc31cb45a44790b6c4ed12a1f64",
+      "sourceSha256": "cd12756ff56732becd59a7f3a227a9fce8039dc31cb45a44790b6c4ed12a1f64",
+      "sourceModifiedUtc": "2026-10-18T02:24:18.7049973Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC27-Work/Engine/PostExit.cs",
+      "source": "Aetherfront-RC27-Work/Engine/PostExit.cs",
+      "role": "RC27 case-preserving prepared commits, authenticated early startup repair, targeted version graft and casing regressions",
+      "bytes": 2499,
+      "sha256": "4d042158deba0b73122795bb121bcbb34ccd1278127e6fbd4a29a181df1c2a6b",
+      "sourceSha256": "4d042158deba0b73122795bb121bcbb34ccd1278127e6fbd4a29a181df1c2a6b",
+      "sourceModifiedUtc": "2026-10-17T08:16:19.8293614Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC27-Work/Engine/PreparedPack.cs",
+      "source": "Aetherfront-RC27-Work/Engine/PreparedPack.cs",
+      "role": "RC27 case-preserving prepared commits, authenticated early startup repair, targeted version graft and casing regressions",
+      "bytes": 23113,
+      "sha256": "72a331cde99367fabe5507c5f2e1b9f87c2fed953d116efee144dc13acbac2d5",
+      "sourceSha256": "72a331cde99367fabe5507c5f2e1b9f87c2fed953d116efee144dc13acbac2d5",
+      "sourceModifiedUtc": "2026-10-18T02:24:18.7289965Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC27-Work/Engine/RuntimeFiles.cs",
+      "source": "Aetherfront-RC27-Work/Engine/RuntimeFiles.cs",
+      "role": "RC27 case-preserving prepared commits, authenticated early startup repair, targeted version graft and casing regressions",
+      "bytes": 6442,
+      "sha256": "5ddc50e5d0b2b381787fb3a35912799d74a371c3639bac518582fad273f7a3bd",
+      "sourceSha256": "5ddc50e5d0b2b381787fb3a35912799d74a371c3639bac518582fad273f7a3bd",
+      "sourceModifiedUtc": "2026-10-18T02:25:16.0769539Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC27-Work/Engine/StartupCasing.cs",
+      "source": "Aetherfront-RC27-Work/Engine/StartupCasing.cs",
+      "role": "RC27 case-preserving prepared commits, authenticated early startup repair, targeted version graft and casing regressions",
+      "bytes": 16905,
+      "sha256": "858e3a726ce433744d5b85beda3391bc374775bf4765f54d4f753c16461f3939",
+      "sourceSha256": "858e3a726ce433744d5b85beda3391bc374775bf4765f54d4f753c16461f3939",
+      "sourceModifiedUtc": "2026-10-18T02:44:20.1885615Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC27-Work/NativeTests/NativeTests.csproj",
+      "source": "Aetherfront-RC27-Work/NativeTests/NativeTests.csproj",
+      "role": "RC27 case-preserving prepared commits, authenticated early startup repair, targeted version graft and casing regressions",
+      "bytes": 724,
+      "sha256": "9c6e2e5d9eb7e54ac3eb70e810d0e809144b04cbf30a51acd4bb89e4c28b0993",
+      "sourceSha256": "9c6e2e5d9eb7e54ac3eb70e810d0e809144b04cbf30a51acd4bb89e4c28b0993",
+      "sourceModifiedUtc": "2026-10-17T06:26:53.5924419Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC27-Work/NativeTests/Program.cs",
+      "source": "Aetherfront-RC27-Work/NativeTests/Program.cs",
+      "role": "RC27 case-preserving prepared commits, authenticated early startup repair, targeted version graft and casing regressions",
+      "bytes": 37284,
+      "sha256": "616e4bf83d3664c9628a16b0e77ce08c7381168b0d1683ca7946cfa36f7f0260",
+      "sourceSha256": "616e4bf83d3664c9628a16b0e77ce08c7381168b0d1683ca7946cfa36f7f0260",
+      "sourceModifiedUtc": "2026-10-18T02:27:36.4553409Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC27-Work/Test-Casing.ps1",
+      "source": "Aetherfront-RC27-Work/Test-Casing.ps1",
+      "role": "Authentic old-helper/new-startup, journal recovery and Mono casing regression matrix",
+      "bytes": 7088,
+      "sha256": "b145af0cc026017d1df0a0f5432fb307f06cecd716b36e67a01a4216bc6878e3",
+      "sourceSha256": "b145af0cc026017d1df0a0f5432fb307f06cecd716b36e67a01a4216bc6878e3",
+      "sourceModifiedUtc": "2026-10-18T02:44:42.3087012Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC27-Work/Test-ModelPaths.ps1",
+      "source": "Aetherfront-RC27-Work/Test-ModelPaths.ps1",
+      "role": "Ordinal model URL validation against authenticated archive inventories",
+      "bytes": 5383,
+      "sha256": "71320617c5dc658a966e19de6790479b55f1619e64cd6921fea1d21ffd61b7ce",
+      "sourceSha256": "71320617c5dc658a966e19de6790479b55f1619e64cd6921fea1d21ffd61b7ce",
+      "sourceModifiedUtc": "2026-10-18T02:38:42.4383701Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC27-Work/Test-Native.ps1",
+      "source": "Aetherfront-RC27-Work/Test-Native.ps1",
+      "role": "RC27 native commit, runtime-file, recovery and path-casing regression checks",
+      "bytes": 4718,
+      "sha256": "65232fda28bd5cd8b5b7dba13819c27f993e6cd7fcd439bfa8c4ca4fe3b5c29e",
+      "sourceSha256": "65232fda28bd5cd8b5b7dba13819c27f993e6cd7fcd439bfa8c4ca4fe3b5c29e",
+      "sourceModifiedUtc": "2026-10-18T02:34:04.7232754Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC27-Work/Verify-Deployment.ps1",
+      "source": "Aetherfront-RC27-Work/Verify-Deployment.ps1",
+      "role": "Read-only native, public-download, preservation and historical-asset verification",
+      "bytes": 39928,
+      "sha256": "fca32fd09c382a73654c641d70685394bdfdeb859d9213717589ae5074a15827",
+      "sourceSha256": "fca32fd09c382a73654c641d70685394bdfdeb859d9213717589ae5074a15827",
+      "sourceModifiedUtc": "2026-10-18T02:44:21.978184Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC27-Work/VersionPatcher/Program.cs",
+      "source": "Aetherfront-RC27-Work/VersionPatcher/Program.cs",
+      "role": "RC27 case-preserving prepared commits, authenticated early startup repair, targeted version graft and casing regressions",
+      "bytes": 25870,
+      "sha256": "d3e7e5f75e82e2e6a31a9a09dc20dc488677ca178aff3c72de07373601cf5bab",
+      "sourceSha256": "d3e7e5f75e82e2e6a31a9a09dc20dc488677ca178aff3c72de07373601cf5bab",
+      "sourceModifiedUtc": "2026-10-18T02:22:28.6280464Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC27-Work/VersionPatcher/VersionPatcher.csproj",
+      "source": "Aetherfront-RC27-Work/VersionPatcher/VersionPatcher.csproj",
+      "role": "RC27 case-preserving prepared commits, authenticated early startup repair, targeted version graft and casing regressions",
+      "bytes": 461,
+      "sha256": "297657c56fcab562c6cedc8d3dac68f816b3d254fb97b6a4b22facfdf2b92450",
+      "sourceSha256": "297657c56fcab562c6cedc8d3dac68f816b3d254fb97b6a4b22facfdf2b92450",
+      "sourceModifiedUtc": "2026-10-18T02:21:14.084013Z",
       "transformations": []
     },
     {
@@ -26953,8 +27159,8 @@
       "path": "export-policy.json",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 20677,
-      "sha256": "7a5dfc6ef5c9126792d43ec1d147a949d5e86a46840a150e18ad6ef095653bbf",
+      "bytes": 22077,
+      "sha256": "e50629ab7ee11d98b6c1bac1e399c4f674ac1e99c7837def4d71fd02a6bbcf66",
       "sourceSha256": null,
       "transformations": []
     },
@@ -26980,8 +27186,8 @@
       "path": "TESTING.md",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 25364,
-      "sha256": "b86e649d962db2a3f8ca9ff9366f93f764f701218385a2485d3ad0a2c6edbb19",
+      "bytes": 28711,
+      "sha256": "bc2cb10c607df7c3ea908589a6b947e0540e0dea70d366ed32a59e70c3d79a47",
       "sourceSha256": null,
       "transformations": []
     },
@@ -27013,7 +27219,7 @@
       "transformations": []
     }
   ],
-  "totalFileBytes": 14232310,
+  "totalFileBytes": 14556558,
   "exclusions": [
     "All Git history and Git metadata; CI workflows and operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",
