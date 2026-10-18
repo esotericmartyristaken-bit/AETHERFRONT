@@ -485,6 +485,11 @@ internal static class Program
     {
         bool fresh = mode.StartsWith("fresh", StringComparison.Ordinal);
         var fixture = new Fixture(mode, true);
+        // Exercise the real original pack revision, not RC26 for every loaded helper.
+        if (!fresh && (mode=="migration28" || mode=="migration29")) {
+            fixture.Transaction.ExistingState.PackVersion="kesas-rc"+mode.Substring(mode.Length-2);
+            Put(fixture.Data,"APFPackState.json",ApfJson.Serialize(fixture.Transaction.ExistingState));
+        }
         if (fresh) {
             foreach (string setting in Settings.Select(RootOf).Distinct(StringComparer.OrdinalIgnoreCase)) {
                 string target = Path.GetFullPath(Path.Combine(fixture.GameData, setting));

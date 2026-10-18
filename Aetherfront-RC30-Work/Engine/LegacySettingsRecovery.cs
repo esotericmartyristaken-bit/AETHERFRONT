@@ -225,8 +225,8 @@ namespace KesasInstall
                 leases.File(stateRecord.Backup, MetadataLimit);
                 Require(SameHash(core.Hash(root, stateRecord.Backup), stateRecord.ContentSha256), "Original pack state backup changed.");
                 oldState = ApfJson.Deserialize<ApfPackState>(ReadText(root, stateRecord.Backup, MetadataLimit));
-                Require(oldState != null && (oldState.PackVersion == "kesas-rc26" || oldState.PackVersion == "kesas-rc27"),
-                    "Legacy recovery requires an RC26/RC27 original pack state.");
+                Require(oldState != null && new[] { "kesas-rc26", "kesas-rc27", "kesas-rc28", "kesas-rc29" }.Contains(oldState.PackVersion, StringComparer.Ordinal),
+                    "Legacy recovery requires an RC26 through RC29 original pack state.");
             }
             else
             {

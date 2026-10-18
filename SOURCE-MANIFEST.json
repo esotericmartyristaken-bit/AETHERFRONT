@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-18T19:14:09.814647+00:00",
+  "createdUtc": "2026-10-18T19:42:06.848013+00:00",
   "publication": "Reviewed source update; ordinary source pushes do not deploy",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -27595,9 +27595,10 @@
       "path": "Aetherfront-RC30-Work/Engine/LegacySettingsRecovery.cs",
       "source": "Aetherfront-RC30-Work/Engine/LegacySettingsRecovery.cs",
       "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 44902,
-      "sha256": "635f02e70ba0e3ea2953b98aeafdbbc304071b5181c138801d8c91b30b9534bf",
-      "sourceSha256": "635f02e70ba0e3ea2953b98aeafdbbc304071b5181c138801d8c91b30b9534bf"
+      "bytes": 44951,
+      "sha256": "b985acf0a3379ca1ea93fdda5dbbcdd8c8efe259d040a3db9ba32848f9a8f471",
+      "sourceSha256": "b985acf0a3379ca1ea93fdda5dbbcdd8c8efe259d040a3db9ba32848f9a8f471",
+      "sourceModifiedUtc": "2026-10-18T19:42:06.848013+00:00"
     },
     {
       "path": "Aetherfront-RC30-Work/Engine/NativeInstall.cs",
@@ -27675,9 +27676,10 @@
       "path": "Aetherfront-RC30-Work/SettingsTests/Program.cs",
       "source": "Aetherfront-RC30-Work/SettingsTests/Program.cs",
       "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 57737,
-      "sha256": "c1341537d8d8f18ffec8bd6041d01b246771bb4593d525dba2af4505970bb60c",
-      "sourceSha256": "c1341537d8d8f18ffec8bd6041d01b246771bb4593d525dba2af4505970bb60c"
+      "bytes": 58108,
+      "sha256": "89ab4c1449d1bbbbbef5f168347a0e9e499f117e0637bbd825863ebb6a9160f5",
+      "sourceSha256": "89ab4c1449d1bbbbbef5f168347a0e9e499f117e0637bbd825863ebb6a9160f5",
+      "sourceModifiedUtc": "2026-10-18T19:42:06.848013+00:00"
     },
     {
       "path": "Aetherfront-RC30-Work/SettingsTests/SettingsTests.csproj",
