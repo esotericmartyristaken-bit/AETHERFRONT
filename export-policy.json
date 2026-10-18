@@ -12,9 +12,14 @@
     {"path":"APFDiscordBot/test/smoke.test.js","rule":"private-host","matchSha256":"227994d2c45ba2bc7b07982b150624fd90a20796522dfa0770e185d70affcd71","reason":"Synthetic path-redaction unit test input; not accessed."},
     {"path":"scripts/Export-GitHubSource.ps1","rule":"private-host","matchSha256":"227994d2c45ba2bc7b07982b150624fd90a20796522dfa0770e185d70affcd71","reason":"Scanner pattern definition only; never accessed."}
   ],
-  "deniedDirectoryPattern": "(?i)^(?:\\.git|\\.vs|\\.idea|\\.vscode|bin|obj|packages|node_modules|Build|BuildAttempts|Runs|P[0-9a-f]{8}|.*-Probe-.*|Results-.*|TestRuntime|TestResults|logs?|Universe|saves|screenshots|secrets|diagnostics|Backups|artifacts|updates|state|Config|Candidate.*|Release.*|Patched|.*Fixture.*|.*backup.*|Decompiled|ModpackSource|HostedPackages)$",
+  "deniedDirectoryPattern": "(?i)^(?:\\.git|\\.vs|\\.idea|\\.vscode|bin|obj|packages|node_modules|Build|BuildAttempts|Attempts|Runs|P[0-9a-f]{8}|.*-Probe-.*|Results-.*|TestRuntime|TestResults|logs?|Universe|saves|screenshots|secrets|diagnostics|Backups|artifacts|updates|state|Config|Candidate.*|Release.*|Patched|.*Fixture.*|.*backup.*|Decompiled|ModpackSource|HostedPackages)$",
   "deniedFilePattern": "(?i)(?:^|/)(?:Aetherfront-Client-Handoff\\.md|SetDirectories\\.bat|CopyToKSPDirectory\\.bat|Publish-Release\\.before\\.ps1|config\\.json|WORK-STATE\\.json|TEST-RESULTS\\.json|EVIDENCE\\.json|LIVE-RESULT\\.json)|\\.(?:user|suo|log|cache|pem|key|pfx|p12|crt|cer|snk)$|^Aetherfront-Source/(?:LmpMasterServer|MasterServer)/app\\.config$",
   "groups": [
+    {
+      "role": "RC28 exact runtime settings, post-exit preservation, authenticated legacy recovery and regression tests",
+      "directories": ["Aetherfront-RC28-Work/Engine", "Aetherfront-RC28-Work/NativeTests", "Aetherfront-RC28-Work/CasingTests", "Aetherfront-RC28-Work/SettingsTests", "Aetherfront-RC28-Work/VersionPatcher"],
+      "extensions": [".cs", ".csproj", ".ps1"]
+    },
     {
       "role": "RC27 case-preserving prepared commits, authenticated early startup repair, targeted version graft and casing regressions",
       "directories": ["Aetherfront-RC27-Work/Engine", "Aetherfront-RC27-Work/NativeTests", "Aetherfront-RC27-Work/CasingTests", "Aetherfront-RC27-Work/VersionPatcher"],
@@ -77,6 +82,15 @@
     }
   ],
   "explicitFiles": [
+    {"source":"Aetherfront-RC28-Work/Build-Engine.ps1","role":"RC28 isolated Engine build from the immutable authenticated RC27 baseline"},
+    {"source":"Aetherfront-RC28-Work/Build-Code.ps1","role":"RC28 minimal authenticated client version graft preserving the existing startup hook"},
+    {"source":"Aetherfront-RC28-Work/Build-Release.ps1","role":"RC28 immutable release with eight version-only settings migration repairs"},
+    {"source":"Aetherfront-RC28-Work/Test-Native.ps1","role":"RC28 native installation, integrity, execution lock and recovery regressions"},
+    {"source":"Aetherfront-RC28-Work/Test-Casing.ps1","role":"RC28 authenticated startup casing and HETTN regression matrix"},
+    {"source":"Aetherfront-RC28-Work/Test-Settings.ps1","role":"Exact settings integrity and signed old-helper one-restart migration matrix"},
+    {"source":"Aetherfront-RC28-Work/Test-FaultMatrix.ps1","role":"Interrupted recovery checkpoints through actual signed legacy migrations using the frozen test executable"},
+    {"source":"Aetherfront-RC28-Work/MonoRecoveryProbe/Run.ps1","role":"RC28 actual KSP Mono startup recovery probe with signed dependencies and eight-setting integrity checks"},
+    {"source":"Aetherfront-RC28-Work/Verify-Deployment.ps1","role":"Read-only native/public release parity and preservation verification"},
     {"source":"Aetherfront-RC27-Work/Build-Engine.ps1","role":"RC27 isolated Engine build from the authenticated RC26 baseline"},
     {"source":"Aetherfront-RC27-Work/Build-Code.ps1","role":"RC27 canonical early-startup hook and minimal authenticated client-version graft"},
     {"source":"Aetherfront-RC27-Work/Build-Release.ps1","role":"RC27 immutable client release and narrowly scoped old-helper tech-tree repair migration"},

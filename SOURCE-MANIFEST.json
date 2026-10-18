@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-18T03:09:29.8807081Z",
+  "createdUtc": "2026-10-18T04:42:31.0494126Z",
   "publication": "STAGED ONLY; not pushed",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -12,12 +12,8 @@
   },
   "rebuildStatus": "NOT independently rebuildable as shipping RC22 from this export alone; see README.md",
   "concurrentSourceReviewPending": false,
-  "integrationGates": [
-    "Refresh after native/GitHub publisher review completes",
-    "Add forthcoming recovery-test source paths to export-policy.json and refresh",
-    "Review source drift, privacy and licenses before publication"
-  ],
-  "excludedDirectoryCount": 253,
+  "integrationGates": [],
+  "excludedDirectoryCount": 254,
   "excludedReparsePointCount": 0,
   "files": [
     {
@@ -2688,6 +2684,278 @@
       "path": "Aetherfront-RC27-Work/VersionPatcher/VersionPatcher.csproj",
       "source": "Aetherfront-RC27-Work/VersionPatcher/VersionPatcher.csproj",
       "role": "RC27 case-preserving prepared commits, authenticated early startup repair, targeted version graft and casing regressions",
+      "bytes": 461,
+      "sha256": "297657c56fcab562c6cedc8d3dac68f816b3d254fb97b6a4b22facfdf2b92450",
+      "sourceSha256": "297657c56fcab562c6cedc8d3dac68f816b3d254fb97b6a4b22facfdf2b92450",
+      "sourceModifiedUtc": "2026-10-18T02:21:14.084013Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/Build-Code.ps1",
+      "source": "Aetherfront-RC28-Work/Build-Code.ps1",
+      "role": "RC28 minimal authenticated client version graft preserving the existing startup hook",
+      "bytes": 9550,
+      "sha256": "ed191e52267d78faa4459cf6b074b47ac5362956b1b5e334bd12e8aff7d08d01",
+      "sourceSha256": "ed191e52267d78faa4459cf6b074b47ac5362956b1b5e334bd12e8aff7d08d01",
+      "sourceModifiedUtc": "2026-10-18T03:49:31.8758076Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/Build-Engine.ps1",
+      "source": "Aetherfront-RC28-Work/Build-Engine.ps1",
+      "role": "RC28 isolated Engine build from the immutable authenticated RC27 baseline",
+      "bytes": 5040,
+      "sha256": "d70d4021667da943f8bb6014ee2a93db85042eb4c0a919f1863a1ed20e06c007",
+      "sourceSha256": "d70d4021667da943f8bb6014ee2a93db85042eb4c0a919f1863a1ed20e06c007",
+      "sourceModifiedUtc": "2026-10-18T03:48:00.2986933Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/Build-Release.ps1",
+      "source": "Aetherfront-RC28-Work/Build-Release.ps1",
+      "role": "RC28 immutable release with eight version-only settings migration repairs",
+      "bytes": 20557,
+      "sha256": "1ca71019c05c1babf71ec059c668cdc7dafa82bec68175591df941213036141b",
+      "sourceSha256": "1ca71019c05c1babf71ec059c668cdc7dafa82bec68175591df941213036141b",
+      "sourceModifiedUtc": "2026-10-18T03:49:54.2009286Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/CasingTests/CasingTests.csproj",
+      "source": "Aetherfront-RC28-Work/CasingTests/CasingTests.csproj",
+      "role": "RC28 exact runtime settings, post-exit preservation, authenticated legacy recovery and regression tests",
+      "bytes": 758,
+      "sha256": "727d5402b9f18d2d3160cb60c5b434f40d66d2f4b8b1bd25259a7295f4c5abfe",
+      "sourceSha256": "727d5402b9f18d2d3160cb60c5b434f40d66d2f4b8b1bd25259a7295f4c5abfe",
+      "sourceModifiedUtc": "2026-10-18T02:28:11.3441833Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/CasingTests/Program.cs",
+      "source": "Aetherfront-RC28-Work/CasingTests/Program.cs",
+      "role": "RC28 exact runtime settings, post-exit preservation, authenticated legacy recovery and regression tests",
+      "bytes": 42374,
+      "sha256": "b190628526219dd50940014def5500b30edde8ed0152a7999ee5d16679d61103",
+      "sourceSha256": "b190628526219dd50940014def5500b30edde8ed0152a7999ee5d16679d61103",
+      "sourceModifiedUtc": "2026-10-18T04:17:28.7387206Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/Engine/Engine.csproj",
+      "source": "Aetherfront-RC28-Work/Engine/Engine.csproj",
+      "role": "RC28 exact runtime settings, post-exit preservation, authenticated legacy recovery and regression tests",
+      "bytes": 839,
+      "sha256": "800a35b1453ead6642a6ce6f8ef72c6d8c3f26d4ee05eaf180f59a00d39ed7a8",
+      "sourceSha256": "800a35b1453ead6642a6ce6f8ef72c6d8c3f26d4ee05eaf180f59a00d39ed7a8",
+      "sourceModifiedUtc": "2026-10-17T08:26:49.7546909Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/Engine/Installer.cs",
+      "source": "Aetherfront-RC28-Work/Engine/Installer.cs",
+      "role": "RC28 exact runtime settings, post-exit preservation, authenticated legacy recovery and regression tests",
+      "bytes": 56252,
+      "sha256": "219f4c96e85718e7ede88ea9ef9082ac04cc8be94a371f190727a4ebcf884499",
+      "sourceSha256": "219f4c96e85718e7ede88ea9ef9082ac04cc8be94a371f190727a4ebcf884499",
+      "sourceModifiedUtc": "2026-10-18T03:57:54.1590573Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/Engine/LegacySettingsRecovery.cs",
+      "source": "Aetherfront-RC28-Work/Engine/LegacySettingsRecovery.cs",
+      "role": "RC28 exact runtime settings, post-exit preservation, authenticated legacy recovery and regression tests",
+      "bytes": 44182,
+      "sha256": "692e48b07f75fbd509dccba5b3c05fbae91d32812d748f239b076c0cb643b460",
+      "sourceSha256": "692e48b07f75fbd509dccba5b3c05fbae91d32812d748f239b076c0cb643b460",
+      "sourceModifiedUtc": "2026-10-18T04:07:52.342833Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/Engine/NativeInstall.cs",
+      "source": "Aetherfront-RC28-Work/Engine/NativeInstall.cs",
+      "role": "RC28 exact runtime settings, post-exit preservation, authenticated legacy recovery and regression tests",
+      "bytes": 14924,
+      "sha256": "0ecf0740c7c062a3f681e95b2e8a3f068b364bef915de0d8059e8d7bef07128e",
+      "sourceSha256": "0ecf0740c7c062a3f681e95b2e8a3f068b364bef915de0d8059e8d7bef07128e",
+      "sourceModifiedUtc": "2026-10-18T04:17:28.7357156Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/Engine/PackageCasing.cs",
+      "source": "Aetherfront-RC28-Work/Engine/PackageCasing.cs",
+      "role": "RC28 exact runtime settings, post-exit preservation, authenticated legacy recovery and regression tests",
+      "bytes": 1477,
+      "sha256": "cd12756ff56732becd59a7f3a227a9fce8039dc31cb45a44790b6c4ed12a1f64",
+      "sourceSha256": "cd12756ff56732becd59a7f3a227a9fce8039dc31cb45a44790b6c4ed12a1f64",
+      "sourceModifiedUtc": "2026-10-18T02:24:18.7049973Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/Engine/PostExit.cs",
+      "source": "Aetherfront-RC28-Work/Engine/PostExit.cs",
+      "role": "RC28 exact runtime settings, post-exit preservation, authenticated legacy recovery and regression tests",
+      "bytes": 2499,
+      "sha256": "4d042158deba0b73122795bb121bcbb34ccd1278127e6fbd4a29a181df1c2a6b",
+      "sourceSha256": "4d042158deba0b73122795bb121bcbb34ccd1278127e6fbd4a29a181df1c2a6b",
+      "sourceModifiedUtc": "2026-10-17T08:16:19.8293614Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/Engine/PreparedPack.cs",
+      "source": "Aetherfront-RC28-Work/Engine/PreparedPack.cs",
+      "role": "RC28 exact runtime settings, post-exit preservation, authenticated legacy recovery and regression tests",
+      "bytes": 27440,
+      "sha256": "38e2401f8f667d3fd423f8480e2d5860139717e39a2839ede7212fbc23d57b9c",
+      "sourceSha256": "38e2401f8f667d3fd423f8480e2d5860139717e39a2839ede7212fbc23d57b9c",
+      "sourceModifiedUtc": "2026-10-18T03:56:33.1344365Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/Engine/RuntimeFiles.cs",
+      "source": "Aetherfront-RC28-Work/Engine/RuntimeFiles.cs",
+      "role": "RC28 exact runtime settings, post-exit preservation, authenticated legacy recovery and regression tests",
+      "bytes": 6499,
+      "sha256": "d7aafa99ba359960622cc3ae393b185ea0cb89579e52c0831d3685fc88991a41",
+      "sourceSha256": "d7aafa99ba359960622cc3ae393b185ea0cb89579e52c0831d3685fc88991a41",
+      "sourceModifiedUtc": "2026-10-18T03:47:09.9619608Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/Engine/StartupCasing.cs",
+      "source": "Aetherfront-RC28-Work/Engine/StartupCasing.cs",
+      "role": "RC28 exact runtime settings, post-exit preservation, authenticated legacy recovery and regression tests",
+      "bytes": 16970,
+      "sha256": "42ca99fd4c460f5ac8e4738642b1b3bc28551c481c374b0212aee9941a09a2cf",
+      "sourceSha256": "42ca99fd4c460f5ac8e4738642b1b3bc28551c481c374b0212aee9941a09a2cf",
+      "sourceModifiedUtc": "2026-10-18T03:50:49.2174352Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/Engine/UserSettings.cs",
+      "source": "Aetherfront-RC28-Work/Engine/UserSettings.cs",
+      "role": "RC28 exact runtime settings, post-exit preservation, authenticated legacy recovery and regression tests",
+      "bytes": 2826,
+      "sha256": "ed2cbe42e088e7be1c3b5d4cd6050d54712c884b4e40ec01f3ce2d14280d3ca8",
+      "sourceSha256": "ed2cbe42e088e7be1c3b5d4cd6050d54712c884b4e40ec01f3ce2d14280d3ca8",
+      "sourceModifiedUtc": "2026-10-18T03:56:33.1376396Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/MonoRecoveryProbe/Run.ps1",
+      "source": "Aetherfront-RC28-Work/MonoRecoveryProbe/Run.ps1",
+      "role": "RC28 actual KSP Mono startup recovery probe with signed dependencies and eight-setting integrity checks",
+      "bytes": 8285,
+      "sha256": "19d69d78324c6db2c3680e9720d3c8b0a7ba2cbc5b666c541916d0fd4542696c",
+      "sourceSha256": "607e0c4a6b3f9785ec0c49d5728ccd946285cd690184744877cabee4864f7cf4",
+      "sourceModifiedUtc": "2026-10-18T04:35:16.9655312Z",
+      "transformations": [
+        "absolute workspace root replaced by ."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC28-Work/NativeTests/NativeTests.csproj",
+      "source": "Aetherfront-RC28-Work/NativeTests/NativeTests.csproj",
+      "role": "RC28 exact runtime settings, post-exit preservation, authenticated legacy recovery and regression tests",
+      "bytes": 724,
+      "sha256": "9c6e2e5d9eb7e54ac3eb70e810d0e809144b04cbf30a51acd4bb89e4c28b0993",
+      "sourceSha256": "9c6e2e5d9eb7e54ac3eb70e810d0e809144b04cbf30a51acd4bb89e4c28b0993",
+      "sourceModifiedUtc": "2026-10-17T06:26:53.5924419Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/NativeTests/Program.cs",
+      "source": "Aetherfront-RC28-Work/NativeTests/Program.cs",
+      "role": "RC28 exact runtime settings, post-exit preservation, authenticated legacy recovery and regression tests",
+      "bytes": 37284,
+      "sha256": "eab0d18070011dccef60311e4e62a486152156c8e7f7232fe6614932a5a7de0c",
+      "sourceSha256": "eab0d18070011dccef60311e4e62a486152156c8e7f7232fe6614932a5a7de0c",
+      "sourceModifiedUtc": "2026-10-18T03:48:08.2347268Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/SettingsTests/Program.cs",
+      "source": "Aetherfront-RC28-Work/SettingsTests/Program.cs",
+      "role": "RC28 exact runtime settings, post-exit preservation, authenticated legacy recovery and regression tests",
+      "bytes": 53407,
+      "sha256": "0bef7e14e216e0999d96c75bf50c38961d3a374349f5e81d9e92c2deeb8cd5a4",
+      "sourceSha256": "0bef7e14e216e0999d96c75bf50c38961d3a374349f5e81d9e92c2deeb8cd5a4",
+      "sourceModifiedUtc": "2026-10-18T04:15:01.7491834Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/SettingsTests/SettingsTests.csproj",
+      "source": "Aetherfront-RC28-Work/SettingsTests/SettingsTests.csproj",
+      "role": "RC28 exact runtime settings, post-exit preservation, authenticated legacy recovery and regression tests",
+      "bytes": 848,
+      "sha256": "d810b40f3969efb013503e3efdddc80bae7b9374869d678c8a3a2b1964469b6c",
+      "sourceSha256": "d810b40f3969efb013503e3efdddc80bae7b9374869d678c8a3a2b1964469b6c",
+      "sourceModifiedUtc": "2026-10-18T04:15:41.9199162Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/Test-Casing.ps1",
+      "source": "Aetherfront-RC28-Work/Test-Casing.ps1",
+      "role": "RC28 authenticated startup casing and HETTN regression matrix",
+      "bytes": 7088,
+      "sha256": "8422be0d78cb79a3c028f52250f7b354599e35be594def8f4dc527ef0f0ee62a",
+      "sourceSha256": "8422be0d78cb79a3c028f52250f7b354599e35be594def8f4dc527ef0f0ee62a",
+      "sourceModifiedUtc": "2026-10-18T03:48:08.1137774Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/Test-FaultMatrix.ps1",
+      "source": "Aetherfront-RC28-Work/Test-FaultMatrix.ps1",
+      "role": "Interrupted recovery checkpoints through actual signed legacy migrations using the frozen test executable",
+      "bytes": 10670,
+      "sha256": "caef744fc389828ecc04e09a110e60b92a3022286eb0a755754b08aa40e95e00",
+      "sourceSha256": "caef744fc389828ecc04e09a110e60b92a3022286eb0a755754b08aa40e95e00",
+      "sourceModifiedUtc": "2026-10-18T04:26:22.1573345Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/Test-Native.ps1",
+      "source": "Aetherfront-RC28-Work/Test-Native.ps1",
+      "role": "RC28 native installation, integrity, execution lock and recovery regressions",
+      "bytes": 4718,
+      "sha256": "cea225afdf0332c1ac35746ee31d65a3ef9519fb33dc3850fc356581630f8599",
+      "sourceSha256": "cea225afdf0332c1ac35746ee31d65a3ef9519fb33dc3850fc356581630f8599",
+      "sourceModifiedUtc": "2026-10-18T03:48:08.1067264Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/Test-Settings.ps1",
+      "source": "Aetherfront-RC28-Work/Test-Settings.ps1",
+      "role": "Exact settings integrity and signed old-helper one-restart migration matrix",
+      "bytes": 10798,
+      "sha256": "6bcccf195b796992e67a1993c9110717f2d14386c1f06a903cebad28ce544343",
+      "sourceSha256": "6bcccf195b796992e67a1993c9110717f2d14386c1f06a903cebad28ce544343",
+      "sourceModifiedUtc": "2026-10-18T04:09:47.7201077Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/Verify-Deployment.ps1",
+      "source": "Aetherfront-RC28-Work/Verify-Deployment.ps1",
+      "role": "Read-only native/public release parity and preservation verification",
+      "bytes": 43312,
+      "sha256": "944f07a9363e0f7a3524dce7ef077fcc4df73b5c4746ce7c154586ee9ce19ccc",
+      "sourceSha256": "944f07a9363e0f7a3524dce7ef077fcc4df73b5c4746ce7c154586ee9ce19ccc",
+      "sourceModifiedUtc": "2026-10-18T03:52:06.9173068Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/VersionPatcher/Program.cs",
+      "source": "Aetherfront-RC28-Work/VersionPatcher/Program.cs",
+      "role": "RC28 exact runtime settings, post-exit preservation, authenticated legacy recovery and regression tests",
+      "bytes": 25625,
+      "sha256": "8aaf6e8f0a64ab56dcb420380b74bf9190e46a2a4814aa1d7fe48a683a7503ac",
+      "sourceSha256": "8aaf6e8f0a64ab56dcb420380b74bf9190e46a2a4814aa1d7fe48a683a7503ac",
+      "sourceModifiedUtc": "2026-10-18T04:04:15.3639077Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC28-Work/VersionPatcher/VersionPatcher.csproj",
+      "source": "Aetherfront-RC28-Work/VersionPatcher/VersionPatcher.csproj",
+      "role": "RC28 exact runtime settings, post-exit preservation, authenticated legacy recovery and regression tests",
       "bytes": 461,
       "sha256": "297657c56fcab562c6cedc8d3dac68f816b3d254fb97b6a4b22facfdf2b92450",
       "sourceSha256": "297657c56fcab562c6cedc8d3dac68f816b3d254fb97b6a4b22facfdf2b92450",
@@ -27159,8 +27427,8 @@
       "path": "export-policy.json",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 22077,
-      "sha256": "e50629ab7ee11d98b6c1bac1e399c4f674ac1e99c7837def4d71fd02a6bbcf66",
+      "bytes": 23812,
+      "sha256": "9d7f249ea4fa2196d070381319662565075a15606adc05b4c44f6ee9051061e8",
       "sourceSha256": null,
       "transformations": []
     },
@@ -27186,8 +27454,8 @@
       "path": "TESTING.md",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 29156,
-      "sha256": "f24d9d2339ebfafeb5c8b5c3da4c9c23f5f5f725d82a81b0e8c97a264e604688",
+      "bytes": 32769,
+      "sha256": "05d70e4f938ce99349b742aca8eb3061d8bd54f5c61a1472d82c5a2daa296431",
       "sourceSha256": null,
       "transformations": []
     },
@@ -27219,7 +27487,7 @@
       "transformations": []
     }
   ],
-  "totalFileBytes": 14558739,
+  "totalFileBytes": 15019494,
   "exclusions": [
     "All Git history and Git metadata; CI workflows and operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",

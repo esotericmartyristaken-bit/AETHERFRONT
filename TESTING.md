@@ -1,3 +1,62 @@
+# RC28 validation status
+
+The real RC27 attempt never relaunched KSP. Its already-loaded RC26 helper
+committed the client/catalog, then rejected seven generated settings files and
+one legitimately rewritten CLS settings file during final pack verification.
+The pack rolled back, leaving client/catalog RC27 with pack/profile RC26.
+Those logs are not evidence of a completed RC27 game launch.
+
+RC28 recognizes exactly eight additional mod-owned settings paths. Their writer
+methods were checked in the authenticated shipped assemblies. Preflight and
+final package verification now use the same content scan; unchanged completed
+reconnects still use their authenticated fast path. Required configuration,
+assemblies, models and textures remain checked.
+
+New helpers preserve settings after KSP exits and its executable is locked, so
+shutdown saves are not replaced by an earlier preparation snapshot. Existing
+RC26/RC27 helpers cannot switch their loaded code during self-update. Eight
+version-only package repairs therefore let them complete final verification;
+the new early-startup hook restores settings from authenticated replacement
+backups. Archive bytes, URLs and sizes are unchanged and cached downloads can
+be reused. The HETTN repair27 migration and canonical directory casing remain.
+
+Recovery verifies the completed receipt, signed catalog/code, consumed request,
+newest authenticated recovery journal, original backup contents and signed
+archive defaults before writing. A durable authenticated progress record permits
+interrupted recovery to resume. Completed recovery does not overwrite later
+user edits. This protects ordinary updates and interruptions; it is not a
+rollback-proof defense against wholesale deletion/replay of local history.
+
+Two defects were caught before publication: directory sharing prevented atomic
+progress-file moves, and an exiting unrelated KSP process could invalidate a
+process-module lookup. Both were corrected. An unreadable live KSP process still
+blocks installation. The retired candidates were not deployed.
+
+Final automated evidence:
+
+- 186 native assertions and 368 casing/HETTN assertions pass on Windows CLR
+  and KSP's actual Mono runtime.
+- 724 settings/migration assertions pass across twelve runs: new-helper rules,
+  the old-helper negative control, RC26 and mixed-RC27 migrations, and fresh
+  RC26/RC27 starters on both helper runtimes. All eight settings are preserved
+  in one explicit restart, with no repeated rollback.
+- 420 assertions pass across twelve real interruption/resume scenarios at
+  plan-save, first-file-write and first-file-record checkpoints.
+- A separate replay executes the new startup recovery itself under actual KSP
+  Mono: 16 assertions verify eight restored settings, completion authentication,
+  scanner integrity, repeat no-op, later-edit preservation and unchanged backups.
+- Actual addon attributes and read paths confirm recovery precedes all eight
+  settings loads. kOS has Instantly addons, but its reads are deferred to Start;
+  the recovery runs synchronously in the canonical Instantly Awake hook.
+- Core bytes are unchanged from signed RC27; 6,326 client methods are preserved.
+  No new media or physics/content changes are included.
+
+These are headless/runtime and static checks, not a completed Unity gameplay
+test. Real startup, facility access and Regular/Potato switching still require
+the local client test. Inherited optional-integration/schema/texture warnings
+remain separate; no entirely error-free KSP log is claimed. Native activation
+and anonymous public-download parity are checked after publication.
+
 # RC27 validation status
 
 The real RC26 client test confirmed one approved restart, no external installer,
