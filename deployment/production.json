@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "version": "kesas-rc28",
-  "releaseTag": "host-kesas-rc28",
-  "assetName": "Aetherfront-Release-kesas-rc28.zip",
-  "sha256": "614a2377f3a357e6124573fe09ce035c3f2c300d0950c371402e6a9ed90aa046",
-  "sizeBytes": 1792484,
-  "notes": "Preserve runtime settings and recover interrupted installations."
+  "version": "kesas-rc29",
+  "releaseTag": "host-kesas-rc29",
+  "assetName": "Aetherfront-Release-kesas-rc29.zip",
+  "sha256": "bf185d421df04016c198494b0320f35b11166a9f25affbd401a458ee03a858a8",
+  "sizeBytes": 1768281,
+  "notes": "Preserve completed install receipts when preparation is canceled; retry transient Windows atomic replacement locks; retain legacy settings recovery and cached mod archives."
 }
