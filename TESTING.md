@@ -64,14 +64,24 @@ Current local evidence, before publication:
   are publicly downloadable with verified bytes; no active release is changed
   by publishing those immutable media files alone.
 
-Final dirty-profile migration, native activation and anonymous complete-release
-download verification are still pending in this staged
-documentation. No clean Unity gameplay or error-free KSP log is claimed.
+The final signed candidate completes the full 177-package dirty-install migration
+on the unchanged loaded RC25 helper: ten archives, fifteen worker assertions,
+one explicitly approved GameStub restart, and a completed RC26 client/pack/profile
+receipt. Regenerated exclusively locked caches are accepted; an added PluginData
+DLL remains detectable. The reconnect test stages the real connection metadata,
+accepts the completed same-profile receipt without a full scan, and rejects the
+opposite profile. The profile cycle, native activation and anonymous complete-
+release verification remain pending. No clean Unity gameplay or error-free KSP
+log is claimed.
 The first complete-catalog fixture run failed because its directory-only clone
 omitted five flat GameData files, including ModuleManager. This was a test setup
 failure, not accepted release evidence. The clone now copies and authenticates
 those files and checks all required installed paths before launching the helper;
-the exact signed candidate is being rerun without changing product binaries.
+the exact signed candidate subsequently passed that migration without changing
+product binaries. Its completion proof is preserved separately while profile
+tests continue. An earlier reconnect fixture omitted the connection coordinator's
+staged metadata and therefore exercised a full fallback scan; the corrected test
+now supplies those authenticated inputs and checks the actual receipt predicate.
 
 Known residual diagnostics from the captured pre-repair log include upstream
 model texture inputs without a verified source replacement, a TGA loader

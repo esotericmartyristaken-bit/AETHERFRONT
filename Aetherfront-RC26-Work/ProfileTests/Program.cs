@@ -322,6 +322,10 @@ internal static class Program
         var state=State();var manifest=Mode(mode);var receipt=ApfJson.Deserialize<Dictionary<string,string>>(File.ReadAllText(Owned("APF/LastInstallResult.json")));
         Check(receipt["status"]=="complete"&&receipt["mode"]==mode&&receipt["clientVersion"]=="kesas-rc26"&&receipt["packVersion"]=="kesas-rc26"&&state.PackVersion=="kesas-rc26"&&state.Packages.Count==manifest.ManagedPackages.Count,mode+": actual state and rich client/pack/profile completion receipt are RC26");
         WritePrivate(Data+"server-pack.json",manifest.ToJson());
+        // These are the authenticated connection coordinator's actual staging
+        // locations. Omitting them tests a full fallback scan, not reconnect.
+        CopyPrivate(Path.Combine(candidate,"Published/APFClientUpdate.json"),"APF/.client-update-staging/connect/feed.json");
+        WritePrivate("APF/.client-update-staging/connect/server-pack.json",manifest.ToJson());
         string manual=WritePrivate("GameData/ProfileManualSentinel/keep.txt","Fast path must not request manual-mod removal.");
         try{
             var plan=Installer.ScanConnection(Owned("GameData"),manifest,state);
@@ -329,6 +333,7 @@ internal static class Program
             var installer=new Installer(root,new IPEndPoint(IPAddress.Parse("217.216.49.250"),18865),"kesas-rc26");
             typeof(Installer).GetField("verifiedClientManifest",BindingFlags.Instance|BindingFlags.NonPublic).SetValue(installer,feed26);
             var matches=typeof(Installer).GetMethod("CompletedPackMatches",BindingFlags.Instance|BindingFlags.NonPublic);
+            Check((bool)matches.Invoke(installer,new object[]{mode,target,manifest}),mode+": completed same-profile receipt is accepted");
             string other=mode=="potato"?"full":"potato";
             Check(!(bool)matches.Invoke(installer,new object[]{other,target,Mode(other)}),mode+": opposite profile cannot reuse this receipt");
         }finally{File.Delete(manual);Directory.Delete(Path.GetDirectoryName(manual));}
@@ -394,6 +399,10 @@ internal static class Program
     {
         try{
             if(args.Length==2&&args[0]=="--legacy-worker")return LegacyWorker(args[1]);
+            string resumedFixture=null;
+            if(args.Length>=10&&args[args.Length-2]=="--resume-fixture"){
+                resumedFixture=args[args.Length-1];args=args.Take(args.Length-2).ToArray();
+            }
             if(args.Length<8||args.Length>9||(args.Length==9&&args[8]!="--chain"))throw new ArgumentException("Expected absolute Candidate directory, CODE-RESULT.json, ASSET-PLAN.json, asset plan SHA256, TestAssets result and result SHA256, explicit Potato policy plan and SHA256, optionally --chain. All inputs must be reviewed and frozen.");
             if(!Regex.IsMatch(Engine26,"^[0-9a-f]{64}$")||Engine26=="bfafcbbb46e3ef92fe88c8a488fe618295d38981597e118397e9fff1ce4cbc26")throw new InvalidDataException("Await the reviewed post-junction RC26 Engine pin; the old bfaf candidate is forbidden.");
             candidate=Path.GetFullPath(args[0]);string codeResult=Path.GetFullPath(args[1]);
@@ -419,10 +428,24 @@ internal static class Program
             ReadPolicy(args[6],args[7],baselineCatalogSha256);
             CatalogRepairContract(sourceCatalog);
             var original=SourceSnapshot();
-            root=Path.Combine(OwnedBase,"P"+Guid.NewGuid().ToString("N").Substring(0,8));if(Directory.Exists(root))throw new IOException("Owned fixture already exists.");Directory.CreateDirectory(root);WritePrivate("owned-fixture.txt",root);
-            Console.WriteLine("FIXTURE "+root);CloneBaseline();
-            WritePrivate("context.json",ApfJson.Serialize(new Dictionary<string,string>{{"candidate",candidate},{"codeResult",codeResult},{"legacyCoreSha256",oldFeed.Files.Single(f=>f.Path=="GameData/LunaMultiplayer/Plugins/ApfCore.dll").Sha256},{"baselineCatalogSha256",baselineCatalogSha256},{"assetPlanPath",assetPlanPath},{"assetPlanSha256",assetPlanSha256},{"assetTestPath",assetTestPath},{"assetTestSha256",assetTestSha256},{"potatoPolicyPlanPath",policy.PlanPath},{"potatoPolicyPlanSha256",policy.PlanSha256}}));
-            Dirty("dirty-existing25");RunLegacyWorker();
+            if(resumedFixture==null){
+                root=Path.Combine(OwnedBase,"P"+Guid.NewGuid().ToString("N").Substring(0,8));if(Directory.Exists(root))throw new IOException("Owned fixture already exists.");Directory.CreateDirectory(root);WritePrivate("owned-fixture.txt",root);
+                Console.WriteLine("FIXTURE "+root);CloneBaseline();
+                WritePrivate("context.json",ApfJson.Serialize(new Dictionary<string,string>{{"candidate",candidate},{"codeResult",codeResult},{"legacyCoreSha256",oldFeed.Files.Single(f=>f.Path=="GameData/LunaMultiplayer/Plugins/ApfCore.dll").Sha256},{"baselineCatalogSha256",baselineCatalogSha256},{"assetPlanPath",assetPlanPath},{"assetPlanSha256",assetPlanSha256},{"assetTestPath",assetTestPath},{"assetTestSha256",assetTestSha256},{"potatoPolicyPlanPath",policy.PlanPath},{"potatoPolicyPlanSha256",policy.PlanSha256}}));
+                Dirty("dirty-existing25");RunLegacyWorker();
+            }else{
+                RequireOwnedRoot(resumedFixture);
+                var context=ApfJson.Deserialize<Dictionary<string,string>>(File.ReadAllText(Owned("context.json")));
+                var prior=ApfJson.Deserialize<LegacyResumeProof>(File.ReadAllText(Owned("legacy-result.json")));
+                if(Path.GetFullPath(context["candidate"])!=candidate||context["assetPlanSha256"]!=assetPlanSha256||context["assetTestSha256"]!=assetTestSha256||context["potatoPolicyPlanSha256"]!=policy.PlanSha256||prior==null||!prior.Passed||prior.HelperSha256!=Engine25||prior.CoreSha256!=oldFeed.Files.Single(f=>f.Path=="GameData/LunaMultiplayer/Plugins/ApfCore.dll").Sha256||prior.ActualArchivePackages!=10||prior.ExplicitRestarts!=1||prior.PotatoPolicyPlanSha256!=policy.PlanSha256)throw new InvalidDataException("Only the exact completed reviewed old-helper migration can be resumed.");
+                var receipt=ApfJson.Deserialize<Dictionary<string,string>>(File.ReadAllText(Owned("APF/LastInstallResult.json")));
+                if(receipt["status"]!="complete"||receipt["mode"]!="potato"||receipt["clientVersion"]!="kesas-rc26"||State().PackVersion!="kesas-rc26"||State().Packages.Count!=177)throw new InvalidDataException("Resume requires the completed RC26 Potato receipt/state, never an applying/failed transaction.");
+                HashIs(Owned("GameData/LunaMultiplayer/Plugins/KesasInstall.dll"),Engine26,"Resume installed engine differs.");HashIs(Owned("GameData/LunaMultiplayer/Plugins/ApfCore.dll"),Core26,"Resume installed core differs.");
+                string sentinel=Owned("GameData/ProfileManualSentinel/keep.txt");
+                if(File.Exists(sentinel)){if(File.ReadAllText(sentinel)!="Fast path must not request manual-mod removal.")throw new InvalidDataException("Unexpected sentinel content; preserve it.");File.Delete(sentinel);Directory.Delete(Path.GetDirectoryName(sentinel));}
+                WritePrivate("resume-proof-"+Guid.NewGuid().ToString("N")+".json",ApfJson.Serialize(new{completedLegacyProofSha256=ApfJson.Sha256File(Owned("legacy-result.json")),candidate,policyPlanSha256=policy.PlanSha256,resumedUtc=DateTime.UtcNow.ToString("o"),priorRestartCount=1}));
+                Check(true,"Resumed the hash-bound completed real old-helper migration; no repeated install or restart");
+            }
             Dirty("regenerated-after-migration26");VerifyRuntimeScanner("RC26 migration","potato");VerifyInstalledAssets("RC26 migration");VerifyInstalledPolicy("potato");VerifyReceipt("potato");
             bool chain=args.Length==9;
             if(chain)foreach(string mode in new[]{"full","potato"}){
@@ -431,8 +454,13 @@ internal static class Program
             }
             Check(File.ReadAllText(Owned(Data+"privatekey.txt"))=="RC26 profile identity sentinel"&&File.ReadAllText(Owned("saves/Profile/persistent.sfs"))=="RC26 profile save sentinel"&&File.ReadAllText(Owned("settings.cfg")).Contains("KEY_BINDING = retained"),"Migration and selected transitions preserve private identity, saves and controls");
             Check(original.All(pair=>File.Exists(pair.Key)&&ApfJson.Sha256File(pair.Key)==pair.Value),"Original RC25 baseline metadata and every runtime/media source root remain unchanged");
-            WritePrivate("result.json",ApfJson.Serialize(new{passed=true,checks,headlessOnly=true,unityGameplayTested=false,reusedExistingProfile=true,freshStockTest=false,fullBaselineReextracted=false,dirtyExistingProfileMigration=true,oldHelperVersion="kesas-rc25",newVersion="kesas-rc26",engine26Sha256=Engine26,core26Sha256=Core26,runtimeRepairArchives=4,reviewedAssetArchives=media.Count,reviewedPolicyArchives=1,mediaReplacements=media.Count+1,actualMigrationPackages=migrationIds.Count,migrationPackageIds=migrationIds.OrderBy(id=>id,StringComparer.Ordinal).ToArray(),assetPlanPath,assetPlanSha256,assetTestPath,assetTestSha256,potatoPolicyPlanPath=policy.PlanPath,potatoPolicyPlanSha256=policy.PlanSha256,policySourceSha256=policy.DeclarationPlan.Source.Sha256,policyEvidenceSha256=policy.DeclarationPlan.TestEvidence.Sha256,policyBoundary="Exact reviewed sole ZIP-entry replacement and installed Potato bytes verified; Full has no policy. MM semantics are attributed to the independently hash-bound passing policy/MM evidence.",originalAssetEntriesPreservedByTestAssets=assetTest.OriginalEntriesVerified,installedAliasCount=7,installedBindingCount=8,bothCatalogsValidated=true,fullProfileCycleExecuted=chain,runtimeFileBoundary="Synthetic private payloads at the observed game-generated paths; no mod or Unity execution.",scannerBoundary="Four real repair roots scanned directly with exclusive runtime-file locks; NativeRun independently verifies the complete signed manifest at each commit.",assetBoundary="Exact AssetPlan/TestAssets hashes, five unchanged-root declarations and installed additions checked; original ZIP entry preservation is attributed to the separately pinned TestAssets evidence, not re-executed here.",source=Baseline,sourceHashes=original,candidate,codeResult,linked,copied,linkedBytes,completedUtc=DateTime.UtcNow.ToString("o")}));
+            WritePrivate("result.json",ApfJson.Serialize(new{passed=true,checks,headlessOnly=true,unityGameplayTested=false,reusedExistingProfile=true,resumedCompletedMigration=resumedFixture!=null,legacyProofSha256=ApfJson.Sha256File(Owned("legacy-result.json")),freshStockTest=false,fullBaselineReextracted=false,dirtyExistingProfileMigration=true,oldHelperVersion="kesas-rc25",newVersion="kesas-rc26",engine26Sha256=Engine26,core26Sha256=Core26,runtimeRepairArchives=4,reviewedAssetArchives=media.Count,reviewedPolicyArchives=1,mediaReplacements=media.Count+1,actualMigrationPackages=migrationIds.Count,migrationPackageIds=migrationIds.OrderBy(id=>id,StringComparer.Ordinal).ToArray(),assetPlanPath,assetPlanSha256,assetTestPath,assetTestSha256,potatoPolicyPlanPath=policy.PlanPath,potatoPolicyPlanSha256=policy.PlanSha256,policySourceSha256=policy.DeclarationPlan.Source.Sha256,policyEvidenceSha256=policy.DeclarationPlan.TestEvidence.Sha256,policyBoundary="Exact reviewed sole ZIP-entry replacement and installed Potato bytes verified; Full has no policy. MM semantics are attributed to the independently hash-bound passing policy/MM evidence.",originalAssetEntriesPreservedByTestAssets=assetTest.OriginalEntriesVerified,installedAliasCount=7,installedBindingCount=8,bothCatalogsValidated=true,fullProfileCycleExecuted=chain,runtimeFileBoundary="Synthetic private payloads at the observed game-generated paths; no mod or Unity execution.",scannerBoundary="Four real repair roots scanned directly with exclusive runtime-file locks; NativeRun independently verifies the complete signed manifest at each commit.",assetBoundary="Exact AssetPlan/TestAssets hashes, five unchanged-root declarations and installed additions checked; original ZIP entry preservation is attributed to the separately pinned TestAssets evidence, not re-executed here.",source=Baseline,sourceHashes=original,candidate,codeResult,linked,copied,linkedBytes,completedUtc=DateTime.UtcNow.ToString("o")}));
             Console.WriteLine("PASS dirty existing profile checks="+checks+" fullCycle="+chain+" RESULT "+Owned("result.json"));return 0;
         }catch(Exception error){Console.Error.WriteLine(error);Console.Error.WriteLine("Retained owned fixture="+root);return 1;}
     }
+}
+internal sealed class LegacyResumeProof
+{
+    public bool Passed{get;set;}public string HelperSha256{get;set;}public string CoreSha256{get;set;}
+    public int ActualArchivePackages{get;set;}public int ExplicitRestarts{get;set;}public string PotatoPolicyPlanSha256{get;set;}
 }

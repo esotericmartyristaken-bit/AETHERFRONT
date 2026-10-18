@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-17T23:21:52.4689075Z",
+  "createdUtc": "2026-10-18T00:11:30.9374981Z",
   "publication": "STAGED ONLY; not pushed",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -2340,10 +2340,10 @@
       "path": "Aetherfront-RC26-Work/ProfileTests/Program.cs",
       "source": "Aetherfront-RC26-Work/ProfileTests/Program.cs",
       "role": "RC26 generated-runtime verification repair, targeted scanner/version grafts and regression proofs",
-      "bytes": 47668,
-      "sha256": "03131b04ff31c92e2b797ba4271b07b8664ca44728199219e6e3308c504388ce",
-      "sourceSha256": "3b8aa1c69a07788757aa28350ae1de16da24d46b84d388242cb5fe3fecec8646",
-      "sourceModifiedUtc": "2026-10-17T23:15:18.3948574Z",
+      "bytes": 51191,
+      "sha256": "609303f5bdf9164b3057979766d7b5baee85b0d845681bebcdb3e5fde82e670e",
+      "sourceSha256": "72fb3644bc6ebf272fe19e41825cdce3123025dbef9acf9aaed4c4fa538c36f3",
+      "sourceModifiedUtc": "2026-10-17T23:46:47.9533580Z",
       "transformations": [
         "absolute workspace root replaced by ."
       ]
@@ -2352,25 +2352,21 @@
       "path": "Aetherfront-RC26-Work/ProfileTests/README.md",
       "source": "Aetherfront-RC26-Work/ProfileTests/README.md",
       "role": "RC26 generated-runtime verification repair, targeted scanner/version grafts and regression proofs",
-      "bytes": 7347,
-      "sha256": "5678eaaa94d48ed249a40cb2a9b3b29b2ae91f74cc5c6d0af0a1282cbaf400c2",
-      "sourceSha256": "5678eaaa94d48ed249a40cb2a9b3b29b2ae91f74cc5c6d0af0a1282cbaf400c2",
-      "sourceModifiedUtc": "2026-10-17T22:52:44.2904125Z",
-      "transformations": [
-        "explicitly refreshed after source review"
-      ]
+      "bytes": 8229,
+      "sha256": "49d12652b23645479d761f5e91578c66b13bc1623c90a3ffc023e0c00249392a",
+      "sourceSha256": "49d12652b23645479d761f5e91578c66b13bc1623c90a3ffc023e0c00249392a",
+      "sourceModifiedUtc": "2026-10-17T23:50:15.8388586Z",
+      "transformations": []
     },
     {
       "path": "Aetherfront-RC26-Work/ProfileTests/Test-Profile.ps1",
       "source": "Aetherfront-RC26-Work/ProfileTests/Test-Profile.ps1",
       "role": "RC26 generated-runtime verification repair, targeted scanner/version grafts and regression proofs",
-      "bytes": 16296,
-      "sha256": "7d311abf79e68f22e1cec0e07d153003cba74606161d83e8ada752d1993c39b7",
-      "sourceSha256": "7d311abf79e68f22e1cec0e07d153003cba74606161d83e8ada752d1993c39b7",
-      "sourceModifiedUtc": "2026-10-17T22:52:20.8229618Z",
-      "transformations": [
-        "explicitly refreshed after source review"
-      ]
+      "bytes": 16830,
+      "sha256": "b51762651a427b458d2dc617c5443dc2bcba2e80f3f67370e5c18531dd21f7a6",
+      "sourceSha256": "b51762651a427b458d2dc617c5443dc2bcba2e80f3f67370e5c18531dd21f7a6",
+      "sourceModifiedUtc": "2026-10-17T23:46:47.9571906Z",
+      "transformations": []
     },
     {
       "path": "Aetherfront-RC26-Work/Test-Assets.ps1",
@@ -26912,8 +26908,8 @@
       "path": "scripts/Export-GitHubSource.ps1",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 29470,
-      "sha256": "2a2e983e4d99fad21f5c67842149f2fabd42a79bc053f5ed92f00b35d277cb8d",
+      "bytes": 29561,
+      "sha256": "0e2c7441d8db3eb8b9b017e1302d52b85352bf821e4b8e58e4a97598ec87e400",
       "sourceSha256": null,
       "transformations": []
     },
@@ -26984,8 +26980,8 @@
       "path": "TESTING.md",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 24173,
-      "sha256": "10e349b82cc330045af8a7e67e3b61e1cf509f7235fb1cf4fee392ac66dd9e33",
+      "bytes": 24946,
+      "sha256": "028e8d9b3c5d20a448ccddbdefd63efef7da4bed89322eecb0a28d00ea99dadf",
       "sourceSha256": null,
       "transformations": []
     },
@@ -27017,7 +27013,7 @@
       "transformations": []
     }
   ],
-  "totalFileBytes": 14226089,
+  "totalFileBytes": 14231892,
   "exclusions": [
     "All Git history and Git metadata; CI workflows and operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",

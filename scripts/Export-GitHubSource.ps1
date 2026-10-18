@@ -7,12 +7,13 @@ param(
     [switch]$FinalizeExisting,
     [switch]$ResumeIncomplete,
     [string[]]$RefreshSource = @(),
+    [ValidateSet('BelowNormal','Normal')][string]$ProcessPriority = 'BelowNormal',
     [string]$LgplLicensePath = 'C:\Program Files\Git\mingw64\share\licenses\xz\COPYING.LGPLv2.1'
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 # Affect only this export process, never another process or a running service.
-[Diagnostics.Process]::GetCurrentProcess().PriorityClass = 'BelowNormal'
+[Diagnostics.Process]::GetCurrentProcess().PriorityClass = $ProcessPriority
 $workspace = [IO.Path]::GetFullPath($WorkspaceRoot).TrimEnd('\','/')
 $destination = Join-Path $workspace 'Aetherfront-GitHub-Source'
 $utf8 = [Text.UTF8Encoding]::new($false)
@@ -220,7 +221,7 @@ foreach ($group in $policy.groups) {
 }
 foreach ($entry in $policy.explicitFiles) { Add-Selection $entry.source $entry.role }
 if($Refresh){$RefreshSource=@($selected|ForEach-Object {$_.path})}
-Write-Output "Allowlisted source files: $($selected.Count). Export process priority: BelowNormal."
+Write-Output "Allowlisted source files: $($selected.Count). Export process priority: $ProcessPriority."
 
 # Finish validation before creating any copied source. Never overwrite anything.
 foreach ($entry in $selected) { if (-not $ResumeIncomplete -and (Test-Path -LiteralPath (Join-Path $destination $entry.path))) { throw 'An export target already exists; inspect manually. Nothing overwritten.' } }

@@ -3,6 +3,19 @@
 Sources and output belong only to `Aetherfront-RC26-Work/ProfileTests`.
 The runner does not build, modify, activate, publish, or sign product code.
 
+`-ResumeFixture <absolute-owned-ProfileTests/Pxxxxxxxx>` is available only with
+`-Run`. It requires a completed RC26 Potato receipt, the same signed candidate,
+exact asset/policy evidence, installed frozen core/engine hashes, and the prior
+successful old-helper proof with ten archives and one explicit restart. Applying
+or failed migrations cannot be resumed through this path. The prior proof SHA256
+is recorded in the continuation result; the successful upgrade is not repeated.
+
+The reconnect fixture stages the signed feed and server manifest at the real
+connection coordinator's `APF/.client-update-staging/connect` paths. Its positive
+same-profile receipt and negative opposite-profile control test the receipt path,
+not an accidental full-scan fallback caused by missing connection metadata.
+NativeRun still verifies the complete selected manifest at every profile commit.
+
 ## Inputs and execution gate
 
 Use the reviewed `Code-ce4097af3e0f4a5587c74cc1713fd210/CODE-RESULT.json`.

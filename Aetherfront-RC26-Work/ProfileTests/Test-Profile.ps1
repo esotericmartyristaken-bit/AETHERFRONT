@@ -9,6 +9,7 @@ param(
     [string]$PotatoPolicyPlanPath='',
     [ValidatePattern('^(?:[a-f0-9]{64})?$')][string]$PotatoPolicyPlanSha256='',
     [string]$CandidateRoot='',
+    [string]$ResumeFixture='',
     [switch]$Run,
     [switch]$FullCycle,
     [ValidateSet('CLR','KSP-Mono')][string]$Runtime='CLR'
@@ -20,6 +21,11 @@ $work=Split-Path $owned
 $workspace=Split-Path $work
 if($owned -ine [IO.Path]::GetFullPath((Join-Path $workspace 'Aetherfront-RC26-Work/ProfileTests'))){throw 'Run only from the owned RC26 ProfileTests directory.'}
 if($FullCycle -and !$Run){throw 'FullCycle requires explicit Run.'}
+if($ResumeFixture){
+    if(!$Run -or ![IO.Path]::IsPathRooted($ResumeFixture)){throw 'ResumeFixture requires Run and an explicit absolute owned fixture.'}
+    $ResumeFixture=[IO.Path]::GetFullPath($ResumeFixture)
+    if((Split-Path $ResumeFixture) -ine $owned -or (Split-Path $ResumeFixture -Leaf) -cnotmatch '^P[0-9a-f]{8}$'){throw 'ResumeFixture must be an owned ProfileTests/Pxxxxxxxx fixture.'}
+}
 if($Run -and !$CandidateRoot){throw 'A frozen signed CandidateRoot is required; no fixture or test will be launched without it.'}
 if($Run -and (!$PotatoPolicyPlanPath -or !$PotatoPolicyPlanSha256)){throw 'Run requires explicit -PotatoPolicyPlanPath and -PotatoPolicyPlanSha256; no old-candidate fallback.'}
 $codeFile=[IO.Path]::GetFullPath($CodeResult)
@@ -138,11 +144,12 @@ try{
     })
     $inputs+=@($assetArchives)
     $inputs+=@($policyInputs)
-    $proof=[ordered]@{compiled=$true;executed=$false;fullCycleRequested=$FullCycle.IsPresent;runtime=$Runtime;codeResult=$codeFile;candidate=$CandidateRoot;assetPlan=$assetPlanPath;assetPlanSha256=$AssetPlanSha256;assetTest=$assetTestPath;assetTestSha256=$AssetTestResultSha256;potatoPolicyPlan=$policyPlanFile;potatoPolicyPlanSha256=$PotatoPolicyPlanSha256;policyRequiredForExecution=$true;inputs=$inputs;exactStarterBcl=$bcl;runtimeAssemblies=$runtimeAssemblies;attempt=$attempt}
+    $proof=[ordered]@{compiled=$true;executed=$false;fullCycleRequested=$FullCycle.IsPresent;resumeFixture=$ResumeFixture;runtime=$Runtime;codeResult=$codeFile;candidate=$CandidateRoot;assetPlan=$assetPlanPath;assetPlanSha256=$AssetPlanSha256;assetTest=$assetTestPath;assetTestSha256=$AssetTestResultSha256;potatoPolicyPlan=$policyPlanFile;potatoPolicyPlanSha256=$PotatoPolicyPlanSha256;policyRequiredForExecution=$true;inputs=$inputs;exactStarterBcl=$bcl;runtimeAssemblies=$runtimeAssemblies;attempt=$attempt}
     [IO.File]::WriteAllText((Join-Path $attempt 'runner-result.json'),($proof|ConvertTo-Json -Depth 8))
     if(!$Run){$proof|ConvertTo-Json -Depth 8;return}
     $arguments=@($CandidateRoot,$codeFile,$assetPlanPath,$AssetPlanSha256,$assetTestPath,$AssetTestResultSha256,$policyPlanFile,$PotatoPolicyPlanSha256)
     if($FullCycle){$arguments+='--chain'}
+    if($ResumeFixture){$arguments+=@('--resume-fixture',$ResumeFixture)}
     Push-Location $workspace
     try{
         if($Runtime -ceq 'KSP-Mono'){
