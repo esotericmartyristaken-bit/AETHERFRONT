@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "version": "kesas-rc29",
-  "releaseTag": "host-kesas-rc29",
-  "assetName": "Aetherfront-Release-kesas-rc29.zip",
-  "sha256": "bf185d421df04016c198494b0320f35b11166a9f25affbd401a458ee03a858a8",
-  "sizeBytes": 1768281,
-  "notes": "Preserve completed install receipts when preparation is canceled; retry transient Windows atomic replacement locks; retain legacy settings recovery and cached mod archives."
+  "version": "kesas-rc30",
+  "releaseTag": "host-kesas-rc30",
+  "assetName": "Aetherfront-Release-kesas-rc30.zip",
+  "sha256": "0c4dd0e6d6bfdf9269d97365d0aa7957ac65537d1bdb215f8d215255219e08f4",
+  "sizeBytes": 1770285,
+  "notes": "Preserve generated mod preferences and select shared High terrain geometry for clean Sandbox clients."
 }
