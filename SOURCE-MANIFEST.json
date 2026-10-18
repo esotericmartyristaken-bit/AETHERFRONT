@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-18T04:42:31.0494126Z",
+  "createdUtc": "2026-10-18T04:49:15.0999583Z",
   "publication": "STAGED ONLY; not pushed",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -27374,7 +27374,7 @@
       "source": null,
       "role": "publication metadata, license or export tooling",
       "bytes": 3584,
-      "sha256": "143114793a59fc045314b05395516acc1d7d37b16c817fd06bbe76bbf017da35",
+      "sha256": "0154397a8d012705b757ac7fec94ece7bc14fd724be4b5e6743ebdc0c31e1450",
       "sourceSha256": null,
       "transformations": []
     },
@@ -27454,8 +27454,8 @@
       "path": "TESTING.md",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 32769,
-      "sha256": "05d70e4f938ce99349b742aca8eb3061d8bd54f5c61a1472d82c5a2daa296431",
+      "bytes": 33100,
+      "sha256": "5cb1c16faead367bbff6e2fc72383be4835fb9a143e080da23cd00919d39eb82",
       "sourceSha256": null,
       "transformations": []
     },
@@ -27487,7 +27487,7 @@
       "transformations": []
     }
   ],
-  "totalFileBytes": 15019494,
+  "totalFileBytes": 15019825,
   "exclusions": [
     "All Git history and Git metadata; CI workflows and operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",

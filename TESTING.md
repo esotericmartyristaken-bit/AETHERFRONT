@@ -54,8 +54,14 @@ Final automated evidence:
 These are headless/runtime and static checks, not a completed Unity gameplay
 test. Real startup, facility access and Regular/Potato switching still require
 the local client test. Inherited optional-integration/schema/texture warnings
-remain separate; no entirely error-free KSP log is claimed. Native activation
-and anonymous public-download parity are checked after publication.
+remain separate; no entirely error-free KSP log is claimed.
+
+Post-publication verification passed: the running RC28 game and pinned HTTPS
+service own their expected ports, the bridge is fresh, and all three anonymous
+GitHub release downloads match the deployed bytes. All 464 signed files and six
+prepared files match the reviewed candidate. Nine protected server files and
+the vanilla server process are unchanged. Existing media and historical release
+tags remain available.
 
 # RC27 validation status
 
