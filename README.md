@@ -10,6 +10,13 @@ releases. Current release: [kesas-rc28](https://github.com/esotericmartyristaken
 Use the starter asset, not the source-code ZIP or `pack-media` release.
 Verification evidence and explicit limits are listed in [Testing](TESTING.md).
 
+## Deployment control
+
+The host can follow the dedicated `deploy` branch automatically. Build and test
+on the development PC, then publish the native bundle and channel pointer with
+[the deployment publisher](APFDiscordBot/docs/GITHUB-DEPLOYMENT.md). Source pushes
+alone do not deploy. The host retains signing keys and its guarded update queue.
+
 ## Install
 
 1. Start with a clean Windows KSP 1.12.5 installation that you own.

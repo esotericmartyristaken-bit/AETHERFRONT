@@ -887,7 +887,7 @@ test('external LMP commands use the allowlisted bridge and await its result', as
   let request;
   const responder = (async () => {
     for (let attempt = 0; attempt < 100; attempt++) {
-      const files = await fs.readdir(path.join(bridge, 'inbox')).catch(() => []);
+      const files = (await fs.readdir(path.join(bridge, 'inbox')).catch(() => [])).filter(name => name.endsWith('.json'));
       if (files.length) {
         request = JSON.parse(await fs.readFile(path.join(bridge, 'inbox', files[0]), 'utf8'));
         await fs.mkdir(path.join(bridge, 'results'), { recursive: true });

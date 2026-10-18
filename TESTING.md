@@ -1,3 +1,18 @@
+# GitHub deployment linkage
+
+All 135 bot tests pass, including 26 new deployment-channel tests. They cover
+commit pinning, size/hash checks, allowed redirects, busy/failed/cancelled native
+work, crash-held outcomes, durable-state corruption, network failure/recovery,
+concurrent polls and the native idle-only queue gate. Test fixtures do not stop
+production services or claim a live new-version rollout passed. The initial
+channel points to the already-active RC28 baseline; it must not restart KESAS.
+The real baseline publisher, anonymous GitHub artifact download, native archive
+verification and repeat publication without a channel write were also checked.
+The host watcher reports current RC28 without queueing a deployment. A stale
+disk-read/cancellation race is guarded by state revisions and pending-write
+ordering; its suspended-read and in-flight-save regressions pass. An existing
+bridge test responder was corrected to ignore atomic-write temporary files.
+
 # RC28 validation status
 
 The real RC27 attempt never relaunched KSP. Its already-loaded RC26 helper

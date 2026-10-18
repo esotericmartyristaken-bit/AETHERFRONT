@@ -62,7 +62,14 @@
     "pollIntervalMs": 2000,
     "deploymentTimeoutMs": 180000,
     "defaultCountdownMinutes": 15,
-    "requirePreDeployBackup": true
+    "requirePreDeployBackup": true,
+    "githubDeployment": {
+      "enabled": false,
+      "repository": "esotericmartyristaken-bit/AETHERFRONT",
+      "branch": "deploy",
+      "manifestPath": "deployment/production.json",
+      "pollIntervalMs": 60000
+    }
   },
   "security": {
     "deleteTransientResponsesMs": 12000,

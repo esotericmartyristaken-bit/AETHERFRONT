@@ -117,31 +117,50 @@ export class UpdateManager {
     this.requirePreDeployBackup = updates.requirePreDeployBackup !== false;
     this.state = initialState();
     this.loaded = false;
+    this.stateRevision = 0;
+    this.pendingSave = Promise.resolve();
     this.lastObservation = null;
     this.operation = null;
   }
 
   async load() {
     if (this.loaded) return this.state;
-    const saved = await readJson(this.statePath, {});
+    const revision = this.stateRevision;
+    await this.pendingSave;
+    if (revision !== this.stateRevision) return this.state;
+    const saved = await this.readSavedState();
+    if (revision !== this.stateRevision) return this.state;
     if (saved && typeof saved === 'object') this.state = { ...initialState(), ...saved, schemaVersion: SCHEMA_VERSION };
     this.loaded = true;
     return this.state;
   }
 
+  async readSavedState() { return readJson(this.statePath, {}); }
+
   async refreshFromDisk() {
     await this.load();
     if (this.operation) return this.state;
-    const saved = await readJson(this.statePath, {});
+    const revision = this.stateRevision;
+    await this.pendingSave;
+    if (this.operation || revision !== this.stateRevision) return this.state;
+    const saved = await this.readSavedState();
+    // A queue/cancel/save or a newer refresh may have completed while this disk
+    // read was suspended. Never restore the older snapshot over that decision.
+    if (this.operation || revision !== this.stateRevision) return this.state;
     if (saved && typeof saved === 'object') {
       const refreshed = { ...initialState(), ...saved, schemaVersion: SCHEMA_VERSION };
-      if (JSON.stringify(refreshed) !== JSON.stringify(this.state)) this.state = refreshed;
+      if (JSON.stringify(refreshed) !== JSON.stringify(this.state)) {
+        this.state = refreshed;
+        this.stateRevision++;
+      }
     }
     return this.state;
   }
 
   async save() {
-    await writeJsonAtomic(this.statePath, this.state);
+    this.stateRevision++;
+    this.pendingSave = writeJsonAtomic(this.statePath, this.state);
+    await this.pendingSave;
     return this.state;
   }
 
@@ -270,6 +289,16 @@ export class UpdateManager {
     await this.load();
     const { manifest } = await this.readManifest(id);
     if (this.operation) return { ok: false, reason: 'deployment-in-progress' };
+    if (options.onlyIfIdle) {
+      await this.refreshFromDisk();
+      if (this.operation || this.state.status !== 'idle') return { ok: false, reason: 'update-already-active' };
+      if (this.state.lastDeployment?.status === 'cancelled' && this.state.lastDeployment.version === manifest.version) {
+        return { ok: false, reason: 'update-was-cancelled' };
+      }
+      const lastVersion = this.state.lastDeployment?.version;
+      if (/^kesas-rc[1-9][0-9]*$/.test(lastVersion || '') && /^kesas-rc[1-9][0-9]*$/.test(manifest.version) &&
+          BigInt(lastVersion.slice(8)) >= BigInt(manifest.version.slice(8))) return { ok: false, reason: 'version-already-deployed' };
+    }
     const now = Number.isFinite(Number(options.now)) ? Number(options.now) : Date.now();
     const minutes = countdownMinutes(options.countdownMinutes, this.defaultCountdownMinutes);
     const changelog = text(options.changelog || manifest.notes || '', 320);

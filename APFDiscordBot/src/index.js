@@ -4,6 +4,7 @@ import { loadConfig } from './config.js';
 import { BridgeEventTailer, LmpController, LogTailer, shortLeaveReason } from './lmp.js';
 import { UniverseManager } from './universe.js';
 import { UpdateManager } from './update-manager.js';
+import { GitHubDeployment } from './github-deployment.js';
 import { HealthMonitor, LogAlertDeduper, backupStale, isActionableLmpLogLine, statusPollDelay } from './health.js';
 import { acquireSingleInstance } from './single-instance.js';
 import { clientTimeoutAdvice, likelyClientSideTimeout, matchesDefaultClientTimeout, timeoutGapSeconds } from './timeout-help.js';
@@ -22,6 +23,9 @@ await updateManager.load();
 const tailer = new LogTailer(controller);
 const bridgeTailer = new BridgeEventTailer(controller);
 const bot = new DiscordBot(config, controller, universe, updateManager);
+const githubDeployment = new GitHubDeployment(config, updateManager, {
+  onEvent: event => bot.recordEvent('github-deployment', event)
+});
 
 let pendingErrors = [];
 let errorTimer = null;
@@ -84,6 +88,7 @@ controller.on('output', text => {
 await bot.start();
 await tailer.start();
 await bridgeTailer.start();
+githubDeployment.start();
 
 let previousBackupStale = null;
 let statusCheckBusy = false;
@@ -209,6 +214,7 @@ async function shutdown(signal) {
   statusLoopStopped = true;
   if (statusTimer) clearTimeout(statusTimer);
   if (backupTimer) clearInterval(backupTimer);
+  githubDeployment.stop();
   tailer.stop();
   bridgeTailer.stop();
   bot.stop();
