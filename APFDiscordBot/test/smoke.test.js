@@ -337,7 +337,11 @@ test('master listing requires sustained absence and ignores probe failures', asy
   const failed = await controller.masterListing(settings); assert.equal(failed.checked, false); assert.equal(failed.visible, null);
 });
 
-test('controller reads live LMP settings and observes current process without controlling it', async () => {
+// This legacy integration check needs a separately running EXTI host. Keep the
+// normal isolated suite independent of production processes/configuration.
+test('controller reads live LMP settings and observes current process without controlling it', {
+  skip: process.env.APF_RUN_LIVE_EXTI_OBSERVER !== '1' && 'Requires explicitly enabled legacy live EXTI observer environment'
+}, async () => {
   const root = '.\\EXTI-Server';
   const controller = new LmpController({ lmp: { serverRoot: root, executable: 'Server.exe', port: 2252, serverName: 'EXTI', masterListUrl: '' , control: { mode: 'observe' } }, security: {} });
   const settings = await controller.readSettings();
