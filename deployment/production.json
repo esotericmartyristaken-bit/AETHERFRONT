@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "version": "kesas-rc28",
+  "releaseTag": "host-kesas-rc28",
+  "assetName": "Aetherfront-Release-kesas-rc28.zip",
+  "sha256": "614a2377f3a357e6124573fe09ce035c3f2c300d0950c371402e6a9ed90aa046",
+  "sizeBytes": 1792484,
+  "notes": "Preserve runtime settings and recover interrupted installations."
+}
