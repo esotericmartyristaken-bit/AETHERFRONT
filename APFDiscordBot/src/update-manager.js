@@ -102,10 +102,11 @@ function initialState() {
 }
 
 export class UpdateManager {
-  constructor(config, controller, universe) {
+  constructor(config, controller, universe, tools = {}) {
     this.config = config;
     this.controller = controller;
     this.universe = universe;
+    this.runTool = tools.runTool || execFileAsync;
     const root = config.__root || process.cwd();
     const updates = config.updates || {};
     this.stagingRoot = path.resolve(root, updates.stagingRoot || 'updates/staged');
@@ -266,7 +267,8 @@ export class UpdateManager {
   async stageKesas(archive, options = {}) {
     const version = String(options.version || path.basename(archive).match(/kesas-rc[1-9][0-9]*/)?.[0] || '');
     if (!/^kesas-rc[1-9][0-9]*$/.test(version) || !archive.toLowerCase().endsWith('.zip')) throw new Error('KESAS release archive/version required');
-    await execFileAsync('pwsh.exe', ['-NoProfile','-NonInteractive','-File',
+    const executable = this.config.updates?.powerShellExecutable || 'pwsh.exe';
+    await this.runTool(executable, ['-NoProfile','-NonInteractive','-File',
       path.join(this.config.__root, 'scripts', 'Verify-KesasRelease.ps1'), '-Archive', archive, '-ExpectedVersion', version],
     { windowsHide: true, maxBuffer: 256 * 1024 });
     const id = packageId(options.id || version);

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-18T05:42:32.5534359Z",
+  "createdUtc": "2026-10-18T07:59:43.2366669Z",
   "publication": "STAGED ONLY; not pushed",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -26642,10 +26642,10 @@
       "path": "APFDiscordBot/src/update-manager.js",
       "source": "APFDiscordBot/src/update-manager.js",
       "role": "Discord integration source/tests/operator scripts",
-      "bytes": 29335,
-      "sha256": "0909ab17a48fcac605ce8597afba2d25d6840be76df63c1fba11c1b250a7388e",
-      "sourceSha256": "0909ab17a48fcac605ce8597afba2d25d6840be76df63c1fba11c1b250a7388e",
-      "sourceModifiedUtc": "2026-10-18T05:41:15.0728145Z",
+      "bytes": 29477,
+      "sha256": "08f9ac496053a7d7c2beb31c656533d05ad15383adcd1b775ad8f446a4e53809",
+      "sourceSha256": "08f9ac496053a7d7c2beb31c656533d05ad15383adcd1b775ad8f446a4e53809",
+      "sourceModifiedUtc": "2026-10-18T07:59:41.1295572Z",
       "transformations": []
     },
     {
@@ -26692,10 +26692,10 @@
       "path": "APFDiscordBot/test/kesas.test.js",
       "source": "APFDiscordBot/test/kesas.test.js",
       "role": "Discord integration source/tests/operator scripts",
-      "bytes": 6649,
-      "sha256": "03ffd838e40af6627a6b7222a9cd2f196e9ef167289018d3d04d5d300a217f28",
-      "sourceSha256": "03ffd838e40af6627a6b7222a9cd2f196e9ef167289018d3d04d5d300a217f28",
-      "sourceModifiedUtc": "2026-10-16T03:20:50.5982901Z",
+      "bytes": 8657,
+      "sha256": "bf5a02ea0fa149d733ad499e16604971f2b9d8096eee0cd5636f6e6d6285e740",
+      "sourceSha256": "bf5a02ea0fa149d733ad499e16604971f2b9d8096eee0cd5636f6e6d6285e740",
+      "sourceModifiedUtc": "2026-10-18T07:59:41.1316133Z",
       "transformations": []
     },
     {
@@ -27525,7 +27525,7 @@
       "transformations": []
     }
   ],
-  "totalFileBytes": 15079416,
+  "totalFileBytes": 15081566.0,
   "exclusions": [
     "All Git history and Git metadata; CI workflows and operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",

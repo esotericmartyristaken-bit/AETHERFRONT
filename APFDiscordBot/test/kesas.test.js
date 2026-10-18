@@ -110,3 +110,34 @@ test('KESAS public status omits vanilla password and disabled master-list warnin
   assert.match(embed.title, /KESAS Science SERVER ONLINE/);
   assert.doesNotMatch(JSON.stringify(embed), /old-password|Server Password/);
 });
+
+test('KESAS staging uses configured absolute PowerShell instead of requiring pwsh on PATH', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'kesas-powershell-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const archive = path.join(root, 'release.zip');
+  await fs.writeFile(archive, 'test-only archive; verifier is injected');
+  const executable = path.join(root, 'tools with spaces', 'pwsh.exe');
+  const calls = [];
+  const manager = new UpdateManager({ __root: root, lmp: { deploymentRoot: root }, updates: { powerShellExecutable: executable } }, null, null, {
+    runTool: async (...args) => { calls.push(args); return {}; }
+  });
+  await manager.stage(archive, { id: 'path-regression', version: 'kesas-rc29' });
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0][0], executable);
+  assert.deepEqual(calls[0][1], ['-NoProfile', '-NonInteractive', '-File', path.join(root, 'scripts', 'Verify-KesasRelease.ps1'), '-Archive', archive, '-ExpectedVersion', 'kesas-rc29']);
+  assert.equal(calls[0][2].windowsHide, true);
+  assert.equal((await manager.readManifest('path-regression')).manifest.version, 'kesas-rc29');
+});
+
+test('KESAS verifier failure leaves no staged package or deployment request', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'kesas-verifier-failure-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const archive = path.join(root, 'release.zip');
+  await fs.writeFile(archive, 'invalid fixture');
+  const manager = new UpdateManager({ __root: root, lmp: { deploymentRoot: root }, updates: {} }, null, null, {
+    runTool: async executable => { assert.equal(executable, 'pwsh.exe'); throw new Error('verification refused'); }
+  });
+  await assert.rejects(manager.stage(archive, { id: 'rejected', version: 'kesas-rc29' }), /verification refused/);
+  assert.equal(await fs.stat(path.join(manager.stagingRoot, 'rejected')).catch(() => null), null);
+  assert.equal(manager.state.status, 'idle');
+});
