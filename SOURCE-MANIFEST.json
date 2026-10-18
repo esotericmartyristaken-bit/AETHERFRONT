@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-18T00:11:30.9374981Z",
+  "createdUtc": "2026-10-18T00:42:50.1141738Z",
   "publication": "STAGED ONLY; not pushed",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -2343,7 +2343,7 @@
       "bytes": 51191,
       "sha256": "609303f5bdf9164b3057979766d7b5baee85b0d845681bebcdb3e5fde82e670e",
       "sourceSha256": "72fb3644bc6ebf272fe19e41825cdce3123025dbef9acf9aaed4c4fa538c36f3",
-      "sourceModifiedUtc": "2026-10-17T23:46:47.9533580Z",
+      "sourceModifiedUtc": "2026-10-17T23:46:47.953358Z",
       "transformations": [
         "absolute workspace root replaced by ."
       ]
@@ -26900,7 +26900,7 @@
       "source": null,
       "role": "publication metadata, license or export tooling",
       "bytes": 3584,
-      "sha256": "819eec071ced71ff8a04da154f0ebc9f43c7ebe4d0739e9ff88bd22148cbbbe8",
+      "sha256": "f29379ffbf7de947243503c118dc4aa7836ecb82327ef859321711460a03b802",
       "sourceSha256": null,
       "transformations": []
     },
@@ -26980,8 +26980,8 @@
       "path": "TESTING.md",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 24946,
-      "sha256": "028e8d9b3c5d20a448ccddbdefd63efef7da4bed89322eecb0a28d00ea99dadf",
+      "bytes": 25364,
+      "sha256": "b86e649d962db2a3f8ca9ff9366f93f764f701218385a2485d3ad0a2c6edbb19",
       "sourceSha256": null,
       "transformations": []
     },
@@ -27013,7 +27013,7 @@
       "transformations": []
     }
   ],
-  "totalFileBytes": 14231892,
+  "totalFileBytes": 14232310,
   "exclusions": [
     "All Git history and Git metadata; CI workflows and operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",

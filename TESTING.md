@@ -20,7 +20,7 @@ before opening/hashing them during scans, and retains verification of required
 configuration, assemblies and content. Archive extraction/preparation continues
 authenticating every file, including runtime defaults supplied in an archive.
 
-Current local evidence, before publication:
+RC26 validation evidence:
 
 - The unchanged RC25 helper reproduces all four observed package-verification
   mismatches and the resulting rollback: four assertions passed.
@@ -70,9 +70,14 @@ one explicitly approved GameStub restart, and a completed RC26 client/pack/profi
 receipt. Regenerated exclusively locked caches are accepted; an added PluginData
 DLL remains detectable. The reconnect test stages the real connection metadata,
 accepts the completed same-profile receipt without a full scan, and rejects the
-opposite profile. The profile cycle, native activation and anonymous complete-
-release verification remain pending. No clean Unity gameplay or error-free KSP
-log is claimed.
+opposite profile. The full-catalog Potato-to-Regular native transaction also
+completed: 211 packages, 42 prepared replacements, one policy-root deletion,
+one explicit restart, matching completion receipt and fast reconnect. Regenerated
+locked runtime files remain accepted while the added-DLL negative is detected.
+The optional reverse-cycle fixture was retired before completion after the
+user requested immediate wrap-up; that final RC26 reverse cycle is not claimed
+as passed. Real Unity startup, rendering, facility access and gameplay remain
+local-client tests. No error-free end-user KSP log is claimed.
 The first complete-catalog fixture run failed because its directory-only clone
 omitted five flat GameData files, including ModuleManager. This was a test setup
 failure, not accepted release evidence. The clone now copies and authenticates
