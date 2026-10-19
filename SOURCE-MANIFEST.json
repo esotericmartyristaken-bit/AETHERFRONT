@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-19T01:07:41.287534+00:00",
+  "createdUtc": "2026-10-19T10:04:39.2075439Z",
   "publication": "Reviewed source update; ordinary source pushes do not deploy",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -26572,10 +26572,10 @@
       "path": "APFDiscordBot/src/lmp.js",
       "source": "APFDiscordBot/src/lmp.js",
       "role": "Discord integration source/tests/operator scripts",
-      "bytes": 48765,
-      "sha256": "38d3b61a5b2521ed88f2e3cd8058cad66c8699dc1f50344b1aec13aca945d798",
-      "sourceSha256": "38d3b61a5b2521ed88f2e3cd8058cad66c8699dc1f50344b1aec13aca945d798",
-      "sourceModifiedUtc": "2026-10-16T03:19:43.1383355Z",
+      "bytes": 52997,
+      "sha256": "e4b331b2d4fa4ca14dde50b57e535733fafee0838efaefa30d6d25e6556ced87",
+      "sourceSha256": "e4b331b2d4fa4ca14dde50b57e535733fafee0838efaefa30d6d25e6556ced87",
+      "sourceModifiedUtc": "2026-10-19T10:01:12.0453573Z",
       "transformations": []
     },
     {
@@ -26676,6 +26676,16 @@
       "sha256": "ada8cbc3be2723133131d61566bac6b1819797e730f14a2147a0ffe9aaaedbda",
       "sourceSha256": "ada8cbc3be2723133131d61566bac6b1819797e730f14a2147a0ffe9aaaedbda",
       "sourceModifiedUtc": "2026-08-12T22:13:18.7752347Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/test/elevated-process.test.js",
+      "source": "APFDiscordBot/test/elevated-process.test.js",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 4035,
+      "sha256": "f2963192d37cf061507af556112460ed10559e845d4e24e6056b62afedd3673f",
+      "sourceSha256": "f2963192d37cf061507af556112460ed10559e845d4e24e6056b62afedd3673f",
+      "sourceModifiedUtc": "2026-10-19T10:01:12.6838714Z",
       "transformations": []
     },
     {
@@ -28078,7 +28088,7 @@
       "transformations": []
     }
   ],
-  "totalFileBytes": 15833789,
+  "totalFileBytes": 15842056,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",
@@ -28097,5 +28107,5 @@
     "report": "PRIVACY-SCAN.json",
     "limitation": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
   },
-  "fileCount": 2808
+  "fileCount": 2809
 }

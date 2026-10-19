@@ -88,6 +88,7 @@ export class LmpController extends EventEmitter {
     this.config = config;
     this.fetch = dependencies.fetch || globalThis.fetch;
     this.now = dependencies.now || Date.now;
+    this.powershellJson = dependencies.powershellJson || powershellJson;
     this.child = null;
     this.startedAt = null;
     this.externalPid = null;
@@ -133,11 +134,64 @@ export class LmpController extends EventEmitter {
   async findExternalProcess() {
     const target = shellQuotePowerShell(this.executablePath);
     try {
-      const result = await powershellJson(`$target=${target}; @(Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath -eq $target } | Select-Object ProcessId,CreationDate,ExecutablePath,CommandLine | ConvertTo-Json -Compress)`);
+      const result = await this.powershellJson(`$target=${target}; @(Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath -eq $target } | Select-Object ProcessId,CreationDate,ExecutablePath,CommandLine | ConvertTo-Json -Compress)`);
       const rows = Array.isArray(result) ? result : (result ? [result] : []);
+      const row = rows.find(value => Number.isSafeInteger(Number(value.ProcessId)) && Number(value.ProcessId) > 0 &&
+        String(value.ExecutablePath || '').toLowerCase() === this.executablePath.toLowerCase());
+      if (row) return { pid: Number(row.ProcessId), created: row.CreationDate, executablePath: row.ExecutablePath, commandLine: row.CommandLine, owned: false };
+    } catch { /* A protected process can hide ExecutablePath without being offline. */ }
+    return this.findBridgeProcess();
+  }
+
+  async findBridgeProcess() {
+    try {
+      // Restrict this observation fallback to the native KESAS bridge inside its
+      // owned server root. Never treat a PID file or a bound port alone as identity.
+      if (!this.deploymentRoot || this.bridgeRoot.toLowerCase() !== path.join(this.root, 'APFDiscordBridge').toLowerCase()) return null;
+      const canonicalRoot = path.join(await fs.realpath(this.deploymentRoot), 'Server');
+      if ((await fs.realpath(this.root)).toLowerCase() !== canonicalRoot.toLowerCase() ||
+          (await fs.lstat(this.root)).isSymbolicLink() || (await fs.lstat(this.bridgeRoot)).isSymbolicLink()) return null;
+      const read = async () => {
+        const files = ['ready.json', 'status.json'].map(name => path.join(this.bridgeRoot, name));
+        for (const file of files) {
+          const stat = await fs.lstat(file);
+          if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 1024 * 1024 ||
+              (await fs.realpath(file)).toLowerCase() !== path.join(canonicalRoot, 'APFDiscordBridge', path.basename(file)).toLowerCase()) throw new Error('Untrusted bridge location');
+        }
+        return Promise.all(files.map(async file => parseBridgeJson(await fs.readFile(file, 'utf8'))));
+      };
+      const [firstReady, firstLive] = await read();
+      const pid = firstReady.pid;
+      if (!Number.isSafeInteger(pid) || pid <= 0 || firstLive.serverPid !== pid) return null;
+      const settings = await this.readSettings();
+      const port = Number(settings.port);
+      if (!Number.isInteger(port) || port < 1 || port > 65535) return null;
+      const observation = await this.powershellJson(`$p=@(Get-CimInstance Win32_Process -Filter 'ProcessId=${pid}' | Select-Object ProcessId,Name,CreationDate,ExecutablePath,CommandLine); $owners=@(Get-NetUDPEndpoint -LocalPort ${port} -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique); [pscustomobject]@{processes=$p;udpOwners=$owners} | ConvertTo-Json -Compress`);
+      const rows = Array.isArray(observation?.processes) ? observation.processes : (observation?.processes ? [observation.processes] : []);
+      const owners = Array.isArray(observation?.udpOwners) ? observation.udpOwners : [observation?.udpOwners];
       const row = rows[0];
-      if (!row) return null;
-      return { pid: Number(row.ProcessId), created: row.CreationDate, executablePath: row.ExecutablePath, commandLine: row.CommandLine, owned: false };
+      if (rows.length !== 1 || Number(row.ProcessId) !== pid ||
+          String(row.Name || '').toLowerCase() !== path.basename(this.executablePath).toLowerCase() ||
+          owners.length !== 1 || Number(owners[0]) !== pid ||
+          (row.ExecutablePath && String(row.ExecutablePath).toLowerCase() !== this.executablePath.toLowerCase())) return null;
+      // Re-read after the OS query to reject a restart/PID reuse or stale bridge.
+      const [ready, live] = await read();
+      const created = dateFromValue(row.CreationDate)?.getTime();
+      const started = Date.parse(ready.startedAt);
+      const updated = Date.parse(live.updatedAt);
+      const now = this.now();
+      if (ready.pid !== pid || live.serverPid !== pid || ready.startedAt !== firstReady.startedAt ||
+          !Number.isFinite(created) || !Number.isFinite(started) || !Number.isFinite(updated) ||
+          created > now + 2000 || started < created - 1000 || started > now + 2000 ||
+          updated < started - 1000 || now - updated > 5000 || updated > now + 2000 ||
+          !Number.isInteger(live.playerCount) || live.playerCount < 0 ||
+          !Number.isInteger(live.connectedCount) || live.connectedCount < live.playerCount ||
+          !Array.isArray(live.players) || live.players.length !== live.playerCount) return null;
+      return {
+        pid, created: row.CreationDate, executablePath: row.ExecutablePath || null,
+        commandLine: row.CommandLine || null, owned: false, identitySource: 'native-bridge-udp',
+        executablePathVerified: Boolean(row.ExecutablePath)
+      };
     } catch { return null; }
   }
 
