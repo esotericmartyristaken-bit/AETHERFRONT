@@ -1,0 +1,11 @@
+# RC31 player-package cleanup
+
+Remove KESAS/Verify-Install.ps1 and the optional KESASLauncher.ps1 and RepairClientCasing.ps1. Retain APFApplyUpdate.ps1, Plugins and LunaMultiplayer.version. The normal in-game updater remains the supported installation path.
+
+The native bundle is derived from the verified production RC30 signed inventory. It contains 461 client files, three fewer than RC30. The catalog changes only release version fields: every managed mod package, URL, archive hash and package version remains identical. Core is byte-identical. Client changes only the version getter and constant; all 6326 other method bodies and the existing authenticated startup hook are unchanged. No server runtime, Sandbox configuration or trust changes.
+
+After a completed, authenticated signed RC31 transaction, startup removes only the exact historical bytes of the three retired scripts when the new signed inventory no longer declares them. Modified user scripts and unrelated files are preserved. Reparse paths are refused. Locked optional scripts do not prevent startup and are retried next launch. The required updater is preserved byte-identical. A fresh RC31 starter omits the scripts, so they are not downloaded again.
+
+Validation: native signature and inventory verification of immutable RC30 inputs; deterministic version graft and independent reversal review; 20 CLR regression cases with 345 checks before the added two startup integration assertions; three actual KSP Mono cases with 121 checks, including the authenticated startup integration; true RC29 helper to signed RC31 upgrade, 51 checks with one restart. Junction refusal, custom scripts, locks, declared-file preservation, settings and repeat cleanup covered. Full graphical/gameplay validation is inherited from RC30 and was not repeated for this cleanup. Production signing and starter audit are recorded separately after deployment.
+
+Build with Build-Engine.ps1, VersionPatcher patch then review, and Build-Release.py. Supply verified signed RC30 inputs, the production PUBLIC key and existing RC30 native templates. No private production key is used locally. Publish using the guarded APFDiscordBot/scripts/Publish-GitHubDeployment.ps1 workflow. Old RC30 artifacts remain immutable fallback files.

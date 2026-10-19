@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-18T20:35:42.691015+00:00",
+  "createdUtc": "2026-10-19T01:07:41.287534+00:00",
   "publication": "Reviewed source update; ordinary source pushes do not deploy",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -27876,9 +27876,209 @@
       "sourceModifiedUtc": "2026-10-18T09:10:34.182031+00:00",
       "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Build-Engine.ps1",
+      "source": "Aetherfront-RC31-Work/Build-Engine.ps1",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 3077,
+      "sha256": "96851731d584e29f5d7aa8dc864e01d323549c6696bc57324771cad74e708199",
+      "sourceSha256": "96851731d584e29f5d7aa8dc864e01d323549c6696bc57324771cad74e708199",
+      "sourceModifiedUtc": "2026-10-19T01:01:55.648858+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Build-Release.py",
+      "source": "Aetherfront-RC31-Work/Build-Release.py",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 5995,
+      "sha256": "b8335a2c50c47fca54db8625e0825a27c622019e6068b9af0e22ef071823df74",
+      "sourceSha256": "b8335a2c50c47fca54db8625e0825a27c622019e6068b9af0e22ef071823df74",
+      "sourceModifiedUtc": "2026-10-19T01:05:01.734756+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/AssemblyInfo.cs",
+      "source": "Aetherfront-RC31-Work/Engine/AssemblyInfo.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 107,
+      "sha256": "8a1336238caf1699e8dd5697dfe5330ee2ed3350ee538638c22f258632765970",
+      "sourceSha256": "8a1336238caf1699e8dd5697dfe5330ee2ed3350ee538638c22f258632765970",
+      "sourceModifiedUtc": "2026-10-18T06:44:18.941018+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/AtomicFiles.cs",
+      "source": "Aetherfront-RC31-Work/Engine/AtomicFiles.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 2079,
+      "sha256": "2638836990399e136ca0ff7453a30dee3c60353458c62876ed62316b61d29e87",
+      "sourceSha256": "2638836990399e136ca0ff7453a30dee3c60353458c62876ed62316b61d29e87",
+      "sourceModifiedUtc": "2026-10-18T19:00:13.143134+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/Installer.cs",
+      "source": "Aetherfront-RC31-Work/Engine/Installer.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 56350,
+      "sha256": "bdccddf5d5b826c14f85bb11b1588ce604f6f5b952501b9439175417c31fac46",
+      "sourceSha256": "bdccddf5d5b826c14f85bb11b1588ce604f6f5b952501b9439175417c31fac46",
+      "sourceModifiedUtc": "2026-10-18T20:02:55.544435+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/LegacySettingsRecovery.cs",
+      "source": "Aetherfront-RC31-Work/Engine/LegacySettingsRecovery.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 44951,
+      "sha256": "019f1c51f297d99b16d1562f0aafd1aed03f19c16f9bec7740b014ac3832ce23",
+      "sourceSha256": "019f1c51f297d99b16d1562f0aafd1aed03f19c16f9bec7740b014ac3832ce23",
+      "sourceModifiedUtc": "2026-10-19T01:01:55.662471+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/NativeInstall.cs",
+      "source": "Aetherfront-RC31-Work/Engine/NativeInstall.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 14924,
+      "sha256": "0ecf0740c7c062a3f681e95b2e8a3f068b364bef915de0d8059e8d7bef07128e",
+      "sourceSha256": "0ecf0740c7c062a3f681e95b2e8a3f068b364bef915de0d8059e8d7bef07128e",
+      "sourceModifiedUtc": "2026-10-18T05:58:57.653675+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/ObsoleteScripts.cs",
+      "source": "Aetherfront-RC31-Work/Engine/ObsoleteScripts.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 1908,
+      "sha256": "8127f4775690427ee69bb654bfc847ec3d10a8c28680a2ad7544d51e4c3861b7",
+      "sourceSha256": "8127f4775690427ee69bb654bfc847ec3d10a8c28680a2ad7544d51e4c3861b7",
+      "sourceModifiedUtc": "2026-10-19T01:05:01.733247+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/PackageCasing.cs",
+      "source": "Aetherfront-RC31-Work/Engine/PackageCasing.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 1477,
+      "sha256": "cd12756ff56732becd59a7f3a227a9fce8039dc31cb45a44790b6c4ed12a1f64",
+      "sourceSha256": "cd12756ff56732becd59a7f3a227a9fce8039dc31cb45a44790b6c4ed12a1f64",
+      "sourceModifiedUtc": "2026-10-18T05:58:57.653675+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/PostExit.cs",
+      "source": "Aetherfront-RC31-Work/Engine/PostExit.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 2499,
+      "sha256": "4d042158deba0b73122795bb121bcbb34ccd1278127e6fbd4a29a181df1c2a6b",
+      "sourceSha256": "4d042158deba0b73122795bb121bcbb34ccd1278127e6fbd4a29a181df1c2a6b",
+      "sourceModifiedUtc": "2026-10-18T05:58:57.654680+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/PreparedPack.cs",
+      "source": "Aetherfront-RC31-Work/Engine/PreparedPack.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 27472,
+      "sha256": "a9ca91cc104bf534e1f4f75d97e90d7c978e149ad6f16366705bde428d2a3aaa",
+      "sourceSha256": "a9ca91cc104bf534e1f4f75d97e90d7c978e149ad6f16366705bde428d2a3aaa",
+      "sourceModifiedUtc": "2026-10-18T19:00:13.144643+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/RuntimeFiles.cs",
+      "source": "Aetherfront-RC31-Work/Engine/RuntimeFiles.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 6499,
+      "sha256": "d7aafa99ba359960622cc3ae393b185ea0cb89579e52c0831d3685fc88991a41",
+      "sourceSha256": "d7aafa99ba359960622cc3ae393b185ea0cb89579e52c0831d3685fc88991a41",
+      "sourceModifiedUtc": "2026-10-18T05:58:57.655184+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/StartupCasing.cs",
+      "source": "Aetherfront-RC31-Work/Engine/StartupCasing.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 17321,
+      "sha256": "f737f29221abbe4e354d8e0aa9af12d04bcdd18165e2184e24862d1c9377ac8c",
+      "sourceSha256": "f737f29221abbe4e354d8e0aa9af12d04bcdd18165e2184e24862d1c9377ac8c",
+      "sourceModifiedUtc": "2026-10-19T01:05:01.732733+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/TerrainPolicy.cs",
+      "source": "Aetherfront-RC31-Work/Engine/TerrainPolicy.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 4258,
+      "sha256": "acc989338d87c147aeb5ff5ea6c61e7ac24ce5081a518b76f2ef483ee703040e",
+      "sourceSha256": "acc989338d87c147aeb5ff5ea6c61e7ac24ce5081a518b76f2ef483ee703040e",
+      "sourceModifiedUtc": "2026-10-18T20:03:37.246286+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/UserSettings.cs",
+      "source": "Aetherfront-RC31-Work/Engine/UserSettings.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 3288,
+      "sha256": "026da12d8dff750292bb00045817cb500bf0d015523f68ff6d91b255c64ccd59",
+      "sourceSha256": "026da12d8dff750292bb00045817cb500bf0d015523f68ff6d91b255c64ccd59",
+      "sourceModifiedUtc": "2026-10-18T09:21:39.492718+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/RELEASE-REVIEW.md",
+      "source": "Aetherfront-RC31-Work/RELEASE-REVIEW.md",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 2284,
+      "sha256": "359960e9a9574e22364faebc131e027325724ad2c2e48c198941c2f83f95aee3",
+      "sourceSha256": "359960e9a9574e22364faebc131e027325724ad2c2e48c198941c2f83f95aee3",
+      "sourceModifiedUtc": "2026-10-19T01:07:41.282532+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/SettingsTests/Program.cs",
+      "source": "Aetherfront-RC31-Work/SettingsTests/Program.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 65659,
+      "sha256": "3a1accb08cd9ce118620b04c4e524329fa2a7456cc52f6c9c868a28647536e41",
+      "sourceSha256": "3a1accb08cd9ce118620b04c4e524329fa2a7456cc52f6c9c868a28647536e41",
+      "sourceModifiedUtc": "2026-10-19T01:06:47.228506+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/SettingsTests/SettingsTests.csproj",
+      "source": "Aetherfront-RC31-Work/SettingsTests/SettingsTests.csproj",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 861,
+      "sha256": "0f3f2289f5228844f7d86a814439d86d9b01b2048f4fee67ffd8a949330f52af",
+      "sourceSha256": "0f3f2289f5228844f7d86a814439d86d9b01b2048f4fee67ffd8a949330f52af",
+      "sourceModifiedUtc": "2026-10-18T19:14:49.119413+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/VersionPatcher/Program.cs",
+      "source": "Aetherfront-RC31-Work/VersionPatcher/Program.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 25625,
+      "sha256": "261b8103070f7f2e9566faae512d0eb6da08b598b9563363538b8185a89ada8b",
+      "sourceSha256": "261b8103070f7f2e9566faae512d0eb6da08b598b9563363538b8185a89ada8b",
+      "sourceModifiedUtc": "2026-10-19T01:01:55.673577+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/VersionPatcher/VersionPatcher.csproj",
+      "source": "Aetherfront-RC31-Work/VersionPatcher/VersionPatcher.csproj",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 388,
+      "sha256": "bab0ca3bb9e42596392f218185ecd90b156f47ee8f1cdd9784b58512237c7854",
+      "sourceSha256": "bab0ca3bb9e42596392f218185ecd90b156f47ee8f1cdd9784b58512237c7854",
+      "sourceModifiedUtc": "2026-10-18T19:14:49.120412+00:00",
+      "transformations": []
     }
   ],
-  "totalFileBytes": 15219386,
+  "totalFileBytes": 15833789,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",
@@ -27897,5 +28097,5 @@
     "report": "PRIVACY-SCAN.json",
     "limitation": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
   },
-  "fileCount": 2766
+  "fileCount": 2808
 }
