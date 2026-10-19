@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "version": "kesas-rc30",
-  "releaseTag": "host-kesas-rc30",
-  "assetName": "Aetherfront-Release-kesas-rc30.zip",
-  "sha256": "0c4dd0e6d6bfdf9269d97365d0aa7957ac65537d1bdb215f8d215255219e08f4",
-  "sizeBytes": 1770285,
-  "notes": "Preserve generated mod preferences and select shared High terrain geometry for clean Sandbox clients."
+  "version": "kesas-rc31",
+  "releaseTag": "host-kesas-rc31",
+  "assetName": "Aetherfront-Release-kesas-rc31.zip",
+  "sha256": "d6f59d568d3704dac9b21e60590aaa157a30b341a12001a95b0e3deccb658f4a",
+  "sizeBytes": 1767893,
+  "notes": "Remove optional manual launcher, casing repair and verification scripts; retain the signed in-game updater. Sandbox and mod payloads unchanged."
 }
