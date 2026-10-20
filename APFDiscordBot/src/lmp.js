@@ -132,25 +132,42 @@ export class LmpController extends EventEmitter {
   }
 
   async findExternalProcess() {
+    return (await this.observeExternalProcess()).process;
+  }
+
+  async observeExternalProcess() {
     const target = shellQuotePowerShell(this.executablePath);
+    const name = shellQuotePowerShell(path.basename(this.executablePath));
+    let reason = 'process-query-failed';
     try {
-      const result = await this.powershellJson(`$target=${target}; @(Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath -eq $target } | Select-Object ProcessId,CreationDate,ExecutablePath,CommandLine | ConvertTo-Json -Compress)`);
+      const result = await this.powershellJson(`$target=${target}; $name=${name}; @(Get-CimInstance Win32_Process -ErrorAction Stop | Where-Object { $_.ExecutablePath -eq $target -or $_.Name -eq $name } | Select-Object ProcessId,Name,CreationDate,ExecutablePath,CommandLine | ConvertTo-Json -Compress)`);
       const rows = Array.isArray(result) ? result : (result ? [result] : []);
       const row = rows.find(value => Number.isSafeInteger(Number(value.ProcessId)) && Number(value.ProcessId) > 0 &&
         String(value.ExecutablePath || '').toLowerCase() === this.executablePath.toLowerCase());
-      if (row) return { pid: Number(row.ProcessId), created: row.CreationDate, executablePath: row.ExecutablePath, commandLine: row.CommandLine, owned: false };
+      if (row) return { state: 'online', reason: 'exact-process-path', process: { pid: Number(row.ProcessId), created: row.CreationDate, executablePath: row.ExecutablePath, commandLine: row.CommandLine, owned: false } };
+      // A successful complete process query can prove absence. A hidden path,
+      // failed query, or stale bridge cannot prove that the server exited.
+      const protectedRows = rows.filter(value => !value.ExecutablePath && String(value.Name || '').toLowerCase() === path.basename(this.executablePath).toLowerCase());
+      if (!protectedRows.length) return { state: 'offline', reason: 'process-not-found', process: null };
+      reason = 'protected-process-path';
     } catch { /* A protected process can hide ExecutablePath without being offline. */ }
-    return this.findBridgeProcess();
+    if (!this.deploymentRoot) return { state: 'unknown', reason, process: null };
+    return this.observeBridgeProcess();
   }
 
   async findBridgeProcess() {
+    return (await this.observeBridgeProcess()).process;
+  }
+
+  async observeBridgeProcess() {
+    const unknown = reason => ({ state: 'unknown', reason, process: null });
     try {
       // Restrict this observation fallback to the native KESAS bridge inside its
       // owned server root. Never treat a PID file or a bound port alone as identity.
-      if (!this.deploymentRoot || this.bridgeRoot.toLowerCase() !== path.join(this.root, 'APFDiscordBridge').toLowerCase()) return null;
+      if (!this.deploymentRoot || this.bridgeRoot.toLowerCase() !== path.join(this.root, 'APFDiscordBridge').toLowerCase()) return unknown('bridge-location-untrusted');
       const canonicalRoot = path.join(await fs.realpath(this.deploymentRoot), 'Server');
       if ((await fs.realpath(this.root)).toLowerCase() !== canonicalRoot.toLowerCase() ||
-          (await fs.lstat(this.root)).isSymbolicLink() || (await fs.lstat(this.bridgeRoot)).isSymbolicLink()) return null;
+          (await fs.lstat(this.root)).isSymbolicLink() || (await fs.lstat(this.bridgeRoot)).isSymbolicLink()) return unknown('bridge-location-untrusted');
       const read = async () => {
         const files = ['ready.json', 'status.json'].map(name => path.join(this.bridgeRoot, name));
         for (const file of files) {
@@ -162,18 +179,18 @@ export class LmpController extends EventEmitter {
       };
       const [firstReady, firstLive] = await read();
       const pid = firstReady.pid;
-      if (!Number.isSafeInteger(pid) || pid <= 0 || firstLive.serverPid !== pid) return null;
+      if (!Number.isSafeInteger(pid) || pid <= 0 || firstLive.serverPid !== pid) return unknown('bridge-pid-mismatch');
       const settings = await this.readSettings();
       const port = Number(settings.port);
-      if (!Number.isInteger(port) || port < 1 || port > 65535) return null;
-      const observation = await this.powershellJson(`$p=@(Get-CimInstance Win32_Process -Filter 'ProcessId=${pid}' | Select-Object ProcessId,Name,CreationDate,ExecutablePath,CommandLine); $owners=@(Get-NetUDPEndpoint -LocalPort ${port} -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique); [pscustomobject]@{processes=$p;udpOwners=$owners} | ConvertTo-Json -Compress`);
+      if (!Number.isInteger(port) || port < 1 || port > 65535) return unknown('invalid-game-port');
+      const observation = await this.powershellJson(`$p=@(Get-CimInstance Win32_Process -Filter 'ProcessId=${pid}' -ErrorAction Stop | Select-Object ProcessId,Name,CreationDate,ExecutablePath,CommandLine); $owners=@(Get-NetUDPEndpoint -LocalPort ${port} -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique); [pscustomobject]@{processes=$p;udpOwners=$owners} | ConvertTo-Json -Compress`);
       const rows = Array.isArray(observation?.processes) ? observation.processes : (observation?.processes ? [observation.processes] : []);
       const owners = Array.isArray(observation?.udpOwners) ? observation.udpOwners : [observation?.udpOwners];
       const row = rows[0];
       if (rows.length !== 1 || Number(row.ProcessId) !== pid ||
           String(row.Name || '').toLowerCase() !== path.basename(this.executablePath).toLowerCase() ||
           owners.length !== 1 || Number(owners[0]) !== pid ||
-          (row.ExecutablePath && String(row.ExecutablePath).toLowerCase() !== this.executablePath.toLowerCase())) return null;
+          (row.ExecutablePath && String(row.ExecutablePath).toLowerCase() !== this.executablePath.toLowerCase())) return unknown('bridge-process-or-udp-mismatch');
       // Re-read after the OS query to reject a restart/PID reuse or stale bridge.
       const [ready, live] = await read();
       const created = dateFromValue(row.CreationDate)?.getTime();
@@ -186,21 +203,25 @@ export class LmpController extends EventEmitter {
           updated < started - 1000 || now - updated > 5000 || updated > now + 2000 ||
           !Number.isInteger(live.playerCount) || live.playerCount < 0 ||
           !Number.isInteger(live.connectedCount) || live.connectedCount < live.playerCount ||
-          !Array.isArray(live.players) || live.players.length !== live.playerCount) return null;
-      return {
+          !Array.isArray(live.players) || live.players.length !== live.playerCount) return unknown(now - updated > 5000 ? 'bridge-status-stale' : 'bridge-status-invalid');
+      return { state: 'online', reason: 'native-bridge-udp', process: {
         pid, created: row.CreationDate, executablePath: row.ExecutablePath || null,
         commandLine: row.CommandLine || null, owned: false, identitySource: 'native-bridge-udp',
         executablePathVerified: Boolean(row.ExecutablePath)
-      };
-    } catch { return null; }
+      } };
+    } catch (error) { return unknown(`bridge-read-or-query-${/^[A-Z0-9_]{1,32}$/.test(error?.code || '') ? error.code : 'failed'}`); }
   }
 
   async processInfo() {
+    return (await this.observeProcess()).process;
+  }
+
+  async observeProcess() {
     if (this.child && !this.child.killed && this.child.exitCode === null) {
-      return { pid: this.child.pid, created: this.startedAt, executablePath: this.executablePath, commandLine: this.executablePath, owned: true };
+      return { state: 'online', reason: 'owned-child', process: { pid: this.child.pid, created: this.startedAt, executablePath: this.executablePath, commandLine: this.executablePath, owned: true } };
     }
     this.child = null;
-    return this.findExternalProcess();
+    return this.observeExternalProcess();
   }
 
   async processResources(process) {
@@ -311,6 +332,7 @@ export class LmpController extends EventEmitter {
     const process = await this.processInfo();
     if (!process) {
       this.playerSession = { pid: null, file: '', offset: 0, remainder: '', count: 0, connected: 0, active: new Map() };
+      if (this.config.lmp.requireLivePlayerSnapshot || this.deploymentRoot) return { count: null, connected: null, players: [], source: 'process-unverified' };
       return { count: 0, connected: 0, players: [], source: 'offline' };
     }
     const live = await fs.readFile(path.join(this.bridgeRoot, 'status.json'), 'utf8').then(parseBridgeJson).catch(() => null);
@@ -472,7 +494,10 @@ export class LmpController extends EventEmitter {
   }
 
   async status() {
-    const [settings, process, storage, plugins, modControl, playerSnapshot] = await Promise.all([this.readSettings(), this.processInfo(), this.storageInfo(), this.pluginInventory(), this.modControlSummary(), this.playerSnapshot()]);
+    const observedAt = new Date(this.now()).toISOString();
+    const [settings, observation, storage, plugins, modControl, playerSnapshot] = await Promise.all([this.readSettings(), this.observeProcess(), this.storageInfo(), this.pluginInventory(), this.modControlSummary(), this.playerSnapshot()]);
+    const process = observation.process;
+    const unknown = observation.state === 'unknown';
     const resources = await this.processResources(process);
     const bridge = await this.bridgeStatus(process);
     const log = await this.readLogWindow(1_000_000, process?.created);
@@ -493,7 +518,7 @@ export class LmpController extends EventEmitter {
     const processAgeMs = processStartMs === null ? null : Math.max(0, Date.now() - processStartMs);
     const healthIssues = [];
     const addHealthIssue = (code, message, severity = 'warning') => healthIssues.push({ code, message, severity });
-    if (!process) addHealthIssue('server-offline', 'server offline', 'critical');
+    if (!process) addHealthIssue(unknown ? 'status-observation' : 'server-offline', unknown ? `server status unavailable (${observation.reason})` : 'server offline', unknown ? 'warning' : 'critical');
     if (process && !ready && (processAgeMs === null || processAgeMs > startupGraceMinutes * 60 * 1000)) addHealthIssue('startup-readiness', 'startup readiness not confirmed');
     if (process && settings.register && !registration && (processAgeMs === null || processAgeMs > startupGraceMinutes * 60 * 1000)) addHealthIssue('master-registration', 'master registration not confirmed');
     if (process && master.checked && master.visible === false && master.confirmedMissing) addHealthIssue('master-listing', 'not visible in master listing');
@@ -512,7 +537,9 @@ export class LmpController extends EventEmitter {
       ? { playerCount: playerSnapshot.count, connectedCount: playerSnapshot.connected, source: playerSnapshot.source }
       : resolvePlayerCounts(Boolean(process), playerSnapshot.count ?? logPlayerCount, playerSnapshot.connected ?? (connectedText === null ? null : Number(connectedText)), masterPlayerCount, playerSnapshot.count);
     const status = {
-      online: Boolean(process),
+      observedAt,
+      processObservation: { state: observation.state, reason: observation.reason },
+      online: unknown ? null : Boolean(process),
       pid: process?.pid || null,
       owned: Boolean(process?.owned),
       startedAt: dateFromValue(process?.created || this.startedAt)?.toISOString() || null,
@@ -537,9 +564,9 @@ export class LmpController extends EventEmitter {
       healthInfo,
       healthPolicy: { startupGraceMinutes, logQuietMinutes, diskWarningPercent, masterListingGraceMinutes: Number(healthConfig.masterListingGraceMinutes ?? 5) },
       healthSummary: healthIssues.length ? healthIssues.map(issue => issue.message).join('; ') : 'healthy',
-      playerCount: counts.playerCount,
-      connectedCount: counts.connectedCount,
-      playerCountSource: counts.source,
+      playerCount: unknown ? null : (observation.state === 'offline' ? 0 : counts.playerCount),
+      connectedCount: unknown ? null : (observation.state === 'offline' ? 0 : counts.connectedCount),
+      playerCountSource: unknown ? 'unknown' : (observation.state === 'offline' ? 'offline' : counts.source),
       players: playerSnapshot.players,
       playerSnapshot,
       mode: this.config.lmp.control?.mode || 'observe',

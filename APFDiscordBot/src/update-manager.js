@@ -450,6 +450,12 @@ export class UpdateManager {
       // stopping and return to the queue if any player/connection appeared.
       if (!this.state.force) {
         const gate = await this.controller.status();
+        if (gate?.processObservation?.state === 'unknown' || gate?.online == null) {
+          this.state.status = 'queued';
+          this.state.phase = 'waiting-for-verified-status';
+          await this.save();
+          return { ok: false, deferred: true, reason: 'server-status-unknown', state: await this.status() };
+        }
         const players = gate?.playerCount == null ? NaN : Number(gate.playerCount);
         const connections = gate?.connectedCount == null ? NaN : Number(gate.connectedCount);
         if (gate?.online === true && (!Number.isFinite(players) || players !== 0 || !Number.isFinite(connections) || connections !== 0)) {

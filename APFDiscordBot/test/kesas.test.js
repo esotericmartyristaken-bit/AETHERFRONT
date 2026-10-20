@@ -28,7 +28,7 @@ test('KESAS presence accepts only fresh bridge data from its running process', a
     assert.equal(snapshot.connected, null);
   }
   controller.processInfo = async () => null;
-  assert.equal((await controller.playerSnapshotUnlocked()).count, 0);
+  assert.equal((await controller.playerSnapshotUnlocked()).count, null, 'an unverified process must not produce an authoritative empty-server count');
 });
 
 async function staged(t) {
@@ -65,6 +65,16 @@ test('KESAS unknown counts cannot trigger empty or expired countdown deployment'
     assert.equal(result.deferred, true);
     assert.equal(manager.state.force, false);
   }
+});
+
+test('KESAS defers publishing when status becomes unknown during the pre-deploy gate', async t => {
+  const { manager, controller } = await staged(t);
+  controller.status = async () => ({ online: null, processObservation: { state: 'unknown', reason: 'bridge-status-stale' }, playerCount: null, connectedCount: null });
+  controller.publishRelease = () => { throw new Error('unknown status must not publish'); };
+  const result = await manager.reconcile({ online: true, ready: true, playerCount: 0, connectedCount: 0 });
+  assert.equal(result.deferred, true);
+  assert.equal(result.reason, 'server-status-unknown');
+  assert.equal((await manager.status()).status, 'queued');
 });
 
 test('KESAS failed warning is retried, not recorded or used to arm restart', async t => {

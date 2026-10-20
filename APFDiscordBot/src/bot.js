@@ -6,6 +6,7 @@ import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { isModerator, isOperator, tokenFor } from './config.js';
 import { appendJsonLine, clampText, formatBytes, formatDuration, readJson, tailText, writeJsonAtomic } from './util.js';
+import { PublicAvailabilityMonitor } from './health.js';
 
 const COLOR = { good: 0x2ecc71, warn: 0xf1c40f, bad: 0xe74c3c, blue: 0x3498db, gray: 0x95a5a6 };
 const fence = String.fromCharCode(96).repeat(3);
@@ -93,22 +94,31 @@ function deploymentDisplayState(update) {
   return 'deploying';
 }
 
+function publicStatusForDisplay(status, confirmedOnline) {
+  if (status.online === true || confirmedOnline === false) return status;
+  return { ...status, online: null, playerCount: null, connectedCount: null,
+    processObservation: { state: 'unknown', reason: status.processObservation?.reason || 'outage-not-confirmed' } };
+}
+
 export function publicStatusEmbed(status, latestBackup = null, now = Date.now(), careerStats = null, publicPassword = '', update = null) {
   const settings = status?.settings || {};
   const online = status?.online === true;
+  const unknown = status?.processObservation?.state === 'unknown';
   const ready = online && status?.ready === true;
   const deployment = deploymentDisplayState(update);
   const title = deployment === 'updating'
     ? `${settings.name || 'LMP'} SERVER UPDATING`
     : deployment === 'starting'
       ? `${settings.name || 'LMP'} SERVER STARTING`
+      : unknown
+        ? `${settings.name || 'LMP'} STATUS UNAVAILABLE`
       : ready
         ? `${settings.name || 'LMP'} SERVER ONLINE`
         : (online ? `${settings.name || 'LMP'} SERVER STARTING` : `${settings.name || 'LMP'} SERVER OFFLINE`);
-  const color = deployment ? COLOR.warn : (ready ? COLOR.good : (online ? COLOR.warn : COLOR.bad));
+  const color = deployment || unknown ? COLOR.warn : (ready ? COLOR.good : (online ? COLOR.warn : COLOR.bad));
   const created = Date.parse(latestBackup?.createdAt || '');
   const backup = Number.isFinite(created) ? `${formatDuration(Math.max(0, now - created))} ago${latestBackup?.size ? ` · ${latestBackup.size}` : ''}` : 'No verified backup found';
-  const uptime = online && Number.isFinite(status?.uptimeMs) ? formatDuration(status.uptimeMs) : 'Offline';
+  const uptime = online && Number.isFinite(status?.uptimeMs) ? formatDuration(status.uptimeMs) : (unknown ? 'Unknown' : 'Offline');
   const publicNumber = (value, maximumFractionDigits) => value === null || value === undefined || !Number.isFinite(Number(value))
     ? 'Unknown'
     : Number(value).toLocaleString('en-US', { maximumFractionDigits });
@@ -118,6 +128,8 @@ export function publicStatusEmbed(status, latestBackup = null, now = Date.now(),
     ? 'The server is temporarily offline while an update installs.'
     : deployment === 'starting'
       ? 'The updated server is starting.'
+      : unknown
+        ? 'The latest server status could not be verified. This does not confirm an outage.'
       : ready
         ? 'The server is operational.'
         : (online ? 'The server is starting.' : 'The server is currently unavailable. Staff have been notified.');
@@ -165,12 +177,13 @@ export function publicErrorText(error) {
 function statusEmbed(status, maintenance = false, universe = null, maintenanceUntil = null, update = null) {
   const settings = status.settings || {};
   const master = status.master || {};
-  const color = !status.online ? COLOR.bad : (!status.ready || (settings.register && (!status.registration || !master.visible)) || status.healthIssues?.length ? COLOR.warn : COLOR.good);
+  const unknown = status.processObservation?.state === 'unknown';
+  const color = unknown ? COLOR.warn : (!status.online ? COLOR.bad : (!status.ready || (settings.register && (!status.registration || !master.visible)) || status.healthIssues?.length ? COLOR.warn : COLOR.good));
   const players = playerCountText(status.playerCount);
   const externallyControllable = Boolean(status.externalLifecycleEnabled);
-  const embed = new EmbedBuilder().setColor(color).setTitle(`APF · ${settings.name || 'LMP Server'}`).setDescription(status.online ? (status.ready ? 'Server operational.' : 'Server running with health warnings.') : 'Server offline.').addFields(
-    { name: 'Process', value: status.online ? `online · PID ${status.pid}${status.owned ? ' · bot-owned' : (externallyControllable ? ' · external lifecycle enabled' : ' · observe-only')}` : 'offline', inline: true },
-    { name: 'Uptime', value: status.uptimeMs === null ? 'offline' : formatDuration(status.uptimeMs), inline: true },
+  const embed = new EmbedBuilder().setColor(color).setTitle(`APF · ${settings.name || 'LMP Server'}`).setDescription(unknown ? 'Server status unavailable; an outage is not confirmed.' : (status.online ? (status.ready ? 'Server operational.' : 'Server running with health warnings.') : 'Server offline.')).addFields(
+    { name: 'Process', value: unknown ? 'unknown' : (status.online ? `online · PID ${status.pid}${status.owned ? ' · bot-owned' : (externallyControllable ? ' · external lifecycle enabled' : ' · observe-only')}` : 'offline'), inline: true },
+    { name: 'Uptime', value: unknown ? 'unknown' : (status.uptimeMs === null ? 'offline' : formatDuration(status.uptimeMs)), inline: true },
     { name: 'Memory', value: status.resources?.workingSetBytes ? formatBytes(status.resources.workingSetBytes) : 'unknown', inline: true },
     { name: 'LMP', value: `${settings.name || 'unknown'} · ${settings.mode || '?'} · UDP ${settings.port || '?'}`, inline: true },
     { name: 'Players', value: players, inline: true },
@@ -414,6 +427,10 @@ export class DiscordBot {
     this.publicStatusMessageId = null;
     this.publicStatusChannelId = null;
     this.publicStatusOnline = null;
+    this.publicAvailabilityMonitor = new PublicAvailabilityMonitor(config.health || {});
+    this.publicStatusSyncPromise = Promise.resolve();
+    this.lastObservationDiagnosticKey = null;
+    this.lastObservationDiagnosticAt = 0;
     this.publicStatusLastCoreKey = null;
     this.publicStatusLastDataKey = null;
     this.publicStatusLastWrittenAt = 0;
@@ -636,18 +653,34 @@ export class DiscordBot {
     // every bot restart would create a new Discord notification.
     return this.syncPublicStatus(null, null, { moveToBottom: false });
   }
-  async syncPublicStatus(status = null, backups = null, options = {}) {
+  syncPublicStatus(status = null, backups = null, options = {}) {
+    const current = this.publicStatusSyncPromise.catch(() => {}).then(() => this.syncPublicStatusUnlocked(status, backups, options));
+    this.publicStatusSyncPromise = current;
+    return current;
+  }
+  async syncPublicStatusUnlocked(status = null, backups = null, options = {}) {
     if (!channelId(this.config, 'publicStatus')) return null;
     const current = status || await this.controller.status();
+    if (Number.isFinite(Date.parse(current.observedAt)) && Date.parse(current.observedAt) < this.publicAvailabilityMonitor.lastObservedAt) return this.publicStatusMessage;
     const backupRows = backups || await this.universe.listBackups();
-    const wasOnline = this.publicStatusOnline;
-    this.publicStatusOnline = current.online === true;
-    await this.saveState();
-    const wentOffline = wasOnline === true && this.publicStatusOnline === false;
     const update = options.update || await this.updateStatus();
     const plannedDowntime = update?.status === 'deploying';
+    const result = this.publicAvailabilityMonitor.update(current, this.publicStatusOnline, { planned: plannedDowntime });
+    const changed = this.publicStatusOnline !== result.online;
+    this.publicStatusOnline = result.online;
+    if (changed) await this.saveState();
+    const wentOffline = result.wentOffline;
+    const observation = current.processObservation;
+    if (observation && observation.state !== 'online') {
+      const key = `${observation.state}:${observation.reason}`;
+      if (key !== this.lastObservationDiagnosticKey || Date.now() - this.lastObservationDiagnosticAt >= 300000) {
+        this.lastObservationDiagnosticKey = key;
+        this.lastObservationDiagnosticAt = Date.now();
+        await this.recordEvent('server-observation', { state: observation.state, reason: observation.reason, observedAt: current.observedAt, confirmedOnline: this.publicStatusOnline }).catch(() => {});
+      }
+    }
     if (wentOffline && !plannedDowntime) await this.sendPublicOfflineAlert(current);
-    return this.refreshPublicStatus({ status: current, backups: backupRows, update, moveToBottom: options.moveToBottom === true || (wentOffline && !plannedDowntime) });
+    return this.refreshPublicStatus({ status: publicStatusForDisplay(current, this.publicStatusOnline), backups: backupRows, update, moveToBottom: options.moveToBottom === true || (wentOffline && !plannedDowntime) });
   }
   async sendPublicOfflineAlert(status) {
     const channel = await this.getChannel('publicStatus'); if (!channel?.isTextBased()) return null;
@@ -755,7 +788,7 @@ export class DiscordBot {
       finally { transientTimer(() => this.expectedPublicStatusDeletes.delete(oldId), 5000); }
       this.publicStatusMessage = null; this.publicStatusMessageId = null; this.publicStatusChannelId = null;
     }
-    const status = options.status || await this.controller.status();
+    const status = publicStatusForDisplay(options.status || await this.controller.status(), this.publicStatusOnline);
     const careerPromise = options.careerStats
       ? Promise.resolve(options.careerStats)
       : (typeof this.universe.careerStats === 'function' ? this.universe.careerStats().catch(() => null) : Promise.resolve(null));
@@ -764,6 +797,7 @@ export class DiscordBot {
     const latestBackup = backups?.[0] || null;
     const coreKey = JSON.stringify({
       online: status?.online === true,
+      observation: status?.processObservation?.state || null,
       ready: status?.ready === true,
       players: Number.isFinite(Number(status?.playerCount)) ? Number(status.playerCount) : null,
       update: update ? [deploymentDisplayState(update), update.status === 'failed' ? update.error : null] : null
@@ -1152,7 +1186,7 @@ export class DiscordBot {
       const backup = interaction.options.getString('backup'); const relative = interaction.options.getString('path'); const expected = `RECOVER ${backup} ${relative}`; const confirmation = interaction.options.getString('confirm');
       if (confirmation !== expected) return interaction.reply({ content: `Exact confirmation required: \`${expected}\``, ephemeral: true });
       await interaction.deferReply({ ephemeral: false }); const status = await this.controller.status();
-      if (status.online) return interaction.editReply({ content: 'Server must be offline for safe asset recovery. No files changed.' });
+      if (status.online !== false) return interaction.editReply({ content: 'Server must be confirmed offline for safe asset recovery. No files changed.' });
       const result = sub === 'recover-vessel'
         ? await this.universe.recoverVessel(backup, relative, { maintenance: this.maintenance, serverOffline: true })
         : await this.universe.recoverScenario(backup, relative, { maintenance: this.maintenance, serverOffline: true });
@@ -1166,7 +1200,7 @@ export class DiscordBot {
       if (!this.maintenance) return interaction.reply({ content: 'Enable maintenance mode first.', ephemeral: true });
       const backup = interaction.options.getString('id'); const expected = `RESTORE ${backup}`; const confirmation = interaction.options.getString('confirm');
       if (confirmation !== expected) return interaction.reply({ content: `Exact confirmation required: \`${expected}\``, ephemeral: true });
-      await interaction.deferReply({ ephemeral: false }); const status = await this.controller.status(); if (status.online) return interaction.editReply({ content: 'Server must be offline for full restore. No files changed.' });
+      await interaction.deferReply({ ephemeral: false }); const status = await this.controller.status(); if (status.online !== false) return interaction.editReply({ content: 'Server must be confirmed offline for full restore. No files changed.' });
       const result = await this.universe.restore(backup, confirmation, { maintenance: this.maintenance, serverOffline: true }); await this.audit(interaction, 'universe-restore', result);
       return interaction.editReply({ content: `Universe restored from ${backup}. Rollback copy retained at ${result.rollbackRoot}.` });
     }
@@ -1175,7 +1209,7 @@ export class DiscordBot {
       if (!this.maintenance) return interaction.reply({ content: 'Enable maintenance mode first.', ephemeral: true });
       const point = interaction.options.getString('point'); const expected = `ROLLBACK ${point}`; const confirmation = interaction.options.getString('confirm');
       if (confirmation !== expected) return interaction.reply({ content: `Exact confirmation required: \`${expected}\``, ephemeral: true });
-      await interaction.deferReply({ ephemeral: false }); const status = await this.controller.status(); if (status.online) return interaction.editReply({ content: 'Server must be offline for rollback. No files changed.' });
+      await interaction.deferReply({ ephemeral: false }); const status = await this.controller.status(); if (status.online !== false) return interaction.editReply({ content: 'Server must be confirmed offline for rollback. No files changed.' });
       const result = await this.universe.rollback(point, confirmation, { maintenance: this.maintenance, serverOffline: true }); await this.audit(interaction, 'universe-rollback', result);
       return interaction.editReply({ content: `Universe rolled back to ${point}. Displaced current copy retained at ${result.displacedCurrent}.` });
     }

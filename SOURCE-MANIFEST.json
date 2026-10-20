@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-19T10:04:39.2075439Z",
+  "createdUtc": "2026-10-20T01:00:25.687Z",
   "publication": "Reviewed source update; ordinary source pushes do not deploy",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -26502,10 +26502,10 @@
       "path": "APFDiscordBot/src/bot.js",
       "source": "APFDiscordBot/src/bot.js",
       "role": "Discord integration source/tests/operator scripts",
-      "bytes": 109001,
-      "sha256": "87744ab9d3349bfdc6a79ea5a82822f5fcb5165a07cb651dae4ba0bf98473571",
-      "sourceSha256": "87744ab9d3349bfdc6a79ea5a82822f5fcb5165a07cb651dae4ba0bf98473571",
-      "sourceModifiedUtc": "2026-10-16T03:17:19.0504257Z",
+      "bytes": 111492,
+      "sha256": "34d8bb1a847bc2370fe1dcedd3541860b82b214c1cb0cfe644da6f78dc995317",
+      "sourceSha256": "34d8bb1a847bc2370fe1dcedd3541860b82b214c1cb0cfe644da6f78dc995317",
+      "sourceModifiedUtc": "2026-10-20T00:59:50.698Z",
       "transformations": []
     },
     {
@@ -26542,10 +26542,10 @@
       "path": "APFDiscordBot/src/health.js",
       "source": "APFDiscordBot/src/health.js",
       "role": "Discord integration source/tests/operator scripts",
-      "bytes": 9942,
-      "sha256": "41f1bf3d8bc83404d3ca0f3fbe5a96072c534d32aec0d6450f75e077cb9e46b0",
-      "sourceSha256": "41f1bf3d8bc83404d3ca0f3fbe5a96072c534d32aec0d6450f75e077cb9e46b0",
-      "sourceModifiedUtc": "2026-08-27T22:41:45.2474737Z",
+      "bytes": 12561,
+      "sha256": "e7df76ae2c5a42c015e623ad3d32a67227e7649c55aa4bd237ec903e44cd6dc5",
+      "sourceSha256": "e7df76ae2c5a42c015e623ad3d32a67227e7649c55aa4bd237ec903e44cd6dc5",
+      "sourceModifiedUtc": "2026-10-20T00:59:50.695Z",
       "transformations": []
     },
     {
@@ -26572,10 +26572,10 @@
       "path": "APFDiscordBot/src/lmp.js",
       "source": "APFDiscordBot/src/lmp.js",
       "role": "Discord integration source/tests/operator scripts",
-      "bytes": 52997,
-      "sha256": "e4b331b2d4fa4ca14dde50b57e535733fafee0838efaefa30d6d25e6556ced87",
-      "sourceSha256": "e4b331b2d4fa4ca14dde50b57e535733fafee0838efaefa30d6d25e6556ced87",
-      "sourceModifiedUtc": "2026-10-19T10:01:12.0453573Z",
+      "bytes": 55346,
+      "sha256": "b2de5b5a02242f0d90a636bf053d026f7ec46cbba15202cb2558a953a374fb0c",
+      "sourceSha256": "b2de5b5a02242f0d90a636bf053d026f7ec46cbba15202cb2558a953a374fb0c",
+      "sourceModifiedUtc": "2026-10-20T00:56:47.528Z",
       "transformations": []
     },
     {
@@ -26642,10 +26642,10 @@
       "path": "APFDiscordBot/src/update-manager.js",
       "source": "APFDiscordBot/src/update-manager.js",
       "role": "Discord integration source/tests/operator scripts",
-      "bytes": 29477,
-      "sha256": "08f9ac496053a7d7c2beb31c656533d05ad15383adcd1b775ad8f446a4e53809",
-      "sourceSha256": "08f9ac496053a7d7c2beb31c656533d05ad15383adcd1b775ad8f446a4e53809",
-      "sourceModifiedUtc": "2026-10-18T07:59:41.1295572Z",
+      "bytes": 29810,
+      "sha256": "32817f3b38d3a2134972f8dc8e4c5caa03bac97c92c3e3ec782ab326969a43f6",
+      "sourceSha256": "32817f3b38d3a2134972f8dc8e4c5caa03bac97c92c3e3ec782ab326969a43f6",
+      "sourceModifiedUtc": "2026-10-20T00:56:47.533Z",
       "transformations": []
     },
     {
@@ -26682,10 +26682,10 @@
       "path": "APFDiscordBot/test/elevated-process.test.js",
       "source": "APFDiscordBot/test/elevated-process.test.js",
       "role": "Discord integration source/tests/operator scripts",
-      "bytes": 4035,
-      "sha256": "f2963192d37cf061507af556112460ed10559e845d4e24e6056b62afedd3673f",
-      "sourceSha256": "f2963192d37cf061507af556112460ed10559e845d4e24e6056b62afedd3673f",
-      "sourceModifiedUtc": "2026-10-19T10:01:12.6838714Z",
+      "bytes": 5917,
+      "sha256": "51ae2cc0cbfb9cff31f2a27690e22b1f018c888060b71164b8810f071ed228bb",
+      "sourceSha256": "51ae2cc0cbfb9cff31f2a27690e22b1f018c888060b71164b8810f071ed228bb",
+      "sourceModifiedUtc": "2026-10-20T00:55:08.116Z",
       "transformations": []
     },
     {
@@ -26702,20 +26702,20 @@
       "path": "APFDiscordBot/test/kesas.test.js",
       "source": "APFDiscordBot/test/kesas.test.js",
       "role": "Discord integration source/tests/operator scripts",
-      "bytes": 8657,
-      "sha256": "bf5a02ea0fa149d733ad499e16604971f2b9d8096eee0cd5636f6e6d6285e740",
-      "sourceSha256": "bf5a02ea0fa149d733ad499e16604971f2b9d8096eee0cd5636f6e6d6285e740",
-      "sourceModifiedUtc": "2026-10-18T07:59:41.1316133Z",
+      "bytes": 9417,
+      "sha256": "2339b2bcd50f6c0cea2bbb8529025e2d34c419dbd8cd0e604e69da5b2ffab8c7",
+      "sourceSha256": "1674d5b0d5de61827c409ff364fd897e5402e53e55aecb19041d90c8eb68fe5b",
+      "sourceModifiedUtc": "2026-10-20T01:00:24.659Z",
       "transformations": []
     },
     {
       "path": "APFDiscordBot/test/smoke.test.js",
       "source": "APFDiscordBot/test/smoke.test.js",
       "role": "Discord integration source/tests/operator scripts",
-      "bytes": 113638,
-      "sha256": "d0d2f214d8eefcd63dd51ed712bea3c48357edfc5cc3e9f11f63e128d76c9da2",
-      "sourceSha256": "900b5b2b310280ff4ff719ab64790a98733a6feee5c86a41913dcaf704cb6dab",
-      "sourceModifiedUtc": "2026-10-18T05:41:15.0788328Z",
+      "bytes": 114262,
+      "sha256": "c0b25b633d5ad064b40b32b8880e8bc21fb45da11aa770635fa021160d109de3",
+      "sourceSha256": "1d8f662d82915c1ad96202c9cff72bd975af5ceeebf29d26ba7221fdce3fec6e",
+      "sourceModifiedUtc": "2026-10-20T01:00:24.663Z",
       "transformations": [
         "absolute workspace root replaced by ."
       ]
@@ -28086,9 +28086,19 @@
       "sourceSha256": "bab0ca3bb9e42596392f218185ecd90b156f47ee8f1cdd9784b58512237c7854",
       "sourceModifiedUtc": "2026-10-18T19:14:49.120412+00:00",
       "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/test/offline-alerts.test.js",
+      "source": "APFDiscordBot/test/offline-alerts.test.js",
+      "role": "Discord bot regression test source",
+      "transformations": [],
+      "bytes": 8344,
+      "sha256": "20020248842d06a2b503cb19fdf99cc4953eec57894d0ad022060fc6bb8b2de0",
+      "sourceSha256": "20020248842d06a2b503cb19fdf99cc4953eec57894d0ad022060fc6bb8b2de0",
+      "sourceModifiedUtc": "2026-10-20T00:59:50.699Z"
     }
   ],
-  "totalFileBytes": 15842056,
+  "totalFileBytes": 15861458,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",
@@ -28107,5 +28117,5 @@
     "report": "PRIVACY-SCAN.json",
     "limitation": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
   },
-  "fileCount": 2809
+  "fileCount": 2810
 }

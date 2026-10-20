@@ -1,5 +1,6 @@
 const ISSUE_EVENT = Object.freeze({
   'server-offline': { enter: 'server-offline', exit: 'server-online', enterMessage: 'LMP server went offline.', exitMessage: 'LMP server is online again.' },
+  'status-observation': { enter: 'status-unavailable', exit: 'status-restored', enterMessage: 'Server status is temporarily unavailable.', exitMessage: 'Server status is available again.' },
   'startup-readiness': { enter: 'readiness-lost', exit: 'readiness-restored', enterMessage: 'LMP startup readiness is not confirmed.', exitMessage: 'LMP startup readiness confirmed.' },
   'master-registration': { enter: 'registration-lost', exit: 'registration-restored', enterMessage: 'LMP master registration is not confirmed.', exitMessage: 'LMP master registration confirmed.' },
   'master-listing': { enter: 'master-lost', exit: 'master-visible', enterMessage: 'LMP server disappeared from the master listing.', exitMessage: 'LMP server is visible in the master listing again.' },
@@ -39,6 +40,10 @@ export function healthIssues(status) {
     issues.set(code, { code, severity: issueSeverity(code, source), message: issueMessage(code, raw) });
   };
 
+  if (status?.processObservation?.state === 'unknown') {
+    add('status-observation', 'server status unavailable');
+    return [...issues.values()];
+  }
   if (!status || status.online !== true) {
     add('server-offline', 'server offline');
     return [...issues.values()];
@@ -171,6 +176,10 @@ export class HealthMonitor {
 
   update(status) {
     if (!status) return [];
+    if (status.processObservation?.state === 'unknown') {
+      this.candidateKey = null; this.candidateStatus = null; this.candidateCount = 0;
+      return [];
+    }
     if (!this.stableStatus) { this.stableStatus = status; return []; }
     const currentKey = healthKey(status);
     if (currentKey === healthKey(this.stableStatus)) {
@@ -186,6 +195,44 @@ export class HealthMonitor {
     this.stableStatus = this.candidateStatus;
     this.candidateKey = null; this.candidateStatus = null; this.candidateCount = 0;
     return healthTransitions(previous, this.stableStatus);
+  }
+}
+
+// The same snapshot is published more than once per poll. Only distinct,
+// chronologically ordered observations separated in real time can confirm an
+// outage or re-arm its alert after recovery. Unknown observations break a run.
+export class PublicAvailabilityMonitor {
+  constructor(options = {}, now = Date.now) {
+    this.now = now;
+    this.failureConfirmations = Math.max(3, Number(options.publicOfflineConfirmations) || 3);
+    this.failureGraceMs = Math.max(30000, Number(options.publicOfflineGraceMs) || 30000);
+    this.recoveryConfirmations = 2;
+    this.recoveryGraceMs = 10000;
+    this.lastObservedAt = -Infinity;
+    this.candidate = null;
+  }
+
+  update(status, previousOnline, { planned = false } = {}) {
+    const observed = status?.observedAt ? Date.parse(status.observedAt) : this.now();
+    const unchanged = { online: previousOnline, wentOffline: false };
+    if (!Number.isFinite(observed) || observed <= this.lastObservedAt || observed > this.now() + 2000) return unchanged;
+    this.lastObservedAt = observed;
+    if (planned) { this.candidate = null; return unchanged; }
+    const state = status?.processObservation?.state || (typeof status?.online === 'boolean' ? (status.online ? 'online' : 'offline') : 'unknown');
+    if (state === 'unknown') { this.candidate = null; return unchanged; }
+    const online = state === 'online';
+    if (online === previousOnline || (previousOnline === null && online)) {
+      this.candidate = null;
+      return { online, wentOffline: false };
+    }
+    if (this.candidate?.online !== online || observed - this.candidate.lastAt > 120000) this.candidate = { online, since: observed, lastAt: observed, count: 0 };
+    this.candidate.count++;
+    this.candidate.lastAt = observed;
+    const required = online ? this.recoveryConfirmations : this.failureConfirmations;
+    const grace = online ? this.recoveryGraceMs : this.failureGraceMs;
+    if (this.candidate.count < required || observed - this.candidate.since < grace) return unchanged;
+    this.candidate = null;
+    return { online, wentOffline: previousOnline === true && !online };
   }
 }
 

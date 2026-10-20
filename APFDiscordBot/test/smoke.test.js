@@ -1200,8 +1200,9 @@ test('public status moves below new messages and sends one offline ping per outa
   let scheduled = 0; bot.schedulePublicStatusMove = () => { scheduled++; };
   await bot.handleMessage({ channelId: 'public', author: { id: 'human', bot: false }, embeds: [] }); assert.equal(scheduled, 1);
   bot.publicStatusOnline = true;
-  await bot.syncPublicStatus(offline, [backup]);
-  await bot.syncPublicStatus(offline, [backup]);
+  const pollAt = Date.now();
+  bot.publicAvailabilityMonitor.now = () => pollAt + 45000;
+  for (const seconds of [0, 15, 30, 45]) await bot.syncPublicStatus({ ...offline, observedAt: new Date(pollAt + seconds * 1000).toISOString() }, [backup]);
   const alerts = sent.filter(payload => typeof payload.content === 'string' && payload.content.includes('went offline'));
   assert.equal(alerts.length, 1); assert.match(alerts[0].content, /<@545068258508931082>/); assert.ok(edits >= 1);
   bot.stop(); await fs.rm(temp, { recursive: true, force: true });
@@ -1222,7 +1223,9 @@ test('planned update downtime suppresses the public offline ping', async () => {
   await bot.syncPublicStatus({ online: false }, [], { update: { status: 'deploying', phase: 'stopping' } });
   assert.equal(alerts, 0);
   bot.publicStatusOnline = true;
-  await bot.syncPublicStatus({ online: false }, [], { update: { status: 'idle' } });
+  const pollAt = Date.now();
+  bot.publicAvailabilityMonitor.now = () => pollAt + 60000;
+  for (const seconds of [15, 30, 45, 60]) await bot.syncPublicStatus({ online: false, observedAt: new Date(pollAt + seconds * 1000).toISOString() }, [], { update: { status: 'idle' } });
   assert.equal(alerts, 1);
   await fs.rm(temp, { recursive: true, force: true });
 });

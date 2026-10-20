@@ -17,7 +17,7 @@ async function fixture(t) {
   let calls = 0;
   const controller = new LmpController({ lmp: { serverRoot: path.join(root, 'Server'), deploymentRoot: root, port: 18865 } }, {
     now: () => now,
-    powershellJson: async () => ++calls === 1 ? [] : observation
+    powershellJson: async script => { calls++; return script.includes('$target=') ? [process] : observation; }
   });
   const save = async () => {
     await writeJsonAtomic(path.join(controller.bridgeRoot, 'ready.json'), ready);
@@ -74,10 +74,49 @@ test('elevated KESAS discovery rejects bridge replacement during OS inspection',
   const f = await fixture(t);
   let calls = 0;
   f.controller.powershellJson = async () => {
-    if (++calls === 1) return [];
+    if (++calls === 1) return [f.process];
     f.ready.startedAt = new Date(f.now - 10000).toISOString();
     await f.save();
     return f.observation;
   };
   assert.equal(await f.controller.processInfo(), null);
+});
+
+test('stale bridge is unknown, never proof of an offline server', async t => {
+  const f = await fixture(t);
+  f.live.updatedAt = new Date(f.now - 60000).toISOString();
+  await f.save();
+  const observation = await f.controller.observeProcess();
+  assert.equal(observation.state, 'unknown');
+  assert.equal(observation.reason, 'bridge-status-stale');
+  assert.equal(observation.process, null, 'strict lifecycle identity must still reject stale evidence');
+});
+
+test('failed OS query and unreadable bridge remain unknown', async t => {
+  const f = await fixture(t);
+  f.controller.powershellJson = async () => { throw Object.assign(new Error('query unavailable'), { code: 'EACCES' }); };
+  const result = await f.controller.observeProcess();
+  assert.equal(result.state, 'unknown');
+  assert.equal(result.process, null);
+  await fs.rm(path.join(f.controller.bridgeRoot, 'status.json'));
+  assert.equal((await f.controller.observeProcess()).state, 'unknown');
+});
+
+test('only a successful process enumeration proves that the server is absent', async t => {
+  const f = await fixture(t);
+  f.controller.powershellJson = async () => [];
+  assert.deepEqual(await f.controller.observeProcess(), { state: 'offline', reason: 'process-not-found', process: null });
+});
+
+test('unknown status exposes no authoritative zero player count', async t => {
+  const f = await fixture(t);
+  f.live.updatedAt = new Date(f.now - 60000).toISOString();
+  await f.save();
+  const status = await f.controller.status();
+  assert.equal(status.online, null);
+  assert.equal(status.processObservation.state, 'unknown');
+  assert.equal(status.playerCount, null);
+  assert.equal(status.connectedCount, null);
+  assert.equal(status.playerCountSource, 'unknown');
+  assert.equal(status.healthIssues.some(issue => issue.code === 'server-offline'), false);
 });
