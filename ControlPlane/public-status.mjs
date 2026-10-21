@@ -13,7 +13,56 @@ export function crc32(bytes) {
 export function statusZip(report) {
   const data = Buffer.from(JSON.stringify(validateHostReport(report)));
   if (data.length > 32768) throw new Error('Host status exceeds limit');
-  const name = Buffer.from('host-status.json');
+  return singleEntryZip('host-status.json',data);
+}
+const DIAGNOSTIC_NATIVE_STAGES = ['request-validation','intent-authentication','archive-copy','fixed-verifier','publisher-validation','publisher-execution','completion-health','awaiting-new-guard','guard-admission','preparation-signing','media-publication','native-activation','github-completion'];
+const DIAGNOSTIC_WATCHER_STAGES = ['channel-observation','requirements','active-health','intent-authentication','archive-download','archive-staging','queue-admission'];
+const diagnosticMatch = (value,pattern) => typeof value === 'string' && pattern.exec(value)?.[0] === value;
+const diagnosticHash = value => diagnosticMatch(value,/^[a-f0-9]{64}$/);
+const diagnosticCommit = value => value === null || diagnosticMatch(value,/^[a-f0-9]{40}$/);
+const diagnosticVersion = value => diagnosticMatch(value,/^kesas-rc[1-9][0-9]{0,14}$/);
+const diagnosticDate = value => diagnosticMatch(value,/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/) && Number.isFinite(Date.parse(value));
+const diagnosticObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+
+export function diagnosticsZip(report) {
+  const bootstrap = report?.bootstrap, watcher = report?.watcher, native = report?.native, recovery = report?.recovery;
+  if (!diagnosticObject(report) || report.schemaVersion !== 1 || !diagnosticDate(report.observedAt) || !diagnosticDate(report.expiresAt) ||
+      !diagnosticMatch(report.controlVersion,/^control-[1-9][0-9]{0,8}$/) || !diagnosticObject(bootstrap) || !diagnosticObject(watcher) ||
+      ![bootstrap.nativeAgentSha256,bootstrap.publisherWrapperSha256].every(value => value === null || diagnosticHash(value)) ||
+      ![0,1].includes(bootstrap.nativeRecoveryVersion) || (bootstrap.nativeRecoveryVersion === 1 && (!diagnosticHash(bootstrap.nativeAgentSha256) || !diagnosticHash(bootstrap.publisherWrapperSha256))) ||
+      !(watcher.stage === null || DIAGNOSTIC_WATCHER_STAGES.includes(watcher.stage)) ||
+      !(watcher.reason === null || (watcher.stage !== null && watcher.reason === `${watcher.stage}-failed`)) ||
+      !(watcher.version === null || diagnosticVersion(watcher.version)) || !diagnosticCommit(watcher.sourceCommit) ||
+      ![watcher.manifestSha256,watcher.archiveSha256].every(value => value === null || diagnosticHash(value))) throw new Error('Invalid host diagnostics');
+  let publication = null;
+  if (native !== null) {
+    if (!diagnosticObject(native) || !diagnosticHash(native.requestId) || !diagnosticVersion(native.version) ||
+        !diagnosticHash(native.archiveSha256) || !diagnosticCommit(native.sourceCommit) || !diagnosticHash(native.resultSha256) ||
+        !['accepted','recovery-authorized','applying','healthy','blocked'].includes(native.phase) || !DIAGNOSTIC_NATIVE_STAGES.includes(native.stage) ||
+        ![null,'native-publication-blocked'].includes(native.reason) ||
+        !(native.exitCode === null || (Number.isInteger(native.exitCode) && native.exitCode >= -2147483648 && native.exitCode <= 2147483647)) ||
+        !Number.isInteger(native.attempt) || native.attempt < 1 || native.attempt > 1000000 ||
+        !(native.recoveryAction === null || (native.recoveryAction === 'retry-preactivation' && native.phase === 'blocked' && DIAGNOSTIC_NATIVE_STAGES.slice(0,5).includes(native.stage)))) throw new Error('Invalid host diagnostics');
+    publication = {requestId:native.requestId,version:native.version,archiveSha256:native.archiveSha256,sourceCommit:native.sourceCommit,
+      resultSha256:native.resultSha256,phase:native.phase,stage:native.stage,reason:native.reason,exitCode:native.exitCode,attempt:native.attempt,recoveryAction:native.recoveryAction};
+  }
+  let recoveryObservation = null;
+  if (recovery !== null) {
+    if (!diagnosticObject(recovery) || !diagnosticHash(recovery.recoveryId) || !diagnosticHash(recovery.requestId) ||
+        !diagnosticCommit(recovery.commit) || !['received','authorized','blocked'].includes(recovery.status) ||
+        ![null,'recovery-not-authorized'].includes(recovery.reason)) throw new Error('Invalid host diagnostics');
+    recoveryObservation = {recoveryId:recovery.recoveryId,requestId:recovery.requestId,commit:recovery.commit,status:recovery.status,reason:recovery.reason};
+  }
+  // Project every public field explicitly; private journal extensions never escape.
+  const data = Buffer.from(JSON.stringify({schemaVersion:1,observedAt:report.observedAt,expiresAt:report.expiresAt,controlVersion:report.controlVersion,
+    bootstrap:{nativeAgentSha256:bootstrap.nativeAgentSha256,publisherWrapperSha256:bootstrap.publisherWrapperSha256,nativeRecoveryVersion:bootstrap.nativeRecoveryVersion},
+    watcher:{stage:watcher.stage,reason:watcher.reason,version:watcher.version,sourceCommit:watcher.sourceCommit,manifestSha256:watcher.manifestSha256,archiveSha256:watcher.archiveSha256},
+    native:publication,recovery:recoveryObservation}));
+  if (data.length > 32768) throw new Error('Host diagnostics exceeds limit');
+  return singleEntryZip('host-diagnostics.json',data);
+}
+function singleEntryZip(filename,data) {
+  const name = Buffer.from(filename);
   const local = Buffer.alloc(30); local.writeUInt32LE(0x04034b50); local.writeUInt16LE(20,4);
   local.writeUInt32LE(crc32(data),14); local.writeUInt32LE(data.length,18); local.writeUInt32LE(data.length,22); local.writeUInt16LE(name.length,26);
   const central = Buffer.alloc(46); central.writeUInt32LE(0x02014b50); central.writeUInt16LE(20,4); central.writeUInt16LE(20,6);
@@ -64,7 +113,7 @@ export async function publicMediaInventory(directory, previous = {}) {
   const stamp = stat => `${stat.dev}:${stat.ino}:${stat.size}:${stat.mtimeMs}:${stat.ctimeMs}`;
   const regular = stat => { if (!stat.isFile() || stat.isSymbolicLink()) throw new Error('Unsafe public archive'); return stat; };
   const next = {};
-  const names = (await fs.readdir(directory)).filter(name => /^kesas-.*\.zip$/.test(name) && name !== 'kesas-host-status.zip').sort();
+  const names = (await fs.readdir(directory)).filter(name => /^kesas-.*\.zip$/.test(name) && !['kesas-host-status.zip','kesas-host-diagnostics.zip'].includes(name)).sort();
   for (const name of names) {
     const file = path.join(directory, name);
     const before = regular(await fs.lstat(file));

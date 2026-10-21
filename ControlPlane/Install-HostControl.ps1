@@ -38,7 +38,7 @@ $powerShellHome=Split-Path -Parent $PowerShell
 if(-not (Test-Path -LiteralPath "$powerShellHome/pwsh.dll") -or -not (Test-Path -LiteralPath "$powerShellHome/System.Management.Automation.dll")){throw 'A complete provisioned PowerShell runtime is required.'}
 Copy-UpdateTree $powerShellHome "$root/bootstrap/PowerShell7"
 $protectedPowerShell=Join-Path $root 'bootstrap/PowerShell7/pwsh.exe'
-foreach($name in @('bootstrap.mjs','engine.mjs','contract.mjs','github.mjs','public-status.mjs','native-agent.mjs','Expand-ControlBundle.ps1','Probe-NativeIdle.ps1','Read-ClientInventory.ps1','Start-ControlHost.ps1','Start-NativeAgent.ps1','Start-NativeServer.ps1','Provision-ControlTasks.ps1')){Copy-UpdateAtomic "$PSScriptRoot/$name" "$root/bootstrap/$name"}
+foreach($name in @('bootstrap.mjs','engine.mjs','contract.mjs','github.mjs','public-status.mjs','native-agent.mjs','Invoke-NativePublisher.ps1','Expand-ControlBundle.ps1','Probe-NativeIdle.ps1','Read-ClientInventory.ps1','Start-ControlHost.ps1','Start-NativeAgent.ps1','Start-NativeServer.ps1','Provision-ControlTasks.ps1')){Copy-UpdateAtomic "$PSScriptRoot/$name" "$root/bootstrap/$name"}
 foreach($name in @('Publish-Release','Update.Common','GitHub.Publish','Export-Client','Start-Server','Stop-Server')){Copy-UpdateAtomic "$source/KESAS-VPS-Server/$name.ps1" "$root/bootstrap/native/$name.ps1"}
 Copy-UpdateAtomic "$source/APFDiscordBot/scripts/Verify-KesasRelease.ps1" "$root/bootstrap/Verify-KesasRelease.ps1"
 $settings=[ordered]@{root=$root;botRoot=$bot;nativeRoot=$native;powershell=$protectedPowerShell;node=$Node;npm=$npm;runtime=[ordered]@{node=$nodeVersion;powershell=$psVersion;dotnet=$dotnet}}

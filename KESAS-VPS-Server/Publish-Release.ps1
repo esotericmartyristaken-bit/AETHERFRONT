@@ -2,6 +2,10 @@
 param([Parameter(Mandatory=$true)][string]$ReleaseZip,[string]$Notes='KESAS update',[switch]$AllowActivePlayers,[string]$DeploymentRoot=$env:APF_NATIVE_ROOT)
 . "$PSScriptRoot/Update.Common.ps1"
 
+function Write-PublisherStage([string]$Stage) {
+    Write-Information -MessageData $Stage -Tags 'Aetherfront-PublisherStage' -InformationAction Continue
+}
+
 function Add-ReleaseMedia([string]$ReleaseRoot,[string]$ConfigRoot,$Release,$Catalog) {
     # Only additive, content-addressed public archives. Operator configuration,
     # existing media, state and keys are never replacement targets here.
@@ -146,10 +150,12 @@ $wasRunning=$false
 $githubPlan=$null
 $nativeReady=$false
 try{
+    Write-PublisherStage 'guard-admission'
     $releasePath=Assert-UpdatePath (Resolve-Path -LiteralPath $ReleaseZip).Path
     $releaseSha=(Get-FileHash -LiteralPath $releasePath -Algorithm SHA256).Hash.ToLowerInvariant()
     Assert-UpdateKeyPair $root
     if([IO.File]::Exists($journal)){
+        Write-PublisherStage 'github-completion'
         $pending=Read-UpdateText $journal | ConvertFrom-Json
         if(-not $pending.PSObject.Properties['phase'] -or $pending.phase -cne 'github-completion' -or $pending.schema -ne 1 -or
             $pending.releaseZipSha256 -cne $releaseSha -or $pending.version -cnotmatch '^kesas-rc[1-9][0-9]*$'){
@@ -187,6 +193,7 @@ try{
     }
     Assert-UpdateActiveFeed $root $cfg
     $wasRunning=@(Get-UpdateServiceProcesses $root $cfg).Count -gt 0
+    Write-PublisherStage 'preparation-signing'
     Expand-UpdateArchive $releasePath "$stage/Release"
     $releaseText=Read-UpdateText "$stage/Release/RELEASE.json"
     Assert-ReleaseJsonUnique $releaseText
@@ -266,6 +273,7 @@ try{
         Assert-PublisherPrepared $prepared $fingerprint $version
         $githubPlan=New-GitHubPublicationPlan -Repository $githubSettings.Value.repository -MediaTag $githubSettings.Value.mediaTag -PublishedDirectory "$prepared/Published" -BootstrapZip "$prepared/Aetherfront-Starter-$version.zip" -CatalogPath "$prepared/install-catalog.json" -MediaDirectory "$root/Server/Config"
         if((Get-FileHash -LiteralPath $releasePath -Algorithm SHA256).Hash -ine $releaseSha){throw 'Source release changed during preparation; no GitHub mutation requested.'}
+        Write-PublisherStage 'media-publication'
         Prepare-GitHubPublication -Plan $githubPlan
     }
     $targets=@(
@@ -289,10 +297,12 @@ try{
         $destination=Get-UpdateChildPath $root $item.relative
         if([IO.Directory]::Exists($destination)){throw "Expected a file destination: $($item.relative)"}
     }
+    Write-PublisherStage 'guard-admission'
     if($wasRunning){
         if(-not $AllowActivePlayers){Assert-PublisherEmpty $root $cfg}
         Wait-UpdateServerStopped $root $cfg;$stopped=$true
     }
+    Write-PublisherStage 'native-activation'
     $activationLock=New-Object IO.FileStream((Get-UpdateChildPath $root '.server.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
     $backup=Get-UpdateChildPath $root ("Backups/updates/$(Get-Date -Format 'yyyyMMdd-HHmmss-fff')-$version-"+[Guid]::NewGuid().ToString('N'))
     New-UpdateDirectory $backup
@@ -325,6 +335,7 @@ try{
         $nativeReady=$true
         $transaction.phase='github-completion'
         Write-UpdateAtomic $journal ($transaction|ConvertTo-Json -Depth 16)
+        Write-PublisherStage 'github-completion'
         Invoke-PublisherCompletion $githubPlan
     }
     [IO.File]::Delete($journal);$journalWritten=$false

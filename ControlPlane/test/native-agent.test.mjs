@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { fstatSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -13,6 +14,10 @@ import { digest, writeJson } from '../public-status.mjs';
 const commit = '1'.repeat(40), controlCommit = '2'.repeat(40);
 const bytes = Buffer.from('disposable application archive');
 const pin = 'a'.repeat(64);
+const recoveryUrl = `https://raw.githubusercontent.com/${REPOSITORY}/refs/heads/deploy/deployment/recovery.json`;
+function publicationUrls(state) {
+  return state.urls.filter(url => url !== recoveryUrl);
+}
 function request(overrides = {}) {
   const value = {schemaVersion:1,transactionVersion:1,version:'kesas-rc32',sha256:digest(bytes),sizeBytes:bytes.length,
     notes:'Reviewed release; spaces, quotes " and $ remain literal.',sourceCommit:commit,...overrides};
@@ -53,8 +58,11 @@ async function fixture(t, options = {}) {
   const value = request(options.request);
   const state = {idle:true,publish:0,verify:0,extract:0,health:0,calls:[],urls:[],pending:null};
   await fs.mkdir(path.join(settings.root,'native-cache'),{recursive:true});
+  await writeJson(path.join(settings.root,'host.json'),settings);
   await writeJson(path.join(bootstrap,'seed.json'),{pointer:initial.pointer,provenance:{commit:controlCommit}});
   await writeJson(path.join(settings.root,'active.json'),options.updatedControl ? next.pointer : initial.pointer);
+  await put(path.join(bootstrap,'native-agent.mjs'),'frozen native agent');
+  await put(path.join(bootstrap,'Invoke-NativePublisher.ps1'),'frozen publisher wrapper');
   await put(path.join(bootstrap,'native','Publish-Release.ps1'),'frozen publisher');
   await put(path.join(bootstrap,'native','Start-Server.ps1'),'frozen server starter');
   await put(path.join(bootstrap,'Verify-KesasRelease.ps1'),'frozen verifier');
@@ -77,6 +85,7 @@ async function fixture(t, options = {}) {
     assert.equal(init.redirect,'manual');
     assert.equal(Object.keys(init.headers).some(key => /authorization|cookie/i.test(key)),false);
     assert.equal(new URL(url).protocol,'https:');
+    if (url === recoveryUrl) return new Response('not found',{status:404});
     if (options.fetch) { const response = await options.fetch(url,init); if (response) return response; }
     if (url === `https://api.github.com/repos/${REPOSITORY}/git/ref/heads/deploy`)
       return Response.json({ref:'refs/heads/deploy',object:{type:'commit',sha:commit}});
@@ -91,11 +100,21 @@ async function fixture(t, options = {}) {
   const spawner = (file,args,spawnOptions) => {
     assert.equal(spawnOptions.shell,false); assert.equal(spawnOptions.windowsHide,true);
     assert.equal(spawnOptions.timeout,undefined); assert.equal(spawnOptions.killSignal,undefined);
-    assert.deepEqual(spawnOptions.stdio,['ignore',spawnOptions.detached ? 'ignore' : 'pipe','ignore']);
-    const child = new EventEmitter(); child.pid = 4242; child.stdout = new PassThrough();
+    const script = args.includes('-File') ? args[args.indexOf('-File')+1] : null;
+    if (script === path.join(bootstrap,'Invoke-NativePublisher.ps1')) {
+      assert.equal(spawnOptions.stdio.length,3); assert.equal(spawnOptions.stdio[0],'ignore');
+      for (const fd of spawnOptions.stdio.slice(1)) {
+        assert.ok(Number.isSafeInteger(fd) && fd >= 0);
+        assert.ok(fstatSync(fd).isFile());
+      }
+      assert.notEqual(spawnOptions.stdio[1],spawnOptions.stdio[2]);
+    } else assert.deepEqual(spawnOptions.stdio,['ignore','pipe','pipe']);
+    const child = new EventEmitter(); child.pid = 4242;
+    child.stdout = spawnOptions.stdio[1] === 'pipe' ? new PassThrough() : null;
+    child.stderr = spawnOptions.stdio[2] === 'pipe' ? new PassThrough() : null;
     child.kill = () => assert.fail('A native child must never be killed');
     state.calls.push({file,args,options:spawnOptions});
-    const complete = (code = 0, stdout = '') => { child.stdout.end(stdout); child.emit('exit',code,null); child.emit('close',code,null); };
+    const complete = (code = 0, stdout = '') => { child.stdout?.end(stdout); child.stderr?.end(); child.emit('exit',code,null); child.emit('close',code,null); };
     setImmediate(async () => {
       try {
         if (args.includes('-EncodedCommand')) {
@@ -107,7 +126,6 @@ async function fixture(t, options = {}) {
           assert.deepEqual(args,['--probe-server','https://127.0.0.1:18866/health',pin]);
           return complete(options.healthFailure ? 1 : 0,'private health output discarded');
         }
-        const script = args[args.indexOf('-File') + 1];
         if (script === path.join(bootstrap,'Verify-KesasRelease.ps1')) {
           state.verify++;
           assert.deepEqual(await fs.readFile(args[args.indexOf('-Archive')+1]),bytes);
@@ -123,21 +141,31 @@ async function fixture(t, options = {}) {
           if (options.tamperExtraction) await put(path.join(destination,'KESAS-VPS-Server','Publish-Release.ps1'),'unverified replacement');
           return complete();
         }
-        assert.equal(path.basename(script),'Publish-Release.ps1');
+        assert.equal(file,settings.powershell);
+        assert.equal(script,path.join(bootstrap,'Invoke-NativePublisher.ps1'));
+        const publisher = args[args.indexOf('-Publisher')+1];
+        assert.equal(path.basename(publisher),'Publish-Release.ps1');
         state.publish++;
-        assert.equal(spawnOptions.detached,true);
+        assert.equal(spawnOptions.detached,process.platform !== 'win32');
         assert.equal(spawnOptions.env.APF_SERVER_TASK,'KESAS Server');
+        assert.equal(spawnOptions.env.APF_CONTROL_ROOT,settings.root);
         assert.deepEqual(JSON.parse(await fs.readFile(path.join(settings.root,'native-cache','current-native.json'),'utf8')),
-          {directory:path.dirname(script),sha256:digest(await fs.readFile(path.join(path.dirname(script),'Start-Server.ps1')))});
-        assert.deepEqual(args.slice(4),['-DeploymentRoot',settings.nativeRoot,'-ReleaseZip',
+          {directory:path.dirname(publisher),sha256:digest(await fs.readFile(path.join(path.dirname(publisher),'Start-Server.ps1')))});
+        assert.deepEqual(args,['-NoProfile','-NonInteractive','-File',path.join(bootstrap,'Invoke-NativePublisher.ps1'),
+          '-Settings',path.join(settings.root,'host.json'),'-RequestId',value.id,'-Attempt','1','-Publisher',publisher,'-Archive',
           path.join(settings.root,'native-cache','applications',`${value.id}.zip`),'-Notes',value.notes,...(options.guarded ? ['-AllowActivePlayers'] : [])]);
         if (options.updatedControl) {
-          assert.ok(script.startsWith(path.join(settings.root,'native-cache','control')+path.sep));
-          assert.equal(script.includes(path.join(settings.root,'releases')),false);
-        } else assert.equal(script,path.join(bootstrap,'native','Publish-Release.ps1'));
-        if (options.holdPublisher) { state.pending = complete; return; }
+          assert.ok(publisher.startsWith(path.join(settings.root,'native-cache','control')+path.sep));
+          assert.equal(publisher.includes(path.join(settings.root,'releases')),false);
+        } else assert.equal(publisher,path.join(bootstrap,'native','Publish-Release.ps1'));
+        const completePublication = async (code = 0) => {
+          if (code === 0) await writeJson(path.join(settings.root,'native-cache','diagnostics',value.id,'1','receipt.json'),
+            {requestId:value.id,attempt:1,status:'succeeded',exitCode:0});
+          complete(code);
+        };
+        if (options.holdPublisher) { state.pending = completePublication; return; }
         if (!options.publishFailure) await active(value.version);
-        return complete(options.publishFailure ? 1 : 0);
+        return await completePublication(options.publishFailure ? 1 : 0);
       } catch (error) { state.childError = error; complete(1); }
     });
     return child;
@@ -183,12 +211,12 @@ test('fixed destination, protected archive, pinned health, safe result; duplicat
   assert.equal((await f.tick()).status,'healthy'); assert.equal(f.state.publish,1);
   const text = await fs.readFile(path.join(f.settings.root,'native-results',`${f.value.id}.json`),'utf8');
   assert.equal(text.includes(f.directory),false); assert.equal(text.includes(pin),false); assert.equal(text.includes('fixture-private-token'),false);
-  assert.equal(f.state.urls.length,1);
+  assert.equal(publicationUrls(f.state).length,1);
 });
 test('null sourceCommit resolves fixed deploy head, then authenticates pinned production descriptor', async t => {
   const f = await fixture(t,{request:{sourceCommit:null}});
   assert.equal((await f.tick()).status,'healthy');
-  assert.deepEqual(f.state.urls,[`https://api.github.com/repos/${REPOSITORY}/git/ref/heads/deploy`,
+  assert.deepEqual(publicationUrls(f.state),[`https://api.github.com/repos/${REPOSITORY}/git/ref/heads/deploy`,
     `https://raw.githubusercontent.com/${REPOSITORY}/${commit}/deployment/production.json`]);
 });
 test('schema 2 authenticated intent supported', async t => {
@@ -198,7 +226,7 @@ test('schema 2 authenticated intent supported', async t => {
 test('mismatched application intent blocks, never retries same id', async t => {
   const f = await fixture(t,{descriptor:{...deployment(),notes:'Different authorized notes'}});
   assert.equal((await f.tick()).status,'blocked'); assert.equal(f.state.publish,0); assert.equal(f.state.verify,0);
-  await f.enqueue(); assert.equal((await f.tick()).status,'blocked'); assert.equal(f.state.urls.length,1);
+  await f.enqueue(); assert.equal((await f.tick()).status,'blocked'); assert.equal(publicationUrls(f.state).length,1);
 });
 test('bad application hash or length cannot reach verifier/publisher', async t => {
   for (const archive of [Buffer.from('x'.repeat(bytes.length)),Buffer.from('short')]) {
@@ -217,7 +245,7 @@ test('duplicate JSON keys, invalid request id, payload arguments never execute',
 });
 test('anonymous GitHub transport rejects foreign HTTPS redirects and duplicate descriptor fields', async t => {
   const redirect = await fixture(t,{fetch:async () => new Response(null,{status:302,headers:{location:'https://evil.invalid/production.json'}})});
-  assert.equal((await redirect.tick()).status,'blocked'); assert.equal(redirect.state.urls.length,1);
+  assert.equal((await redirect.tick()).status,'blocked'); assert.equal(publicationUrls(redirect.state).length,1);
   const text = JSON.stringify(deployment()).replace('"schemaVersion":1','"schemaVersion":1,"schemaVersion":1');
   const duplicate = await fixture(t,{descriptorText:text});
   assert.equal((await duplicate.tick()).status,'blocked'); assert.equal(duplicate.state.publish,0);
@@ -250,6 +278,16 @@ test('recovery recognizes committed healthy application without rerunning publis
   const recovered = new NativeAgent(f.settings,{...f.agentOptions,fault:undefined});
   assert.equal((await recovered.tick()).status,'healthy'); assert.equal(f.state.publish,1); assert.equal(f.state.health,1);
 });
+test('recovery blocks committed application without private successful receipt', async t => {
+  const f = await fixture(t,{agentOptions:{fault:async phase => { if (phase === 'published') throw Object.assign(new Error('crash'),{simulatedCrash:true}); }}});
+  await assert.rejects(f.tick(),/crash/); assert.equal(f.state.publish,1);
+  await fs.unlink(path.join(f.settings.root,'native-cache','diagnostics',f.value.id,'1','receipt.json'));
+  const recovered = new NativeAgent(f.settings,{...f.agentOptions,fault:undefined});
+  const result = await recovered.tick();
+  assert.equal(result.status,'blocked'); assert.equal(result.failure,'native-publication-blocked');
+  assert.equal(f.state.publish,1); assert.equal(f.state.health,0);
+  assert.equal((await recovered.tick()).status,'blocked'); assert.equal(f.state.publish,1);
+});
 test('recovery waits for recorded starting child even before native OS lease is acquired', async t => {
   const f = await fixture(t,{agentOptions:{fault:async phase => { if (phase === 'published') throw Object.assign(new Error('crash'),{simulatedCrash:true}); }}});
   await assert.rejects(f.tick(),/crash/);
@@ -280,7 +318,7 @@ test('single owner stays held for asynchronous publisher; no second agent or tim
   const second = new NativeAgent(f.settings,f.agentOptions);
   assert.equal((await second.tick()).status,'busy');
   assert.equal((await f.agent.tick()).status,'busy');
-  await f.active(f.value.version); f.state.pending();
+  await f.active(f.value.version); await f.state.pending();
   assert.equal((await pending).status,'healthy'); assert.equal(f.state.publish,1);
 });
 test('public result forgery cannot suppress request verification or reset protected failure', async t => {
@@ -288,7 +326,7 @@ test('public result forgery cannot suppress request verification or reset protec
   await writeJson(path.join(f.settings.root,'native-results',`${f.value.id}.json`),{...f.value,status:'healthy'});
   assert.equal((await f.tick()).status,'blocked');
   await writeJson(path.join(f.settings.root,'native-results',`${f.value.id}.json`),{...f.value,status:'accepted'});
-  assert.equal((await f.tick()).status,'blocked'); assert.equal(f.state.urls.length,1);
+  assert.equal((await f.tick()).status,'blocked'); assert.equal(publicationUrls(f.state).length,1);
 });
 test('owner reclaim handles dead owner; live or uncertain owners cannot be stolen', async t => {
   const f = await fixture(t); const cache = path.join(f.settings.root,'native-cache');

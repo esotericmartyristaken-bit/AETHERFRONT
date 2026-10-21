@@ -23,6 +23,7 @@ maintenance.json           narrowly owned activation gate
 native-requests/            limited bot's declarative archive requests, not commands
 native-cache/               protected authenticated code, archives and broker journals
 native-results/             sanitized completion mirrors, not authorization
+native-capabilities.json    frozen broker/wrapper hashes and recovery protocol
 host-status.json            sanitized local readback
 ```
 
@@ -48,11 +49,11 @@ Capabilities: `application-v1`, `media-payload-v1`, `control-plane-v1`, `host-re
 | Certificate/signing update tools | `CertificateToolPayload/`, `UpdateToolPayload/` | Full tool/runtime/dependency inventory digests; operator keys are excluded |
 | Client bootstrap, in-game updater and post-exit helper | Signed `ClientTemplate.zip` application path | Bootstrap hash; verified updater DLL group and helper/embedded-helper assembly group hashes from the actual signed client ZIP |
 | Catalog and public mod archives | Pack template and additive `MediaPayload/` | Combined actual pack-document/install-catalog hash; canonical digest of public archive names and actual content hashes |
-| Fixed bootstrap and broker | Initial operator installation only | Bootstrap hash; bootstrap contract 1 |
+| Fixed bootstrap and broker | Reviewed host-local operator installation only | Bootstrap hash; explicit broker/wrapper hashes in diagnostics; bootstrap contract 1 and separately advertised native recovery protocol 1 |
 
 The public hash groups are not a claim that a mod DLL or KSP itself was launched during host acceptance tests. Client package file hashes remain in the signed feed. Source provenance and running code are distinct: only a completed host readback establishes activation.
 
-Public mod ZIPs may be hardlinked to the existing immutable pack cache. Their read-only inventory checks file identity and content timestamps before and after hashing; control code, journals and writes retain the strict no-hardlinks policy. The changing `kesas-host-status.zip` is excluded from the media digest.
+Public mod ZIPs may be hardlinked to the existing immutable pack cache. Their read-only inventory checks file identity and content timestamps before and after hashing; control code, journals and writes retain the strict no-hardlinks policy. The changing `kesas-host-status.zip` and `kesas-host-diagnostics.zip` are excluded from the media digest.
 
 ## Trust and prerequisites
 
@@ -67,6 +68,12 @@ Use the existing host certificate SHA256 from the trusted client bootstrap. Do n
 ```powershell
 # Fresh capability/current/pending/phase/health/hash/failure readback:
 node .\ControlPlane\controller.mjs status --origin https://217.216.49.250:18866 --pin PIN
+
+# Separate sanitized diagnostics, including failures before native handoff:
+node .\ControlPlane\controller.mjs diagnostics --origin https://217.216.49.250:18866 --pin PIN
+
+# Explicitly authorize one proved-safe, blocked pre-publisher retry:
+node .\ControlPlane\controller.mjs recover --origin https://217.216.49.250:18866 --pin PIN
 
 # Read the requested control channel (not proof of activation):
 node .\ControlPlane\controller.mjs read
@@ -98,6 +105,16 @@ Both watchers retain a minimum 60-second poll. Native application deployment ret
 Control staging validates the entire archive, allowed destinations, hashes and dependencies in a fresh directory. It waits for native idle and the native OS publisher lease, establishes its maintenance marker, drains both bot polling loops, then durably hands off. The fixed supervisor switches one pointer, checks replacement startup, and restores the known-good pointer on failure. A rollback intent precedes the rollback pointer so a reboot cannot revive a rejected candidate. Revisioned history repairs a process death between the two journal writes. Duplicate/completed/older transactions do not requeue publication.
 
 An orphaned applying publisher is never killed. The independent supervisor keeps a fresh blocked readback while waiting. The protected broker checks its durable result, recorded helper PID, native lease, active feed/pack and pinned health before recognizing completion. It never replays an ambiguous applying/native-activation operation. An interrupted native-activation journal remains blocked for operator recovery; deleting or clearing it is not a recovery method. Existing publisher GitHub-completion recovery remains available for the same verified bytes and notes after review.
+
+### Native diagnostics and recovery protocol 1
+
+The original host-report contract 1 is unchanged. A separate bounded STORE ZIP, `kesas-host-diagnostics.zip`, contains only `host-diagnostics.json` and expires after 150 seconds. It reports fixed watcher/native stages and reason codes, immutable request/archive/source identities, a result digest, exit code, attempt number and actual frozen broker/wrapper hashes. Watcher download/staging errors are reported even before a native request exists. Raw exceptions, output, notes, paths, player data and credentials are never included. Detailed capped stdout, stderr, exceptions and typed publisher receipts remain under protected `native-cache/diagnostics/REQUEST/`.
+
+`recover` is an explicit repository-authenticated request, not automatic failure replay. It writes `deployment/recovery.json` on `deploy`, with schema 1, a unique `recoveryId`, fixed action `retry-preactivation`, request/version/archive/source identity, the exact protected-result digest and a maximum one-hour validity. The frozen broker independently pins the branch commit, rereads those exact bytes, validates the original immutable application intent and archive, consumes the nonce in protected history, and refuses any helper/lease/journal activity, prepared version, non-older active release or unhealthy baseline. Only failed stages before a publisher PID could exist qualify. A fresh normal 15-minute queue or authoritative early-empty guard remains mandatory. The limited watcher cannot authorize recovery by editing a mirror.
+
+Publisher preparation, activation and GitHub-completion failures remain held for host review; this endpoint never guesses that they are safe to replay. A consumed/interrupted authorization remains audited and is not replayed. Download/staging failures before native handoff retain the watcher's existing safe polling behavior; recovery does not reset its attempt history. A waiting/cancelled recovery does not monopolize newer deployment requests.
+
+`nativeRecoveryVersion: 1` is advertised only when the frozen agent's capability receipt matches the actual installed broker and wrapper hashes. The privileged broker and wrapper still require an idle, reviewed host-local installation under normal UAC; publishing a control bundle or pushing source does not replace them. Windows launches the hidden publisher without Node's `detached` flag, using protected regular-file handles rather than parent-owned pipes. A successful private receipt bound to the exact request/archive is required before completion; process exit 0 or a matching version string alone is insufficient. No live process-death/fault experiment is implied by deployment verification.
 
 One fallback pointer is retained. Older immutable staging/release directories and transaction evidence are not automatically deleted; they are not additional selectable fallback slots. Disk-retention cleanup is a separate operator task.
 

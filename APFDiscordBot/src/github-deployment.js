@@ -10,6 +10,32 @@ const MANIFEST_PATH = 'deployment/production.json';
 const MAX_ARCHIVE = 512 * 1024 * 1024;
 const MAX_TEXT = 64 * 1024;
 const digest = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
+const DIAGNOSTIC_STAGES = Object.freeze({
+  'channel-observation': { error: 'channel-observation-failed', reasons: [] },
+  requirements: { error: 'requirements-failed', reasons: [] },
+  'active-health': { error: 'active-health-failed', reasons: ['native-failure', 'native-busy', 'current', 'older-version', 'active-version-superseded'] },
+  'intent-authentication': { error: 'intent-authentication-failed', reasons: ['channel-changed'] },
+  'archive-download': { error: 'archive-download-failed', reasons: ['download-started'] },
+  'archive-staging': { error: 'archive-staging-failed', reasons: [] },
+  'queue-admission': { error: 'queue-admission-failed', reasons: ['cancelled', 'previous-attempt', 'queue-requested', 'native-busy', 'queued', 'recovery-queued', 'recovery-rejected'] }
+});
+
+function sanitizeDiagnostic(value) {
+  if (!value || typeof value.stage !== 'string' || typeof value.reason !== 'string' || !Object.hasOwn(DIAGNOSTIC_STAGES, value.stage)) return null;
+  const allowed = DIAGNOSTIC_STAGES[value.stage];
+  if (value.reason !== allowed.error && !allowed.reasons.includes(value.reason)) return null;
+  const identity = (key, pattern) => typeof value[key] === 'string' && value[key].length <= 64 && pattern.exec(value[key])?.[0] === value[key] ? value[key] : null;
+  return {
+    schemaVersion: 1,
+    stage: value.stage,
+    reason: value.reason,
+    version: identity('version', /^kesas-rc[1-9][0-9]{0,14}$/),
+    sourceCommit: identity('sourceCommit', /^[a-f0-9]{40}$/),
+    manifestSha256: identity('manifestSha256', /^[a-f0-9]{64}$/),
+    archiveSha256: identity('archiveSha256', /^[a-f0-9]{64}$/),
+    requestId: null
+  };
+}
 
 export function releaseNumber(version) {
   if (typeof version !== 'string' || !/^kesas-rc[1-9][0-9]{0,14}$/.test(version)) throw new Error('Invalid deployment version');
@@ -141,6 +167,7 @@ export class GitHubDeployment {
     await noLinks(this.statePath);
     const previous = await readState(this.statePath);
     const next = { ...previous, ...state, schemaVersion: 1, checkedAt: new Date().toISOString() };
+    if (state && Object.hasOwn(state, 'diagnostic')) next.diagnostic = sanitizeDiagnostic(state.diagnostic);
     await writeJsonAtomic(this.statePath, next);
     if (previous.status !== next.status || previous.version !== next.version || previous.error !== next.error) {
       await this.onEvent({ status: next.status, version: next.version || null, error: next.error || null });
@@ -184,45 +211,117 @@ export class GitHubDeployment {
     } finally { await file.close().catch(() => {}); await fs.rm(temp, { force: true }).catch(() => {}); }
   }
 
+  async reviewedRecovery(manifest, native) {
+    if (!this.config.__controlRoot || native.status !== 'failed' || native.version !== manifest.version) return null;
+    const id = `github-${manifest.version}-${manifest.sha256.slice(0, 12)}`;
+    if (native.packageId !== id) return null;
+    try {
+      const staged = (await this.manager.readManifest(id)).manifest;
+      if (!staged || staged.schemaVersion !== 1 || staged.id !== id || staged.provider !== 'kesas-release' ||
+          staged.version !== manifest.version || staged.notes !== manifest.notes || !Array.isArray(staged.files) || staged.files.length !== 1) return null;
+      const row = staged.files[0];
+      if (!row || row.sha256 !== manifest.sha256 || Number(row.sizeBytes) !== manifest.sizeBytes ||
+          typeof staged.sourceCommit !== 'string' || staged.sourceCommit.length !== 40 || !/^[a-f0-9]{40}$/.test(staged.sourceCommit)) return null;
+      // Keep publicationRequest's canonical field order and original staged provenance.
+      const request = { schemaVersion: 1, transactionVersion: 1, version: manifest.version, sha256: manifest.sha256,
+        sizeBytes: manifest.sizeBytes, notes: manifest.notes, sourceCommit: staged.sourceCommit };
+      const requestId = digest(JSON.stringify(request));
+      const file = path.join(this.config.__controlRoot, 'native-results', `${requestId}.json`);
+      await noLinks(file);
+      const handle = await fs.open(file, 'r');
+      let result;
+      try {
+        const chunks = [];
+        let size = 0;
+        for await (const chunk of handle.createReadStream()) {
+          size += chunk.length;
+          if (size > MAX_TEXT) return null;
+          chunks.push(chunk);
+        }
+        result = parseStrictJson(Buffer.concat(chunks).toString('utf8'));
+      } finally { await handle.close().catch(() => {}); }
+      if (!result || result.id !== requestId || result.phase !== 'recovery-authorized' || result.status !== 'recovery-authorized' ||
+          Object.entries(request).some(([key, value]) => result[key] !== value) || result.recovery?.schemaVersion !== 1 ||
+          result.recovery.action !== 'github-reviewed-preactivation' || typeof result.recovery.authorizedAt !== 'string' ||
+          !Number.isFinite(Date.parse(result.recovery.authorizedAt))) return null;
+      return { id, sourceCommit: staged.sourceCommit };
+    } catch { return null; }
+  }
+
   async tick() {
     if (!this.enabled || this.stopped || this.busy) return { status: 'disabled-or-busy' };
     this.busy = true;
+    let stage = 'active-health';
+    // Identity belongs only to this poll, never to merged state or attempt history.
+    let identity = {};
+    const diagnostic = reason => ({ ...identity, stage, reason });
     try {
       if(this.config.__controlRoot&&typeof this.manager.controlMaintenance==='function'&&await this.manager.controlMaintenance())return {status:'waiting-control-health'};
+      stage = 'channel-observation';
       await noLinks(this.statePath);
       const saved = await readState(this.statePath);
       const observation = await this.json(`https://raw.githubusercontent.com/${REPOSITORY}/refs/heads/deploy/${MANIFEST_PATH}`);
       let manifest = validateDeployment(observation.value);
+      // Archive identity is declared by the validated manifest, not a partial download.
+      identity = { version: manifest.version, manifestSha256: observation.sha256, archiveSha256: manifest.sha256 };
       if (manifest.schemaVersion === 2) {
+        stage = 'requirements';
         if (!this.config.__controlRoot) throw new Error('Required control-plane capability report is unavailable');
         const report = JSON.parse(await fs.readFile(path.join(this.config.__controlRoot, 'host-status.json'), 'utf8'));
         assertCapabilities(report, manifest.requirements.capabilities);
       }
+      stage = 'active-health';
       const active = await this.activeVersion();
       const native = await this.manager.status();
       if (['queued', 'deploying', 'failed'].includes(native.status)) {
-        return await this.save({ status: native.status === 'failed' ? 'held-native-failure' : 'waiting-native', version: manifest.version, activeVersion: active, error: native.status === 'failed' ? 'Native deployment requires operator review' : null });
+        if (native.status === 'failed') {
+          stage = 'queue-admission';
+          const recovery = await this.reviewedRecovery(manifest, native);
+          if (recovery) {
+            identity = { ...identity, sourceCommit: recovery.sourceCommit };
+            const beforeRecovery = await this.manager.status();
+            if (this.stopped) return { status: 'stopped' };
+            if (beforeRecovery.status === 'failed' && beforeRecovery.version === manifest.version && beforeRecovery.packageId === recovery.id) {
+              // The mirror admits only a normal queue; native authority rechecks the
+              // protected authorization, fresh countdown and early-empty guard.
+              const result = await this.manager.queue(recovery.id, 'github-reviewed-recovery', { countdownMinutes: 15, changelog: manifest.notes }).catch(() => ({ ok: false }));
+              return await this.save({ status: result.ok ? 'recovery-queued' : 'held-native-failure', version: manifest.version, activeVersion: active,
+                error: result.ok ? null : 'Native deployment requires operator review', diagnostic: diagnostic(result.ok ? 'recovery-queued' : 'recovery-rejected') });
+            }
+            if (['queued', 'deploying'].includes(beforeRecovery.status)) {
+              stage = 'active-health';
+              return await this.save({ status: 'waiting-native', version: manifest.version, activeVersion: active, error: null, diagnostic: diagnostic('native-busy') });
+            }
+          }
+          stage = 'active-health';
+        }
+        return await this.save({ status: native.status === 'failed' ? 'held-native-failure' : 'waiting-native', version: manifest.version, activeVersion: active, error: native.status === 'failed' ? 'Native deployment requires operator review' : null, diagnostic: diagnostic(native.status === 'failed' ? 'native-failure' : 'native-busy') });
       }
       if (releaseNumber(manifest.version) <= releaseNumber(active)) {
-        return await this.save({ status: manifest.version === active ? 'current' : 'ignored-older-version', version: manifest.version, activeVersion: active, manifestSha256: observation.sha256, error: null });
+        return await this.save({ status: manifest.version === active ? 'current' : 'ignored-older-version', version: manifest.version, activeVersion: active, manifestSha256: observation.sha256, error: null, diagnostic: diagnostic(manifest.version === active ? 'current' : 'older-version') });
       }
+      stage = 'queue-admission';
       if (native.lastDeployment?.status === 'cancelled' && native.lastDeployment.version === manifest.version) {
-        return await this.save({ status: 'held-cancelled', version: manifest.version, error: 'Deployment was cancelled; publish a new version or obtain operator review' });
+        return await this.save({ status: 'held-cancelled', version: manifest.version, error: 'Deployment was cancelled; publish a new version or obtain operator review', diagnostic: diagnostic('cancelled') });
       }
       if (saved.attempt?.manifestSha256 === observation.sha256 && ['queue-requested', 'queued', 'rejected'].includes(saved.attempt.status)) {
-        return await this.save({ status: 'held-previous-attempt', version: manifest.version, error: 'Previous attempt requires operator review; automatic retry disabled' });
+        return await this.save({ status: 'held-previous-attempt', version: manifest.version, error: 'Previous attempt requires operator review; automatic retry disabled', diagnostic: diagnostic('previous-attempt') });
       }
       // Poll raw content without consuming an API request per minute. For a new
       // deployment, resolve and re-read one immutable commit before downloading.
+      stage = 'intent-authentication';
       const reference = await this.json(`https://api.github.com/repos/${REPOSITORY}/git/ref/heads/deploy`);
       const commit = reference.value?.object?.sha;
       if (!/^[a-f0-9]{40}$/.test(commit || '')) throw new Error('Invalid deployment branch commit');
       const pinned = await this.json(`https://raw.githubusercontent.com/${REPOSITORY}/${commit}/${MANIFEST_PATH}`);
-      if (pinned.sha256 !== observation.sha256) return await this.save({ status: 'channel-changed-during-check', version: manifest.version, error: null });
+      if (pinned.sha256 !== observation.sha256) return await this.save({ status: 'channel-changed-during-check', version: manifest.version, error: null, diagnostic: diagnostic('channel-changed') });
       manifest = validateDeployment(pinned.value);
-      await this.save({ status: 'downloading', version: manifest.version, commit, manifestSha256: pinned.sha256, error: null });
+      identity = { version: manifest.version, sourceCommit: commit, manifestSha256: pinned.sha256, archiveSha256: manifest.sha256 };
+      stage = 'archive-download';
+      await this.save({ status: 'downloading', version: manifest.version, commit, manifestSha256: pinned.sha256, error: null, diagnostic: diagnostic('download-started') });
       const archive = await this.download(manifest);
       if (this.stopped) return { status: 'stopped' };
+      stage = 'archive-staging';
       const id = `github-${manifest.version}-${manifest.sha256.slice(0, 12)}`;
       const staged = await this.manager.readManifest(id).catch(error => { if (error.code === 'ENOENT' || error.message === 'invalid update manifest') return null; throw error; });
       if (staged) {
@@ -233,25 +332,31 @@ export class GitHubDeployment {
         await this.manager.stage(archive, { id, version: manifest.version, notes: manifest.notes, sourceCommit: commit });
       }
       // Re-read channel intent and active version after a potentially long fetch.
+      stage = 'intent-authentication';
       const latest = await this.json(`https://raw.githubusercontent.com/${REPOSITORY}/refs/heads/deploy/${MANIFEST_PATH}`);
-      if (latest.sha256 !== pinned.sha256 || releaseNumber(await this.activeVersion()) >= releaseNumber(manifest.version)) {
-        return await this.save({ status: 'superseded-before-queue', version: manifest.version, error: null });
+      if (latest.sha256 !== pinned.sha256) {
+        return await this.save({ status: 'superseded-before-queue', version: manifest.version, error: null, diagnostic: diagnostic('channel-changed') });
       }
+      stage = 'active-health';
+      if (releaseNumber(await this.activeVersion()) >= releaseNumber(manifest.version)) {
+        return await this.save({ status: 'superseded-before-queue', version: manifest.version, error: null, diagnostic: diagnostic('active-version-superseded') });
+      }
+      stage = 'queue-admission';
       const beforeQueue = await this.manager.status();
       if (beforeQueue.lastDeployment?.status === 'cancelled' && beforeQueue.lastDeployment.version === manifest.version) {
-        return await this.save({ status: 'held-cancelled', version: manifest.version, error: 'Deployment was cancelled during preparation; operator review required' });
+        return await this.save({ status: 'held-cancelled', version: manifest.version, error: 'Deployment was cancelled during preparation; operator review required', diagnostic: diagnostic('cancelled') });
       }
       if (this.stopped) return { status: 'stopped' };
       const attempt = { manifestSha256: pinned.sha256, status: 'queue-requested', version: manifest.version, packageId: id };
-      await this.save({ attempt, status: 'queue-requested', version: manifest.version, error: null });
+      await this.save({ attempt, status: 'queue-requested', version: manifest.version, error: null, diagnostic: diagnostic('queue-requested') });
       const result = await this.manager.queue(id, 'github-deploy-branch', { countdownMinutes: 15, changelog: manifest.notes, onlyIfIdle: true });
-      if (!result.ok) return await this.save({ status: 'waiting-native', version: manifest.version, error: null });
+      if (!result.ok) return await this.save({ status: 'waiting-native', version: manifest.version, error: null, diagnostic: diagnostic('native-busy') });
       attempt.status = 'queued';
-      return await this.save({ attempt, status: 'queued', version: manifest.version, error: null });
+      return await this.save({ attempt, status: 'queued', version: manifest.version, error: null, diagnostic: diagnostic('queued') });
     } catch (error) {
       // Network/metadata errors cannot stop a server. Native failures/cancellations
-      // remain held by the native state and are never retried automatically.
-      return await this.save({ status: 'error', error: String(error?.message || 'GitHub deployment check failed').replace(/[\x00-\x1f]/g, ' ').slice(0, 240) });
+      // remain held unless independently reviewed authorization admits a normal queue.
+      return await this.save({ status: 'error', error: String(error?.message || 'GitHub deployment check failed').replace(/[\x00-\x1f]/g, ' ').slice(0, 240), diagnostic: diagnostic(DIAGNOSTIC_STAGES[stage].error) });
     } finally { this.busy = false; }
   }
 

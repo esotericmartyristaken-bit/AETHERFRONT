@@ -11,7 +11,6 @@ export const REPOSITORY = 'esotericmartyristaken-bit/AETHERFRONT';
 export const CHANNEL = 'deployment/control-plane.json';
 export const MAX_STATUS_BYTES = 64 * 1024;
 export const MAX_CONTROL_BYTES = 128 * 1024 * 1024;
-const STATUS_ENTRY = Buffer.from('host-status.json');
 const ERRORS = new Set(['INVALID_ARGUMENT', 'CONTRACT_UNAVAILABLE', 'INCOMPATIBLE_CONTRACT',
   'INVALID_DESCRIPTOR', 'INVALID_STATUS', 'INVALID_STATUS_ZIP', 'STATUS_UNREACHABLE',
   'TLS_PIN_MISMATCH', 'STALE_STATUS', 'UNSUPPORTED_REQUIREMENT', 'CONTROL_NOT_HEALTHY',
@@ -112,8 +111,10 @@ export function crc32(bytes) {
 }
 
 // One STORE entry only; no extraction, ZIP64, comments, extras, descriptors or links.
-export function readStatusZip(bytes) {
+export function readStatusZip(bytes, entry = 'host-status.json') {
   try {
+    if(!['host-status.json','host-diagnostics.json'].includes(entry))fail('INVALID_STATUS_ZIP');
+    const STATUS_ENTRY=Buffer.from(entry);
     if (!Buffer.isBuffer(bytes) || bytes.length > MAX_STATUS_BYTES || bytes.length < 30 + 46 + 22 + STATUS_ENTRY.length * 2) fail('INVALID_STATUS_ZIP');
     const end = bytes.length - 22;
     if (bytes.readUInt32LE(end) !== 0x06054b50 || bytes.readUInt16LE(end + 4) !== 0 ||
@@ -145,11 +146,12 @@ export function normalizePin(pin) {
   if (typeof pin !== 'string' || !/^(?:[a-fA-F0-9]{64}|(?:[a-fA-F0-9]{2}:){31}[a-fA-F0-9]{2})$/.test(pin)) fail('INVALID_ARGUMENT');
   return pin.replaceAll(':', '').toLowerCase();
 }
-export function statusUrl(origin) {
+export function statusUrl(origin, resource = 'status') {
   try {
+    if(!['status','diagnostics'].includes(resource))fail('INVALID_ARGUMENT');
     const url = new URL(origin);
     if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash || url.pathname !== '/') fail('INVALID_ARGUMENT');
-    return new URL('/kesas-host-status.zip', url);
+    return new URL(`/kesas-host-${resource}.zip`, url);
   } catch { fail('INVALID_ARGUMENT'); }
 }
 export function verifyPinnedCertificate(certificate, pin) {
@@ -159,8 +161,8 @@ export function verifyPinnedCertificate(certificate, pin) {
   if (!crypto.timingSafeEqual(actual, expected)) fail('TLS_PIN_MISMATCH');
 }
 
-export async function requestPinnedStatus({ origin, pin, request = https.request }) {
-  const url = statusUrl(origin); pin = normalizePin(pin);
+export async function requestPinnedStatus({ origin, pin, request = https.request, resource = 'status' }) {
+  const url = statusUrl(origin,resource); pin = normalizePin(pin);
   return checked('STATUS_UNREACHABLE', () => new Promise((resolve, reject) => {
     let verified = false, settled = false, timer, req;
     const finish = (error, bytes) => {
@@ -221,6 +223,61 @@ export async function readStatus(options = {}) {
       expires <= observed || now - observed > 180_000 || expires - observed > 180_000) fail('STALE_STATUS');
   if (report.schemaVersion !== 1 || report.contractVersion !== 1) fail('INCOMPATIBLE_CONTRACT');
   return report;
+}
+
+export async function readDiagnostics(options = {}) {
+  statusUrl(options.origin,'diagnostics');normalizePin(options.pin);
+  const bytes=await checked('STATUS_UNREACHABLE',()=>(options.fetchDiagnostics||requestPinnedStatus)({...options,resource:'diagnostics'}));
+  const value=await parseStrictJson(readStatusZip(bytes,'host-diagnostics.json'));
+  const fields=(row,keys)=>object(row)&&Object.keys(row).length===keys.length&&keys.every(key=>Object.hasOwn(row,key));
+  const hash=row=>typeof row==='string'&&/^[a-f0-9]{64}$/.test(row);
+  const nullable=(row,test)=>row===null||test(row);
+  const version=row=>typeof row==='string'&&/^kesas-rc[1-9][0-9]{0,14}$/.test(row);
+  const commit=row=>typeof row==='string'&&/^[a-f0-9]{40}$/.test(row);
+  const stages=['request-validation','intent-authentication','archive-copy','fixed-verifier','publisher-validation','publisher-execution','completion-health','awaiting-new-guard','guard-admission','preparation-signing','media-publication','native-activation','github-completion'];
+  const watcherStages=['channel-observation','requirements','active-health','intent-authentication','archive-download','archive-staging','queue-admission'];
+  if(!fields(value,['schemaVersion','observedAt','expiresAt','controlVersion','bootstrap','watcher','native','recovery'])||value.schemaVersion!==1||!/^control-[1-9][0-9]{0,8}$/.test(value.controlVersion))fail('INVALID_STATUS');
+  const observed=Date.parse(value.observedAt),expires=Date.parse(value.expiresAt),now=typeof options.now==='function'?options.now():options.now??Date.now();
+  if(!Number.isFinite(observed)||!Number.isFinite(expires)||new Date(observed).toISOString()!==value.observedAt||new Date(expires).toISOString()!==value.expiresAt||observed>now+5000||expires<=now||expires<=observed||now-observed>180000||expires-observed>180000)fail('STALE_STATUS');
+  if(!fields(value.bootstrap,['nativeAgentSha256','publisherWrapperSha256','nativeRecoveryVersion'])||!nullable(value.bootstrap.nativeAgentSha256,hash)||!nullable(value.bootstrap.publisherWrapperSha256,hash)||![0,1].includes(value.bootstrap.nativeRecoveryVersion))fail('INVALID_STATUS');
+  const watcher=value.watcher;
+  if(!fields(watcher,['stage','reason','version','sourceCommit','manifestSha256','archiveSha256'])||!nullable(watcher.stage,row=>watcherStages.includes(row))||!nullable(watcher.reason,row=>watcherStages.some(stage=>row===`${stage}-failed`))||!nullable(watcher.version,version)||!nullable(watcher.sourceCommit,commit)||!nullable(watcher.manifestSha256,hash)||!nullable(watcher.archiveSha256,hash))fail('INVALID_STATUS');
+  const native=value.native;
+  if(native!==null&&(!fields(native,['requestId','version','archiveSha256','sourceCommit','resultSha256','phase','stage','reason','exitCode','attempt','recoveryAction'])||!hash(native.requestId)||!version(native.version)||!hash(native.archiveSha256)||!nullable(native.sourceCommit,commit)||!hash(native.resultSha256)||!['accepted','recovery-authorized','applying','healthy','blocked'].includes(native.phase)||!nullable(native.stage,row=>stages.includes(row))||![null,'native-publication-blocked'].includes(native.reason)||!nullable(native.exitCode,row=>Number.isInteger(row)&&row>=-2147483648&&row<=2147483647)||!integer(native.attempt)||native.attempt>1000000||![null,'retry-preactivation'].includes(native.recoveryAction)))fail('INVALID_STATUS');
+  const recovery=value.recovery;
+  if(recovery!==null&&(!fields(recovery,['recoveryId','requestId','commit','status','reason'])||!hash(recovery.recoveryId)||!hash(recovery.requestId)||!nullable(recovery.commit,commit)||!['received','authorized','blocked'].includes(recovery.status)||![null,'recovery-not-authorized'].includes(recovery.reason)))fail('INVALID_STATUS');
+  return value;
+}
+
+async function recoverySnapshot(options) {
+  const reference=await api(options,'git/ref/heads/deploy');
+  const commit=reference.object?.sha;
+  if(reference.ref!=='refs/heads/deploy'||reference.object?.type!=='commit'||!/^[a-f0-9]{40}$/.test(commit||''))fail('INVALID_CHANNEL');
+  const rows=await api(options,`contents/deployment?ref=${commit}`,'GET',undefined,'[.[] | {name,path,type,sha}]');
+  if(!Array.isArray(rows)||rows.length>256)fail('INVALID_CHANNEL');
+  const entries=rows.filter(row=>row.name==='recovery.json');
+  if(entries.length>1||(entries.length&&(entries[0].path!=='deployment/recovery.json'||entries[0].type!=='file'||!/^[a-f0-9]{40}$/.test(entries[0].sha))))fail('INVALID_CHANNEL');
+  return {commit,fileSha:entries[0]?.sha||null};
+}
+
+export async function publishRecovery(options = {}) {
+  const report=await readStatus(options),diagnostics=await readDiagnostics(options);
+  const native=diagnostics.native;
+  if(!['healthy','idle'].includes(report.control.status)||report.control.pendingVersion||report.control.failure||diagnostics.controlVersion!==report.control.version)fail('CONTROL_NOT_HEALTHY');
+  if(diagnostics.bootstrap.nativeRecoveryVersion!==1||native?.phase!=='blocked'||native.recoveryAction!=='retry-preactivation'||!native.sourceCommit)fail('APPLICATION_NOT_READY');
+  const now=Date.now();
+  const intent={schemaVersion:1,recoveryId:crypto.randomBytes(32).toString('hex'),action:'retry-preactivation',requestId:native.requestId,version:native.version,archiveSha256:native.archiveSha256,sourceCommit:native.sourceCommit,expectedResultSha256:native.resultSha256,issuedAt:new Date(now).toISOString(),expiresAt:new Date(now+3600000).toISOString()};
+  const before=await recoverySnapshot(options);
+  const fresh=await readDiagnostics(options);
+  if(fresh.native?.resultSha256!==native.resultSha256||fresh.native?.requestId!==native.requestId||fresh.native?.recoveryAction!=='retry-preactivation')fail('CHANNEL_CHANGED');
+  const after=await recoverySnapshot(options);
+  if(after.commit!==before.commit||after.fileSha!==before.fileSha)fail('CHANNEL_CHANGED');
+  const body={branch:'deploy',message:`Authorize guarded recovery ${native.version}`,content:Buffer.from(`${JSON.stringify(intent)}\n`).toString('base64'),...(before.fileSha?{sha:before.fileSha}:{})};
+  try{await api(options,'contents/deployment/recovery.json','PUT',body);}catch{/* Reconcile uncertain writes; never force or replay. */}
+  const confirmed=await recoverySnapshot(options);
+  const file=await api(options,`contents/deployment/recovery.json?ref=${confirmed.commit}`);
+  if(file.encoding!=='base64'||typeof file.content!=='string'||file.content.length>32768||!same(await parseStrictJson(Buffer.from(file.content,'base64'),'INVALID_CHANNEL'),intent))fail('PUBLICATION_UNCONFIRMED');
+  return {ok:true,status:'recovery-requested',intent,commit:confirmed.commit};
 }
 
 export async function preflight(options = {}) {
@@ -434,7 +491,7 @@ export async function publishControl(options = {}) {
 export async function runCli(argv, dependencies = {}) {
   try {
     const [command, ...arguments_] = argv;
-    if (!['read', 'status', 'preflight', 'publish-control'].includes(command)) fail('INVALID_ARGUMENT');
+    if (!['read', 'status', 'diagnostics', 'recover', 'preflight', 'publish-control'].includes(command)) fail('INVALID_ARGUMENT');
     const allowed = new Set(command === 'read' ? [] : command === 'publish-control'
       ? ['origin', 'pin', 'requires', 'archive', 'version', 'minimum-bootstrap']
       : command === 'preflight' ? ['origin', 'pin', 'requires', 'version', 'minimum-bootstrap'] : ['origin', 'pin']);
@@ -448,6 +505,7 @@ export async function runCli(argv, dependencies = {}) {
     const options = { ...dependencies, ...flags, requirements: flags.requires ? flags.requires.split(',') : [],
       minimumBootstrap: flags['minimum-bootstrap'] ? Number(flags['minimum-bootstrap']) : 1 };
     const result = command === 'read' ? await readControl(options) : command === 'status' ? await readStatus(options)
+      : command === 'diagnostics' ? await readDiagnostics(options) : command === 'recover' ? await publishRecovery(options)
       : command === 'preflight' ? await preflight(options) : await publishControl(options);
     return { exitCode: 0, output: JSON.stringify(result) };
   } catch (error) {

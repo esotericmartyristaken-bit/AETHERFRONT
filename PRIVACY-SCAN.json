@@ -1,16 +1,16 @@
 {
-  "scannedUtc": "2026-10-21T06:45:06.3383969Z",
-  "filesScanned": 2866,
-  "elapsedSeconds": 16.067859,
+  "scannedUtc": "2026-10-21T08:16:26.5594589Z",
+  "filesScanned": 2898,
+  "elapsedSeconds": 32.1465062,
   "ruleMilliseconds": {
-    "cloud-key": 616.7233999999996,
-    "user-home": 572.706899999999,
-    "private-key": 779.5831000000005,
-    "credential-literal": 2354.6389999999983,
-    "private-host": 2590.560500000006,
-    "discord-token": 2310.849099999999,
-    "credential-url": 713.746199999999,
-    "github-token": 661.246600000002
+    "credential-url": 2435.4762000000014,
+    "cloud-key": 2108.5895999999934,
+    "private-host": 4033.274600000007,
+    "private-key": 2211.5744999999984,
+    "credential-literal": 3926.0929000000056,
+    "github-token": 2102.6480000000033,
+    "discord-token": 3532.0811999999955,
+    "user-home": 2393.1260999999995
   },
   "regexTimeoutSecondsPerFileRule": 5,
   "findingCount": 0,
@@ -78,49 +78,5 @@
     }
   ],
   "contentOrMatchedValuesPrinted": false,
-  "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check.",
-  "incrementalReviews": [
-    {
-      "scannedUtc": "2026-10-21T06:59:08.9347030Z",
-      "filesScanned": 34,
-      "findingCount": 0,
-      "paths": [
-        ".gitignore",
-        "Aetherfront-RC33-Work/Build-Engine.ps1",
-        "Aetherfront-RC33-Work/Build-Progression.ps1",
-        "Aetherfront-RC33-Work/Build-Release.py",
-        "Aetherfront-RC33-Work/Compatibility/KopernicusShadows.cfg",
-        "Aetherfront-RC33-Work/PackPolicy.py",
-        "Aetherfront-RC33-Work/PersonalClient/AetherfrontPersonalClient.csproj",
-        "Aetherfront-RC33-Work/PersonalClient/DefaultDisplay.cs",
-        "Aetherfront-RC33-Work/PersonalClient/DefaultDisplayPolicy.cs",
-        "Aetherfront-RC33-Work/PersonalClient/LaunchPositionCompatibility.cs",
-        "Aetherfront-RC33-Work/PersonalClient/PersonalClient.cs",
-        "Aetherfront-RC33-Work/PersonalClient/ScienceClaim.cs",
-        "Aetherfront-RC33-Work/PersonalClient/ScienceOutbox.cs",
-        "Aetherfront-RC33-Work/PersonalServer/AetherfrontPersonalServer.csproj",
-        "Aetherfront-RC33-Work/PersonalServer/PersonalServer.cs",
-        "Aetherfront-RC33-Work/README.md",
-        "Aetherfront-RC33-Work/SettingsTests/Program.cs",
-        "Aetherfront-RC33-Work/SettingsTests/SettingsTests.csproj",
-        "Aetherfront-Source/AetherfrontCore/AetherfrontModels.cs",
-        "Aetherfront-Source/AetherfrontCore/PersonalProgression.cs",
-        "Development/PersonalProgressionTests/PersonalProgressionTests.csproj",
-        "Development/PersonalProgressionTests/Program.cs",
-        "Development/PersonalServerTests/Build-ScienceCatalog.py",
-        "Development/PersonalServerTests/Build-TechnologyCatalog.py",
-        "Development/PersonalServerTests/PersonalServerTests.csproj",
-        "Development/PersonalServerTests/Prepare-Client.py",
-        "Development/PersonalServerTests/Prepare-Overlay.py",
-        "Development/PersonalServerTests/Prepare-Server.py",
-        "Development/PersonalServerTests/Program.cs",
-        "Development/PersonalUdpTests/PersonalUdpTests.csproj",
-        "Development/PersonalUdpTests/Program.cs",
-        "Development/ProgressionPatch/Program.cs",
-        "Development/ProgressionPatch/ProgressionPatch.csproj",
-        "export-policy.json"
-      ],
-      "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
-    }
-  ]
+  "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
 }
