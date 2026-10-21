@@ -87,7 +87,10 @@ async function collectComponents() {
     mediaHashCache=media.cache;next.publicMedia=media.sha256;
     if((await readJson(path.join(settings.nativeRoot,'Updates','APFClientUpdate.json'))).version!==feed.version||!labels.every(label=>hash(next[label])))throw new Error('Incomplete application inventory');
     components=next;componentVersion=feed.version;inventoryObservedAt=new Date().toISOString();inventoryStatus='complete';
-  } catch {inventoryStatus='failed';}
+  } catch(error) {
+    inventoryStatus='failed';
+    await writeJson(path.join(settings.botRoot,'state','control-inventory-error.json'),{at:new Date().toISOString(),reason:'inventory-failed',detail:String(error?.stack||error).slice(0,12000)}).catch(()=>{});
+  }
   finally {collecting=false;nextInventory=Date.now()+(inventoryStatus==='failed'?60000:300000);}
 }
 async function publishStatus() {

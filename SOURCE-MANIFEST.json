@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-21T22:18:02.2715016Z",
+  "createdUtc": "2026-10-21T22:26:26.9859879Z",
   "publication": "Reviewed source update; ordinary source pushes do not deploy",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -27408,7 +27408,7 @@
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
       "bytes": 9640,
-      "sha256": "4784856edd8e7ed798db25994a6bd6aa6b52a736e5be3754fedf926da79a193d",
+      "sha256": "905892dd31bccd5dc5007607b0d82f4a2a94eec702ae77626163db137ba9abbc",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -27649,8 +27649,8 @@
       "path": "ControlPlane/worker.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 11519,
-      "sha256": "dc410bc806a97d0c682ac84fd95f29546a2e707ebf715d66326f8e710187c7d9",
+      "bytes": 11743,
+      "sha256": "9bd854ff5af5b7d9498db37213af43d87e79cfdc1af26b05c95d25f54bb47687",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -28715,8 +28715,8 @@
       "path": "ControlPlane/host-reporter.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 24236,
-      "sha256": "272ba80de6cbaa5a182b39345d9c998b2c7692476165ff33c8dd6e484e1e8d40",
+      "bytes": 24263,
+      "sha256": "a1915574460f065a72e6ca3315eef9fbaf64ab5752db8c9248b606663d9af651",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -28726,8 +28726,8 @@
       "path": "ControlPlane/Manage-ControlWorker.ps1",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 670,
-      "sha256": "deef2897b3d0bc94367a8f486ef6cad2752a528be9ac6b16f4dee16e41e2d773",
+      "bytes": 995,
+      "sha256": "d109ea80baf3e71c914267847cfe1fb4ceb39a625b8c0585868fccedfa6a5575",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -28778,7 +28778,7 @@
       ]
     }
   ],
-  "totalFileBytes": 16184377,
+  "totalFileBytes": 16553279,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",

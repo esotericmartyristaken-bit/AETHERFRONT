@@ -64,11 +64,11 @@ node ControlPlane/controller.mjs status --origin https://217.216.49.250:18866 --
 node ControlPlane/controller.mjs diagnostics --origin https://217.216.49.250:18866 --pin PIN
 
 # Build the next reviewed control revision, including broker/wrapper fixes.
-pwsh -File ControlPlane/Build-ControlBundle.ps1 -Version control-4 -Output C:/build/Aetherfront-Control-control-4.zip
-node ControlPlane/controller.mjs publish-control --origin https://217.216.49.250:18866 --pin PIN --archive C:/build/Aetherfront-Control-control-4.zip --version control-4
+pwsh -File ControlPlane/Build-ControlBundle.ps1 -Version control-5 -Output C:/build/Aetherfront-Control-control-5.zip
+node ControlPlane/controller.mjs publish-control --origin https://217.216.49.250:18866 --pin PIN --archive C:/build/Aetherfront-Control-control-5.zip --version control-5
 
 # Combined path observes exact control version/hash/health before app intent.
-pwsh -File ControlPlane/Publish-HostRelease.ps1 -ControlArchive C:/build/Aetherfront-Control-control-4.zip -ControlVersion control-4 -Archive C:/build/Aetherfront-Release-kesas-rc34.zip -Version kesas-rc34 -HostCertificateSha256 PIN -Notes 'Reviewed changes'
+pwsh -File ControlPlane/Publish-HostRelease.ps1 -ControlArchive C:/build/Aetherfront-Control-control-5.zip -ControlVersion control-5 -Archive C:/build/Aetherfront-Release-kesas-rc34.zip -Version kesas-rc34 -HostCertificateSha256 PIN -Notes 'Reviewed changes'
 
 # Existing compatible host: application only.
 pwsh -File ControlPlane/Publish-HostRelease.ps1 -Archive C:/build/Aetherfront-Release-kesas-rc34.zip -Version kesas-rc34 -HostCertificateSha256 PIN -Notes 'Reviewed changes'

@@ -154,7 +154,7 @@ async function bridgeFresh(settings,now) {
 }
 async function leaseActive(settings,active) {
   let child=false;
-  if(active?.nativePid)try{process.kill(active.nativePid,0);child=true;}catch(error){if(error.code!=='ESRCH')child=true;}
+  if(active?.phase==='applying'&&active.nativePid)try{process.kill(active.nativePid,0);child=true;}catch(error){if(error.code!=='ESRCH')child=true;}
   if(child)return true;
   try {
     await noLinks(path.join(settings.nativeRoot,'.publish.lock'));
