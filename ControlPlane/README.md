@@ -52,6 +52,8 @@ Capabilities: `application-v1`, `media-payload-v1`, `control-plane-v1`, `host-re
 
 The public hash groups are not a claim that a mod DLL or KSP itself was launched during host acceptance tests. Client package file hashes remain in the signed feed. Source provenance and running code are distinct: only a completed host readback establishes activation.
 
+Public mod ZIPs may be hardlinked to the existing immutable pack cache. Their read-only inventory checks file identity and content timestamps before and after hashing; control code, journals and writes retain the strict no-hardlinks policy. The changing `kesas-host-status.zip` is excluded from the media digest.
+
 ## Trust and prerequisites
 
 The existing trust boundary is retained: authenticated write access to this fixed repository's deployment branch authorizes host release intent. The host reads the branch through HTTPS, pins an immutable commit, rereads the descriptor there and checks archive hashes and full inventory. A standalone hash, upload or source commit does not authorize execution. Existing host-held signing keys still sign client updates; the controller does not acquire those keys.

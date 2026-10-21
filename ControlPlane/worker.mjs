@@ -5,7 +5,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { ControlEngine, validatePointer, inventory } from './engine.mjs';
 import { CAPABILITIES, validateHostReport } from './contract.mjs';
-import { atomic, writeJson, readJson, fileHash, digest, statusZip, noLinks } from './public-status.mjs';
+import { atomic, writeJson, readJson, fileHash, digest, statusZip, noLinks, publicMediaInventory } from './public-status.mjs';
 
 const settings=await readJson(process.argv[process.argv.indexOf('--settings')+1]);
 const pointer=validatePointer(await readJson(path.join(settings.root,'active.json')));
@@ -65,17 +65,10 @@ async function collectComponents() {
   const clientHashes=JSON.parse(client.stdout);components.clientUpdater=clientHashes.clientUpdater;components.clientHelper=clientHashes.clientHelper;
   components.catalog=digest(Buffer.from(JSON.stringify({pack:components.catalog,installCatalog:clientHashes.catalog})));
   coreComponentVersion=feed.version;
-  // Cache content hashes only while size, identity and mtime all match. Names
-  // alone are not evidence that a public archive still has its declared bytes.
-  const cacheFile=path.join(settings.root,'media-hash-cache.json');const cache=await readJson(cacheFile,{});const next={};
-  for(const name of (await fs.readdir(path.join(settings.nativeRoot,'Server','Config'))).filter(name=>/^kesas-.*\.zip$/.test(name)).sort()) {
-    const file=path.join(settings.nativeRoot,'Server','Config',name);await noLinks(file);const stat=await fs.stat(file);
-    const stamp=`${stat.size}:${stat.mtimeMs}:${stat.ino}`;
-    const sha256=cache[name]?.stamp===stamp?cache[name].sha256:await fileHash(file);
-    next[name]={stamp,sha256};
-  }
-  await writeJson(cacheFile,next);
-  components.publicMedia=digest(Buffer.from(JSON.stringify(Object.entries(next).map(([name,row])=>({name,sha256:row.sha256})))));
+  const cacheFile=path.join(settings.root,'media-hash-cache.json');
+  const media=await publicMediaInventory(path.join(settings.nativeRoot,'Server','Config'),await readJson(cacheFile,{}));
+  await writeJson(cacheFile,media.cache);
+  components.publicMedia=media.sha256;
   componentVersion=feed.version;
   } finally {collecting=false;}
 }

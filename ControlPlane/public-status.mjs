@@ -54,3 +54,40 @@ export async function fileHash(file) {
   try {for await(const chunk of handle.createReadStream())hash.update(chunk);return hash.digest('hex');}
   finally {await handle.close().catch(()=>{});}
 }
+
+// Public ZIPs are deliberately hardlinked to the immutable pack cache. This
+// read-only inventory must not relax the no-hardlinks rule for control code,
+// journals or writes. Reject reparse paths and verify file identity and content
+// timestamps before and after reading through one open handle.
+export async function publicMediaInventory(directory, previous = {}) {
+  await noLinks(directory);
+  const stamp = stat => `${stat.dev}:${stat.ino}:${stat.size}:${stat.mtimeMs}:${stat.ctimeMs}`;
+  const regular = stat => { if (!stat.isFile() || stat.isSymbolicLink()) throw new Error('Unsafe public archive'); return stat; };
+  const next = {};
+  const names = (await fs.readdir(directory)).filter(name => /^kesas-.*\.zip$/.test(name) && name !== 'kesas-host-status.zip').sort();
+  for (const name of names) {
+    const file = path.join(directory, name);
+    const before = regular(await fs.lstat(file));
+    const identity = stamp(before);
+    let sha256 = previous[name]?.stamp === identity && /^[a-f0-9]{64}$/.test(previous[name]?.sha256 || '') ? previous[name].sha256 : null;
+    if (!sha256) {
+      const hash = crypto.createHash('sha256');
+      const handle = await fs.open(file, 'r');
+      try {
+        if (stamp(regular(await handle.stat())) !== identity) throw new Error('Public archive changed during inventory');
+        const buffer = Buffer.alloc(1024 * 1024);
+        for (;;) {
+          const { bytesRead } = await handle.read(buffer, 0, buffer.length, null);
+          if (!bytesRead) break;
+          hash.update(buffer.subarray(0, bytesRead));
+        }
+        if (stamp(regular(await handle.stat())) !== identity) throw new Error('Public archive changed during inventory');
+        sha256 = hash.digest('hex');
+      } finally { await handle.close(); }
+    }
+    if (stamp(regular(await fs.lstat(file))) !== identity) throw new Error('Public archive changed during inventory');
+    next[name] = { stamp: identity, sha256 };
+  }
+  await noLinks(directory);
+  return { cache: next, sha256: digest(Buffer.from(JSON.stringify(Object.entries(next).map(([name, row]) => ({ name, sha256: row.sha256 }))))) };
+}
