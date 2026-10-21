@@ -1,5 +1,13 @@
 # GitHub deployment linkage
 
+The earlier counts below are historical. Current host-control acceptance and
+private native-publication prerequisites are documented in
+[ControlPlane/README.md](ControlPlane/README.md#isolated-acceptance). Run the bot
+suite and `node --test ControlPlane/test/*.test.mjs`; transport/bridge doubles
+are explicit, and native publication requires disposable keys plus a privately
+provisioned update tool/public template. No production fault injection or RC33
+deployment is authorized by these tests.
+
 All 135 bot tests pass, including 26 new deployment-channel tests. They cover
 commit pinning, size/hash checks, allowed redirects, busy/failed/cancelled native
 work, crash-held outcomes, durable-state corruption, network failure/recovery,

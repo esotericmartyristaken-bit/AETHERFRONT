@@ -9,6 +9,9 @@ export async function loadConfig() {
   if (!config) throw new Error(`Missing config: ${file}. Copy config.example.json to config.json.`);
   config.__file = file;
   config.__root = root;
+  config.__codeRoot = process.env.APF_CONTROL_RELEASE_ROOT ? path.join(process.env.APF_CONTROL_RELEASE_ROOT, 'APFDiscordBot') : root;
+  config.__nativeCodeRoot = process.env.APF_CONTROL_RELEASE_ROOT ? path.join(process.env.APF_CONTROL_RELEASE_ROOT, 'KESAS-VPS-Server') : null;
+  config.__controlRoot = process.env.APF_CONTROL_ROOT || null;
   config.discord ??= {};
   config.discord.channels ??= {};
   config.discord.adminRoleIds ??= [];

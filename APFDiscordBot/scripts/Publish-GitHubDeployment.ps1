@@ -10,6 +10,9 @@ param(
     [Parameter(Mandatory)][string]$Version,
     [AllowEmptyString()][string]$Notes = '',
     [string]$Repository = 'esotericmartyristaken-bit/AETHERFRONT',
+    [string]$HostOrigin = 'https://217.216.49.250:18866',
+    [string]$HostCertificateSha256 = '',
+    [string[]]$MinimumCapabilities = @('application-v1','guard-15m-empty-v1','host-report-v1'),
     [switch]$SkipChannelUpdate,
     [switch]$DryRun
 )
@@ -24,6 +27,29 @@ $utf8 = [Text.UTF8Encoding]::new($false, $true)
 function Require([bool]$Condition, [string]$Message) {
     if (!$Condition) { throw [IO.InvalidDataException]::new($Message) }
 }
+function Test-HostCompatibility([string]$Path) {
+    Require ($HostCertificateSha256 -cmatch '\A[a-fA-F0-9]{64}\z') 'A trusted host certificate SHA256 is required before changing the deployment channel.'
+    $requirements=@($MinimumCapabilities | Sort-Object -Unique)
+    $zip=[IO.Compression.ZipFile]::OpenRead($Path)
+    try {
+        if(@($zip.Entries | Where-Object FullName -clike 'MediaPayload/*').Count){$requirements+='media-payload-v1'}
+        if(@($zip.Entries | Where-Object FullName -clike 'UpdateToolPayload/*').Count){$requirements+='native-tools-v1'}
+    }finally{$zip.Dispose()}
+    $controller=Join-Path $PSScriptRoot '../../ControlPlane/controller.mjs'
+    Require (Test-Path -LiteralPath $controller -PathType Leaf) 'Controller contract is missing; channel unchanged.'
+    $result=@(& node $controller preflight --origin $HostOrigin --pin $HostCertificateSha256 --requires ($requirements -join ',') 2>&1)
+    $exitCode=$LASTEXITCODE
+    $reason='HOST_UNAVAILABLE'
+    try {
+        $reported=($result -join "`n")|ConvertFrom-Json
+        if($reported.error -cmatch '^[A-Z_]{1,80}$'){$reason=$reported.error}
+        if($reported.PSObject.Properties['missingCapabilities']){
+            $missing=@($reported.missingCapabilities|Where-Object {$_ -cin @('application-v1','media-payload-v1','control-plane-v1','host-report-v1','guard-15m-empty-v1','atomic-control-rollback-v1','native-tools-v1')})
+            if($missing.Count){$reason+=' ('+($missing -join ', ')+')'}
+        }
+    }catch{}
+    Require ($exitCode -eq 0) "Host compatibility preflight failed: $reason; channel unchanged."
+}
 function VersionNumber([string]$Value) {
     [long]$number = 0
     Require ($Value -cmatch '\Akesas-rc[1-9][0-9]{0,14}\z' -and
@@ -36,28 +62,45 @@ function Read-Channel([string]$Json) {
     try {
         $root = $document.RootElement
         Require ($root.ValueKind -eq [Text.Json.JsonValueKind]::Object) 'Deployment manifest must be an object.'
+        $schema=$root.GetProperty('schemaVersion').GetInt32()
         $fields = @('schemaVersion','version','releaseTag','assetName','sha256','sizeBytes','notes')
+        if($schema -eq 2){$fields+='requirements'}
         $seen = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
         foreach ($property in $root.EnumerateObject()) {
             Require ($property.Name -cin $fields -and $seen.Add($property.Name)) 'Unknown or duplicate deployment manifest field.'
             if ($property.Name -cin @('schemaVersion','sizeBytes')) {
                 Require ($property.Value.ValueKind -eq [Text.Json.JsonValueKind]::Number -and
                     $property.Value.GetRawText() -cmatch '\A[1-9][0-9]*\z') 'Manifest integers must be positive JSON integers.'
+            } elseif($property.Name -ceq 'requirements') {
+                Require ($property.Value.ValueKind -eq [Text.Json.JsonValueKind]::Object) 'Requirements must be an object.'
+                $requiredFields=[Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+                foreach($requiredProperty in $property.Value.EnumerateObject()) {
+                    Require ($requiredProperty.Name -cin @('contractVersion','capabilities') -and $requiredFields.Add($requiredProperty.Name)) 'Unknown or duplicate capability requirement.'
+                }
+                Require ($requiredFields.Count -eq 2 -and $property.Value.GetProperty('contractVersion').GetRawText() -ceq '1') 'Unsupported capability contract.'
+                $caps=$property.Value.GetProperty('capabilities')
+                Require ($caps.ValueKind -eq [Text.Json.JsonValueKind]::Array -and $caps.GetArrayLength() -gt 0 -and $caps.GetArrayLength() -le 7) 'Invalid capability list.'
+                $capSeen=[Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+                foreach($cap in $caps.EnumerateArray()) {
+                    Require ($cap.ValueKind -eq [Text.Json.JsonValueKind]::String -and $cap.GetString() -cin @('application-v1','media-payload-v1','control-plane-v1','host-report-v1','guard-15m-empty-v1','atomic-control-rollback-v1','native-tools-v1') -and $capSeen.Add($cap.GetString())) 'Unsupported or duplicate capability.'
+                }
             } else {
                 Require ($property.Value.ValueKind -eq [Text.Json.JsonValueKind]::String) 'Manifest text fields must be strings.'
             }
         }
         Require ($seen.Count -eq $fields.Count) 'Missing deployment manifest field.'
         $value = ConvertFrom-Json -InputObject $Json
-        Require ($value.schemaVersion -eq 1) 'Unsupported deployment manifest schema.'
+        Require ($value.schemaVersion -in @(1,2)) 'Unsupported deployment manifest schema.'
         $null = VersionNumber $value.version
         Require ($value.releaseTag -ceq "host-$($value.version)" -and
             $value.assetName -ceq "Aetherfront-Release-$($value.version).zip") 'Deployment release tag/asset mismatch.'
         Require ($value.sha256 -cmatch '\A[a-f0-9]{64}\z') 'Deployment SHA256 must be lowercase hexadecimal.'
         Require ($value.sizeBytes -gt 0 -and $value.sizeBytes -le $maximumBytes) 'Deployment asset must be positive and at most 512 MiB.'
         Require ($value.notes.Length -le 500 -and $value.notes -notmatch '[\p{Cc}\p{Cf}]') 'Notes exceed 500 characters or contain control characters.'
-        return [ordered]@{ schemaVersion = 1; version = $value.version; releaseTag = $value.releaseTag
+        $normalized=[ordered]@{ schemaVersion = $value.schemaVersion; version = $value.version; releaseTag = $value.releaseTag
             assetName = $value.assetName; sha256 = $value.sha256; sizeBytes = [long]$value.sizeBytes; notes = $value.notes }
+        if($value.schemaVersion -eq 2){$normalized.requirements=[ordered]@{contractVersion=1;capabilities=@($value.requirements.capabilities)}}
+        return $normalized
     } finally { $document.Dispose() }
 }
 function Same-Channel($Left, $Right) {
@@ -209,15 +252,23 @@ try {
     $sha = [Security.Cryptography.SHA256]::Create()
     try { $digest = [BitConverter]::ToString($sha.ComputeHash($archiveHandle)).Replace('-','').ToLowerInvariant() }
     finally { $sha.Dispose() }
-    $manifest = Read-Channel (ConvertTo-Json -InputObject ([ordered]@{ schemaVersion = 1; version = $Version
+    $requiredCapabilities=@($MinimumCapabilities)
+    $zip=[IO.Compression.ZipFile]::OpenRead($archivePath)
+    try {
+        if(@($zip.Entries | Where-Object FullName -clike 'MediaPayload/*').Count){$requiredCapabilities+='media-payload-v1'}
+        if(@($zip.Entries | Where-Object FullName -clike 'UpdateToolPayload/*').Count){$requiredCapabilities+='native-tools-v1'}
+    }finally{$zip.Dispose()}
+    $requiredCapabilities=@($requiredCapabilities | Sort-Object -Unique)
+    $manifest = Read-Channel (ConvertTo-Json -InputObject ([ordered]@{ schemaVersion = 2; version = $Version
         releaseTag = "host-$Version"; assetName = "Aetherfront-Release-$Version.zip"; sha256 = $digest
-        sizeBytes = $archiveHandle.Length; notes = $Notes }) -Compress)
+        sizeBytes = $archiveHandle.Length; notes = $Notes;requirements=[ordered]@{contractVersion=1;capabilities=$requiredCapabilities} }) -Depth 6 -Compress)
     if ($DryRun -or $WhatIfPreference) {
         Write-Output 'Local validation passed. Offline plan only; GitHub state/order/authentication NOT checked; build/KSP tests NOT executed.'
         Write-Output (ConvertTo-Json -InputObject $manifest)
         return
     }
     if (!$PSCmdlet.ShouldProcess("github.com/$Repository", "Publish immutable $($manifest.releaseTag) artifact; channel update disabled=$SkipChannelUpdate")) { return }
+    if (!$SkipChannelUpdate) { Test-HostCompatibility $archivePath }
     $null = Get-Command gh -CommandType Application,Function -ErrorAction Stop
     $repo = Api ''
     Require ($repo.full_name -ceq $Repository -and $repo.private -is [bool] -and !$repo.private -and
@@ -239,6 +290,7 @@ try {
     Check-Order $after.manifest $manifest
     if (Same-Channel $after.manifest $manifest) { Write-Output "Deployment channel already matches $Version; no content write."; return }
     Require ($after.head -ceq $before.head -and $after.fileSha -ceq $before.fileSha) 'Deploy branch changed during publication. Asset retained; rerun against the new branch head.'
+    Test-HostCompatibility $archivePath
     $body = @{ branch = $branch; message = "Deploy $Version"; content = [Convert]::ToBase64String($utf8.GetBytes((ConvertTo-Json -InputObject $manifest) + "`n")) }
     if ($null -ne $before.fileSha) { $body.sha = $before.fileSha }
     $null = Api "contents/$channelPath" 'PUT' $body

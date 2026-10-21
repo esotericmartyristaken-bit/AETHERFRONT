@@ -8,6 +8,7 @@ import { LmpController } from '../src/lmp.js';
 import { UpdateManager } from '../src/update-manager.js';
 import { publicStatusEmbed } from '../src/bot.js';
 import { writeJsonAtomic } from '../src/util.js';
+import { publicationRequest } from '../src/native-broker.js';
 
 test('KESAS presence accepts only fresh bridge data from its running process', async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'kesas-presence-'));
@@ -150,4 +151,44 @@ test('KESAS verifier failure leaves no staged package or deployment request', as
   await assert.rejects(manager.stage(archive, { id: 'rejected', version: 'kesas-rc29' }), /verification refused/);
   assert.equal(await fs.stat(path.join(manager.stagingRoot, 'rejected')).catch(() => null), null);
   assert.equal(manager.state.status, 'idle');
+});
+async function interruptedBroker(t) {
+  const f=await staged(t);const root=f.manager.config.__root;
+  const archive=path.join(f.packageDir,'KESAS-Release-kesas-rc15.zip');
+  await fs.rename(path.join(f.packageDir,'release.zip'),archive);
+  const file=path.join(f.packageDir,'manifest.json');const manifest=JSON.parse(await fs.readFile(file,'utf8'));
+  manifest.files[0].source=path.basename(archive);await writeJsonAtomic(file,manifest);
+  const control=path.join(root,'control');f.manager.config.__controlRoot=control;
+  const pointer={version:'control-1',bundleSha256:'a'.repeat(64)};
+  await writeJsonAtomic(path.join(control,'active.json'),pointer);
+  await writeJsonAtomic(path.join(control,'verified-active.json'),{schemaVersion:1,...pointer});
+  f.manager.state.status='deploying';f.manager.state.phase='installing';await f.manager.save();
+  const request=await publicationRequest(archive,manifest.notes,{sourceCommit:null});
+  f.controller.publishRelease=()=>{throw new Error('interrupted native publication must not be replayed');};
+  return {...f,root,control,request,manifest};
+}
+test('native helper completion after bot restart reconciles once without publication or duplicate notices',async t=>{
+  const f=await interruptedBroker(t);
+  await writeJsonAtomic(path.join(f.control,'native-results',`${f.request.id}.json`),{...f.request,status:'healthy',completedAt:new Date().toISOString()});
+  await writeJsonAtomic(path.join(f.root,'Updates','APFClientUpdate.json'),{version:'kesas-rc15'});
+  await writeJsonAtomic(path.join(f.root,'Server','Config','APFPack.json'),{packVersion:'kesas-rc15',requiredClientVersion:'kesas-rc15'});
+  let notices=0;const hooks={onDeployed:async()=>{notices++;}};
+  assert.equal((await f.manager.reconcile(await f.controller.status(),hooks)).recovered,true);
+  assert.equal(f.manager.state.status,'idle');assert.equal(f.manager.state.lastDeployment.version,'kesas-rc15');assert.equal(notices,0);
+  assert.equal((await f.manager.reconcile(await f.controller.status(),hooks)).idle,true);assert.equal(notices,0);
+});
+test('native helper still applying remains pending, never killed or republished',async t=>{
+  const f=await interruptedBroker(t);
+  await writeJsonAtomic(path.join(f.control,'native-results',`${f.request.id}.json`),{...f.request,status:'applying'});
+  assert.equal((await f.manager.reconcile(await f.controller.status())).reason,'native-helper-still-running');
+  assert.equal(f.manager.state.status,'deploying');
+});
+test('interruption before durable handoff resumes original guard but preserves an ambiguous native journal',async t=>{
+  const f=await interruptedBroker(t);const deadline=f.manager.state.deployAt;
+  assert.equal((await f.manager.reconcile(await f.controller.status())).reason,'resuming-guarded-queue');
+  assert.equal(f.manager.state.deployAt,deadline);
+  f.manager.state.status='deploying';await f.manager.save();
+  await fs.writeFile(path.join(f.root,'.update-transaction.json'),'preserve fixture journal');
+  assert.equal((await f.manager.reconcile(await f.controller.status())).reason,'native-journal-requires-review');
+  assert.equal(await fs.readFile(path.join(f.root,'.update-transaction.json'),'utf8'),'preserve fixture journal');
 });

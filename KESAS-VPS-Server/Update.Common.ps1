@@ -3,6 +3,26 @@ Set-StrictMode -Version Latest
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $UpdateUtf8=New-Object Text.UTF8Encoding($false)
+$UpdateCodeRoot=$PSScriptRoot
+
+function Assert-ReleaseJsonUnique([string]$Json) {
+    $null=ConvertFrom-Json -InputObject $Json -ErrorAction Stop
+    $stack=New-Object 'Collections.Generic.Stack[object]'
+    foreach($token in [regex]::Matches($Json,'"(?:\\.|[^"\\])*"|[{}\[\]:,]')){
+        $value=$token.Value
+        if($value -ceq '{'){$stack.Push([pscustomobject]@{array=$false;key=$true;seen=(New-Object 'Collections.Generic.HashSet[string]' ([StringComparer]::Ordinal))});continue}
+        if($value -ceq '['){$stack.Push([pscustomobject]@{array=$true;key=$false;seen=$null});continue}
+        if($value -ceq '}' -or $value -ceq ']'){$null=$stack.Pop();continue}
+        if(-not $stack.Count){continue}
+        $top=$stack.Peek()
+        if($value -ceq ',' -and -not $top.array){$top.key=$true;continue}
+        if($value.StartsWith('"') -and $top.key){
+            $name=ConvertFrom-Json -InputObject $value
+            if(-not $top.seen.Add([string]$name)){throw 'Duplicate release JSON property'}
+            $top.key=$false
+        }
+    }
+}
 
 function Assert-UpdatePath([string]$Path) {
     $full=[IO.Path]::GetFullPath($Path)
@@ -232,7 +252,7 @@ function Get-UpdateServiceProcesses([string]$Root,$Config) {
 }
 function Wait-UpdateServerStopped([string]$Root,$Config) {
     $processes=@(Get-UpdateServiceProcesses $Root $Config)
-    & "$Root/Stop-Server.ps1"
+    & "$UpdateCodeRoot/Stop-Server.ps1" -DeploymentRoot $Root
     $deadline=(Get-Date).AddSeconds(40)
     do{
         $busy=$false
@@ -251,10 +271,27 @@ function Wait-UpdateServerStopped([string]$Root,$Config) {
 function Start-UpdatedServer([string]$Root,$Config) {
     $stamp=Get-Date -Format 'yyyyMMdd-HHmmss-fff'
     New-UpdateDirectory "$Root/LauncherLogs"
-    $launcher=Start-Process powershell.exe -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',"`"$Root/Start-Server.ps1`"",'-LauncherLog',"`"$Root/LauncherLogs/$stamp.log`"",'-PublicationActivation') -WindowStyle Hidden -PassThru
+    $launcher=$null
+    if($env:APF_SERVER_TASK -ceq 'KESAS Server') {
+        # The independently supervised native publisher does not own the game
+        # process tree. Reuse its existing SYSTEM task and protected code router.
+        if(-not $env:APF_CONTROL_ROOT){throw 'Protected control root is required for managed publication startup'}
+        $deadline=(Get-Date).AddSeconds(10)
+        while((Get-ScheduledTask -TaskName 'KESAS Server' -ErrorAction Stop).State -eq 'Running'){
+            if((Get-Date)-gt $deadline){throw 'Prior SYSTEM launcher has not exited; no duplicate start requested'}
+            Start-Sleep -Milliseconds 250
+        }
+        $nativeJournal=Get-UpdateChildPath $Root '.update-transaction.json'
+        $journalHash=if([IO.File]::Exists($nativeJournal)){(Get-FileHash -LiteralPath $nativeJournal).Hash.ToLowerInvariant()}else{$null}
+        $permit=@{schemaVersion=1;purpose='native-publication-start';id=[Guid]::NewGuid().ToString('N');createdAt=[DateTime]::UtcNow.ToString('o');nativeRoot=$Root;journalSha256=$journalHash;launcherSha256=(Get-FileHash -LiteralPath "$UpdateCodeRoot/Start-Server.ps1").Hash.ToLowerInvariant()}
+        Write-UpdateAtomic (Get-UpdateChildPath $env:APF_CONTROL_ROOT 'native-cache/server-start-permit.json') ($permit|ConvertTo-Json)
+        Start-ScheduledTask -TaskName 'KESAS Server' -ErrorAction Stop
+    } else {
+        $launcher=Start-Process powershell.exe -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',"`"$UpdateCodeRoot/Start-Server.ps1`"",'-LauncherLog',"`"$Root/LauncherLogs/$stamp.log`"",'-PublicationActivation','-DeploymentRoot',"`"$Root`"") -WindowStyle Hidden -PassThru
+    }
     $deadline=(Get-Date).AddSeconds(30)
     while(!(Get-NetUDPEndpoint -LocalPort $Config.gamePort -ErrorAction SilentlyContinue) -or !(Get-NetTCPConnection -LocalPort $Config.packPort -State Listen -ErrorAction SilentlyContinue)){
-        if($launcher.HasExited -or (Get-Date)-gt $deadline){throw 'Updated server failed to start; inspect LauncherLogs'}
+        if(($launcher -and $launcher.HasExited) -or (Get-Date)-gt $deadline){throw 'Updated server failed to start; inspect LauncherLogs'}
         Start-Sleep -Milliseconds 500
     }
     $null=@(Get-UpdateServiceProcesses $Root $Config)

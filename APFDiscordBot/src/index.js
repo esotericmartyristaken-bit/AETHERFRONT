@@ -177,10 +177,24 @@ const statusPollMs = Math.max(5000, Number(config.health?.statusPollMs) || 5000)
 const idleStatusPollMs = Math.max(statusPollMs, Number(config.health?.idleStatusPollMs) || 30000);
 let statusTimer = null;
 let statusLoopStopped = false;
+let controlApplicationHealth = 'unknown';
+let controlStatusReady = false;
+let controlStatusCheckedAt = 0;
+let controlHealthGeneration = 0;
 async function runStatusLoop() {
   let result = null;
-  try { result = await monitorStatus(); }
-  catch (error) { await bot.reportError(error); }
+  try {
+    result = await monitorStatus();
+    controlStatusReady = Boolean(result);
+    controlStatusCheckedAt = Date.now();
+    controlApplicationHealth = result?.status?.online === true && result?.status?.ready === true ? 'healthy' : result?.status?.online === false ? 'offline' : 'unknown';
+  }
+  catch (error) {
+    controlStatusReady=false;controlApplicationHealth='unknown';
+    controlHealthGeneration++;
+    if(process.connected&&config.__controlRoot)process.send({type:'control-health-failed'});
+    await bot.reportError(error);
+  }
   if (statusLoopStopped) return;
   const delay = statusPollDelay(result?.status, result?.update, statusPollMs, idleStatusPollMs);
   statusTimer = setTimeout(runStatusLoop, delay);
@@ -224,5 +238,44 @@ async function shutdown(signal) {
 
 process.on('SIGINT', () => { shutdown('SIGINT').catch(error => { console.error(error); process.exitCode = 1; }); });
 process.on('SIGTERM', () => { shutdown('SIGTERM').catch(error => { console.error(error); process.exitCode = 1; }); });
+
+// The independent supervisor owns only this bot/watcher, never the game or an
+// applying native publisher. Drain work before acknowledging a code handoff.
+if (process.send && config.__controlRoot) {
+  let draining = false;
+  let readyGeneration = -1;
+  const heartbeat = setInterval(() => {
+    if (process.connected && controlStatusReady && Date.now() - controlStatusCheckedAt < 90000) {
+      if (readyGeneration!==controlHealthGeneration) { process.send({ type: 'control-ready', health: controlApplicationHealth, observedAt:controlStatusCheckedAt }); readyGeneration=controlHealthGeneration; }
+      process.send({ type: 'control-health', health: controlApplicationHealth, observedAt:controlStatusCheckedAt });
+    }
+    if(process.connected&&updateManager.operation)process.send({type:'control-progress'});
+  }, 5000);
+  heartbeat.unref();
+  const drain = async () => {
+    if (draining) return;
+    draining = true;
+    githubDeployment.stop();
+    while (statusCheckBusy || githubDeployment.busy || updateManager.operation) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    const state = await updateManager.status();
+    if (state.status !== 'idle') {
+      draining = false;
+      if (process.connected) process.send({ type: 'control-busy' });
+      githubDeployment.start();
+      return;
+    }
+    await shutdown('control-handoff');
+    clearInterval(heartbeat);
+    if (process.connected) process.send({ type: 'control-quiesced' }, () => process.exit(0));
+    else process.exit(0);
+  };
+  process.on('message', message => {
+    if (message?.type === 'quiesce') drain().catch(() => { draining = false; });
+    if (message?.type === 'resume' && !shuttingDown) { draining = false; githubDeployment.start(); }
+  });
+  process.on('disconnect', () => { drain().catch(() => { process.exitCode = 1; }); });
+}
 
 console.log(`APF Discord Bot running from ${path.resolve(config.__root)}`);

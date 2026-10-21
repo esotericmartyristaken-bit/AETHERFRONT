@@ -1,16 +1,16 @@
 {
-  "scannedUtc": "2026-10-18T05:42:30.7537024Z",
-  "filesScanned": 2751,
-  "elapsedSeconds": 18.1499934,
+  "scannedUtc": "2026-10-21T06:24:12.5653294Z",
+  "filesScanned": 2865,
+  "elapsedSeconds": 14.7800392,
   "ruleMilliseconds": {
-    "user-home": 814.4634000000018,
-    "github-token": 1186.415000000002,
-    "cloud-key": 989.0813999999983,
-    "credential-literal": 2662.0729000000024,
-    "discord-token": 3000.915100000002,
-    "private-host": 2629.8925999999947,
-    "credential-url": 1052.1820000000037,
-    "private-key": 1138.0671999999988
+    "cloud-key": 713.1655000000002,
+    "discord-token": 1965.9762000000019,
+    "credential-url": 778.7919999999993,
+    "private-key": 1065.8056999999988,
+    "github-token": 885.5534999999993,
+    "credential-literal": 2177.6752999999994,
+    "private-host": 2158.6727999999966,
+    "user-home": 825.4858999999997
   },
   "regexTimeoutSecondsPerFileRule": 5,
   "findingCount": 0,
@@ -53,6 +53,12 @@
       "reason": "Synthetic path-redaction unit test input; not accessed."
     },
     {
+      "path": "ControlPlane/test/controller.test.mjs",
+      "rule": "credential-url",
+      "matchSha256": "093866188144b0216fb125431572e8ac2df8980dfeeb6ebeb3d9f3987d1e4c1d",
+      "reason": "Exact deliberately rejected synthetic username/password origin in the pinned-transport negative test; not a live credential."
+    },
+    {
       "path": "KESAS-VPS-Server/GitHub.Publish.ps1",
       "rule": "credential-literal",
       "matchSha256": "37ebf4d8a5cb951e9a0fd076997ffcf07601c62ff341ef676a4329111d0f8284",
@@ -72,17 +78,5 @@
     }
   ],
   "contentOrMatchedValuesPrinted": false,
-  "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check.",
-  "incrementalReviews": [
-    {
-      "scannedUtc": "2026-10-21T03:19:07.569574Z",
-      "paths": [
-        "KESAS-VPS-Server/Publish-Release.ps1",
-        "APFDiscordBot/scripts/Verify-KesasRelease.ps1",
-        "APFDiscordBot/scripts/Test-KesasReleaseMedia.ps1"
-      ],
-      "findingCount": 0,
-      "matchedValuesPrinted": false
-    }
-  ]
+  "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
 }

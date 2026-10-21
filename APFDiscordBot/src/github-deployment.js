@@ -2,6 +2,8 @@ import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { writeJsonAtomic } from './util.js';
+import { assertCapabilities } from '../../ControlPlane/contract.mjs';
+import { parseStrictJson } from '../../ControlPlane/github.mjs';
 
 const REPOSITORY = 'esotericmartyristaken-bit/AETHERFRONT';
 const MANIFEST_PATH = 'deployment/production.json';
@@ -15,7 +17,7 @@ export function releaseNumber(version) {
 }
 
 export function validateDeployment(value) {
-  if (!value || value.schemaVersion !== 1) throw new Error('Invalid deployment manifest schema');
+  if (!value || ![1, 2].includes(value.schemaVersion)) throw new Error('Invalid deployment manifest schema');
   releaseNumber(value.version);
   if (value.releaseTag !== `host-${value.version}` || value.assetName !== `Aetherfront-Release-${value.version}.zip` ||
       !/^[a-f0-9]{64}$/.test(value.sha256 || '') || !Number.isSafeInteger(value.sizeBytes) ||
@@ -23,6 +25,15 @@ export function validateDeployment(value) {
       value.notes.length > 500 || /[\p{Cc}\p{Cf}]/u.test(value.notes)) throw new Error('Invalid deployment artifact metadata');
   // No caller-controlled URL, command, filesystem destination or force flag.
   const allowed = new Set(['schemaVersion', 'version', 'releaseTag', 'assetName', 'sha256', 'sizeBytes', 'notes']);
+  if (value.schemaVersion === 2) {
+    allowed.add('requirements');
+    const requirements = value.requirements;
+    if (!requirements || Object.keys(requirements).length !== 2 || requirements.contractVersion !== 1 ||
+        !Array.isArray(requirements.capabilities) || !requirements.capabilities.length ||
+        new Set(requirements.capabilities).size !== requirements.capabilities.length ||
+        requirements.capabilities.some(item => typeof item !== 'string' || !/^[a-z][a-z0-9-]{0,79}$/.test(item)) ||
+        Object.keys(requirements).some(key => !['contractVersion', 'capabilities'].includes(key))) throw new Error('Unsupported deployment requirements');
+  }
   if (Object.keys(value).some(key => !allowed.has(key))) throw new Error('Unsupported deployment manifest field');
   return value;
 }
@@ -140,7 +151,7 @@ export class GitHubDeployment {
   async json(url) {
     const response = await responseFor(this.fetch, url, AbortSignal.timeout(20_000), false);
     const bytes = await boundedBytes(response, MAX_TEXT);
-    return { value: JSON.parse(bytes.toString('utf8')), sha256: digest(bytes) };
+    return { value: parseStrictJson(bytes.toString('utf8')), sha256: digest(bytes) };
   }
 
   async download(manifest) {
@@ -177,10 +188,16 @@ export class GitHubDeployment {
     if (!this.enabled || this.stopped || this.busy) return { status: 'disabled-or-busy' };
     this.busy = true;
     try {
+      if(this.config.__controlRoot&&typeof this.manager.controlMaintenance==='function'&&await this.manager.controlMaintenance())return {status:'waiting-control-health'};
       await noLinks(this.statePath);
       const saved = await readState(this.statePath);
       const observation = await this.json(`https://raw.githubusercontent.com/${REPOSITORY}/refs/heads/deploy/${MANIFEST_PATH}`);
       let manifest = validateDeployment(observation.value);
+      if (manifest.schemaVersion === 2) {
+        if (!this.config.__controlRoot) throw new Error('Required control-plane capability report is unavailable');
+        const report = JSON.parse(await fs.readFile(path.join(this.config.__controlRoot, 'host-status.json'), 'utf8'));
+        assertCapabilities(report, manifest.requirements.capabilities);
+      }
       const active = await this.activeVersion();
       const native = await this.manager.status();
       if (['queued', 'deploying', 'failed'].includes(native.status)) {
@@ -213,7 +230,7 @@ export class GitHubDeployment {
         if (staged.manifest.provider !== 'kesas-release' || staged.manifest.version !== manifest.version || staged.manifest.notes !== manifest.notes ||
             staged.manifest.files.length !== 1 || row.sha256 !== manifest.sha256 || Number(row.sizeBytes) !== manifest.sizeBytes) throw new Error('Existing staged deployment differs from channel');
       } else {
-        await this.manager.stage(archive, { id, version: manifest.version, notes: manifest.notes });
+        await this.manager.stage(archive, { id, version: manifest.version, notes: manifest.notes, sourceCommit: commit });
       }
       // Re-read channel intent and active version after a potentially long fetch.
       const latest = await this.json(`https://raw.githubusercontent.com/${REPOSITORY}/refs/heads/deploy/${MANIFEST_PATH}`);

@@ -5,6 +5,7 @@ import { spawn, execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { formatBytes, parseTag, powershellJson, shellQuotePowerShell, tailText, writeJsonAtomic } from './util.js';
 import { parseNetworkTimeoutLine } from './timeout-help.js';
+import { publishThroughBroker } from './native-broker.js';
 const execFileAsync = promisify(execFile);
 
 async function latestFile(directory, extension = '.log') {
@@ -766,12 +767,13 @@ export class LmpController extends EventEmitter {
     return { ok: true, pid, mode: 'external', graceful: Boolean(result.graceful), forced: Boolean(result.forced) };
   }
 
-  async publishRelease(archive, notes = '') {
+  async publishRelease(archive, notes = '', options = {}) {
     const root = this.deploymentRoot;
     if (!root) throw new Error('KESAS deployment root is not configured');
+    if (this.config.__controlRoot) return publishThroughBroker(this.config, archive, notes, options);
     const executable = this.config.updates?.powerShellExecutable || 'pwsh.exe';
     const { stdout } = await execFileAsync(executable, ['-NoProfile', '-NonInteractive', '-File',
-      path.join(root, 'Publish-Release.ps1'), '-ReleaseZip', path.resolve(archive), '-Notes', String(notes)],
+      path.join(this.config.__nativeCodeRoot || root, 'Publish-Release.ps1'), '-ReleaseZip', path.resolve(archive), '-Notes', String(notes), '-DeploymentRoot', root],
     { cwd: root, windowsHide: true, maxBuffer: 1024 * 1024 });
     return { ok: true, output: stdout, rollbackRoot: path.join(root, 'Backups', 'updates') };
   }

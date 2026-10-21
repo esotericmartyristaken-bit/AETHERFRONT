@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([Parameter(Mandatory=$true)][string]$ReleaseZip,[string]$Notes='KESAS update',[switch]$AllowActivePlayers)
+param([Parameter(Mandatory=$true)][string]$ReleaseZip,[string]$Notes='KESAS update',[switch]$AllowActivePlayers,[string]$DeploymentRoot=$env:APF_NATIVE_ROOT)
 . "$PSScriptRoot/Update.Common.ps1"
 
 function Add-ReleaseMedia([string]$ReleaseRoot,[string]$ConfigRoot,$Release,$Catalog) {
@@ -132,7 +132,7 @@ function Assert-PublisherEmpty($Root,$Config) {
     }
 }
 
-$root=Assert-UpdatePath $PSScriptRoot
+$root=Assert-UpdatePath $(if($DeploymentRoot){$DeploymentRoot}else{$PSScriptRoot})
 $cfg=Get-UpdateDeployment $root
 foreach($name in @('Server','PackHost','CertificateTool','Updates','Backups','.release-staging','.github-prepared','secrets','UpdateTool')){Assert-UpdateTree (Get-UpdateChildPath $root $name)}
 $releaseLock=New-Object IO.FileStream((Get-UpdateChildPath $root '.publish.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
@@ -160,8 +160,8 @@ try{
         $prepared=Get-UpdateChildPath $root ".github-prepared/$version"
         Assert-PublisherPrepared $prepared $fingerprint $version
         if(($pending.fingerprint|ConvertTo-Json -Depth 8 -Compress) -cne ($fingerprint|ConvertTo-Json -Depth 8 -Compress)){throw 'Completion journal fingerprint mismatch; review without rollback.'}
-        if(-not [IO.File]::Exists("$root/GitHub.Publish.ps1")){throw 'GitHub publisher is not installed; preserve the completion journal.'}
-        . "$root/GitHub.Publish.ps1"
+        if(-not [IO.File]::Exists("$PSScriptRoot/GitHub.Publish.ps1")){throw 'GitHub publisher is not installed; preserve the completion journal.'}
+        . "$PSScriptRoot/GitHub.Publish.ps1"
         Assert-PublisherSigned $root $cfg "$prepared/Published" $version
         $catalog=Read-UpdateText "$prepared/install-catalog.json" | ConvertFrom-Json
         if(-not $catalog.gitHub.enabled){throw 'Completion journal has no enabled GitHub catalog.'}
@@ -188,7 +188,10 @@ try{
     Assert-UpdateActiveFeed $root $cfg
     $wasRunning=@(Get-UpdateServiceProcesses $root $cfg).Count -gt 0
     Expand-UpdateArchive $releasePath "$stage/Release"
-    $release=Read-UpdateText "$stage/Release/RELEASE.json" | ConvertFrom-Json
+    $releaseText=Read-UpdateText "$stage/Release/RELEASE.json"
+    Assert-ReleaseJsonUnique $releaseText
+    $release=$releaseText | ConvertFrom-Json
+    if(@($release.PSObject.Properties).Count -ne 2 -or @($release.PSObject.Properties | Where-Object Name -cnotin @('version','files')).Count -or $release.version -isnot [string] -or $release.files -isnot [array]){throw 'Unsupported release manifest schema'}
     [long]$releaseNumber=0
     if($release.version -cnotmatch '^kesas-rc[1-9][0-9]*$' -or ![long]::TryParse($release.version.Substring(8),[ref]$releaseNumber)){throw 'Release version must be kesas-rc followed by a positive integer within Int64 range'}
     $version=$release.version
@@ -203,10 +206,11 @@ try{
     }
     $declared=New-Object 'Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
     foreach($file in $release.files){
+        if(@($file.PSObject.Properties).Count -ne 2 -or @($file.PSObject.Properties | Where-Object Name -cnotin @('path','sha256')).Count -or $file.path -isnot [string] -or $file.sha256 -isnot [string]){throw 'Unsupported release file schema'}
         $relative=Get-UpdateRelativePath $file.path
         if(!$declared.Add($relative)){throw 'Duplicate release manifest entry'}
-        if(@('ClientTemplate.zip','APFPack-template.json','AetherfrontTechnology.json') -cnotcontains $relative -and $relative -cnotmatch '^(ServerPayload|PackHostPayload|CertificateToolPayload)/' -and $relative -cnotmatch '^MediaPayload/kesas-[a-z0-9-]+-[a-f0-9]{64}\.zip$'){throw "Unsupported release file: $relative"}
-        if($relative -match '^(ServerPayload|PackHostPayload|CertificateToolPayload)/(Config|Universe|Aetherfront|Logs|secrets)(/|$)'){throw 'Release contains protected server state'}
+        if(@('ClientTemplate.zip','APFPack-template.json','AetherfrontTechnology.json') -cnotcontains $relative -and $relative -cnotmatch '^(ServerPayload|PackHostPayload|CertificateToolPayload|UpdateToolPayload)/' -and $relative -cnotmatch '^MediaPayload/kesas-[a-z0-9-]+-[a-f0-9]{64}\.zip$'){throw "Unsupported release file: $relative"}
+        if($relative -match '^(ServerPayload|PackHostPayload|CertificateToolPayload|UpdateToolPayload)/(Config|Universe|Aetherfront|Logs|secrets)(/|$)'){throw 'Release contains protected server state'}
         if($file.sha256 -notmatch '^[a-fA-F0-9]{64}$'){throw "Invalid release SHA256: $relative"}
         $path=Get-UpdateChildPath "$stage/Release" $relative
         if(![IO.File]::Exists($path) -or (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash -ine $file.sha256){throw "Release hash mismatch: $relative"}
@@ -220,8 +224,8 @@ try{
     $fingerprint=$null;$prepared=$null;$reuse=$false
     $bootstrapSource="$stage/KESAS-Client-Bootstrap.zip"
     if($githubEnabled){
-        if(-not [IO.File]::Exists("$root/GitHub.Publish.ps1")){throw 'GitHub publisher is not installed; no services have been stopped.'}
-        . "$root/GitHub.Publish.ps1"
+        if(-not [IO.File]::Exists("$PSScriptRoot/GitHub.Publish.ps1")){throw 'GitHub publisher is not installed; no services have been stopped.'}
+        . "$PSScriptRoot/GitHub.Publish.ps1"
         $fingerprint=Get-PublisherFingerprint $root $cfg $releaseSha $Notes
         $prepared=Get-UpdateChildPath $root ".github-prepared/$version"
         if(Test-Path -LiteralPath $prepared){
@@ -232,13 +236,13 @@ try{
         }
     }
     if(@($release.files | Where-Object {$_.path -clike 'MediaPayload/*'}).Count){
-        if(-not $githubEnabled){. "$root/GitHub.Publish.ps1"}
+        if(-not $githubEnabled){. "$PSScriptRoot/GitHub.Publish.ps1"}
         Add-ReleaseMedia "$stage/Release" "$root/Server/Config" $release $clientCatalog
     }
     if(-not $reuse){
         New-UpdateDirectory "$stage/Published"
         Invoke-UpdateTool $root @('--root-overlay','--source-root',"$stage/Client",'--output',"$stage/Published",'--version',$version,'--package-base-url',"$($cfg.packOrigin)/updates/$version/",'--private-key-xml',"$root/secrets/update-signing-private.xml",'--ksp-version','1.12.5','--release-notes',$Notes)
-        & "$root/Export-Client.ps1" -Template "$stage/Release/ClientTemplate.zip" -Output $bootstrapSource -PublicationLockHeld
+        & "$PSScriptRoot/Export-Client.ps1" -Template "$stage/Release/ClientTemplate.zip" -Output $bootstrapSource -PublicationLockHeld -DeploymentRoot $root
     }
     Assert-PublisherSigned $root $cfg "$stage/Published" $version
     $oldPack=Read-UpdateText "$root/Server/Config/APFPack.json" | ConvertFrom-Json
@@ -272,7 +276,7 @@ try{
         @{source="$bootstrapSource.sha256";relative='KESAS-Client-Bootstrap.zip.sha256'},
         @{source="$stage/Published/APFClientUpdate.json";relative='Updates/APFClientUpdate.json'}
     )
-    $payloadFamilies=@{'ServerPayload/'='Server/';'PackHostPayload/'='PackHost/';'CertificateToolPayload/'='CertificateTool/'}
+    $payloadFamilies=@{'ServerPayload/'='Server/';'PackHostPayload/'='PackHost/';'CertificateToolPayload/'='CertificateTool/';'UpdateToolPayload/'='UpdateTool/'}
     foreach($file in $release.files){
         foreach($prefix in $payloadFamilies.Keys){
             if($file.path.StartsWith($prefix,[StringComparison]::Ordinal)){

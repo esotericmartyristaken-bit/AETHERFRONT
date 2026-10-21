@@ -4,6 +4,25 @@ Set-StrictMode -Version Latest
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
+function Assert-ReleaseJsonUnique([string]$Json) {
+    $null=ConvertFrom-Json -InputObject $Json -ErrorAction Stop
+    $stack=New-Object 'Collections.Generic.Stack[object]'
+    foreach($token in [regex]::Matches($Json,'"(?:\\.|[^"\\])*"|[{}\[\]:,]')){
+        $value=$token.Value
+        if($value -ceq '{'){$stack.Push([pscustomobject]@{array=$false;key=$true;seen=(New-Object 'Collections.Generic.HashSet[string]' ([StringComparer]::Ordinal))});continue}
+        if($value -ceq '['){$stack.Push([pscustomobject]@{array=$true;key=$false;seen=$null});continue}
+        if($value -ceq '}' -or $value -ceq ']'){$null=$stack.Pop();continue}
+        if(-not $stack.Count){continue}
+        $top=$stack.Peek()
+        if($value -ceq ',' -and -not $top.array){$top.key=$true;continue}
+        if($value.StartsWith('"') -and $top.key){
+            $name=ConvertFrom-Json -InputObject $value
+            if(-not $top.seen.Add([string]$name)){throw 'Duplicate release JSON property'}
+            $top.key=$false
+        }
+    }
+}
+
 # Match the native publisher's Windows path and expansion limits before queueing.
 # This is a preflight, not a replacement for its independent final validation.
 function Require-ReleasePath([string]$Name) {
@@ -41,16 +60,18 @@ try {
     $entry=$zip.GetEntry('RELEASE.json')
     if(!$entry -or $entry.Length -gt 65536){throw 'Missing or oversized RELEASE.json'}
     $reader=[IO.StreamReader]::new($entry.Open())
-    try{$release=$reader.ReadToEnd() | ConvertFrom-Json}finally{$reader.Dispose()}
+    try{$releaseText=$reader.ReadToEnd();Assert-ReleaseJsonUnique $releaseText;$release=$releaseText | ConvertFrom-Json}finally{$reader.Dispose()}
+    if(@($release.PSObject.Properties).Count -ne 2 -or @($release.PSObject.Properties | Where-Object Name -cnotin @('version','files')).Count -or $release.version -isnot [string] -or $release.files -isnot [array]){throw 'Unsupported release manifest schema'}
     if($release.version -cne $ExpectedVersion){throw 'Release version does not match staged version'}
     $seen=[Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
     foreach($file in $release.files) {
+        if(@($file.PSObject.Properties).Count -ne 2 -or @($file.PSObject.Properties | Where-Object Name -cnotin @('path','sha256')).Count -or $file.path -isnot [string] -or $file.sha256 -isnot [string]){throw 'Unsupported release file schema'}
         Require-ReleasePath $file.path
         if(!$seen.Add($file.path) -or
             ($file.path -cnotin @('ClientTemplate.zip','APFPack-template.json','AetherfrontTechnology.json') -and
-             $file.path -cnotmatch '^(ServerPayload|PackHostPayload|CertificateToolPayload)/' -and
+             $file.path -cnotmatch '^(ServerPayload|PackHostPayload|CertificateToolPayload|UpdateToolPayload)/' -and
              $file.path -cnotmatch '^MediaPayload/kesas-[a-z0-9-]+-[a-f0-9]{64}\.zip$')){throw 'Unsupported or duplicate release path'}
-        if($file.path -match '^(ServerPayload|PackHostPayload|CertificateToolPayload)/(Config|Universe|Aetherfront|Logs|secrets)(/|$)'){throw 'Protected server state in release'}
+        if($file.path -match '^(ServerPayload|PackHostPayload|CertificateToolPayload|UpdateToolPayload)/(Config|Universe|Aetherfront|Logs|secrets)(/|$)'){throw 'Protected server state in release'}
         $item=$zip.GetEntry($file.path)
         if(!$item -or $file.sha256 -notmatch '^[a-fA-F0-9]{64}$'){throw 'Missing release entry/hash'}
         $stream=$item.Open();$sha=[Security.Cryptography.SHA256]::Create()

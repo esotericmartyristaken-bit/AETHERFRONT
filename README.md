@@ -1,5 +1,9 @@
 # Aetherfront
 
+Guarded controller-to-host updates, capability preflight, progress readback and
+recovery procedures: [Host control contract](ControlPlane/README.md). Source
+pushes do not deploy; control releases do not advance the application channel.
+
 Technical dependencies, provenance and exclusions: [Source provenance](SOURCE-PROVENANCE.md).
 This source-only snapshot cannot independently reproduce the shipping client;
 historical baseline binaries and separately licensed KSP/Unity dependencies are required.

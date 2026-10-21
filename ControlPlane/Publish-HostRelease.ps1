@@ -1,0 +1,34 @@
+#requires -Version 7.0
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory)][string]$Archive,
+    [Parameter(Mandatory)][string]$Version,
+    [Parameter(Mandatory)][string]$HostCertificateSha256,
+    [string]$HostOrigin='https://217.216.49.250:18866',
+    [string]$Notes='',
+    [string]$ControlArchive='',
+    [string]$ControlVersion='',
+    [ValidateRange(1,60)][int]$TimeoutMinutes=30
+)
+$ErrorActionPreference='Stop'
+Set-StrictMode -Version Latest
+if([bool]$ControlArchive -ne [bool]$ControlVersion){throw 'Supply both ControlArchive and ControlVersion, or neither.'}
+$controller=Join-Path $PSScriptRoot 'controller.mjs'
+if($ControlArchive){
+    $expectedControlHash=(Get-FileHash -LiteralPath $ControlArchive -Algorithm SHA256).Hash.ToLowerInvariant()
+    & node $controller publish-control --origin $HostOrigin --pin $HostCertificateSha256 --archive $ControlArchive --version $ControlVersion
+    if($LASTEXITCODE -ne 0){throw 'Control publication was rejected; application channel unchanged.'}
+    $deadline=(Get-Date).AddMinutes($TimeoutMinutes)
+    do {
+        $output=@(& node $controller status --origin $HostOrigin --pin $HostCertificateSha256)
+        if($LASTEXITCODE -ne 0){throw 'Fresh host status unavailable; application channel unchanged.'}
+        $status=($output -join "`n")|ConvertFrom-Json
+        if($status.control.status -in @('blocked','rolled-back')){throw 'Control replacement failed or rolled back; application channel unchanged.'}
+        if($status.control.version -ceq $ControlVersion -and $status.control.sha256 -ceq $expectedControlHash -and $status.control.lastSuccess -ceq $ControlVersion -and $status.control.status -ceq 'healthy' -and -not $status.control.pendingVersion -and -not $status.control.failure){break}
+        if((Get-Date)-ge $deadline){throw 'Control activation is still pending; application channel unchanged. Read status before retrying the same bytes.'}
+        Start-Sleep -Seconds 5
+    }while($true)
+}
+# The application publisher rechecks fresh capabilities before upload and again
+# immediately before the final channel write. Upload is never activation.
+& (Join-Path $PSScriptRoot '../APFDiscordBot/scripts/Publish-GitHubDeployment.ps1') -Archive $Archive -Version $Version -Notes $Notes -HostOrigin $HostOrigin -HostCertificateSha256 $HostCertificateSha256

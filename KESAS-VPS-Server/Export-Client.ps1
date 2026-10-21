@@ -1,7 +1,7 @@
 [CmdletBinding()]
-param([string]$Template='',[string]$Output='',[switch]$PublicationLockHeld)
+param([string]$Template='',[string]$Output='',[switch]$PublicationLockHeld,[string]$DeploymentRoot=$env:APF_NATIVE_ROOT)
 . "$PSScriptRoot/Update.Common.ps1"
-$root=Assert-UpdatePath $PSScriptRoot
+$root=Assert-UpdatePath $(if($DeploymentRoot){$DeploymentRoot}else{$PSScriptRoot})
 $cfg=Get-UpdateDeployment $root
 if(!$Template){$Template=Get-UpdateChildPath $root 'ClientTemplate.zip'}
 if(!$Output){$Output=Get-UpdateChildPath $root 'KESAS-Client-Bootstrap.zip'}

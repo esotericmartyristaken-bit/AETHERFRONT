@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-21T03:19:07.569574Z",
+  "createdUtc": "2026-10-21T06:24:12.9887447Z",
   "publication": "Reviewed source update; ordinary source pushes do not deploy",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -25,13 +25,14 @@
     },
     {
       "path": ".github/workflows/windows-bot-checks.yml",
-      "source": ".github/workflows/windows-bot-checks.yml",
-      "bytes": 891,
-      "sha256": "2de2fa9fdbc358f9a3fa63a47d1b2fb5c308dad38755fcc1c6bfcdbc772bda59",
-      "sourceSha256": "2de2fa9fdbc358f9a3fa63a47d1b2fb5c308dad38755fcc1c6bfcdbc772bda59",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.076971+00:00",
-      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
-      "transformations": []
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 1057,
+      "sha256": "f9da6a36f3d33fc5a4ef9744f259edf417ce9afdfb53324b2f03e44e3bec9fd0",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
     },
     {
       "path": ".gitignore",
@@ -218,13 +219,14 @@
     },
     {
       "path": "APFDiscordBot/scripts/Publish-GitHubDeployment.ps1",
-      "source": "APFDiscordBot/scripts/Publish-GitHubDeployment.ps1",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 16634,
-      "sha256": "078e2634a88d1289b989c2653a215e3b630cc9b065e290ab7ac9cfc60fff4d25",
-      "sourceSha256": "078e2634a88d1289b989c2653a215e3b630cc9b065e290ab7ac9cfc60fff4d25",
-      "sourceModifiedUtc": "2026-10-18T05:34:52.7205244Z",
-      "transformations": []
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 20897,
+      "sha256": "651d9f2a83d03df5e8eec73c6a007e4c133f49b1a8ccee76fb48500ee2ab7143",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
     },
     {
       "path": "APFDiscordBot/scripts/Start-APFDiscordBot.ps1",
@@ -306,7 +308,7 @@
       "bytes": 4622,
       "sha256": "559617055d566739e9c8d9f78ce8dd34860deda1effa38238306062a077b8956",
       "sourceSha256": "559617055d566739e9c8d9f78ce8dd34860deda1effa38238306062a077b8956",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.091483+00:00",
+      "sourceModifiedUtc": "2026-10-18T11:10:34.091483+02:00",
       "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
@@ -322,13 +324,14 @@
     },
     {
       "path": "APFDiscordBot/scripts/Verify-KesasRelease.ps1",
-      "source": "APFDiscordBot/scripts/Verify-KesasRelease.ps1",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 4735,
-      "sha256": "67afef3d648e6f15a6a30fdb623e3340f69626ba958748a544b1b47172332d75",
-      "sourceSha256": "67afef3d648e6f15a6a30fdb623e3340f69626ba958748a544b1b47172332d75",
-      "sourceModifiedUtc": "2026-10-21T03:14:58.728288Z",
-      "transformations": []
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 6360,
+      "sha256": "f6680f368b08e0ca94f0118caf4a5665481d4763c392f681106ecee7c7baa955",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
     },
     {
       "path": "APFDiscordBot/scripts/silent-restart-when-empty.mjs",
@@ -362,13 +365,14 @@
     },
     {
       "path": "APFDiscordBot/src/config.js",
-      "source": "APFDiscordBot/src/config.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 1663,
-      "sha256": "6f9854a89b7e5a25dacac2d0a173dfd28a2a0b1ac7b369a8b88b9c628300dd82",
-      "sourceSha256": "6f9854a89b7e5a25dacac2d0a173dfd28a2a0b1ac7b369a8b88b9c628300dd82",
-      "sourceModifiedUtc": "2026-08-13T19:22:53.4387332Z",
-      "transformations": []
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 2003,
+      "sha256": "f7a8c5e01227b0ccc60954115a997a2b01a68a7e26f242c38702c909efdd31c9",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
     },
     {
       "path": "APFDiscordBot/src/doctor.js",
@@ -382,13 +386,14 @@
     },
     {
       "path": "APFDiscordBot/src/github-deployment.js",
-      "source": "APFDiscordBot/src/github-deployment.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 14274,
-      "sha256": "f5b9b30994d43aec53efc94c644f4fcf60a9dbf429d0ae35b947b9d11da07122",
-      "sourceSha256": "f5b9b30994d43aec53efc94c644f4fcf60a9dbf429d0ae35b947b9d11da07122",
-      "sourceModifiedUtc": "2026-10-18T05:37:19.4732732Z",
-      "transformations": []
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 15648,
+      "sha256": "575b6d0fc10c3af5c0718bb843b7a460ed6159b64b5fd5eeb5671a25471dbbe2",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
     },
     {
       "path": "APFDiscordBot/src/health.js",
@@ -402,13 +407,14 @@
     },
     {
       "path": "APFDiscordBot/src/index.js",
-      "source": "APFDiscordBot/src/index.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 11478,
-      "sha256": "d8a761653adb12dc8d37a7e1b5f68031b4e16f4a5d78b6d625857d4b3b919f3a",
-      "sourceSha256": "d8a761653adb12dc8d37a7e1b5f68031b4e16f4a5d78b6d625857d4b3b919f3a",
-      "sourceModifiedUtc": "2026-10-18T05:30:55.9791651Z",
-      "transformations": []
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 13909,
+      "sha256": "f51135ec0e67c4a7ac62f01b8091a2bcefe500d2fdc85d046681057c6990b211",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
     },
     {
       "path": "APFDiscordBot/src/lifecycle-smoke.js",
@@ -422,13 +428,14 @@
     },
     {
       "path": "APFDiscordBot/src/lmp.js",
-      "source": "APFDiscordBot/src/lmp.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 55346,
-      "sha256": "b2de5b5a02242f0d90a636bf053d026f7ec46cbba15202cb2558a953a374fb0c",
-      "sourceSha256": "b2de5b5a02242f0d90a636bf053d026f7ec46cbba15202cb2558a953a374fb0c",
-      "sourceModifiedUtc": "2026-10-20T00:56:47.528Z",
-      "transformations": []
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 55578,
+      "sha256": "784b5caeb3aa90d2961887bb275c3c6da1b4d4fff84bada661718b6cc1bcb271",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
     },
     {
       "path": "APFDiscordBot/src/provision-channels.js",
@@ -492,13 +499,14 @@
     },
     {
       "path": "APFDiscordBot/src/update-manager.js",
-      "source": "APFDiscordBot/src/update-manager.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 29810,
-      "sha256": "32817f3b38d3a2134972f8dc8e4c5caa03bac97c92c3e3ec782ab326969a43f6",
-      "sourceSha256": "32817f3b38d3a2134972f8dc8e4c5caa03bac97c92c3e3ec782ab326969a43f6",
-      "sourceModifiedUtc": "2026-10-20T00:56:47.533Z",
-      "transformations": []
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 34148,
+      "sha256": "a6e1669353bb42594f5ac5699963606fd4df661fa069df529a4d56ddd61cf3bf",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
     },
     {
       "path": "APFDiscordBot/src/util.js",
@@ -552,13 +560,14 @@
     },
     {
       "path": "APFDiscordBot/test/kesas.test.js",
-      "source": "APFDiscordBot/test/kesas.test.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 9417,
-      "sha256": "2339b2bcd50f6c0cea2bbb8529025e2d34c419dbd8cd0e604e69da5b2ffab8c7",
-      "sourceSha256": "1674d5b0d5de61827c409ff364fd897e5402e53e55aecb19041d90c8eb68fe5b",
-      "sourceModifiedUtc": "2026-10-20T01:00:24.659Z",
-      "transformations": []
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 12695,
+      "sha256": "5f44609886445a380dbcf43694e0d5b83b937e4a1476f6e9b6c78795d2884629",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
     },
     {
       "path": "APFDiscordBot/test/native-verifier.test.js",
@@ -566,7 +575,7 @@
       "bytes": 1309,
       "sha256": "ec30ee4982e337b7ec06ba9b1ee9e146c228178d5588fce4c1135bb2b01fe698",
       "sourceSha256": "ec30ee4982e337b7ec06ba9b1ee9e146c228178d5588fce4c1135bb2b01fe698",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.091988+00:00",
+      "sourceModifiedUtc": "2026-10-18T11:10:34.091988+02:00",
       "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
@@ -3593,7 +3602,7 @@
       "bytes": 56350,
       "sha256": "bdccddf5d5b826c14f85bb11b1588ce604f6f5b952501b9439175417c31fac46",
       "sourceSha256": "bdccddf5d5b826c14f85bb11b1588ce604f6f5b952501b9439175417c31fac46",
-      "sourceModifiedUtc": "2026-10-18T20:02:55.544435+00:00"
+      "sourceModifiedUtc": "2026-10-18T22:02:55.544435+02:00"
     },
     {
       "path": "Aetherfront-RC30-Work/Engine/LegacySettingsRecovery.cs",
@@ -3602,7 +3611,7 @@
       "bytes": 44951,
       "sha256": "b985acf0a3379ca1ea93fdda5dbbcdd8c8efe259d040a3db9ba32848f9a8f471",
       "sourceSha256": "b985acf0a3379ca1ea93fdda5dbbcdd8c8efe259d040a3db9ba32848f9a8f471",
-      "sourceModifiedUtc": "2026-10-18T19:42:06.848013+00:00"
+      "sourceModifiedUtc": "2026-10-18T21:42:06.848013+02:00"
     },
     {
       "path": "Aetherfront-RC30-Work/Engine/NativeInstall.cs",
@@ -3651,7 +3660,7 @@
       "bytes": 17272,
       "sha256": "36cbb5a5914dd7c698443b9225cb241a16c6b687fd7f91d0161c424079424976",
       "sourceSha256": "36cbb5a5914dd7c698443b9225cb241a16c6b687fd7f91d0161c424079424976",
-      "sourceModifiedUtc": "2026-10-18T20:02:55.544435+00:00"
+      "sourceModifiedUtc": "2026-10-18T22:02:55.544435+02:00"
     },
     {
       "path": "Aetherfront-RC30-Work/Engine/TerrainPolicy.cs",
@@ -3660,7 +3669,7 @@
       "bytes": 4258,
       "sha256": "acc989338d87c147aeb5ff5ea6c61e7ac24ce5081a518b76f2ef483ee703040e",
       "sourceSha256": "acc989338d87c147aeb5ff5ea6c61e7ac24ce5081a518b76f2ef483ee703040e",
-      "sourceModifiedUtc": "2026-10-18T20:03:37.246286+00:00"
+      "sourceModifiedUtc": "2026-10-18T22:03:37.246286+02:00"
     },
     {
       "path": "Aetherfront-RC30-Work/Engine/UserSettings.cs",
@@ -3685,7 +3694,7 @@
       "bytes": 3220,
       "sha256": "aca79cba32d4d19b706bb582a9e97d2f954fba650c80195af35ad2d7dda56503",
       "sourceSha256": "aca79cba32d4d19b706bb582a9e97d2f954fba650c80195af35ad2d7dda56503",
-      "sourceModifiedUtc": "2026-10-18T20:35:42.688508+00:00"
+      "sourceModifiedUtc": "2026-10-18T22:35:42.688508+02:00"
     },
     {
       "path": "Aetherfront-RC30-Work/SettingsTests/Program.cs",
@@ -3694,7 +3703,7 @@
       "bytes": 60441,
       "sha256": "b6183fb9a2b6088c217972c86fcb7edb06cb07ae337aa2baa68a0671236251f5",
       "sourceSha256": "b6183fb9a2b6088c217972c86fcb7edb06cb07ae337aa2baa68a0671236251f5",
-      "sourceModifiedUtc": "2026-10-18T20:08:23.347533+00:00"
+      "sourceModifiedUtc": "2026-10-18T22:08:23.347533+02:00"
     },
     {
       "path": "Aetherfront-RC30-Work/SettingsTests/SettingsTests.csproj",
@@ -3727,7 +3736,7 @@
       "bytes": 3077,
       "sha256": "96851731d584e29f5d7aa8dc864e01d323549c6696bc57324771cad74e708199",
       "sourceSha256": "96851731d584e29f5d7aa8dc864e01d323549c6696bc57324771cad74e708199",
-      "sourceModifiedUtc": "2026-10-19T01:01:55.648858+00:00",
+      "sourceModifiedUtc": "2026-10-19T03:01:55.648858+02:00",
       "transformations": []
     },
     {
@@ -3737,7 +3746,7 @@
       "bytes": 5995,
       "sha256": "b8335a2c50c47fca54db8625e0825a27c622019e6068b9af0e22ef071823df74",
       "sourceSha256": "b8335a2c50c47fca54db8625e0825a27c622019e6068b9af0e22ef071823df74",
-      "sourceModifiedUtc": "2026-10-19T01:05:01.734756+00:00",
+      "sourceModifiedUtc": "2026-10-19T03:05:01.734756+02:00",
       "transformations": []
     },
     {
@@ -3747,7 +3756,7 @@
       "bytes": 107,
       "sha256": "8a1336238caf1699e8dd5697dfe5330ee2ed3350ee538638c22f258632765970",
       "sourceSha256": "8a1336238caf1699e8dd5697dfe5330ee2ed3350ee538638c22f258632765970",
-      "sourceModifiedUtc": "2026-10-18T06:44:18.941018+00:00",
+      "sourceModifiedUtc": "2026-10-18T08:44:18.941018+02:00",
       "transformations": []
     },
     {
@@ -3757,7 +3766,7 @@
       "bytes": 2079,
       "sha256": "2638836990399e136ca0ff7453a30dee3c60353458c62876ed62316b61d29e87",
       "sourceSha256": "2638836990399e136ca0ff7453a30dee3c60353458c62876ed62316b61d29e87",
-      "sourceModifiedUtc": "2026-10-18T19:00:13.143134+00:00",
+      "sourceModifiedUtc": "2026-10-18T21:00:13.143134+02:00",
       "transformations": []
     },
     {
@@ -3767,7 +3776,7 @@
       "bytes": 56350,
       "sha256": "bdccddf5d5b826c14f85bb11b1588ce604f6f5b952501b9439175417c31fac46",
       "sourceSha256": "bdccddf5d5b826c14f85bb11b1588ce604f6f5b952501b9439175417c31fac46",
-      "sourceModifiedUtc": "2026-10-18T20:02:55.544435+00:00",
+      "sourceModifiedUtc": "2026-10-18T22:02:55.544435+02:00",
       "transformations": []
     },
     {
@@ -3777,7 +3786,7 @@
       "bytes": 44951,
       "sha256": "019f1c51f297d99b16d1562f0aafd1aed03f19c16f9bec7740b014ac3832ce23",
       "sourceSha256": "019f1c51f297d99b16d1562f0aafd1aed03f19c16f9bec7740b014ac3832ce23",
-      "sourceModifiedUtc": "2026-10-19T01:01:55.662471+00:00",
+      "sourceModifiedUtc": "2026-10-19T03:01:55.662471+02:00",
       "transformations": []
     },
     {
@@ -3787,7 +3796,7 @@
       "bytes": 14924,
       "sha256": "0ecf0740c7c062a3f681e95b2e8a3f068b364bef915de0d8059e8d7bef07128e",
       "sourceSha256": "0ecf0740c7c062a3f681e95b2e8a3f068b364bef915de0d8059e8d7bef07128e",
-      "sourceModifiedUtc": "2026-10-18T05:58:57.653675+00:00",
+      "sourceModifiedUtc": "2026-10-18T07:58:57.653675+02:00",
       "transformations": []
     },
     {
@@ -3797,7 +3806,7 @@
       "bytes": 1908,
       "sha256": "8127f4775690427ee69bb654bfc847ec3d10a8c28680a2ad7544d51e4c3861b7",
       "sourceSha256": "8127f4775690427ee69bb654bfc847ec3d10a8c28680a2ad7544d51e4c3861b7",
-      "sourceModifiedUtc": "2026-10-19T01:05:01.733247+00:00",
+      "sourceModifiedUtc": "2026-10-19T03:05:01.733247+02:00",
       "transformations": []
     },
     {
@@ -3807,7 +3816,7 @@
       "bytes": 1477,
       "sha256": "cd12756ff56732becd59a7f3a227a9fce8039dc31cb45a44790b6c4ed12a1f64",
       "sourceSha256": "cd12756ff56732becd59a7f3a227a9fce8039dc31cb45a44790b6c4ed12a1f64",
-      "sourceModifiedUtc": "2026-10-18T05:58:57.653675+00:00",
+      "sourceModifiedUtc": "2026-10-18T07:58:57.653675+02:00",
       "transformations": []
     },
     {
@@ -3817,7 +3826,7 @@
       "bytes": 2499,
       "sha256": "4d042158deba0b73122795bb121bcbb34ccd1278127e6fbd4a29a181df1c2a6b",
       "sourceSha256": "4d042158deba0b73122795bb121bcbb34ccd1278127e6fbd4a29a181df1c2a6b",
-      "sourceModifiedUtc": "2026-10-18T05:58:57.654680+00:00",
+      "sourceModifiedUtc": "2026-10-18T07:58:57.65468+02:00",
       "transformations": []
     },
     {
@@ -3827,7 +3836,7 @@
       "bytes": 27472,
       "sha256": "a9ca91cc104bf534e1f4f75d97e90d7c978e149ad6f16366705bde428d2a3aaa",
       "sourceSha256": "a9ca91cc104bf534e1f4f75d97e90d7c978e149ad6f16366705bde428d2a3aaa",
-      "sourceModifiedUtc": "2026-10-18T19:00:13.144643+00:00",
+      "sourceModifiedUtc": "2026-10-18T21:00:13.144643+02:00",
       "transformations": []
     },
     {
@@ -3837,7 +3846,7 @@
       "bytes": 6499,
       "sha256": "d7aafa99ba359960622cc3ae393b185ea0cb89579e52c0831d3685fc88991a41",
       "sourceSha256": "d7aafa99ba359960622cc3ae393b185ea0cb89579e52c0831d3685fc88991a41",
-      "sourceModifiedUtc": "2026-10-18T05:58:57.655184+00:00",
+      "sourceModifiedUtc": "2026-10-18T07:58:57.655184+02:00",
       "transformations": []
     },
     {
@@ -3847,7 +3856,7 @@
       "bytes": 17321,
       "sha256": "f737f29221abbe4e354d8e0aa9af12d04bcdd18165e2184e24862d1c9377ac8c",
       "sourceSha256": "f737f29221abbe4e354d8e0aa9af12d04bcdd18165e2184e24862d1c9377ac8c",
-      "sourceModifiedUtc": "2026-10-19T01:05:01.732733+00:00",
+      "sourceModifiedUtc": "2026-10-19T03:05:01.732733+02:00",
       "transformations": []
     },
     {
@@ -3857,7 +3866,7 @@
       "bytes": 4258,
       "sha256": "acc989338d87c147aeb5ff5ea6c61e7ac24ce5081a518b76f2ef483ee703040e",
       "sourceSha256": "acc989338d87c147aeb5ff5ea6c61e7ac24ce5081a518b76f2ef483ee703040e",
-      "sourceModifiedUtc": "2026-10-18T20:03:37.246286+00:00",
+      "sourceModifiedUtc": "2026-10-18T22:03:37.246286+02:00",
       "transformations": []
     },
     {
@@ -3867,7 +3876,7 @@
       "bytes": 3288,
       "sha256": "026da12d8dff750292bb00045817cb500bf0d015523f68ff6d91b255c64ccd59",
       "sourceSha256": "026da12d8dff750292bb00045817cb500bf0d015523f68ff6d91b255c64ccd59",
-      "sourceModifiedUtc": "2026-10-18T09:21:39.492718+00:00",
+      "sourceModifiedUtc": "2026-10-18T11:21:39.492718+02:00",
       "transformations": []
     },
     {
@@ -3877,7 +3886,7 @@
       "bytes": 2284,
       "sha256": "359960e9a9574e22364faebc131e027325724ad2c2e48c198941c2f83f95aee3",
       "sourceSha256": "359960e9a9574e22364faebc131e027325724ad2c2e48c198941c2f83f95aee3",
-      "sourceModifiedUtc": "2026-10-19T01:07:41.282532+00:00",
+      "sourceModifiedUtc": "2026-10-19T03:07:41.282532+02:00",
       "transformations": []
     },
     {
@@ -3887,7 +3896,7 @@
       "bytes": 65659,
       "sha256": "3a1accb08cd9ce118620b04c4e524329fa2a7456cc52f6c9c868a28647536e41",
       "sourceSha256": "3a1accb08cd9ce118620b04c4e524329fa2a7456cc52f6c9c868a28647536e41",
-      "sourceModifiedUtc": "2026-10-19T01:06:47.228506+00:00",
+      "sourceModifiedUtc": "2026-10-19T03:06:47.228506+02:00",
       "transformations": []
     },
     {
@@ -3897,7 +3906,7 @@
       "bytes": 861,
       "sha256": "0f3f2289f5228844f7d86a814439d86d9b01b2048f4fee67ffd8a949330f52af",
       "sourceSha256": "0f3f2289f5228844f7d86a814439d86d9b01b2048f4fee67ffd8a949330f52af",
-      "sourceModifiedUtc": "2026-10-18T19:14:49.119413+00:00",
+      "sourceModifiedUtc": "2026-10-18T21:14:49.119413+02:00",
       "transformations": []
     },
     {
@@ -3907,7 +3916,7 @@
       "bytes": 25625,
       "sha256": "261b8103070f7f2e9566faae512d0eb6da08b598b9563363538b8185a89ada8b",
       "sourceSha256": "261b8103070f7f2e9566faae512d0eb6da08b598b9563363538b8185a89ada8b",
-      "sourceModifiedUtc": "2026-10-19T01:01:55.673577+00:00",
+      "sourceModifiedUtc": "2026-10-19T03:01:55.673577+02:00",
       "transformations": []
     },
     {
@@ -3917,7 +3926,7 @@
       "bytes": 388,
       "sha256": "bab0ca3bb9e42596392f218185ecd90b156f47ee8f1cdd9784b58512237c7854",
       "sourceSha256": "bab0ca3bb9e42596392f218185ecd90b156f47ee8f1cdd9784b58512237c7854",
-      "sourceModifiedUtc": "2026-10-18T19:14:49.120412+00:00",
+      "sourceModifiedUtc": "2026-10-18T21:14:49.120412+02:00",
       "transformations": []
     },
     {
@@ -27204,7 +27213,7 @@
       "bytes": 3653,
       "sha256": "954df93849dfa03a01089b6993d9920625b5962d354d1c9bea3ddc617fb061b9",
       "sourceSha256": "954df93849dfa03a01089b6993d9920625b5962d354d1c9bea3ddc617fb061b9",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.099037+00:00",
+      "sourceModifiedUtc": "2026-10-18T11:10:34.099037+02:00",
       "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
@@ -27214,7 +27223,7 @@
       "bytes": 45502,
       "sha256": "7818765a1fbacd87bdfe2acfa44b12f86e651355c6a0753e27619c7a1c91f5ee",
       "sourceSha256": "7818765a1fbacd87bdfe2acfa44b12f86e651355c6a0753e27619c7a1c91f5ee",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.111132+00:00",
+      "sourceModifiedUtc": "2026-10-18T11:10:34.111132+02:00",
       "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
@@ -27224,7 +27233,7 @@
       "bytes": 682,
       "sha256": "8df770b4fc3a00058180a705e7218f887fe81cfb58f707a219b1cd820b1658dd",
       "sourceSha256": "8df770b4fc3a00058180a705e7218f887fe81cfb58f707a219b1cd820b1658dd",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.116345+00:00",
+      "sourceModifiedUtc": "2026-10-18T11:10:34.116345+02:00",
       "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
@@ -27234,7 +27243,7 @@
       "bytes": 1094,
       "sha256": "94ba66bb8f45f855b47bb9be501dd7e7abda4c20f1b275a2756f9a1209782232",
       "sourceSha256": "94ba66bb8f45f855b47bb9be501dd7e7abda4c20f1b275a2756f9a1209782232",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.125888+00:00",
+      "sourceModifiedUtc": "2026-10-18T11:10:34.125888+02:00",
       "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
@@ -27244,7 +27253,7 @@
       "bytes": 34810,
       "sha256": "0772ae64a289dc556a24d8f80db4e94f3713c403ebedd5fb45541db0811635bd",
       "sourceSha256": "0772ae64a289dc556a24d8f80db4e94f3713c403ebedd5fb45541db0811635bd",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.140039+00:00",
+      "sourceModifiedUtc": "2026-10-18T11:10:34.140039+02:00",
       "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
@@ -27254,7 +27263,7 @@
       "bytes": 1326,
       "sha256": "9fcd5d2a0baecfadec5aff3097922a67466cf607d6d697f9ae520f8985a58c46",
       "sourceSha256": "9fcd5d2a0baecfadec5aff3097922a67466cf607d6d697f9ae520f8985a58c46",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.148598+00:00",
+      "sourceModifiedUtc": "2026-10-18T11:10:34.148598+02:00",
       "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
@@ -27264,7 +27273,7 @@
       "bytes": 10445,
       "sha256": "5e84b219a3bcbead7c786d1d4f339cb5a46c05699878dffc6eca0a36084446ed",
       "sourceSha256": "5e84b219a3bcbead7c786d1d4f339cb5a46c05699878dffc6eca0a36084446ed",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.160124+00:00",
+      "sourceModifiedUtc": "2026-10-18T11:10:34.160124+02:00",
       "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
@@ -27274,7 +27283,7 @@
       "bytes": 664,
       "sha256": "98f306578cc1cadd5457d4cc34a32131c1d00a8b82882a4898b96689a9de8b42",
       "sourceSha256": "98f306578cc1cadd5457d4cc34a32131c1d00a8b82882a4898b96689a9de8b42",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.164406+00:00",
+      "sourceModifiedUtc": "2026-10-18T11:10:34.164406+02:00",
       "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
@@ -27284,7 +27293,7 @@
       "bytes": 4261,
       "sha256": "f8e53c452d931aaf2bb0322d57d58161c03aa9c721c73b3aab088f9fb68cac58",
       "sourceSha256": "f8e53c452d931aaf2bb0322d57d58161c03aa9c721c73b3aab088f9fb68cac58",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.172277+00:00",
+      "sourceModifiedUtc": "2026-10-18T11:10:34.172277+02:00",
       "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
@@ -27294,7 +27303,7 @@
       "bytes": 443,
       "sha256": "5db2c4631916eb512149259cf0cd8f6ef12259b6100f55569355bc8e0a21f8e9",
       "sourceSha256": "5db2c4631916eb512149259cf0cd8f6ef12259b6100f55569355bc8e0a21f8e9",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.177214+00:00",
+      "sourceModifiedUtc": "2026-10-18T11:10:34.177214+02:00",
       "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
@@ -27304,7 +27313,7 @@
       "bytes": 1711,
       "sha256": "e7dca82a80e12e42564986c20fb5d7c247570375aabc0d6cf8ca224a1df73e62",
       "sourceSha256": "e7dca82a80e12e42564986c20fb5d7c247570375aabc0d6cf8ca224a1df73e62",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.177214+00:00",
+      "sourceModifiedUtc": "2026-10-18T11:10:34.177214+02:00",
       "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
@@ -27314,7 +27323,7 @@
       "bytes": 772,
       "sha256": "079df6ec58ac96ab5ee56e30da49f34c6e6e2f9ba00bc1c247cf9f93671e249e",
       "sourceSha256": "079df6ec58ac96ab5ee56e30da49f34c6e6e2f9ba00bc1c247cf9f93671e249e",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.178212+00:00",
+      "sourceModifiedUtc": "2026-10-18T11:10:34.178212+02:00",
       "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
@@ -27324,7 +27333,7 @@
       "bytes": 22424,
       "sha256": "b049b52729387e6784e58569e1cc3d728482fbdfb9f48b16000225176a7a3746",
       "sourceSha256": "b049b52729387e6784e58569e1cc3d728482fbdfb9f48b16000225176a7a3746",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.178212+00:00",
+      "sourceModifiedUtc": "2026-10-18T11:10:34.178212+02:00",
       "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
@@ -27334,7 +27343,7 @@
       "bytes": 717,
       "sha256": "c8d472e577fcb71c0089a09060cfbc4b9faec191f7e0688c2485219b88b9090a",
       "sourceSha256": "c8d472e577fcb71c0089a09060cfbc4b9faec191f7e0688c2485219b88b9090a",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.182031+00:00",
+      "sourceModifiedUtc": "2026-10-18T11:10:34.182031+02:00",
       "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
@@ -27967,13 +27976,14 @@
     },
     {
       "path": "KESAS-VPS-Server/Export-Client.ps1",
-      "source": "KESAS-VPS-Server/Export-Client.ps1",
-      "role": "deployment export recipe, not executed",
-      "bytes": 4306,
-      "sha256": "a33ea5815004a0e2f865e7b959505ce1084991f1a0a11dc30da21b8a7465b841",
-      "sourceSha256": "a33ea5815004a0e2f865e7b959505ce1084991f1a0a11dc30da21b8a7465b841",
-      "sourceModifiedUtc": "2026-10-04T14:35:44Z",
-      "transformations": []
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 4396,
+      "sha256": "9a5b1cf8a708c558a1af39fb5a0fbdfa7fe89898a376fafc0933b3ecbc81656a",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
     },
     {
       "path": "KESAS-VPS-Server/GitHub.Publish.ps1",
@@ -27987,43 +27997,47 @@
     },
     {
       "path": "KESAS-VPS-Server/Publish-Release.ps1",
-      "source": "KESAS-VPS-Server/Publish-Release.ps1",
-      "role": "current deployment implementation, not executed",
-      "bytes": 27992,
-      "sha256": "e60b6984cade0c0f5aae5a3fdc3634036c1cca1aace4eb672d5a090ef7526f6e",
-      "sourceSha256": "e60b6984cade0c0f5aae5a3fdc3634036c1cca1aace4eb672d5a090ef7526f6e",
-      "sourceModifiedUtc": "2026-10-21T03:14:58.727287Z",
-      "transformations": []
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 28798,
+      "sha256": "4e35fd03298268dbab8890f623a57cc335dc4c05567a347c9b8516bf3dc85647",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
     },
     {
       "path": "KESAS-VPS-Server/Start-Server.ps1",
-      "source": "KESAS-VPS-Server/Start-Server.ps1",
-      "role": "deployment recipe, not executed",
-      "bytes": 3130,
-      "sha256": "2717cabb724aca84a04c3c7fea4e8a52685d3ecd21d7cabcb4b2f4c8d4c7c97f",
-      "sourceSha256": "2717cabb724aca84a04c3c7fea4e8a52685d3ecd21d7cabcb4b2f4c8d4c7c97f",
-      "sourceModifiedUtc": "2026-10-04T12:37:18Z",
-      "transformations": []
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 3220,
+      "sha256": "95461c617aaac969d17f1b06d6a7fa5110281d8afcf2b2436b1329dbed3eaf1e",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
     },
     {
       "path": "KESAS-VPS-Server/Stop-Server.ps1",
-      "source": "KESAS-VPS-Server/Stop-Server.ps1",
-      "role": "deployment recipe, not executed",
-      "bytes": 206,
-      "sha256": "d9cb52e12ee8a05dd669cfb24eb9d0d13a7b5bd18d2d1d27019382bd4a930921",
-      "sourceSha256": "d9cb52e12ee8a05dd669cfb24eb9d0d13a7b5bd18d2d1d27019382bd4a930921",
-      "sourceModifiedUtc": "2026-10-04T10:51:14Z",
-      "transformations": []
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 333,
+      "sha256": "ab6920ad7ab35af715318c2bfdacdbc5b5916dca8656a1a06d1975719432ee09",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
     },
     {
       "path": "KESAS-VPS-Server/Update.Common.ps1",
-      "source": "KESAS-VPS-Server/Update.Common.ps1",
-      "role": "deployment helper source, no configuration or keys",
-      "bytes": 17889,
-      "sha256": "52444126b6c4e0b845e6d4f895010ede22d727745f8cbaa495a41c21eaac79ba",
-      "sourceSha256": "52444126b6c4e0b845e6d4f895010ede22d727745f8cbaa495a41c21eaac79ba",
-      "sourceModifiedUtc": "2026-10-04T14:36:30Z",
-      "transformations": []
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 20425,
+      "sha256": "6a9bb4e7560b56f6b7fe2cdd05fc2225bb6709ee5a118c84038e1cc363f0911c",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
     },
     {
       "path": "LICENSE",
@@ -28036,31 +28050,36 @@
     },
     {
       "path": "README.md",
-      "source": "README.md",
-      "role": "publication metadata, license or export tooling",
-      "bytes": 3931,
-      "sha256": "6e5fbebc90933061d3374f83d7c3fea627ca076435475ee49f4da89e04a42e51",
-      "sourceSha256": "6e5fbebc90933061d3374f83d7c3fea627ca076435475ee49f4da89e04a42e51",
-      "transformations": [],
-      "sourceModifiedUtc": "2026-10-18T09:10:34.068929+00:00"
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 4168,
+      "sha256": "4045627c1d63ea6b95d0b2d8d54d8bca9386979de764cbc8b196af6add111a92",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
     },
     {
       "path": "SOURCE-PROVENANCE.md",
       "source": null,
-      "role": "publication metadata, license or export tooling",
-      "bytes": 14935,
-      "sha256": "bd4c675f0737dd9b5d68109d4f7a2ce442f4988b221ffd82cb95ecded01163e3",
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 15316,
+      "sha256": "eda4ec95d5a8e5ceb018fe9417fb8e935fa192219ca4b542b6fa947c7bcbd458",
       "sourceSha256": null,
-      "transformations": []
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
     },
     {
       "path": "TESTING.md",
       "source": null,
-      "role": "publication metadata, license or export tooling",
-      "bytes": 34070,
-      "sha256": "f30b7bed40d755d9306a65e3f025477954167156911d669759123887a7caf494",
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 34567,
+      "sha256": "61a9832d33a1e8bd24f8ea2bc9b2dad4a7bb9df2993c6fe9635c78a151b39b6e",
       "sourceSha256": null,
-      "transformations": []
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
     },
     {
       "path": "THIRD-PARTY-NOTICES.md",
@@ -28074,11 +28093,13 @@
     {
       "path": "export-policy.json",
       "source": null,
-      "role": "publication metadata, license or export tooling",
-      "bytes": 23812,
-      "sha256": "9d7f249ea4fa2196d070381319662565075a15606adc05b4c44f6ee9051061e8",
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 24107,
+      "sha256": "7ac7af42facda738a347af34958679ff1fe5a3be43c21ae70f3f2300aabb41c7",
       "sourceSha256": null,
-      "transformations": []
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
     },
     {
       "path": "licenses/LGPL-2.1.txt",
@@ -28106,9 +28127,328 @@
       "sha256": "5e622f4365426d610b907d576461761377feab6b3c7fdb8c348922033bded532",
       "sourceSha256": null,
       "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/src/native-broker.js",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 3344,
+      "sha256": "4ac031082392dc7ccc6878eaf3552d5986bfbfccd79f770ff4165388de230def",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/bootstrap.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 11613,
+      "sha256": "ea1843a1e987c977e06fde620a9180115cb8ff6d5231ee7dca679801ad4907a7",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/Build-ControlBundle.ps1",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 3282,
+      "sha256": "0f33bd33054022ee4114386d1c414defe42dab8c4e63786b2cb033493a85ae35",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/contract.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 8853,
+      "sha256": "1ce6587e13d90fa37d1d4e6903ee3d9efcc9b63c0eb5c67c488444e66ea8ac8d",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/controller.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 28096,
+      "sha256": "a68b1c0d25efd5fe2b1514addcb6d1db621eb18e420a822b4f02c24d19c99feb",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/engine.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 16186,
+      "sha256": "67c4f8b312dda4e307397962cd0b77d0c6faf628d665f3c28501f8a41270bcb4",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/Expand-ControlBundle.ps1",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 19097,
+      "sha256": "feaeeacccc21415677f99392e87b7276e9934fc69d5d25ec0985b85c5b0faee4",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/github.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 4274,
+      "sha256": "e222044e58ad888d8d7420be4a048ffe6908984cf5abe2f62516cdcb7275cf78",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/initialize.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 2261,
+      "sha256": "183a07d765b1b7a7747f28e90301c1c435929611dcbe1d82800da3802d480910",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/Install-HostControl.ps1",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 5866,
+      "sha256": "e25b3ee2cc25c8820a86d36c3f9e5148f42bc2b4812d5a86fad27a894f5a8afc",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/native-agent.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 26059,
+      "sha256": "f92b8c8d427a19215d65a1c317d728eb51bf8f5b45f6e7bc5ebac9c44a6ffecb",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/Probe-NativeIdle.ps1",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 675,
+      "sha256": "1b6cedd9ccf1f9cd908f5f7e2415b09d8304f55ba7ce7d4a08663de199d6318f",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/Provision-ControlTasks.ps1",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 12296,
+      "sha256": "ba0dd0bbb32c8829ec89bff083e65ad2d293c270b1b4f0d19a6cfa36c597714c",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/public-status.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 3424,
+      "sha256": "ea6ea75af9129a8f837a83ebde2b17decf0646e0be4097797d06ffdf052f5de7",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/Publish-HostRelease.ps1",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 2316,
+      "sha256": "7dfd60b0169fb81015a45f7be2dfd21e799c1ab3fb1bd5f03adbe70a83863841",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/Read-ClientInventory.ps1",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 2429,
+      "sha256": "c27db191f57acd23a2ba3a7cebb70ce4828e131833a3b3c7199000deded42e77",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/README.md",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 14171,
+      "sha256": "8fdd2427d30e246773df1683280cbde98a4cae6e5931ce56300f3b079701cc09",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/Start-ControlHost.ps1",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 1044,
+      "sha256": "a061cf0554136bb053327ac32c389117c653683686e4f5999391840180f1bd5b",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/Start-NativeAgent.ps1",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 341,
+      "sha256": "1142b4e8ff160106b84651d670a5821659c738632a24ffd91f113b18926d4c75",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/Start-NativeServer.ps1",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 2680,
+      "sha256": "142279d39b44dac32d50a11aae29c179be7eddf84e33884824577ce5a88ad11a",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/test/controller.test.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 20071,
+      "sha256": "f96580c3f336f4565d79e3130edb227f663b98787a14c47d561d0784a8c1aa10",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/test/engine.test.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 21214,
+      "sha256": "87a5c19169ac9d0dbe183cd91e16de57065c7f085dad720224d2bf97a7394837",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/test/extractor.test.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 13465,
+      "sha256": "9dcdafc5d19f08229b18cab37a54a2c8de400ffc434510b862b161d83287540c",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/test/Invoke-NativeMediaFixture.ps1",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 6132,
+      "sha256": "edea411261d9862c4267d6f35ef230f50374e622c27dc3c50f64693db93966cf",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/test/native-agent.test.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 24681,
+      "sha256": "2b736ff2a322354f462dea1df9d4d05fb88b035c1b68c756c8260dc1ee35b5de",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/test/publication-fixture.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 4779,
+      "sha256": "3fdca9651e537333d5d1e4eafb0a7b3d14d3c6ed019ad91605dce64e6dc4dc67",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/worker.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 12329,
+      "sha256": "b3d9e7f2e45b5d516bf8d1c77d97b647723b2b7fe4233af395ff87616226a86c",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/Test-HostControl.ps1",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 3205,
+      "sha256": "7206e995bfe85a1b00f9c790d1b12e10d97c80d6b73deb71c76eba16a13afad1",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/test/server-router.test.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 3597,
+      "sha256": "9c4d62d9040de1f72dff944e03d9d3428b85f465317205e09f0597c5bddd7840",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
     }
   ],
-  "totalFileBytes": 15868840,
+  "totalFileBytes": 15594321,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",
@@ -28127,5 +28467,5 @@
     "report": "PRIVACY-SCAN.json",
     "limitation": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
   },
-  "fileCount": 2811
+  "fileCount": 2840
 }

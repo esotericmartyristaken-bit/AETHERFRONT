@@ -1,7 +1,7 @@
 [CmdletBinding()]
-param([string]$LauncherLog='',[switch]$PublicationActivation)
+param([string]$LauncherLog='',[switch]$PublicationActivation,[string]$DeploymentRoot=$env:APF_NATIVE_ROOT)
 . "$PSScriptRoot/Update.Common.ps1"
-$root=Assert-UpdatePath $PSScriptRoot
+$root=Assert-UpdatePath $(if($DeploymentRoot){$DeploymentRoot}else{$PSScriptRoot})
 $settings=Get-UpdateDeployment $root
 foreach($name in @('Server','PackHost','secrets','Updates')){Assert-UpdateTree (Get-UpdateChildPath $root $name)}
 $serverLock=New-Object IO.FileStream((Get-UpdateChildPath $root '.server.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)

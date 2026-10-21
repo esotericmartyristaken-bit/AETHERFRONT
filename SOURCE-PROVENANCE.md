@@ -1,5 +1,11 @@
 # Aetherfront source provenance
 
+`ControlPlane/` is maintained directly in this repository, not copied from live
+operator state. Its versioned contract, controller, fixed bootstrap, privileged
+native broker and isolated acceptance tests are described in
+`ControlPlane/README.md`. This extends host deployment coverage without claiming
+that the source-only snapshot can rebuild every historical KSP client binary.
+
 Source-only maintenance snapshot for `esotericmartyristaken-bit/AETHERFRONT`. The export scripts prepare and verify this snapshot; they do not initialize Git, authenticate, push, publish a release or change a running server/client. Publication and deployment are separate operator actions.
 
 ## Contents and provenance

@@ -4,6 +4,7 @@ import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { readJson, writeJsonAtomic } from './util.js';
+import { observePublication } from './native-broker.js';
 const execFileAsync = promisify(execFile);
 
 const SCHEMA_VERSION = 1;
@@ -136,7 +137,14 @@ export class UpdateManager {
     return this.state;
   }
 
-  async readSavedState() { return readJson(this.statePath, {}); }
+  async readSavedState() {
+    let saved;
+    try { saved = JSON.parse(await fs.readFile(this.statePath, 'utf8')); }
+    catch (error) { if (error.code === 'ENOENT') return null; throw error; }
+    if (!saved || saved.schemaVersion !== SCHEMA_VERSION ||
+        Object.keys(saved).some(key => !Object.hasOwn(initialState(), key))) throw new Error('unsupported update state schema; preserve state for review');
+    return saved;
+  }
 
   async refreshFromDisk() {
     await this.load();
@@ -269,7 +277,7 @@ export class UpdateManager {
     if (!/^kesas-rc[1-9][0-9]*$/.test(version) || !archive.toLowerCase().endsWith('.zip')) throw new Error('KESAS release archive/version required');
     const executable = this.config.updates?.powerShellExecutable || 'pwsh.exe';
     await this.runTool(executable, ['-NoProfile','-NonInteractive','-File',
-      path.join(this.config.__root, 'scripts', 'Verify-KesasRelease.ps1'), '-Archive', archive, '-ExpectedVersion', version],
+      path.join(this.config.__codeRoot || this.config.__root, 'scripts', 'Verify-KesasRelease.ps1'), '-Archive', archive, '-ExpectedVersion', version],
     { windowsHide: true, maxBuffer: 256 * 1024 });
     const id = packageId(options.id || version);
     const packageDir = safeJoin(this.stagingRoot, id);
@@ -281,6 +289,7 @@ export class UpdateManager {
     const stat = await fs.stat(archive);
     await writeJsonAtomic(path.join(packageDir, 'manifest.json'), {
       schemaVersion: SCHEMA_VERSION, provider: 'kesas-release', id, version,
+      ...(options.sourceCommit ? { sourceCommit: options.sourceCommit } : {}),
       notes: text(options.notes || '', 500), createdAt: new Date().toISOString(),
       files: [{ source, destination: name, sizeBytes: stat.size, sha256: await sha256(archive) }]
     });
@@ -288,6 +297,7 @@ export class UpdateManager {
   }
 
   async queue(id, queuedBy = 'operator', options = {}) {
+    if (await this.controlMaintenance()) return { ok: false, reason: 'control-plane-activation' };
     await this.load();
     const { manifest } = await this.readManifest(id);
     if (this.operation) return { ok: false, reason: 'deployment-in-progress' };
@@ -344,7 +354,9 @@ export class UpdateManager {
   }
 
   async reconcile(status, hooks = {}, now = Date.now()) {
+    if (await this.controlMaintenance()) return { ok: false, deferred: true, reason: 'control-plane-activation' };
     await this.refreshFromDisk();
+    if(this.config.__controlRoot&&this.state.status==='deploying'&&!this.operation)return this.recoverNativePublication(status);
     if (this.state.status !== 'queued' || !this.state.packageId) return { ok: true, idle: true, state: await this.status() };
     const count = status?.playerCount == null ? NaN : Number(status.playerCount);
     const connected = status?.connectedCount == null ? NaN : Number(status.connectedCount);
@@ -431,6 +443,7 @@ export class UpdateManager {
   }
 
   async deploy(status, hooks) {
+    if (await this.controlMaintenance()) return { ok: false, deferred: true, reason: 'control-plane-activation' };
     const packageIdValue = this.state.packageId;
     const { packageDir, manifest } = await this.readManifest(packageIdValue);
     let applied = null;
@@ -472,7 +485,7 @@ export class UpdateManager {
         const archive = safeJoin(packageDir, row.source);
         if ((await sha256(archive)) !== row.sha256) throw new Error('KESAS release hash changed after staging');
         await this.setPhase('installing', hooks, 'Publishing KESAS update.');
-        applied = await this.controller.publishRelease(archive, manifest.notes || '');
+        applied = await this.controller.publishRelease(archive, manifest.notes || '', { sourceCommit: manifest.sourceCommit || null });
         await this.setPhase('starting', hooks, 'Waiting for KESAS to start.');
         await this.waitForReady();
       } else {
@@ -544,6 +557,49 @@ export class UpdateManager {
       await new Promise(resolve => setTimeout(resolve, this.pollMs));
     }
     throw new Error('server did not stop before deployment timeout');
+  }
+
+  async controlMaintenance() {
+    if (!this.config.__controlRoot) return false;
+    const setup=await fs.lstat(path.join(this.config.__controlRoot,'setup-in-progress.json')).catch(error=>{if(error.code==='ENOENT')return null;throw error;});
+    if(setup)return true;
+    const proof=await readJson(path.join(this.config.__controlRoot,'verified-active.json'),{});
+    const pointer=await readJson(path.join(this.config.__controlRoot,'active.json'),{});
+    if(proof.schemaVersion!==1||proof.version!==pointer.version||proof.bundleSha256!==pointer.bundleSha256)return true;
+    try {
+      await fs.lstat(path.join(this.config.__controlRoot, 'maintenance.json'));
+      return true;
+    } catch (error) { if (error.code === 'ENOENT') return false; throw error; }
+  }
+
+  async recoverNativePublication(status) {
+    const {packageDir,manifest}=await this.readManifest(this.state.packageId);
+    if(manifest.provider!=='kesas-release'||manifest.files.length!==1)throw new Error('Unknown interrupted native transaction; preserve state');
+    const row=manifest.files[0];const archive=safeJoin(packageDir,row.source);
+    if(await sha256(archive)!==row.sha256)throw new Error('Interrupted native source changed; preserve state');
+    const observed=await observePublication(this.config,archive,manifest.notes||'',{sourceCommit:manifest.sourceCommit||null});
+    if(observed.result?.status==='healthy') {
+      const feed=JSON.parse(await fs.readFile(path.join(this.config.lmp.deploymentRoot,'Updates','APFClientUpdate.json'),'utf8'));
+      const pack=JSON.parse(await fs.readFile(path.join(this.config.lmp.deploymentRoot,'Server','Config','APFPack.json'),'utf8'));
+      if(feed.version!==manifest.version||pack.packVersion!==manifest.version||pack.requiredClientVersion!==manifest.version||status?.online!==true||status.ready!==true||status.bridge?.ready!==true)return {ok:false,deferred:true,reason:'awaiting-recovered-native-health'};
+      this.state={...initialState(),lastDeployment:{id:manifest.id,version:manifest.version,deployedAt:observed.result.completedAt||new Date().toISOString(),notes:manifest.notes||'',rollbackRoot:path.join(this.config.lmp.deploymentRoot,'Backups','updates')}};
+      await this.save();
+      // Recover completion without replaying publication, restart or Discord
+      // completion notifications whose prior delivery may be ambiguous.
+      return {ok:true,recovered:true,state:await this.status()};
+    }
+    if(observed.result?.status==='blocked') {
+      this.state.status='failed';this.state.phase='failed';this.state.error='Native publication requires review; journals preserved';await this.save();
+      return {ok:false,reason:'native-recovery-blocked'};
+    }
+    if(!observed.requested&&!observed.result) {
+      const journal=path.join(this.config.lmp.deploymentRoot,'.update-transaction.json');
+      const existing=await fs.lstat(journal).catch(error=>{if(error.code==='ENOENT')return null;throw error;});
+      if(existing)return {ok:false,deferred:true,reason:'native-journal-requires-review'};
+      this.state.status='queued';this.state.phase='recovered-before-native-handoff';await this.save();
+      return {ok:false,deferred:true,reason:'resuming-guarded-queue'};
+    }
+    return {ok:false,deferred:true,reason:'native-helper-still-running'};
   }
 
   async waitForReady() {
