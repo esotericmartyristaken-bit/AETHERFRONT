@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-20T01:00:25.687Z",
+  "createdUtc": "2026-10-21T03:19:07.569574Z",
   "publication": "Reviewed source update; ordinary source pushes do not deploy",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -14,6 +14,584 @@
   "concurrentSourceReviewPending": false,
   "integrationGates": [],
   "files": [
+    {
+      "path": ".gitattributes",
+      "source": null,
+      "role": "publication metadata, license or export tooling",
+      "bytes": 8,
+      "sha256": "705fd4d6451a31d36b3df7de96f83f30ac976c9b4a6d1e51671d8e2f33e2d0da",
+      "sourceSha256": null,
+      "transformations": []
+    },
+    {
+      "path": ".github/workflows/windows-bot-checks.yml",
+      "source": ".github/workflows/windows-bot-checks.yml",
+      "bytes": 891,
+      "sha256": "2de2fa9fdbc358f9a3fa63a47d1b2fb5c308dad38755fcc1c6bfcdbc772bda59",
+      "sourceSha256": "2de2fa9fdbc358f9a3fa63a47d1b2fb5c308dad38755fcc1c6bfcdbc772bda59",
+      "sourceModifiedUtc": "2026-10-18T09:10:34.076971+00:00",
+      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
+      "transformations": []
+    },
+    {
+      "path": ".gitignore",
+      "source": null,
+      "role": "publication metadata, license or export tooling",
+      "bytes": 592,
+      "sha256": "0b17412f5bd110fd5599f8e443e9fca2f0da9a2c8fa5dd2c1ef39c882be9d21a",
+      "sourceSha256": null,
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/.env.example",
+      "source": "APFDiscordBot/.env.example",
+      "role": "environment variable placeholders only",
+      "bytes": 19,
+      "sha256": "29eafb40fd0969a24cf03b2ddff620d035c025bd151ce63db0b9434eba471491",
+      "sourceSha256": "29eafb40fd0969a24cf03b2ddff620d035c025bd151ce63db0b9434eba471491",
+      "sourceModifiedUtc": "2026-08-12T21:24:18.1434386Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/README.md",
+      "source": "APFDiscordBot/README.md",
+      "role": "bot operator documentation",
+      "bytes": 7162,
+      "sha256": "95355ddf27926b9b18ff2915973a69ee079d872b9fb87344f98939b8cd5ed917",
+      "sourceSha256": "95355ddf27926b9b18ff2915973a69ee079d872b9fb87344f98939b8cd5ed917",
+      "sourceModifiedUtc": "2026-08-13T05:10:49.6095815Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/UPDATES.md",
+      "source": "APFDiscordBot/UPDATES.md",
+      "role": "bot release workflow",
+      "bytes": 2170,
+      "sha256": "7da4f0856aae1d88dfca22a1cf2c71918150aa388a9c73c85283fb76221d63c9",
+      "sourceSha256": "7da4f0856aae1d88dfca22a1cf2c71918150aa388a9c73c85283fb76221d63c9",
+      "sourceModifiedUtc": "2026-08-14T00:30:12.7422917Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/config.example.json",
+      "source": "APFDiscordBot/config.example.json",
+      "role": "example configuration only",
+      "bytes": 2437,
+      "sha256": "0b5df2d1fc955107d214ad97fb7b09b6ed09dcafde1fbbba8a23875c35456b02",
+      "sourceSha256": "d381211f0ccc8a052a927bb20828740db201b1af6ed1079515680e774be3807c",
+      "sourceModifiedUtc": "2026-10-18T05:30:55.9813468Z",
+      "transformations": [
+        "absolute workspace root replaced by ."
+      ]
+    },
+    {
+      "path": "APFDiscordBot/docs/ACTIVATION-CHECKLIST.md",
+      "source": "APFDiscordBot/docs/ACTIVATION-CHECKLIST.md",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 2923,
+      "sha256": "8987b515dcd7512d46fa9684f215272d812263b315fdf908a4b7da077efd9a29",
+      "sourceSha256": "8987b515dcd7512d46fa9684f215272d812263b315fdf908a4b7da077efd9a29",
+      "sourceModifiedUtc": "2026-08-13T03:24:43.580851Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/docs/DISCORD-SETUP.md",
+      "source": "APFDiscordBot/docs/DISCORD-SETUP.md",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 7551,
+      "sha256": "231450ccdaa666e171dbc18e3bf46722c1cf2ee3c61642137d3fde0f9992a4cf",
+      "sourceSha256": "d02db3856abbf3b229984a802e6edadaa50fbf7c3cdad93290753f149981cc5a",
+      "sourceModifiedUtc": "2026-08-13T02:41:03.4096016Z",
+      "transformations": [
+        "absolute workspace root replaced by ."
+      ]
+    },
+    {
+      "path": "APFDiscordBot/docs/FEATURE-ROADMAP.md",
+      "source": "APFDiscordBot/docs/FEATURE-ROADMAP.md",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 7120,
+      "sha256": "0ecd13881c8da85743252aff582d2c08aace61421ba561d9fd45d4b9afef3935",
+      "sourceSha256": "0ecd13881c8da85743252aff582d2c08aace61421ba561d9fd45d4b9afef3935",
+      "sourceModifiedUtc": "2026-08-13T03:24:31.5052753Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/docs/GITHUB-DEPLOYMENT.md",
+      "source": "APFDiscordBot/docs/GITHUB-DEPLOYMENT.md",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 10087,
+      "sha256": "64eadc451060bc8ab57484631b441f7c15a647d7f37ab6b17d9fa807aa452ef1",
+      "sourceSha256": "64eadc451060bc8ab57484631b441f7c15a647d7f37ab6b17d9fa807aa452ef1",
+      "sourceModifiedUtc": "2026-10-18T05:34:52.7222538Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/docs/REQUIREMENT-AUDIT.md",
+      "source": "APFDiscordBot/docs/REQUIREMENT-AUDIT.md",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 3627,
+      "sha256": "039fb7a083355022ed272c8dc5dba58d9f6fbf64170de0f20620219363523e74",
+      "sourceSha256": "039fb7a083355022ed272c8dc5dba58d9f6fbf64170de0f20620219363523e74",
+      "sourceModifiedUtc": "2026-08-13T05:10:49.6113144Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/package-lock.json",
+      "source": "APFDiscordBot/package-lock.json",
+      "role": "Node dependency lock",
+      "bytes": 11787,
+      "sha256": "33fcb0168aaf32c5a593306ed1d7312cb93fed4e60d8f5711f9f8ba6f1a0a9c7",
+      "sourceSha256": "33fcb0168aaf32c5a593306ed1d7312cb93fed4e60d8f5711f9f8ba6f1a0a9c7",
+      "sourceModifiedUtc": "2026-08-12T21:57:15.2735636Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/package.json",
+      "source": "APFDiscordBot/package.json",
+      "role": "Node dependency versions",
+      "bytes": 652,
+      "sha256": "17cf1d3425ef7fc8ef30320ef23fc900c6d5bc5792cbffc896c7c281f5a68522",
+      "sourceSha256": "17cf1d3425ef7fc8ef30320ef23fc900c6d5bc5792cbffc896c7c281f5a68522",
+      "sourceModifiedUtc": "2026-08-14T00:21:34.7406822Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/scripts/Build-APFDiscordBridge.ps1",
+      "source": "APFDiscordBot/scripts/Build-APFDiscordBridge.ps1",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 1939,
+      "sha256": "f9483bf6a6a0eb4a23037da5bc1dc86de4e67ee8e5a81688330665a3cdb454f8",
+      "sourceSha256": "f9483bf6a6a0eb4a23037da5bc1dc86de4e67ee8e5a81688330665a3cdb454f8",
+      "sourceModifiedUtc": "2026-08-13T03:25:36.0584548Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/scripts/Initialize-APFDiscordConfig.ps1",
+      "source": "APFDiscordBot/scripts/Initialize-APFDiscordConfig.ps1",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 1757,
+      "sha256": "ebd1e8558a6b97736bf5d6954224f87fba22b54f86e1125282a302ad8722cdbc",
+      "sourceSha256": "ebd1e8558a6b97736bf5d6954224f87fba22b54f86e1125282a302ad8722cdbc",
+      "sourceModifiedUtc": "2026-08-13T02:38:35.4517463Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/scripts/Install-APFDiscordBotTask.ps1",
+      "source": "APFDiscordBot/scripts/Install-APFDiscordBotTask.ps1",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 1681,
+      "sha256": "1a1fa28ad92254feb499631e9e9a4db287468d877a4978c5eccb0de5d7db935f",
+      "sourceSha256": "1a1fa28ad92254feb499631e9e9a4db287468d877a4978c5eccb0de5d7db935f",
+      "sourceModifiedUtc": "2026-08-13T01:46:16.0936736Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/scripts/Install-APFDiscordBridge.ps1",
+      "source": "APFDiscordBot/scripts/Install-APFDiscordBridge.ps1",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 1452,
+      "sha256": "719f6abd4255e0071bdde38645793954e059ab0e236987305466eec548e23adc",
+      "sourceSha256": "719f6abd4255e0071bdde38645793954e059ab0e236987305466eec548e23adc",
+      "sourceModifiedUtc": "2026-08-13T00:32:07.1916484Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/scripts/Install-APFUniverseBackupTask.ps1",
+      "source": "APFDiscordBot/scripts/Install-APFUniverseBackupTask.ps1",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 1631,
+      "sha256": "f7345b57119e0bed7e6fca1aef1703cb13bb77dd305e1b6e3ceef87f3fc437ce",
+      "sourceSha256": "f7345b57119e0bed7e6fca1aef1703cb13bb77dd305e1b6e3ceef87f3fc437ce",
+      "sourceModifiedUtc": "2026-08-13T02:01:57.5400895Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/scripts/Optimize-APFFlags.ps1",
+      "source": "APFDiscordBot/scripts/Optimize-APFFlags.ps1",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 4504,
+      "sha256": "cc1a82d9435e9683f95d682860c5e9e0d544ee5ef1f874d1d45251d3609179f1",
+      "sourceSha256": "cc1a82d9435e9683f95d682860c5e9e0d544ee5ef1f874d1d45251d3609179f1",
+      "sourceModifiedUtc": "2026-08-26T02:15:33.8604479Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/scripts/Publish-GitHubDeployment.ps1",
+      "source": "APFDiscordBot/scripts/Publish-GitHubDeployment.ps1",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 16634,
+      "sha256": "078e2634a88d1289b989c2653a215e3b630cc9b065e290ab7ac9cfc60fff4d25",
+      "sourceSha256": "078e2634a88d1289b989c2653a215e3b630cc9b065e290ab7ac9cfc60fff4d25",
+      "sourceModifiedUtc": "2026-10-18T05:34:52.7205244Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/scripts/Start-APFDiscordBot.ps1",
+      "source": "APFDiscordBot/scripts/Start-APFDiscordBot.ps1",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 1363,
+      "sha256": "8010a7a93ca06b98ff4632d4975e9c3a0cfec227ccfdb946b30d9f6b677676a8",
+      "sourceSha256": "8010a7a93ca06b98ff4632d4975e9c3a0cfec227ccfdb946b30d9f6b677676a8",
+      "sourceModifiedUtc": "2026-10-16T03:17:05.5556408Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/scripts/Stop-APFLmpGracefully.ps1",
+      "source": "APFDiscordBot/scripts/Stop-APFLmpGracefully.ps1",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 2445,
+      "sha256": "beaf357d47d32944b83a54a038e51e7c01c2853699ab0fb61c950aabbeae5d34",
+      "sourceSha256": "beaf357d47d32944b83a54a038e51e7c01c2853699ab0fb61c950aabbeae5d34",
+      "sourceModifiedUtc": "2026-08-13T02:04:44.8843866Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/scripts/Stop-KesasGracefully.ps1",
+      "source": "APFDiscordBot/scripts/Stop-KesasGracefully.ps1",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 1066,
+      "sha256": "24723e69d44fc559b6f50dd95bb6038e28883103b211453cde9c9744c3515935",
+      "sourceSha256": "24723e69d44fc559b6f50dd95bb6038e28883103b211453cde9c9744c3515935",
+      "sourceModifiedUtc": "2026-10-16T03:11:26.2197743Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/scripts/Test-APFAll.ps1",
+      "source": "APFDiscordBot/scripts/Test-APFAll.ps1",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 1231,
+      "sha256": "3639fc44c7382453a52e92eb0507857464cbe979905f41c4e89330a94ff760ec",
+      "sourceSha256": "3639fc44c7382453a52e92eb0507857464cbe979905f41c4e89330a94ff760ec",
+      "sourceModifiedUtc": "2026-08-13T00:46:58.8067513Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/scripts/Test-APFDiscordBridge.ps1",
+      "source": "APFDiscordBot/scripts/Test-APFDiscordBridge.ps1",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 3969,
+      "sha256": "247175eb1c7fd8a81629f256157391c7ee7afff788127d3434a52e3654b4e333",
+      "sourceSha256": "2e0ff9cd2126a4faee64287739e9dadad98dcac2529dad9aa737a2120036475b",
+      "sourceModifiedUtc": "2026-08-20T19:57:06.8362049Z",
+      "transformations": [
+        "absolute workspace root replaced by ."
+      ]
+    },
+    {
+      "path": "APFDiscordBot/scripts/Test-APFLifecycle.ps1",
+      "source": "APFDiscordBot/scripts/Test-APFLifecycle.ps1",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 2686,
+      "sha256": "f1ceff014f02de8d899ba6c2f524763a6da15fc803bd2efed79bed7e6b2729d6",
+      "sourceSha256": "3fa6af32902fb3c71ea2bb5e5c6374d97e860bb07edfe3426443017f1d6a3be2",
+      "sourceModifiedUtc": "2026-08-20T19:57:06.8344651Z",
+      "transformations": [
+        "absolute workspace root replaced by ."
+      ]
+    },
+    {
+      "path": "APFDiscordBot/scripts/Test-KesasReleaseMedia.ps1",
+      "source": "APFDiscordBot/scripts/Test-KesasReleaseMedia.ps1",
+      "role": "Guarded additive public media installation and regression tests",
+      "transformations": [],
+      "bytes": 4289,
+      "sha256": "3ca1d5c7362e832d4e8a1249228fdd9197d0989b09122233ef0a772a696e2b93",
+      "sourceSha256": "3ca1d5c7362e832d4e8a1249228fdd9197d0989b09122233ef0a772a696e2b93",
+      "sourceModifiedUtc": "2026-10-21T03:17:00.374969Z"
+    },
+    {
+      "path": "APFDiscordBot/scripts/Test-KesasReleasePreflight.ps1",
+      "source": "APFDiscordBot/scripts/Test-KesasReleasePreflight.ps1",
+      "bytes": 4622,
+      "sha256": "559617055d566739e9c8d9f78ce8dd34860deda1effa38238306062a077b8956",
+      "sourceSha256": "559617055d566739e9c8d9f78ce8dd34860deda1effa38238306062a077b8956",
+      "sourceModifiedUtc": "2026-10-18T09:10:34.091483+00:00",
+      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/scripts/Uninstall-APFDiscordBotTask.ps1",
+      "source": "APFDiscordBot/scripts/Uninstall-APFDiscordBotTask.ps1",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 350,
+      "sha256": "fb25befba2805d14a8245280c54e36511fe674950fb8f7322c70fb9466efa4cc",
+      "sourceSha256": "fb25befba2805d14a8245280c54e36511fe674950fb8f7322c70fb9466efa4cc",
+      "sourceModifiedUtc": "2026-08-13T00:40:26.8373581Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/scripts/Verify-KesasRelease.ps1",
+      "source": "APFDiscordBot/scripts/Verify-KesasRelease.ps1",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 4735,
+      "sha256": "67afef3d648e6f15a6a30fdb623e3340f69626ba958748a544b1b47172332d75",
+      "sourceSha256": "67afef3d648e6f15a6a30fdb623e3340f69626ba958748a544b1b47172332d75",
+      "sourceModifiedUtc": "2026-10-21T03:14:58.728288Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/scripts/silent-restart-when-empty.mjs",
+      "source": "APFDiscordBot/scripts/silent-restart-when-empty.mjs",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 2382,
+      "sha256": "c1530c4f24d09d571d567bc7ad0634435c44debf11a4bf5795bf3097a599e0be",
+      "sourceSha256": "c1530c4f24d09d571d567bc7ad0634435c44debf11a4bf5795bf3097a599e0be",
+      "sourceModifiedUtc": "2026-08-27T00:03:58.3645948Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/src/backup-once.js",
+      "source": "APFDiscordBot/src/backup-once.js",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 310,
+      "sha256": "b37fe27035e54c4994aa94dc0900c7acce6fce69a0a612b59f362731c58c4fac",
+      "sourceSha256": "b37fe27035e54c4994aa94dc0900c7acce6fce69a0a612b59f362731c58c4fac",
+      "sourceModifiedUtc": "2026-08-12T22:07:42.2734352Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/src/bot.js",
+      "source": "APFDiscordBot/src/bot.js",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 111492,
+      "sha256": "34d8bb1a847bc2370fe1dcedd3541860b82b214c1cb0cfe644da6f78dc995317",
+      "sourceSha256": "34d8bb1a847bc2370fe1dcedd3541860b82b214c1cb0cfe644da6f78dc995317",
+      "sourceModifiedUtc": "2026-10-20T00:59:50.698Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/src/config.js",
+      "source": "APFDiscordBot/src/config.js",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 1663,
+      "sha256": "6f9854a89b7e5a25dacac2d0a173dfd28a2a0b1ac7b369a8b88b9c628300dd82",
+      "sourceSha256": "6f9854a89b7e5a25dacac2d0a173dfd28a2a0b1ac7b369a8b88b9c628300dd82",
+      "sourceModifiedUtc": "2026-08-13T19:22:53.4387332Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/src/doctor.js",
+      "source": "APFDiscordBot/src/doctor.js",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 6684,
+      "sha256": "a2f6c950e07328e8ae29b9c3885af42fab04e0cf829f8895d1ee4a2af083a0f8",
+      "sourceSha256": "a2f6c950e07328e8ae29b9c3885af42fab04e0cf829f8895d1ee4a2af083a0f8",
+      "sourceModifiedUtc": "2026-08-13T05:09:29.3256364Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/src/github-deployment.js",
+      "source": "APFDiscordBot/src/github-deployment.js",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 14274,
+      "sha256": "f5b9b30994d43aec53efc94c644f4fcf60a9dbf429d0ae35b947b9d11da07122",
+      "sourceSha256": "f5b9b30994d43aec53efc94c644f4fcf60a9dbf429d0ae35b947b9d11da07122",
+      "sourceModifiedUtc": "2026-10-18T05:37:19.4732732Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/src/health.js",
+      "source": "APFDiscordBot/src/health.js",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 12561,
+      "sha256": "e7df76ae2c5a42c015e623ad3d32a67227e7649c55aa4bd237ec903e44cd6dc5",
+      "sourceSha256": "e7df76ae2c5a42c015e623ad3d32a67227e7649c55aa4bd237ec903e44cd6dc5",
+      "sourceModifiedUtc": "2026-10-20T00:59:50.695Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/src/index.js",
+      "source": "APFDiscordBot/src/index.js",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 11478,
+      "sha256": "d8a761653adb12dc8d37a7e1b5f68031b4e16f4a5d78b6d625857d4b3b919f3a",
+      "sourceSha256": "d8a761653adb12dc8d37a7e1b5f68031b4e16f4a5d78b6d625857d4b3b919f3a",
+      "sourceModifiedUtc": "2026-10-18T05:30:55.9791651Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/src/lifecycle-smoke.js",
+      "source": "APFDiscordBot/src/lifecycle-smoke.js",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 1303,
+      "sha256": "956b68cf74789c76c7d7f9b1837bee56b5b9798f47b1baac064fcd084cdc88fd",
+      "sourceSha256": "956b68cf74789c76c7d7f9b1837bee56b5b9798f47b1baac064fcd084cdc88fd",
+      "sourceModifiedUtc": "2026-08-13T00:10:06.1677608Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/src/lmp.js",
+      "source": "APFDiscordBot/src/lmp.js",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 55346,
+      "sha256": "b2de5b5a02242f0d90a636bf053d026f7ec46cbba15202cb2558a953a374fb0c",
+      "sourceSha256": "b2de5b5a02242f0d90a636bf053d026f7ec46cbba15202cb2558a953a374fb0c",
+      "sourceModifiedUtc": "2026-10-20T00:56:47.528Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/src/provision-channels.js",
+      "source": "APFDiscordBot/src/provision-channels.js",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 1601,
+      "sha256": "962bae02452bd034dffd5cf182a3355d6a86015b85c8de19ffda8d91d7365f36",
+      "sourceSha256": "962bae02452bd034dffd5cf182a3355d6a86015b85c8de19ffda8d91d7365f36",
+      "sourceModifiedUtc": "2026-08-13T02:38:35.4497506Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/src/schedule-update.js",
+      "source": "APFDiscordBot/src/schedule-update.js",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 770,
+      "sha256": "c5aceb1550e130fea211019d44474c67e9bdc4774010a9dc3254835a209a248a",
+      "sourceSha256": "c5aceb1550e130fea211019d44474c67e9bdc4774010a9dc3254835a209a248a",
+      "sourceModifiedUtc": "2026-08-14T00:21:34.7423723Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/src/single-instance.js",
+      "source": "APFDiscordBot/src/single-instance.js",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 1318,
+      "sha256": "6c7a1fb762b424e4fe84a5aba3e91d4ca7edb7de569fd3d1a7b6e2012d6a2237",
+      "sourceSha256": "6c7a1fb762b424e4fe84a5aba3e91d4ca7edb7de569fd3d1a7b6e2012d6a2237",
+      "sourceModifiedUtc": "2026-08-13T21:15:53.4650867Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/src/stage-update.js",
+      "source": "APFDiscordBot/src/stage-update.js",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 812,
+      "sha256": "9059e3f2875188a3a2b464c39f596ea1515c6c191300c7a24136d5c37984d461",
+      "sourceSha256": "9059e3f2875188a3a2b464c39f596ea1515c6c191300c7a24136d5c37984d461",
+      "sourceModifiedUtc": "2026-08-13T19:22:50.1679824Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/src/timeout-help.js",
+      "source": "APFDiscordBot/src/timeout-help.js",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 6526,
+      "sha256": "0be5729a80548b302238592c4dbd01cd9bb3a89383e4ce5c6cfcb4bc06321a74",
+      "sourceSha256": "0be5729a80548b302238592c4dbd01cd9bb3a89383e4ce5c6cfcb4bc06321a74",
+      "sourceModifiedUtc": "2026-08-21T17:43:43.8571739Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/src/universe.js",
+      "source": "APFDiscordBot/src/universe.js",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 29208,
+      "sha256": "5009f2bed17153cc265da08ca585e907c5e0ba003af0f5a55cb2d6231b35521d",
+      "sourceSha256": "5009f2bed17153cc265da08ca585e907c5e0ba003af0f5a55cb2d6231b35521d",
+      "sourceModifiedUtc": "2026-08-27T22:41:45.2429018Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/src/update-manager.js",
+      "source": "APFDiscordBot/src/update-manager.js",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 29810,
+      "sha256": "32817f3b38d3a2134972f8dc8e4c5caa03bac97c92c3e3ec782ab326969a43f6",
+      "sourceSha256": "32817f3b38d3a2134972f8dc8e4c5caa03bac97c92c3e3ec782ab326969a43f6",
+      "sourceModifiedUtc": "2026-10-20T00:56:47.533Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/src/util.js",
+      "source": "APFDiscordBot/src/util.js",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 3990,
+      "sha256": "62f77c19c891f286ee4a7c685d226fe21b9782e6fe06194f322ad15648f55793",
+      "sourceSha256": "62f77c19c891f286ee4a7c685d226fe21b9782e6fe06194f322ad15648f55793",
+      "sourceModifiedUtc": "2026-08-14T01:50:16.2978865Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/src/validate-config.js",
+      "source": "APFDiscordBot/src/validate-config.js",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 6365,
+      "sha256": "15066d003828fa31099db26bfc6fcea4da858d3c691744b1962be5686886a777",
+      "sourceSha256": "15066d003828fa31099db26bfc6fcea4da858d3c691744b1962be5686886a777",
+      "sourceModifiedUtc": "2026-08-16T03:44:56.8406992Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/test/elevated-process.test.js",
+      "source": "APFDiscordBot/test/elevated-process.test.js",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 5917,
+      "sha256": "51ae2cc0cbfb9cff31f2a27690e22b1f018c888060b71164b8810f071ed228bb",
+      "sourceSha256": "51ae2cc0cbfb9cff31f2a27690e22b1f018c888060b71164b8810f071ed228bb",
+      "sourceModifiedUtc": "2026-10-20T00:55:08.116Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/test/fixtures/bridge-message.json",
+      "source": "APFDiscordBot/test/fixtures/bridge-message.json",
+      "role": "synthetic protocol test input, not runtime state",
+      "bytes": 62,
+      "sha256": "ada8cbc3be2723133131d61566bac6b1819797e730f14a2147a0ffe9aaaedbda",
+      "sourceSha256": "ada8cbc3be2723133131d61566bac6b1819797e730f14a2147a0ffe9aaaedbda",
+      "sourceModifiedUtc": "2026-08-12T22:13:18.7752347Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/test/github-deployment.test.js",
+      "source": "APFDiscordBot/test/github-deployment.test.js",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 14949,
+      "sha256": "abdbfec5ca54ef023d0ee83cc947f11c788b5ac557f31680cd735752845afb4f",
+      "sourceSha256": "abdbfec5ca54ef023d0ee83cc947f11c788b5ac557f31680cd735752845afb4f",
+      "sourceModifiedUtc": "2026-10-18T05:41:15.0807969Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/test/kesas.test.js",
+      "source": "APFDiscordBot/test/kesas.test.js",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 9417,
+      "sha256": "2339b2bcd50f6c0cea2bbb8529025e2d34c419dbd8cd0e604e69da5b2ffab8c7",
+      "sourceSha256": "1674d5b0d5de61827c409ff364fd897e5402e53e55aecb19041d90c8eb68fe5b",
+      "sourceModifiedUtc": "2026-10-20T01:00:24.659Z",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/test/native-verifier.test.js",
+      "source": "APFDiscordBot/test/native-verifier.test.js",
+      "bytes": 1309,
+      "sha256": "ec30ee4982e337b7ec06ba9b1ee9e146c228178d5588fce4c1135bb2b01fe698",
+      "sourceSha256": "ec30ee4982e337b7ec06ba9b1ee9e146c228178d5588fce4c1135bb2b01fe698",
+      "sourceModifiedUtc": "2026-10-18T09:10:34.091988+00:00",
+      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
+      "transformations": []
+    },
+    {
+      "path": "APFDiscordBot/test/offline-alerts.test.js",
+      "source": "APFDiscordBot/test/offline-alerts.test.js",
+      "role": "Discord bot regression test source",
+      "transformations": [],
+      "bytes": 8344,
+      "sha256": "20020248842d06a2b503cb19fdf99cc4953eec57894d0ad022060fc6bb8b2de0",
+      "sourceSha256": "20020248842d06a2b503cb19fdf99cc4953eec57894d0ad022060fc6bb8b2de0",
+      "sourceModifiedUtc": "2026-10-20T00:59:50.699Z"
+    },
+    {
+      "path": "APFDiscordBot/test/smoke.test.js",
+      "source": "APFDiscordBot/test/smoke.test.js",
+      "role": "Discord integration source/tests/operator scripts",
+      "bytes": 114262,
+      "sha256": "c0b25b633d5ad064b40b32b8880e8bc21fb45da11aa770635fa021160d109de3",
+      "sourceSha256": "1d8f662d82915c1ad96202c9cff72bd975af5ceeebf29d26ba7221fdce3fec6e",
+      "sourceModifiedUtc": "2026-10-20T01:00:24.663Z",
+      "transformations": [
+        "absolute workspace root replaced by ."
+      ]
+    },
     {
       "path": "Aetherfront-RC18-Work/BinaryChecks/BinaryChecks.csproj",
       "source": "Aetherfront-RC18-Work/BinaryChecks/BinaryChecks.csproj",
@@ -941,6 +1519,16 @@
       ]
     },
     {
+      "path": "Aetherfront-RC22-Work/GITHUB-SETUP.txt",
+      "source": "Aetherfront-RC22-Work/GITHUB-SETUP.txt",
+      "role": "RC22 publication documentation",
+      "bytes": 6221,
+      "sha256": "f67d0ad54bbedf50a1ab32497a9bd05898f8fcf93d5844d5cbfd951ac2a3a031",
+      "sourceSha256": "f67d0ad54bbedf50a1ab32497a9bd05898f8fcf93d5844d5cbfd951ac2a3a031",
+      "sourceModifiedUtc": "2026-10-17T04:57:59.5355581Z",
+      "transformations": []
+    },
+    {
       "path": "Aetherfront-RC22-Work/GameStub/GameStub.csproj",
       "source": "Aetherfront-RC22-Work/GameStub/GameStub.csproj",
       "role": "shipping client patch lineage and RC22 overlays/tests/build/publication scripts",
@@ -958,16 +1546,6 @@
       "sha256": "42e677c78a11fa41ecae1652ec67f1ee72d80bf0dac93fb0dab6d4d67b678f17",
       "sourceSha256": "42e677c78a11fa41ecae1652ec67f1ee72d80bf0dac93fb0dab6d4d67b678f17",
       "sourceModifiedUtc": "2026-10-16T23:39:48.2810097Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC22-Work/GITHUB-SETUP.txt",
-      "source": "Aetherfront-RC22-Work/GITHUB-SETUP.txt",
-      "role": "RC22 publication documentation",
-      "bytes": 6221,
-      "sha256": "f67d0ad54bbedf50a1ab32497a9bd05898f8fcf93d5844d5cbfd951ac2a3a031",
-      "sourceSha256": "f67d0ad54bbedf50a1ab32497a9bd05898f8fcf93d5844d5cbfd951ac2a3a031",
-      "sourceModifiedUtc": "2026-10-17T04:57:59.5355581Z",
       "transformations": []
     },
     {
@@ -1091,6 +1669,16 @@
       "transformations": []
     },
     {
+      "path": "Aetherfront-RC22-Work/PLAYER-INSTALL.txt",
+      "source": "Aetherfront-RC22-Work/PLAYER-INSTALL.txt",
+      "role": "RC22 player installation documentation",
+      "bytes": 1751,
+      "sha256": "556cd5aaa03318bdb959cd5b757d30969ae73cbb39e995bfc87e38205e11b0f3",
+      "sourceSha256": "556cd5aaa03318bdb959cd5b757d30969ae73cbb39e995bfc87e38205e11b0f3",
+      "sourceModifiedUtc": "2026-10-16T23:39:47.7519705Z",
+      "transformations": []
+    },
+    {
       "path": "Aetherfront-RC22-Work/Patcher/Patcher.csproj",
       "source": "Aetherfront-RC22-Work/Patcher/Patcher.csproj",
       "role": "shipping client patch lineage and RC22 overlays/tests/build/publication scripts",
@@ -1108,16 +1696,6 @@
       "sha256": "b61e971e81a8defb9611f3b3820576cd6db3a69020525daed26aa270979592db",
       "sourceSha256": "b61e971e81a8defb9611f3b3820576cd6db3a69020525daed26aa270979592db",
       "sourceModifiedUtc": "2026-10-16T23:39:48.509092Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC22-Work/PLAYER-INSTALL.txt",
-      "source": "Aetherfront-RC22-Work/PLAYER-INSTALL.txt",
-      "role": "RC22 player installation documentation",
-      "bytes": 1751,
-      "sha256": "556cd5aaa03318bdb959cd5b757d30969ae73cbb39e995bfc87e38205e11b0f3",
-      "sourceSha256": "556cd5aaa03318bdb959cd5b757d30969ae73cbb39e995bfc87e38205e11b0f3",
-      "sourceModifiedUtc": "2026-10-16T23:39:47.7519705Z",
       "transformations": []
     },
     {
@@ -1583,6 +2161,16 @@
       "transformations": []
     },
     {
+      "path": "Aetherfront-RC24-Work/PLAYER-INSTALL.txt",
+      "source": "Aetherfront-RC24-Work/PLAYER-INSTALL.txt",
+      "role": "RC24 player installation and permanent-removal instructions",
+      "bytes": 2235,
+      "sha256": "03814b9e02c3f494a0692d38d265315d10e0405068094bf8ec219c6af4389e67",
+      "sourceSha256": "03814b9e02c3f494a0692d38d265315d10e0405068094bf8ec219c6af4389e67",
+      "sourceModifiedUtc": "2026-10-17T06:28:38.2512738Z",
+      "transformations": []
+    },
+    {
       "path": "Aetherfront-RC24-Work/Patcher/Patcher.csproj",
       "source": "Aetherfront-RC24-Work/Patcher/Patcher.csproj",
       "role": "RC24 explicit-restart installer, native guards and regression sources",
@@ -1600,16 +2188,6 @@
       "sha256": "7d34112a65795e4eed2ef25e89a64458dca5e5104d7629ea64c24c2630517c08",
       "sourceSha256": "7d34112a65795e4eed2ef25e89a64458dca5e5104d7629ea64c24c2630517c08",
       "sourceModifiedUtc": "2026-10-17T06:24:32.7767776Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC24-Work/PLAYER-INSTALL.txt",
-      "source": "Aetherfront-RC24-Work/PLAYER-INSTALL.txt",
-      "role": "RC24 player installation and permanent-removal instructions",
-      "bytes": 2235,
-      "sha256": "03814b9e02c3f494a0692d38d265315d10e0405068094bf8ec219c6af4389e67",
-      "sourceSha256": "03814b9e02c3f494a0692d38d265315d10e0405068094bf8ec219c6af4389e67",
-      "sourceModifiedUtc": "2026-10-17T06:28:38.2512738Z",
       "transformations": []
     },
     {
@@ -2961,6 +3539,388 @@
       "transformations": []
     },
     {
+      "path": "Aetherfront-RC30-Work/Build-Engine.ps1",
+      "source": "Aetherfront-RC30-Work/Build-Engine.ps1",
+      "role": "RC30 audited settings preservation and release regression sources",
+      "bytes": 3077,
+      "sha256": "6957b694cafd66a1ac3987c502062cf8268553600721ef87bd72569805b01c1c",
+      "sourceSha256": "6957b694cafd66a1ac3987c502062cf8268553600721ef87bd72569805b01c1c"
+    },
+    {
+      "path": "Aetherfront-RC30-Work/Build-Release.py",
+      "source": "Aetherfront-RC30-Work/Build-Release.py",
+      "role": "RC30 audited settings preservation and release regression sources",
+      "bytes": 7033,
+      "sha256": "12943863abd191e33fd7e2f4295721443f484538b9bae18a023710e96ea85224",
+      "sourceSha256": "12943863abd191e33fd7e2f4295721443f484538b9bae18a023710e96ea85224"
+    },
+    {
+      "path": "Aetherfront-RC30-Work/CasingTests/CasingTests.csproj",
+      "source": "Aetherfront-RC30-Work/CasingTests/CasingTests.csproj",
+      "role": "RC30 audited settings preservation and release regression sources",
+      "bytes": 769,
+      "sha256": "8f320463bef50f64321ccc2ee825845fb1bf1626e0ae1390394f2c11add2aa13",
+      "sourceSha256": "8f320463bef50f64321ccc2ee825845fb1bf1626e0ae1390394f2c11add2aa13"
+    },
+    {
+      "path": "Aetherfront-RC30-Work/CasingTests/Program.cs",
+      "source": "Aetherfront-RC30-Work/CasingTests/Program.cs",
+      "role": "RC30 audited settings preservation and release regression sources",
+      "bytes": 42374,
+      "sha256": "0be04c68b49b536a06c1ac14aaa0ba4c336a7f14b0a14010100c04558f3fbf45",
+      "sourceSha256": "0be04c68b49b536a06c1ac14aaa0ba4c336a7f14b0a14010100c04558f3fbf45"
+    },
+    {
+      "path": "Aetherfront-RC30-Work/Engine/AssemblyInfo.cs",
+      "source": "Aetherfront-RC30-Work/Engine/AssemblyInfo.cs",
+      "role": "RC30 audited settings preservation and release regression sources",
+      "bytes": 107,
+      "sha256": "8a1336238caf1699e8dd5697dfe5330ee2ed3350ee538638c22f258632765970",
+      "sourceSha256": "8a1336238caf1699e8dd5697dfe5330ee2ed3350ee538638c22f258632765970"
+    },
+    {
+      "path": "Aetherfront-RC30-Work/Engine/AtomicFiles.cs",
+      "source": "Aetherfront-RC30-Work/Engine/AtomicFiles.cs",
+      "role": "RC30 audited settings preservation and release regression sources",
+      "bytes": 2079,
+      "sha256": "2638836990399e136ca0ff7453a30dee3c60353458c62876ed62316b61d29e87",
+      "sourceSha256": "2638836990399e136ca0ff7453a30dee3c60353458c62876ed62316b61d29e87"
+    },
+    {
+      "path": "Aetherfront-RC30-Work/Engine/Installer.cs",
+      "source": "Aetherfront-RC30-Work/Engine/Installer.cs",
+      "role": "RC30 audited settings preservation and release regression sources",
+      "bytes": 56350,
+      "sha256": "bdccddf5d5b826c14f85bb11b1588ce604f6f5b952501b9439175417c31fac46",
+      "sourceSha256": "bdccddf5d5b826c14f85bb11b1588ce604f6f5b952501b9439175417c31fac46",
+      "sourceModifiedUtc": "2026-10-18T20:02:55.544435+00:00"
+    },
+    {
+      "path": "Aetherfront-RC30-Work/Engine/LegacySettingsRecovery.cs",
+      "source": "Aetherfront-RC30-Work/Engine/LegacySettingsRecovery.cs",
+      "role": "RC30 audited settings preservation and release regression sources",
+      "bytes": 44951,
+      "sha256": "b985acf0a3379ca1ea93fdda5dbbcdd8c8efe259d040a3db9ba32848f9a8f471",
+      "sourceSha256": "b985acf0a3379ca1ea93fdda5dbbcdd8c8efe259d040a3db9ba32848f9a8f471",
+      "sourceModifiedUtc": "2026-10-18T19:42:06.848013+00:00"
+    },
+    {
+      "path": "Aetherfront-RC30-Work/Engine/NativeInstall.cs",
+      "source": "Aetherfront-RC30-Work/Engine/NativeInstall.cs",
+      "role": "RC30 audited settings preservation and release regression sources",
+      "bytes": 14924,
+      "sha256": "0ecf0740c7c062a3f681e95b2e8a3f068b364bef915de0d8059e8d7bef07128e",
+      "sourceSha256": "0ecf0740c7c062a3f681e95b2e8a3f068b364bef915de0d8059e8d7bef07128e"
+    },
+    {
+      "path": "Aetherfront-RC30-Work/Engine/PackageCasing.cs",
+      "source": "Aetherfront-RC30-Work/Engine/PackageCasing.cs",
+      "role": "RC30 audited settings preservation and release regression sources",
+      "bytes": 1477,
+      "sha256": "cd12756ff56732becd59a7f3a227a9fce8039dc31cb45a44790b6c4ed12a1f64",
+      "sourceSha256": "cd12756ff56732becd59a7f3a227a9fce8039dc31cb45a44790b6c4ed12a1f64"
+    },
+    {
+      "path": "Aetherfront-RC30-Work/Engine/PostExit.cs",
+      "source": "Aetherfront-RC30-Work/Engine/PostExit.cs",
+      "role": "RC30 audited settings preservation and release regression sources",
+      "bytes": 2499,
+      "sha256": "4d042158deba0b73122795bb121bcbb34ccd1278127e6fbd4a29a181df1c2a6b",
+      "sourceSha256": "4d042158deba0b73122795bb121bcbb34ccd1278127e6fbd4a29a181df1c2a6b"
+    },
+    {
+      "path": "Aetherfront-RC30-Work/Engine/PreparedPack.cs",
+      "source": "Aetherfront-RC30-Work/Engine/PreparedPack.cs",
+      "role": "RC30 audited settings preservation and release regression sources",
+      "bytes": 27472,
+      "sha256": "a9ca91cc104bf534e1f4f75d97e90d7c978e149ad6f16366705bde428d2a3aaa",
+      "sourceSha256": "a9ca91cc104bf534e1f4f75d97e90d7c978e149ad6f16366705bde428d2a3aaa"
+    },
+    {
+      "path": "Aetherfront-RC30-Work/Engine/RuntimeFiles.cs",
+      "source": "Aetherfront-RC30-Work/Engine/RuntimeFiles.cs",
+      "role": "RC30 audited settings preservation and release regression sources",
+      "bytes": 6499,
+      "sha256": "d7aafa99ba359960622cc3ae393b185ea0cb89579e52c0831d3685fc88991a41",
+      "sourceSha256": "d7aafa99ba359960622cc3ae393b185ea0cb89579e52c0831d3685fc88991a41"
+    },
+    {
+      "path": "Aetherfront-RC30-Work/Engine/StartupCasing.cs",
+      "source": "Aetherfront-RC30-Work/Engine/StartupCasing.cs",
+      "role": "RC30 audited settings preservation and release regression sources",
+      "bytes": 17272,
+      "sha256": "36cbb5a5914dd7c698443b9225cb241a16c6b687fd7f91d0161c424079424976",
+      "sourceSha256": "36cbb5a5914dd7c698443b9225cb241a16c6b687fd7f91d0161c424079424976",
+      "sourceModifiedUtc": "2026-10-18T20:02:55.544435+00:00"
+    },
+    {
+      "path": "Aetherfront-RC30-Work/Engine/TerrainPolicy.cs",
+      "source": "Aetherfront-RC30-Work/Engine/TerrainPolicy.cs",
+      "role": "RC30 audited settings preservation and release regression sources",
+      "bytes": 4258,
+      "sha256": "acc989338d87c147aeb5ff5ea6c61e7ac24ce5081a518b76f2ef483ee703040e",
+      "sourceSha256": "acc989338d87c147aeb5ff5ea6c61e7ac24ce5081a518b76f2ef483ee703040e",
+      "sourceModifiedUtc": "2026-10-18T20:03:37.246286+00:00"
+    },
+    {
+      "path": "Aetherfront-RC30-Work/Engine/UserSettings.cs",
+      "source": "Aetherfront-RC30-Work/Engine/UserSettings.cs",
+      "role": "RC30 audited settings preservation and release regression sources",
+      "bytes": 3288,
+      "sha256": "026da12d8dff750292bb00045817cb500bf0d015523f68ff6d91b255c64ccd59",
+      "sourceSha256": "026da12d8dff750292bb00045817cb500bf0d015523f68ff6d91b255c64ccd59"
+    },
+    {
+      "path": "Aetherfront-RC30-Work/Prepare-MonoRecoveryProbe.py",
+      "source": "Aetherfront-RC30-Work/Prepare-MonoRecoveryProbe.py",
+      "role": "RC30 audited settings preservation and release regression sources",
+      "bytes": 2421,
+      "sha256": "3e157692745144705dfbf52f0d68ffbd11b41d448d11af619286f69d670d969a",
+      "sourceSha256": "3e157692745144705dfbf52f0d68ffbd11b41d448d11af619286f69d670d969a"
+    },
+    {
+      "path": "Aetherfront-RC30-Work/RELEASE-REVIEW.md",
+      "source": "Aetherfront-RC30-Work/RELEASE-REVIEW.md",
+      "role": "RC30 audited settings preservation and release regression sources",
+      "bytes": 3220,
+      "sha256": "aca79cba32d4d19b706bb582a9e97d2f954fba650c80195af35ad2d7dda56503",
+      "sourceSha256": "aca79cba32d4d19b706bb582a9e97d2f954fba650c80195af35ad2d7dda56503",
+      "sourceModifiedUtc": "2026-10-18T20:35:42.688508+00:00"
+    },
+    {
+      "path": "Aetherfront-RC30-Work/SettingsTests/Program.cs",
+      "source": "Aetherfront-RC30-Work/SettingsTests/Program.cs",
+      "role": "RC30 audited settings preservation and release regression sources",
+      "bytes": 60441,
+      "sha256": "b6183fb9a2b6088c217972c86fcb7edb06cb07ae337aa2baa68a0671236251f5",
+      "sourceSha256": "b6183fb9a2b6088c217972c86fcb7edb06cb07ae337aa2baa68a0671236251f5",
+      "sourceModifiedUtc": "2026-10-18T20:08:23.347533+00:00"
+    },
+    {
+      "path": "Aetherfront-RC30-Work/SettingsTests/SettingsTests.csproj",
+      "source": "Aetherfront-RC30-Work/SettingsTests/SettingsTests.csproj",
+      "role": "RC30 audited settings preservation and release regression sources",
+      "bytes": 861,
+      "sha256": "0f3f2289f5228844f7d86a814439d86d9b01b2048f4fee67ffd8a949330f52af",
+      "sourceSha256": "0f3f2289f5228844f7d86a814439d86d9b01b2048f4fee67ffd8a949330f52af"
+    },
+    {
+      "path": "Aetherfront-RC30-Work/VersionPatcher/Program.cs",
+      "source": "Aetherfront-RC30-Work/VersionPatcher/Program.cs",
+      "role": "RC30 audited settings preservation and release regression sources",
+      "bytes": 25625,
+      "sha256": "ab14a1b2993d1ad62716fb29dc20aa7079fddbb7c1498eadcb984fd1797ae823",
+      "sourceSha256": "ab14a1b2993d1ad62716fb29dc20aa7079fddbb7c1498eadcb984fd1797ae823"
+    },
+    {
+      "path": "Aetherfront-RC30-Work/VersionPatcher/VersionPatcher.csproj",
+      "source": "Aetherfront-RC30-Work/VersionPatcher/VersionPatcher.csproj",
+      "role": "RC30 audited settings preservation and release regression sources",
+      "bytes": 388,
+      "sha256": "bab0ca3bb9e42596392f218185ecd90b156f47ee8f1cdd9784b58512237c7854",
+      "sourceSha256": "bab0ca3bb9e42596392f218185ecd90b156f47ee8f1cdd9784b58512237c7854"
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Build-Engine.ps1",
+      "source": "Aetherfront-RC31-Work/Build-Engine.ps1",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 3077,
+      "sha256": "96851731d584e29f5d7aa8dc864e01d323549c6696bc57324771cad74e708199",
+      "sourceSha256": "96851731d584e29f5d7aa8dc864e01d323549c6696bc57324771cad74e708199",
+      "sourceModifiedUtc": "2026-10-19T01:01:55.648858+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Build-Release.py",
+      "source": "Aetherfront-RC31-Work/Build-Release.py",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 5995,
+      "sha256": "b8335a2c50c47fca54db8625e0825a27c622019e6068b9af0e22ef071823df74",
+      "sourceSha256": "b8335a2c50c47fca54db8625e0825a27c622019e6068b9af0e22ef071823df74",
+      "sourceModifiedUtc": "2026-10-19T01:05:01.734756+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/AssemblyInfo.cs",
+      "source": "Aetherfront-RC31-Work/Engine/AssemblyInfo.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 107,
+      "sha256": "8a1336238caf1699e8dd5697dfe5330ee2ed3350ee538638c22f258632765970",
+      "sourceSha256": "8a1336238caf1699e8dd5697dfe5330ee2ed3350ee538638c22f258632765970",
+      "sourceModifiedUtc": "2026-10-18T06:44:18.941018+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/AtomicFiles.cs",
+      "source": "Aetherfront-RC31-Work/Engine/AtomicFiles.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 2079,
+      "sha256": "2638836990399e136ca0ff7453a30dee3c60353458c62876ed62316b61d29e87",
+      "sourceSha256": "2638836990399e136ca0ff7453a30dee3c60353458c62876ed62316b61d29e87",
+      "sourceModifiedUtc": "2026-10-18T19:00:13.143134+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/Installer.cs",
+      "source": "Aetherfront-RC31-Work/Engine/Installer.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 56350,
+      "sha256": "bdccddf5d5b826c14f85bb11b1588ce604f6f5b952501b9439175417c31fac46",
+      "sourceSha256": "bdccddf5d5b826c14f85bb11b1588ce604f6f5b952501b9439175417c31fac46",
+      "sourceModifiedUtc": "2026-10-18T20:02:55.544435+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/LegacySettingsRecovery.cs",
+      "source": "Aetherfront-RC31-Work/Engine/LegacySettingsRecovery.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 44951,
+      "sha256": "019f1c51f297d99b16d1562f0aafd1aed03f19c16f9bec7740b014ac3832ce23",
+      "sourceSha256": "019f1c51f297d99b16d1562f0aafd1aed03f19c16f9bec7740b014ac3832ce23",
+      "sourceModifiedUtc": "2026-10-19T01:01:55.662471+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/NativeInstall.cs",
+      "source": "Aetherfront-RC31-Work/Engine/NativeInstall.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 14924,
+      "sha256": "0ecf0740c7c062a3f681e95b2e8a3f068b364bef915de0d8059e8d7bef07128e",
+      "sourceSha256": "0ecf0740c7c062a3f681e95b2e8a3f068b364bef915de0d8059e8d7bef07128e",
+      "sourceModifiedUtc": "2026-10-18T05:58:57.653675+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/ObsoleteScripts.cs",
+      "source": "Aetherfront-RC31-Work/Engine/ObsoleteScripts.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 1908,
+      "sha256": "8127f4775690427ee69bb654bfc847ec3d10a8c28680a2ad7544d51e4c3861b7",
+      "sourceSha256": "8127f4775690427ee69bb654bfc847ec3d10a8c28680a2ad7544d51e4c3861b7",
+      "sourceModifiedUtc": "2026-10-19T01:05:01.733247+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/PackageCasing.cs",
+      "source": "Aetherfront-RC31-Work/Engine/PackageCasing.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 1477,
+      "sha256": "cd12756ff56732becd59a7f3a227a9fce8039dc31cb45a44790b6c4ed12a1f64",
+      "sourceSha256": "cd12756ff56732becd59a7f3a227a9fce8039dc31cb45a44790b6c4ed12a1f64",
+      "sourceModifiedUtc": "2026-10-18T05:58:57.653675+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/PostExit.cs",
+      "source": "Aetherfront-RC31-Work/Engine/PostExit.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 2499,
+      "sha256": "4d042158deba0b73122795bb121bcbb34ccd1278127e6fbd4a29a181df1c2a6b",
+      "sourceSha256": "4d042158deba0b73122795bb121bcbb34ccd1278127e6fbd4a29a181df1c2a6b",
+      "sourceModifiedUtc": "2026-10-18T05:58:57.654680+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/PreparedPack.cs",
+      "source": "Aetherfront-RC31-Work/Engine/PreparedPack.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 27472,
+      "sha256": "a9ca91cc104bf534e1f4f75d97e90d7c978e149ad6f16366705bde428d2a3aaa",
+      "sourceSha256": "a9ca91cc104bf534e1f4f75d97e90d7c978e149ad6f16366705bde428d2a3aaa",
+      "sourceModifiedUtc": "2026-10-18T19:00:13.144643+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/RuntimeFiles.cs",
+      "source": "Aetherfront-RC31-Work/Engine/RuntimeFiles.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 6499,
+      "sha256": "d7aafa99ba359960622cc3ae393b185ea0cb89579e52c0831d3685fc88991a41",
+      "sourceSha256": "d7aafa99ba359960622cc3ae393b185ea0cb89579e52c0831d3685fc88991a41",
+      "sourceModifiedUtc": "2026-10-18T05:58:57.655184+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/StartupCasing.cs",
+      "source": "Aetherfront-RC31-Work/Engine/StartupCasing.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 17321,
+      "sha256": "f737f29221abbe4e354d8e0aa9af12d04bcdd18165e2184e24862d1c9377ac8c",
+      "sourceSha256": "f737f29221abbe4e354d8e0aa9af12d04bcdd18165e2184e24862d1c9377ac8c",
+      "sourceModifiedUtc": "2026-10-19T01:05:01.732733+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/TerrainPolicy.cs",
+      "source": "Aetherfront-RC31-Work/Engine/TerrainPolicy.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 4258,
+      "sha256": "acc989338d87c147aeb5ff5ea6c61e7ac24ce5081a518b76f2ef483ee703040e",
+      "sourceSha256": "acc989338d87c147aeb5ff5ea6c61e7ac24ce5081a518b76f2ef483ee703040e",
+      "sourceModifiedUtc": "2026-10-18T20:03:37.246286+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/Engine/UserSettings.cs",
+      "source": "Aetherfront-RC31-Work/Engine/UserSettings.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 3288,
+      "sha256": "026da12d8dff750292bb00045817cb500bf0d015523f68ff6d91b255c64ccd59",
+      "sourceSha256": "026da12d8dff750292bb00045817cb500bf0d015523f68ff6d91b255c64ccd59",
+      "sourceModifiedUtc": "2026-10-18T09:21:39.492718+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/RELEASE-REVIEW.md",
+      "source": "Aetherfront-RC31-Work/RELEASE-REVIEW.md",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 2284,
+      "sha256": "359960e9a9574e22364faebc131e027325724ad2c2e48c198941c2f83f95aee3",
+      "sourceSha256": "359960e9a9574e22364faebc131e027325724ad2c2e48c198941c2f83f95aee3",
+      "sourceModifiedUtc": "2026-10-19T01:07:41.282532+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/SettingsTests/Program.cs",
+      "source": "Aetherfront-RC31-Work/SettingsTests/Program.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 65659,
+      "sha256": "3a1accb08cd9ce118620b04c4e524329fa2a7456cc52f6c9c868a28647536e41",
+      "sourceSha256": "3a1accb08cd9ce118620b04c4e524329fa2a7456cc52f6c9c868a28647536e41",
+      "sourceModifiedUtc": "2026-10-19T01:06:47.228506+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/SettingsTests/SettingsTests.csproj",
+      "source": "Aetherfront-RC31-Work/SettingsTests/SettingsTests.csproj",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 861,
+      "sha256": "0f3f2289f5228844f7d86a814439d86d9b01b2048f4fee67ffd8a949330f52af",
+      "sourceSha256": "0f3f2289f5228844f7d86a814439d86d9b01b2048f4fee67ffd8a949330f52af",
+      "sourceModifiedUtc": "2026-10-18T19:14:49.119413+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/VersionPatcher/Program.cs",
+      "source": "Aetherfront-RC31-Work/VersionPatcher/Program.cs",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 25625,
+      "sha256": "261b8103070f7f2e9566faae512d0eb6da08b598b9563363538b8185a89ada8b",
+      "sourceSha256": "261b8103070f7f2e9566faae512d0eb6da08b598b9563363538b8185a89ada8b",
+      "sourceModifiedUtc": "2026-10-19T01:01:55.673577+00:00",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-RC31-Work/VersionPatcher/VersionPatcher.csproj",
+      "source": "Aetherfront-RC31-Work/VersionPatcher/VersionPatcher.csproj",
+      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
+      "bytes": 388,
+      "sha256": "bab0ca3bb9e42596392f218185ecd90b156f47ee8f1cdd9784b58512237c7854",
+      "sourceSha256": "bab0ca3bb9e42596392f218185ecd90b156f47ee8f1cdd9784b58512237c7854",
+      "sourceModifiedUtc": "2026-10-18T19:14:49.120412+00:00",
+      "transformations": []
+    },
+    {
       "path": "Aetherfront-Source/.nuget/nuget.config",
       "source": "Aetherfront-Source/.nuget/nuget.config",
       "role": "fork client/server/shared libraries/tests/tools",
@@ -2968,6 +3928,36 @@
       "sha256": "17be27222f973a693122017c048ffdfbecddf506c62d3bda160834cbfbc312df",
       "sourceSha256": "17be27222f973a693122017c048ffdfbecddf506c62d3bda160834cbfbc312df",
       "sourceModifiedUtc": "2026-08-07T04:22:45Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/APFDiscordBridge/APFDiscordBridge.csproj",
+      "source": "Aetherfront-Source/APFDiscordBridge/APFDiscordBridge.csproj",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 862,
+      "sha256": "ad7db262dfc76f43667c4ef096917b11ba69ec284798f2dbc8dbe1e0ac622033",
+      "sourceSha256": "ad7db262dfc76f43667c4ef096917b11ba69ec284798f2dbc8dbe1e0ac622033",
+      "sourceModifiedUtc": "2026-08-14T11:15:07.0152184Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/APFDiscordBridge/ApfDiscordBridgePlugin.cs",
+      "source": "Aetherfront-Source/APFDiscordBridge/ApfDiscordBridgePlugin.cs",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 13703,
+      "sha256": "3bf1a659e52ae8c6208356c9d863b4f14045b1054c36518c2e720de69d69d8df",
+      "sourceSha256": "3bf1a659e52ae8c6208356c9d863b4f14045b1054c36518c2e720de69d69d8df",
+      "sourceModifiedUtc": "2026-08-14T11:23:50.1392809Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/APFDiscordBridge/README.md",
+      "source": "Aetherfront-Source/APFDiscordBridge/README.md",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 910,
+      "sha256": "1ca4e94f8392e6ff28c1d27bb0e84ab71ed3e4e9f6f00793a2bd8f5a64f71830",
+      "sourceSha256": "1ca4e94f8392e6ff28c1d27bb0e84ab71ed3e4e9f6f00793a2bd8f5a64f71830",
+      "sourceModifiedUtc": "2026-08-12T22:50:01.736217Z",
       "transformations": []
     },
     {
@@ -3231,36 +4221,6 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/APFDiscordBridge/APFDiscordBridge.csproj",
-      "source": "Aetherfront-Source/APFDiscordBridge/APFDiscordBridge.csproj",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 862,
-      "sha256": "ad7db262dfc76f43667c4ef096917b11ba69ec284798f2dbc8dbe1e0ac622033",
-      "sourceSha256": "ad7db262dfc76f43667c4ef096917b11ba69ec284798f2dbc8dbe1e0ac622033",
-      "sourceModifiedUtc": "2026-08-14T11:15:07.0152184Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-Source/APFDiscordBridge/ApfDiscordBridgePlugin.cs",
-      "source": "Aetherfront-Source/APFDiscordBridge/ApfDiscordBridgePlugin.cs",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 13703,
-      "sha256": "3bf1a659e52ae8c6208356c9d863b4f14045b1054c36518c2e720de69d69d8df",
-      "sourceSha256": "3bf1a659e52ae8c6208356c9d863b4f14045b1054c36518c2e720de69d69d8df",
-      "sourceModifiedUtc": "2026-08-14T11:23:50.1392809Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-Source/APFDiscordBridge/README.md",
-      "source": "Aetherfront-Source/APFDiscordBridge/README.md",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 910,
-      "sha256": "1ca4e94f8392e6ff28c1d27bb0e84ab71ed3e4e9f6f00793a2bd8f5a64f71830",
-      "sourceSha256": "1ca4e94f8392e6ff28c1d27bb0e84ab71ed3e4e9f6f00793a2bd8f5a64f71830",
-      "sourceModifiedUtc": "2026-08-12T22:50:01.736217Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/ApfPackHost/ApfPackHost.csproj",
       "source": "Aetherfront-Source/ApfPackHost/ApfPackHost.csproj",
       "role": "fork client/server/shared libraries/tests/tools",
@@ -3331,6 +4291,26 @@
       "transformations": []
     },
     {
+      "path": "Aetherfront-Source/ApfUpdateTool/ApfUpdateTool.csproj",
+      "source": "Aetherfront-Source/ApfUpdateTool/ApfUpdateTool.csproj",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 635,
+      "sha256": "4c5cb3b4c76c65ffe070fd256a613108eb1f69c0bc5a3046c8d54bc0db80e769",
+      "sourceSha256": "4c5cb3b4c76c65ffe070fd256a613108eb1f69c0bc5a3046c8d54bc0db80e769",
+      "sourceModifiedUtc": "2026-08-28T06:14:22.6795796Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/ApfUpdateTool/Program.cs",
+      "source": "Aetherfront-Source/ApfUpdateTool/Program.cs",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 12773,
+      "sha256": "5e1987b351d1ccfca14680d992f68aa5cbb9da65b1a8ae5c834526991cd6e76b",
+      "sourceSha256": "5e1987b351d1ccfca14680d992f68aa5cbb9da65b1a8ae5c834526991cd6e76b",
+      "sourceModifiedUtc": "2026-08-28T06:20:55.3456755Z",
+      "transformations": []
+    },
+    {
       "path": "Aetherfront-Source/ApfUpdater.Tests/ApfUpdater.Tests.csproj",
       "source": "Aetherfront-Source/ApfUpdater.Tests/ApfUpdater.Tests.csproj",
       "role": "fork client/server/shared libraries/tests/tools",
@@ -3371,26 +4351,6 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/ApfUpdateTool/ApfUpdateTool.csproj",
-      "source": "Aetherfront-Source/ApfUpdateTool/ApfUpdateTool.csproj",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 635,
-      "sha256": "4c5cb3b4c76c65ffe070fd256a613108eb1f69c0bc5a3046c8d54bc0db80e769",
-      "sourceSha256": "4c5cb3b4c76c65ffe070fd256a613108eb1f69c0bc5a3046c8d54bc0db80e769",
-      "sourceModifiedUtc": "2026-08-28T06:14:22.6795796Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-Source/ApfUpdateTool/Program.cs",
-      "source": "Aetherfront-Source/ApfUpdateTool/Program.cs",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 12773,
-      "sha256": "5e1987b351d1ccfca14680d992f68aa5cbb9da65b1a8ae5c834526991cd6e76b",
-      "sourceSha256": "5e1987b351d1ccfca14680d992f68aa5cbb9da65b1a8ae5c834526991cd6e76b",
-      "sourceModifiedUtc": "2026-08-28T06:20:55.3456755Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/CODE_OF_CONDUCT.md",
       "source": "Aetherfront-Source/CODE_OF_CONDUCT.md",
       "role": "upstream community guidance",
@@ -3408,6 +4368,66 @@
       "sha256": "6127727a9e9150c55265c1772fe929c50cde89fb33d916a58a66dc8d2d089ce3",
       "sourceSha256": "6127727a9e9150c55265c1772fe929c50cde89fb33d916a58a66dc8d2d089ce3",
       "sourceModifiedUtc": "2026-08-07T04:22:45Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/Documentation/APF-Managed-Packs.md",
+      "source": "Aetherfront-Source/Documentation/APF-Managed-Packs.md",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 10584,
+      "sha256": "badd72632bdccc0e561ac8a15b36c366e97cb486774f787b0c24641a2c08901e",
+      "sourceSha256": "badd72632bdccc0e561ac8a15b36c366e97cb486774f787b0c24641a2c08901e",
+      "sourceModifiedUtc": "2026-08-14T11:04:38.7884172Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/Documentation/APFCareer.example.json",
+      "source": "Aetherfront-Source/Documentation/APFCareer.example.json",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 326,
+      "sha256": "83a43577ba67c82beef28b8ecceb636cdc1ebf2d24da172e088801246a770eca",
+      "sourceSha256": "83a43577ba67c82beef28b8ecceb636cdc1ebf2d24da172e088801246a770eca",
+      "sourceModifiedUtc": "2026-08-07T07:52:55Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/Documentation/APFClient.example.json",
+      "source": "Aetherfront-Source/Documentation/APFClient.example.json",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 38,
+      "sha256": "011725f2a35c3a0e5d766101ab607bd1686ff9ecc73a34ae8ea312a70f90f235",
+      "sourceSha256": "011725f2a35c3a0e5d766101ab607bd1686ff9ecc73a34ae8ea312a70f90f235",
+      "sourceModifiedUtc": "2026-08-07T05:09:45Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/Documentation/APFMasterServer.example.txt",
+      "source": "Aetherfront-Source/Documentation/APFMasterServer.example.txt",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 16,
+      "sha256": "064a2e0d48a0f67f109eb52575d0df5d3e328542b227ea41f11dd465ccccd89c",
+      "sourceSha256": "064a2e0d48a0f67f109eb52575d0df5d3e328542b227ea41f11dd465ccccd89c",
+      "sourceModifiedUtc": "2026-08-07T05:09:45Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/Documentation/APFPack.example.json",
+      "source": "Aetherfront-Source/Documentation/APFPack.example.json",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 304,
+      "sha256": "bdb9161bb61c3a4d5d8e3d8d6718be6043ffb45cfabfb908575c058db4f26aac",
+      "sourceSha256": "bdb9161bb61c3a4d5d8e3d8d6718be6043ffb45cfabfb908575c058db4f26aac",
+      "sourceModifiedUtc": "2026-08-07T05:59:53Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/Documentation/APFResearch.example.json",
+      "source": "Aetherfront-Source/Documentation/APFResearch.example.json",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 399,
+      "sha256": "869715c63c958d581170e1f9cd040bf30b9f1c3850e112363f1f8b3617d14f70",
+      "sourceSha256": "869715c63c958d581170e1f9cd040bf30b9f1c3850e112363f1f8b3617d14f70",
+      "sourceModifiedUtc": "2026-08-14T09:53:50.5187963Z",
       "transformations": []
     },
     {
@@ -3488,66 +4508,6 @@
       "sha256": "67c2714ca3b9d2a52edcdf237b2924f908f848face253ba742b8331458d3ce6f",
       "sourceSha256": "67c2714ca3b9d2a52edcdf237b2924f908f848face253ba742b8331458d3ce6f",
       "sourceModifiedUtc": "2026-08-14T10:21:14.8261272Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-Source/Documentation/APF-Managed-Packs.md",
-      "source": "Aetherfront-Source/Documentation/APF-Managed-Packs.md",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 10584,
-      "sha256": "badd72632bdccc0e561ac8a15b36c366e97cb486774f787b0c24641a2c08901e",
-      "sourceSha256": "badd72632bdccc0e561ac8a15b36c366e97cb486774f787b0c24641a2c08901e",
-      "sourceModifiedUtc": "2026-08-14T11:04:38.7884172Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-Source/Documentation/APFCareer.example.json",
-      "source": "Aetherfront-Source/Documentation/APFCareer.example.json",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 326,
-      "sha256": "83a43577ba67c82beef28b8ecceb636cdc1ebf2d24da172e088801246a770eca",
-      "sourceSha256": "83a43577ba67c82beef28b8ecceb636cdc1ebf2d24da172e088801246a770eca",
-      "sourceModifiedUtc": "2026-08-07T07:52:55Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-Source/Documentation/APFClient.example.json",
-      "source": "Aetherfront-Source/Documentation/APFClient.example.json",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 38,
-      "sha256": "011725f2a35c3a0e5d766101ab607bd1686ff9ecc73a34ae8ea312a70f90f235",
-      "sourceSha256": "011725f2a35c3a0e5d766101ab607bd1686ff9ecc73a34ae8ea312a70f90f235",
-      "sourceModifiedUtc": "2026-08-07T05:09:45Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-Source/Documentation/APFMasterServer.example.txt",
-      "source": "Aetherfront-Source/Documentation/APFMasterServer.example.txt",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 16,
-      "sha256": "064a2e0d48a0f67f109eb52575d0df5d3e328542b227ea41f11dd465ccccd89c",
-      "sourceSha256": "064a2e0d48a0f67f109eb52575d0df5d3e328542b227ea41f11dd465ccccd89c",
-      "sourceModifiedUtc": "2026-08-07T05:09:45Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-Source/Documentation/APFPack.example.json",
-      "source": "Aetherfront-Source/Documentation/APFPack.example.json",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 304,
-      "sha256": "bdb9161bb61c3a4d5d8e3d8d6718be6043ffb45cfabfb908575c058db4f26aac",
-      "sourceSha256": "bdb9161bb61c3a4d5d8e3d8d6718be6043ffb45cfabfb908575c058db4f26aac",
-      "sourceModifiedUtc": "2026-08-07T05:59:53Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-Source/Documentation/APFResearch.example.json",
-      "source": "Aetherfront-Source/Documentation/APFResearch.example.json",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 399,
-      "sha256": "869715c63c958d581170e1f9cd040bf30b9f1c3850e112363f1f8b3617d14f70",
-      "sourceSha256": "869715c63c958d581170e1f9cd040bf30b9f1c3850e112363f1f8b3617d14f70",
-      "sourceModifiedUtc": "2026-08-14T09:53:50.5187963Z",
       "transformations": []
     },
     {
@@ -3701,22 +4661,22 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/global.json",
-      "source": "Aetherfront-Source/global.json",
-      "role": "fork SDK pin",
-      "bytes": 112,
-      "sha256": "05065126a73eaf13a593499baa96afe3524db9d8019e99c41d44fd22a694f9f5",
-      "sourceSha256": "05065126a73eaf13a593499baa96afe3524db9d8019e99c41d44fd22a694f9f5",
-      "sourceModifiedUtc": "2026-08-07T04:34:27Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/LICENSE",
       "source": "Aetherfront-Source/LICENSE",
       "role": "upstream license",
       "bytes": 1093,
       "sha256": "3b20235b53b76a1b7d19045acaab15323047703c12a410263a0b29020a020908",
       "sourceSha256": "3b20235b53b76a1b7d19045acaab15323047703c12a410263a0b29020a020908",
+      "sourceModifiedUtc": "2026-08-07T04:22:47Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/LMP Readme.txt",
+      "source": "Aetherfront-Source/LMP Readme.txt",
+      "role": "upstream attribution",
+      "bytes": 657,
+      "sha256": "bb4b696c434f7807392a5f23d714f260211f6f4936e73b72d9dcf8d6f4c31370",
+      "sourceSha256": "bb4b696c434f7807392a5f23d714f260211f6f4936e73b72d9dcf8d6f4c31370",
       "sourceModifiedUtc": "2026-08-07T04:22:47Z",
       "transformations": []
     },
@@ -3941,32 +4901,12 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/Lidgren/NetBuffer.cs",
-      "source": "Aetherfront-Source/Lidgren/NetBuffer.cs",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 2662,
-      "sha256": "052de24a8f20e7cb6a2837b9764cf262acc801fab64f492adb36148a6df1948a",
-      "sourceSha256": "052de24a8f20e7cb6a2837b9764cf262acc801fab64f492adb36148a6df1948a",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/Lidgren/NetBuffer.Peek.cs",
       "source": "Aetherfront-Source/Lidgren/NetBuffer.Peek.cs",
       "role": "fork client/server/shared libraries/tests/tools",
       "bytes": 9515,
       "sha256": "cf013b218456d2a46e7c3609cb32f0487e3b801f7c5ebcafa00ab2ca1230dcf7",
       "sourceSha256": "cf013b218456d2a46e7c3609cb32f0487e3b801f7c5ebcafa00ab2ca1230dcf7",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-Source/Lidgren/NetBuffer.Read.cs",
-      "source": "Aetherfront-Source/Lidgren/NetBuffer.Read.cs",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 21732,
-      "sha256": "41a36f139aed427b057c2a5d9dbdef2a1679d0104796b6bba04ee3734e876723",
-      "sourceSha256": "41a36f139aed427b057c2a5d9dbdef2a1679d0104796b6bba04ee3734e876723",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -3981,12 +4921,12 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/Lidgren/NetBuffer.Write.cs",
-      "source": "Aetherfront-Source/Lidgren/NetBuffer.Write.cs",
+      "path": "Aetherfront-Source/Lidgren/NetBuffer.Read.cs",
+      "source": "Aetherfront-Source/Lidgren/NetBuffer.Read.cs",
       "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 19605,
-      "sha256": "fe3ef2de2bca926012787fecc3f45f24962b5a0c5d93142ed67e4ff50e277525",
-      "sourceSha256": "fe3ef2de2bca926012787fecc3f45f24962b5a0c5d93142ed67e4ff50e277525",
+      "bytes": 21732,
+      "sha256": "41a36f139aed427b057c2a5d9dbdef2a1679d0104796b6bba04ee3734e876723",
+      "sourceSha256": "41a36f139aed427b057c2a5d9dbdef2a1679d0104796b6bba04ee3734e876723",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -4001,22 +4941,32 @@
       "transformations": []
     },
     {
+      "path": "Aetherfront-Source/Lidgren/NetBuffer.Write.cs",
+      "source": "Aetherfront-Source/Lidgren/NetBuffer.Write.cs",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 19605,
+      "sha256": "fe3ef2de2bca926012787fecc3f45f24962b5a0c5d93142ed67e4ff50e277525",
+      "sourceSha256": "fe3ef2de2bca926012787fecc3f45f24962b5a0c5d93142ed67e4ff50e277525",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/Lidgren/NetBuffer.cs",
+      "source": "Aetherfront-Source/Lidgren/NetBuffer.cs",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 2662,
+      "sha256": "052de24a8f20e7cb6a2837b9764cf262acc801fab64f492adb36148a6df1948a",
+      "sourceSha256": "052de24a8f20e7cb6a2837b9764cf262acc801fab64f492adb36148a6df1948a",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
       "path": "Aetherfront-Source/Lidgren/NetClient.cs",
       "source": "Aetherfront-Source/Lidgren/NetClient.cs",
       "role": "fork client/server/shared libraries/tests/tools",
       "bytes": 4984,
       "sha256": "04ef46391969273e07f68f03d37b4cf39d9765c29763bfdc6fd70d9dc020fae3",
       "sourceSha256": "04ef46391969273e07f68f03d37b4cf39d9765c29763bfdc6fd70d9dc020fae3",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-Source/Lidgren/NetConnection.cs",
-      "source": "Aetherfront-Source/Lidgren/NetConnection.cs",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 20426,
-      "sha256": "758b3774c317e98258f97db520e967a5475d4f2578038879d8d61175f6639f84",
-      "sourceSha256": "758b3774c317e98258f97db520e967a5475d4f2578038879d8d61175f6639f84",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -4047,6 +4997,16 @@
       "bytes": 4854,
       "sha256": "e687df7f931e23dc10ac944dc261f6d995906b70566f4eecf218964910c6be37",
       "sourceSha256": "e687df7f931e23dc10ac944dc261f6d995906b70566f4eecf218964910c6be37",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/Lidgren/NetConnection.cs",
+      "source": "Aetherfront-Source/Lidgren/NetConnection.cs",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 20426,
+      "sha256": "758b3774c317e98258f97db520e967a5475d4f2578038879d8d61175f6639f84",
+      "sourceSha256": "758b3774c317e98258f97db520e967a5475d4f2578038879d8d61175f6639f84",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -4171,16 +5131,6 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/Lidgren/NetPeer.cs",
-      "source": "Aetherfront-Source/Lidgren/NetPeer.cs",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 11752,
-      "sha256": "d46dc5797cb864d33af5f9ecbb1a12df6a4008c2dc0a9ad409c0820b27f3e0de",
-      "sourceSha256": "d46dc5797cb864d33af5f9ecbb1a12df6a4008c2dc0a9ad409c0820b27f3e0de",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/Lidgren/NetPeer.Discovery.cs",
       "source": "Aetherfront-Source/Lidgren/NetPeer.Discovery.cs",
       "role": "fork client/server/shared libraries/tests/tools",
@@ -4251,6 +5201,16 @@
       "transformations": []
     },
     {
+      "path": "Aetherfront-Source/Lidgren/NetPeer.cs",
+      "source": "Aetherfront-Source/Lidgren/NetPeer.cs",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 11752,
+      "sha256": "d46dc5797cb864d33af5f9ecbb1a12df6a4008c2dc0a9ad409c0820b27f3e0de",
+      "sourceSha256": "d46dc5797cb864d33af5f9ecbb1a12df6a4008c2dc0a9ad409c0820b27f3e0de",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
       "path": "Aetherfront-Source/Lidgren/NetPeerConfiguration.cs",
       "source": "Aetherfront-Source/Lidgren/NetPeerConfiguration.cs",
       "role": "fork client/server/shared libraries/tests/tools",
@@ -4291,22 +5251,22 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/Lidgren/NetRandom.cs",
-      "source": "Aetherfront-Source/Lidgren/NetRandom.cs",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 4536,
-      "sha256": "61eac6307763505c9db3422f44f6f5077974225241e7ce68255bae3e84d69a0d",
-      "sourceSha256": "61eac6307763505c9db3422f44f6f5077974225241e7ce68255bae3e84d69a0d",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/Lidgren/NetRandom.Implementations.cs",
       "source": "Aetherfront-Source/Lidgren/NetRandom.Implementations.cs",
       "role": "fork client/server/shared libraries/tests/tools",
       "bytes": 7017,
       "sha256": "ce81119eb95550125fce209988bfcc941ceb3a0b5f1ee02b58fdbf44209b49d4",
       "sourceSha256": "ce81119eb95550125fce209988bfcc941ceb3a0b5f1ee02b58fdbf44209b49d4",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/Lidgren/NetRandom.cs",
+      "source": "Aetherfront-Source/Lidgren/NetRandom.cs",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 4536,
+      "sha256": "61eac6307763505c9db3422f44f6f5077974225241e7ce68255bae3e84d69a0d",
+      "sourceSha256": "61eac6307763505c9db3422f44f6f5077974225241e7ce68255bae3e84d69a0d",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -4371,12 +5331,12 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/Lidgren/NetSenderChannelBase.cs",
-      "source": "Aetherfront-Source/Lidgren/NetSenderChannelBase.cs",
+      "path": "Aetherfront-Source/Lidgren/NetSRP.cs",
+      "source": "Aetherfront-Source/Lidgren/NetSRP.cs",
       "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 820,
-      "sha256": "394f41cd78f619bf338b56f735fd72da1783065a8c41640e9daaf995b6f483e8",
-      "sourceSha256": "394f41cd78f619bf338b56f735fd72da1783065a8c41640e9daaf995b6f483e8",
+      "bytes": 5962,
+      "sha256": "ddcc5503b87e1232caea83c0c1debe104e4b0e59cbe629e06de457b3521d336a",
+      "sourceSha256": "ddcc5503b87e1232caea83c0c1debe104e4b0e59cbe629e06de457b3521d336a",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -4391,22 +5351,22 @@
       "transformations": []
     },
     {
+      "path": "Aetherfront-Source/Lidgren/NetSenderChannelBase.cs",
+      "source": "Aetherfront-Source/Lidgren/NetSenderChannelBase.cs",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 820,
+      "sha256": "394f41cd78f619bf338b56f735fd72da1783065a8c41640e9daaf995b6f483e8",
+      "sourceSha256": "394f41cd78f619bf338b56f735fd72da1783065a8c41640e9daaf995b6f483e8",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
       "path": "Aetherfront-Source/Lidgren/NetServer.cs",
       "source": "Aetherfront-Source/Lidgren/NetServer.cs",
       "role": "fork client/server/shared libraries/tests/tools",
       "bytes": 2930,
       "sha256": "c134c69e4c665c7f2fac569820330fe4a7c80279516e4ad7fdfb06efc3c65ddb",
       "sourceSha256": "c134c69e4c665c7f2fac569820330fe4a7c80279516e4ad7fdfb06efc3c65ddb",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-Source/Lidgren/NetSRP.cs",
-      "source": "Aetherfront-Source/Lidgren/NetSRP.cs",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 5962,
-      "sha256": "ddcc5503b87e1232caea83c0c1debe104e4b0e59cbe629e06de457b3521d336a",
-      "sourceSha256": "ddcc5503b87e1232caea83c0c1debe104e4b0e59cbe629e06de457b3521d336a",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -4441,6 +5401,16 @@
       "transformations": []
     },
     {
+      "path": "Aetherfront-Source/Lidgren/NetUPnP.cs",
+      "source": "Aetherfront-Source/Lidgren/NetUPnP.cs",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 9549,
+      "sha256": "bb5b1bdbe394bcfffc2cde19892944550095199b088b0e36ff8671cec3dd7daa",
+      "sourceSha256": "bb5b1bdbe394bcfffc2cde19892944550095199b088b0e36ff8671cec3dd7daa",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
       "path": "Aetherfront-Source/Lidgren/NetUnreliableSenderChannel.cs",
       "source": "Aetherfront-Source/Lidgren/NetUnreliableSenderChannel.cs",
       "role": "fork client/server/shared libraries/tests/tools",
@@ -4467,16 +5437,6 @@
       "bytes": 583,
       "sha256": "8e39911b7e26c8fc16cada1d5f61fa097512d10f436ed58b198ea71310782769",
       "sourceSha256": "8e39911b7e26c8fc16cada1d5f61fa097512d10f436ed58b198ea71310782769",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-Source/Lidgren/NetUPnP.cs",
-      "source": "Aetherfront-Source/Lidgren/NetUPnP.cs",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 9549,
-      "sha256": "bb5b1bdbe394bcfffc2cde19892944550095199b088b0e36ff8671cec3dd7daa",
-      "sourceSha256": "bb5b1bdbe394bcfffc2cde19892944550095199b088b0e36ff8671cec3dd7daa",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -4548,16 +5508,6 @@
       "sha256": "90b76251634ca2d6ca4244dc21aade973f6778925f1d17dec4e5eeec1e51edc8",
       "sourceSha256": "90b76251634ca2d6ca4244dc21aade973f6778925f1d17dec4e5eeec1e51edc8",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-Source/LMP Readme.txt",
-      "source": "Aetherfront-Source/LMP Readme.txt",
-      "role": "upstream attribution",
-      "bytes": 657,
-      "sha256": "bb4b696c434f7807392a5f23d714f260211f6f4936e73b72d9dcf8d6f4c31370",
-      "sourceSha256": "bb4b696c434f7807392a5f23d714f260211f6f4936e73b72d9dcf8d6f4c31370",
-      "sourceModifiedUtc": "2026-08-07T04:22:47Z",
       "transformations": []
     },
     {
@@ -4851,22 +5801,22 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/LmpClient/Events/ExperimentalPartEvent.cs",
-      "source": "Aetherfront-Source/LmpClient/Events/ExperimentalPartEvent.cs",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 357,
-      "sha256": "9914ed38091ac07ba9ec40365afe6067de285c829cfc063aeb15a629b3fbdb77",
-      "sourceSha256": "9914ed38091ac07ba9ec40365afe6067de285c829cfc063aeb15a629b3fbdb77",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/LmpClient/Events/ExperimentEvent.cs",
       "source": "Aetherfront-Source/LmpClient/Events/ExperimentEvent.cs",
       "role": "fork client/server/shared libraries/tests/tools",
       "bytes": 253,
       "sha256": "eb747cf8213d35ee98fb1258809049137f2d50315b56400a8176ae48ff5bba30",
       "sourceSha256": "eb747cf8213d35ee98fb1258809049137f2d50315b56400a8176ae48ff5bba30",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/LmpClient/Events/ExperimentalPartEvent.cs",
+      "source": "Aetherfront-Source/LmpClient/Events/ExperimentalPartEvent.cs",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 357,
+      "sha256": "9914ed38091ac07ba9ec40365afe6067de285c829cfc063aeb15a629b3fbdb77",
+      "sourceSha256": "9914ed38091ac07ba9ec40365afe6067de285c829cfc063aeb15a629b3fbdb77",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -5451,6 +6401,16 @@
       "transformations": []
     },
     {
+      "path": "Aetherfront-Source/LmpClient/Harmony/KSCPauseMenu_QuickLoad.cs",
+      "source": "Aetherfront-Source/LmpClient/Harmony/KSCPauseMenu_QuickLoad.cs",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 758,
+      "sha256": "ee6abed8dfbc5e3a8c788ccc030bda18e9aa3be0245f7c15a4a8fa98bf28775f",
+      "sourceSha256": "ee6abed8dfbc5e3a8c788ccc030bda18e9aa3be0245f7c15a4a8fa98bf28775f",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
       "path": "Aetherfront-Source/LmpClient/Harmony/KerbalEVA_BoardSeat.cs",
       "source": "Aetherfront-Source/LmpClient/Harmony/KerbalEVA_BoardSeat.cs",
       "role": "fork client/server/shared libraries/tests/tools",
@@ -5497,16 +6457,6 @@
       "bytes": 5627,
       "sha256": "f5cdc8bbf85381e613ff6ada6b98117c2ea4a98b3c56f2833259ba24b65f3c78",
       "sourceSha256": "f5cdc8bbf85381e613ff6ada6b98117c2ea4a98b3c56f2833259ba24b65f3c78",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-Source/LmpClient/Harmony/KSCPauseMenu_QuickLoad.cs",
-      "source": "Aetherfront-Source/LmpClient/Harmony/KSCPauseMenu_QuickLoad.cs",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 758,
-      "sha256": "ee6abed8dfbc5e3a8c788ccc030bda18e9aa3be0245f7c15a4a8fa98bf28775f",
-      "sourceSha256": "ee6abed8dfbc5e3a8c788ccc030bda18e9aa3be0245f7c15a4a8fa98bf28775f",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -5611,6 +6561,16 @@
       "transformations": []
     },
     {
+      "path": "Aetherfront-Source/LmpClient/Harmony/PartBuoyancy_FixedUpdate.cs",
+      "source": "Aetherfront-Source/LmpClient/Harmony/PartBuoyancy_FixedUpdate.cs",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 1012,
+      "sha256": "6c26b85ed3b1221f5b7bc8b1e2b5b7aa6ab5544156eb2c2e4b059a2203da70c2",
+      "sourceSha256": "6c26b85ed3b1221f5b7bc8b1e2b5b7aa6ab5544156eb2c2e4b059a2203da70c2",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
       "path": "Aetherfront-Source/LmpClient/Harmony/Part_CheckPartG.cs",
       "source": "Aetherfront-Source/LmpClient/Harmony/Part_CheckPartG.cs",
       "role": "fork client/server/shared libraries/tests/tools",
@@ -5687,16 +6647,6 @@
       "bytes": 855,
       "sha256": "7ddbb78b46581da2c1ca7ab80ca914d2ed85de1a7fd39acdddbff91195bc7663",
       "sourceSha256": "7ddbb78b46581da2c1ca7ab80ca914d2ed85de1a7fd39acdddbff91195bc7663",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-Source/LmpClient/Harmony/PartBuoyancy_FixedUpdate.cs",
-      "source": "Aetherfront-Source/LmpClient/Harmony/PartBuoyancy_FixedUpdate.cs",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 1012,
-      "sha256": "6c26b85ed3b1221f5b7bc8b1e2b5b7aa6ab5544156eb2c2e4b059a2203da70c2",
-      "sourceSha256": "6c26b85ed3b1221f5b7bc8b1e2b5b7aa6ab5544156eb2c2e4b059a2203da70c2",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -5961,6 +6911,16 @@
       "transformations": []
     },
     {
+      "path": "Aetherfront-Source/LmpClient/Harmony/VesselLabels_ProcessLabel.cs",
+      "source": "Aetherfront-Source/LmpClient/Harmony/VesselLabels_ProcessLabel.cs",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 616,
+      "sha256": "7505b83d0f31cb49ac773904b14a228436548ae3bfc048e999c25729c6b10b54",
+      "sourceSha256": "7505b83d0f31cb49ac773904b14a228436548ae3bfc048e999c25729c6b10b54",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
       "path": "Aetherfront-Source/LmpClient/Harmony/Vessel_CheckKill.cs",
       "source": "Aetherfront-Source/LmpClient/Harmony/Vessel_CheckKill.cs",
       "role": "fork client/server/shared libraries/tests/tools",
@@ -6017,16 +6977,6 @@
       "bytes": 700,
       "sha256": "19a39d1484501408cdcb2ba49b20a78647e29a7ace0e68300ccaecbdca201ea9",
       "sourceSha256": "19a39d1484501408cdcb2ba49b20a78647e29a7ace0e68300ccaecbdca201ea9",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-Source/LmpClient/Harmony/VesselLabels_ProcessLabel.cs",
-      "source": "Aetherfront-Source/LmpClient/Harmony/VesselLabels_ProcessLabel.cs",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 616,
-      "sha256": "7505b83d0f31cb49ac773904b14a228436548ae3bfc048e999c25729c6b10b54",
-      "sourceSha256": "7505b83d0f31cb49ac773904b14a228436548ae3bfc048e999c25729c6b10b54",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -6171,22 +7121,22 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/LmpClient/Localization/Structures/ScreenshotWindowText.cs",
-      "source": "Aetherfront-Source/LmpClient/Localization/Structures/ScreenshotWindowText.cs",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 231,
-      "sha256": "d140050868f68cbc7520e80f974b9bf728c62b7d08064f5687b56c14f1da040f",
-      "sourceSha256": "d140050868f68cbc7520e80f974b9bf728c62b7d08064f5687b56c14f1da040f",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/LmpClient/Localization/Structures/ScreenText.cs",
       "source": "Aetherfront-Source/LmpClient/Localization/Structures/ScreenText.cs",
       "role": "fork client/server/shared libraries/tests/tools",
       "bytes": 2531,
       "sha256": "8382892b26c8e2df1a215550bc255d7c55cc0e638264b464878a84b401c68f1a",
       "sourceSha256": "8382892b26c8e2df1a215550bc255d7c55cc0e638264b464878a84b401c68f1a",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/LmpClient/Localization/Structures/ScreenshotWindowText.cs",
+      "source": "Aetherfront-Source/LmpClient/Localization/Structures/ScreenshotWindowText.cs",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 231,
+      "sha256": "d140050868f68cbc7520e80f974b9bf728c62b7d08064f5687b56c14f1da040f",
+      "sourceSha256": "d140050868f68cbc7520e80f974b9bf728c62b7d08064f5687b56c14f1da040f",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -6351,22 +7301,22 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/LmpClient/Localization/XML/Czech/ScreenshotWindowText.xml",
-      "source": "Aetherfront-Source/LmpClient/Localization/XML/Czech/ScreenshotWindowText.xml",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 267,
-      "sha256": "763884698493eb919ad48e0b8dbb6ab49af625a7b38d72f382bcb69591990314",
-      "sourceSha256": "763884698493eb919ad48e0b8dbb6ab49af625a7b38d72f382bcb69591990314",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/LmpClient/Localization/XML/Czech/ScreenText.xml",
       "source": "Aetherfront-Source/LmpClient/Localization/XML/Czech/ScreenText.xml",
       "role": "fork client/server/shared libraries/tests/tools",
       "bytes": 2203,
       "sha256": "38df05310eba39f9b94723ecfd25213697e69c0d9f2843184610ea47acaa8fab",
       "sourceSha256": "38df05310eba39f9b94723ecfd25213697e69c0d9f2843184610ea47acaa8fab",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/LmpClient/Localization/XML/Czech/ScreenshotWindowText.xml",
+      "source": "Aetherfront-Source/LmpClient/Localization/XML/Czech/ScreenshotWindowText.xml",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 267,
+      "sha256": "763884698493eb919ad48e0b8dbb6ab49af625a7b38d72f382bcb69591990314",
+      "sourceSha256": "763884698493eb919ad48e0b8dbb6ab49af625a7b38d72f382bcb69591990314",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -6531,22 +7481,22 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/LmpClient/Localization/XML/Danish/ScreenshotWindowText.xml",
-      "source": "Aetherfront-Source/LmpClient/Localization/XML/Danish/ScreenshotWindowText.xml",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 263,
-      "sha256": "9f57512da76d6c78724fb6605910be3ed9d6b1c377aac4ab31c7aa5ab6240e8f",
-      "sourceSha256": "9f57512da76d6c78724fb6605910be3ed9d6b1c377aac4ab31c7aa5ab6240e8f",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/LmpClient/Localization/XML/Danish/ScreenText.xml",
       "source": "Aetherfront-Source/LmpClient/Localization/XML/Danish/ScreenText.xml",
       "role": "fork client/server/shared libraries/tests/tools",
       "bytes": 4434,
       "sha256": "c2915d2f40fb0cfce9a5a10a49000f5055acb5211485d7d83901552081570d12",
       "sourceSha256": "c2915d2f40fb0cfce9a5a10a49000f5055acb5211485d7d83901552081570d12",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/LmpClient/Localization/XML/Danish/ScreenshotWindowText.xml",
+      "source": "Aetherfront-Source/LmpClient/Localization/XML/Danish/ScreenshotWindowText.xml",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 263,
+      "sha256": "9f57512da76d6c78724fb6605910be3ed9d6b1c377aac4ab31c7aa5ab6240e8f",
+      "sourceSha256": "9f57512da76d6c78724fb6605910be3ed9d6b1c377aac4ab31c7aa5ab6240e8f",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -6711,22 +7661,22 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/LmpClient/Localization/XML/Dutch/ScreenshotWindowText.xml",
-      "source": "Aetherfront-Source/LmpClient/Localization/XML/Dutch/ScreenshotWindowText.xml",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 261,
-      "sha256": "55eb639fe426661ed40e943575756b92676d7b97d20ccee659d2a291ff86d24f",
-      "sourceSha256": "55eb639fe426661ed40e943575756b92676d7b97d20ccee659d2a291ff86d24f",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/LmpClient/Localization/XML/Dutch/ScreenText.xml",
       "source": "Aetherfront-Source/LmpClient/Localization/XML/Dutch/ScreenText.xml",
       "role": "fork client/server/shared libraries/tests/tools",
       "bytes": 4420,
       "sha256": "2e1760a392bdf0fde16e520dc80f26dcc4120e99150b95baa1a8aff05d14ebb5",
       "sourceSha256": "2e1760a392bdf0fde16e520dc80f26dcc4120e99150b95baa1a8aff05d14ebb5",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/LmpClient/Localization/XML/Dutch/ScreenshotWindowText.xml",
+      "source": "Aetherfront-Source/LmpClient/Localization/XML/Dutch/ScreenshotWindowText.xml",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 261,
+      "sha256": "55eb639fe426661ed40e943575756b92676d7b97d20ccee659d2a291ff86d24f",
+      "sourceSha256": "55eb639fe426661ed40e943575756b92676d7b97d20ccee659d2a291ff86d24f",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -6891,22 +7841,22 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/LmpClient/Localization/XML/English/ScreenshotWindowText.xml",
-      "source": "Aetherfront-Source/LmpClient/Localization/XML/English/ScreenshotWindowText.xml",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 261,
-      "sha256": "55eb639fe426661ed40e943575756b92676d7b97d20ccee659d2a291ff86d24f",
-      "sourceSha256": "55eb639fe426661ed40e943575756b92676d7b97d20ccee659d2a291ff86d24f",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/LmpClient/Localization/XML/English/ScreenText.xml",
       "source": "Aetherfront-Source/LmpClient/Localization/XML/English/ScreenText.xml",
       "role": "fork client/server/shared libraries/tests/tools",
       "bytes": 2170,
       "sha256": "d8fbea2c8cae8cde8de601316c76c5613fd48f4bfb8ef7d218b126354b7e6038",
       "sourceSha256": "d8fbea2c8cae8cde8de601316c76c5613fd48f4bfb8ef7d218b126354b7e6038",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/LmpClient/Localization/XML/English/ScreenshotWindowText.xml",
+      "source": "Aetherfront-Source/LmpClient/Localization/XML/English/ScreenshotWindowText.xml",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 261,
+      "sha256": "55eb639fe426661ed40e943575756b92676d7b97d20ccee659d2a291ff86d24f",
+      "sourceSha256": "55eb639fe426661ed40e943575756b92676d7b97d20ccee659d2a291ff86d24f",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -7071,22 +8021,22 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/LmpClient/Localization/XML/Finnish/ScreenshotWindowText.xml",
-      "source": "Aetherfront-Source/LmpClient/Localization/XML/Finnish/ScreenshotWindowText.xml",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 263,
-      "sha256": "790c00f88e2c1e15d526d6d13138eb4f0ca7bc11c1d95b274a7f247335bc8ceb",
-      "sourceSha256": "790c00f88e2c1e15d526d6d13138eb4f0ca7bc11c1d95b274a7f247335bc8ceb",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/LmpClient/Localization/XML/Finnish/ScreenText.xml",
       "source": "Aetherfront-Source/LmpClient/Localization/XML/Finnish/ScreenText.xml",
       "role": "fork client/server/shared libraries/tests/tools",
       "bytes": 2161,
       "sha256": "d56fea81894726ffaf6f6c173530343c5435ac53a7b1ce8cc331e6a137594e22",
       "sourceSha256": "d56fea81894726ffaf6f6c173530343c5435ac53a7b1ce8cc331e6a137594e22",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/LmpClient/Localization/XML/Finnish/ScreenshotWindowText.xml",
+      "source": "Aetherfront-Source/LmpClient/Localization/XML/Finnish/ScreenshotWindowText.xml",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 263,
+      "sha256": "790c00f88e2c1e15d526d6d13138eb4f0ca7bc11c1d95b274a7f247335bc8ceb",
+      "sourceSha256": "790c00f88e2c1e15d526d6d13138eb4f0ca7bc11c1d95b274a7f247335bc8ceb",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -7251,22 +8201,22 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/LmpClient/Localization/XML/French/ScreenshotWindowText.xml",
-      "source": "Aetherfront-Source/LmpClient/Localization/XML/French/ScreenshotWindowText.xml",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 268,
-      "sha256": "207f2fdc671158d05f8b9f4c3db0ed4f2a892ba3a87ae05fd52eafaca1bb7008",
-      "sourceSha256": "207f2fdc671158d05f8b9f4c3db0ed4f2a892ba3a87ae05fd52eafaca1bb7008",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/LmpClient/Localization/XML/French/ScreenText.xml",
       "source": "Aetherfront-Source/LmpClient/Localization/XML/French/ScreenText.xml",
       "role": "fork client/server/shared libraries/tests/tools",
       "bytes": 4700,
       "sha256": "e686b6c3d0d5cc7df91452aed8defbddeb000273456f490fe1ce8dcc8902593c",
       "sourceSha256": "e686b6c3d0d5cc7df91452aed8defbddeb000273456f490fe1ce8dcc8902593c",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/LmpClient/Localization/XML/French/ScreenshotWindowText.xml",
+      "source": "Aetherfront-Source/LmpClient/Localization/XML/French/ScreenshotWindowText.xml",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 268,
+      "sha256": "207f2fdc671158d05f8b9f4c3db0ed4f2a892ba3a87ae05fd52eafaca1bb7008",
+      "sourceSha256": "207f2fdc671158d05f8b9f4c3db0ed4f2a892ba3a87ae05fd52eafaca1bb7008",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -7431,22 +8381,22 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/LmpClient/Localization/XML/German/ScreenshotWindowText.xml",
-      "source": "Aetherfront-Source/LmpClient/Localization/XML/German/ScreenshotWindowText.xml",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 260,
-      "sha256": "7ad6d3a3b45cb2e411717049627e0ae4e1ca4ce839fb633f0da2111db51c6c01",
-      "sourceSha256": "7ad6d3a3b45cb2e411717049627e0ae4e1ca4ce839fb633f0da2111db51c6c01",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/LmpClient/Localization/XML/German/ScreenText.xml",
       "source": "Aetherfront-Source/LmpClient/Localization/XML/German/ScreenText.xml",
       "role": "fork client/server/shared libraries/tests/tools",
       "bytes": 5026,
       "sha256": "78afaaa5174875ef828c2590c9aa8ebd11ea363a0eb78b657d0e57f3483e15ce",
       "sourceSha256": "78afaaa5174875ef828c2590c9aa8ebd11ea363a0eb78b657d0e57f3483e15ce",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/LmpClient/Localization/XML/German/ScreenshotWindowText.xml",
+      "source": "Aetherfront-Source/LmpClient/Localization/XML/German/ScreenshotWindowText.xml",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 260,
+      "sha256": "7ad6d3a3b45cb2e411717049627e0ae4e1ca4ce839fb633f0da2111db51c6c01",
+      "sourceSha256": "7ad6d3a3b45cb2e411717049627e0ae4e1ca4ce839fb633f0da2111db51c6c01",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -7611,22 +8561,22 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/LmpClient/Localization/XML/Italian/ScreenshotWindowText.xml",
-      "source": "Aetherfront-Source/LmpClient/Localization/XML/Italian/ScreenshotWindowText.xml",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 261,
-      "sha256": "022a53fa156e64038c268a1ceb91aea549e0bf61736fa65335cbe70fdea46592",
-      "sourceSha256": "022a53fa156e64038c268a1ceb91aea549e0bf61736fa65335cbe70fdea46592",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/LmpClient/Localization/XML/Italian/ScreenText.xml",
       "source": "Aetherfront-Source/LmpClient/Localization/XML/Italian/ScreenText.xml",
       "role": "fork client/server/shared libraries/tests/tools",
       "bytes": 4640,
       "sha256": "a6cd3d4981ae7afa978e8ab56926f4c85e127583ec917f935f824117f2725102",
       "sourceSha256": "a6cd3d4981ae7afa978e8ab56926f4c85e127583ec917f935f824117f2725102",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/LmpClient/Localization/XML/Italian/ScreenshotWindowText.xml",
+      "source": "Aetherfront-Source/LmpClient/Localization/XML/Italian/ScreenshotWindowText.xml",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 261,
+      "sha256": "022a53fa156e64038c268a1ceb91aea549e0bf61736fa65335cbe70fdea46592",
+      "sourceSha256": "022a53fa156e64038c268a1ceb91aea549e0bf61736fa65335cbe70fdea46592",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -7791,22 +8741,22 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/LmpClient/Localization/XML/Japanese/ScreenshotWindowText.xml",
-      "source": "Aetherfront-Source/LmpClient/Localization/XML/Japanese/ScreenshotWindowText.xml",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 285,
-      "sha256": "1953f4762a9d2e09e254d9491a4b61599622ccb516881880deca328a85a745bc",
-      "sourceSha256": "1953f4762a9d2e09e254d9491a4b61599622ccb516881880deca328a85a745bc",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/LmpClient/Localization/XML/Japanese/ScreenText.xml",
       "source": "Aetherfront-Source/LmpClient/Localization/XML/Japanese/ScreenText.xml",
       "role": "fork client/server/shared libraries/tests/tools",
       "bytes": 3724,
       "sha256": "ae3cddd4f6f2229501c5ae732da4262d20d80be6eea868431cdc3e7d968a2a22",
       "sourceSha256": "ae3cddd4f6f2229501c5ae732da4262d20d80be6eea868431cdc3e7d968a2a22",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/LmpClient/Localization/XML/Japanese/ScreenshotWindowText.xml",
+      "source": "Aetherfront-Source/LmpClient/Localization/XML/Japanese/ScreenshotWindowText.xml",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 285,
+      "sha256": "1953f4762a9d2e09e254d9491a4b61599622ccb516881880deca328a85a745bc",
+      "sourceSha256": "1953f4762a9d2e09e254d9491a4b61599622ccb516881880deca328a85a745bc",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -7971,22 +8921,22 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/LmpClient/Localization/XML/Polish/ScreenshotWindowText.xml",
-      "source": "Aetherfront-Source/LmpClient/Localization/XML/Polish/ScreenshotWindowText.xml",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 263,
-      "sha256": "5d23493b6e0e357eb2cdcff880fca1141ad16326bd18ee143594b16cef0cb188",
-      "sourceSha256": "5d23493b6e0e357eb2cdcff880fca1141ad16326bd18ee143594b16cef0cb188",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/LmpClient/Localization/XML/Polish/ScreenText.xml",
       "source": "Aetherfront-Source/LmpClient/Localization/XML/Polish/ScreenText.xml",
       "role": "fork client/server/shared libraries/tests/tools",
       "bytes": 4476,
       "sha256": "6a328980d9adb99bcc8439f596ba8d1e198952f80dedd2aa10930bea09820a8c",
       "sourceSha256": "6a328980d9adb99bcc8439f596ba8d1e198952f80dedd2aa10930bea09820a8c",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/LmpClient/Localization/XML/Polish/ScreenshotWindowText.xml",
+      "source": "Aetherfront-Source/LmpClient/Localization/XML/Polish/ScreenshotWindowText.xml",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 263,
+      "sha256": "5d23493b6e0e357eb2cdcff880fca1141ad16326bd18ee143594b16cef0cb188",
+      "sourceSha256": "5d23493b6e0e357eb2cdcff880fca1141ad16326bd18ee143594b16cef0cb188",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -8151,22 +9101,22 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/LmpClient/Localization/XML/Russian/ScreenshotWindowText.xml",
-      "source": "Aetherfront-Source/LmpClient/Localization/XML/Russian/ScreenshotWindowText.xml",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 271,
-      "sha256": "0c7d2a04cf1d823bcb73ad5b0ed9064991e6b3bdfe7d20ef22d51b56f9f39985",
-      "sourceSha256": "0c7d2a04cf1d823bcb73ad5b0ed9064991e6b3bdfe7d20ef22d51b56f9f39985",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/LmpClient/Localization/XML/Russian/ScreenText.xml",
       "source": "Aetherfront-Source/LmpClient/Localization/XML/Russian/ScreenText.xml",
       "role": "fork client/server/shared libraries/tests/tools",
       "bytes": 3225,
       "sha256": "a36afdf70b919d481b7d57bad5f0dc0e72d6d31a48ca11589cadd7a5984b48a4",
       "sourceSha256": "a36afdf70b919d481b7d57bad5f0dc0e72d6d31a48ca11589cadd7a5984b48a4",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/LmpClient/Localization/XML/Russian/ScreenshotWindowText.xml",
+      "source": "Aetherfront-Source/LmpClient/Localization/XML/Russian/ScreenshotWindowText.xml",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 271,
+      "sha256": "0c7d2a04cf1d823bcb73ad5b0ed9064991e6b3bdfe7d20ef22d51b56f9f39985",
+      "sourceSha256": "0c7d2a04cf1d823bcb73ad5b0ed9064991e6b3bdfe7d20ef22d51b56f9f39985",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -8331,22 +9281,22 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/LmpClient/Localization/XML/Simplified Chinese/ScreenshotWindowText.xml",
-      "source": "Aetherfront-Source/LmpClient/Localization/XML/Simplified Chinese/ScreenshotWindowText.xml",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 258,
-      "sha256": "6860625dac0f29b2f4c179b66b547201344f4ac9833ceba09b0e2a23e0b9425e",
-      "sourceSha256": "6860625dac0f29b2f4c179b66b547201344f4ac9833ceba09b0e2a23e0b9425e",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/LmpClient/Localization/XML/Simplified Chinese/ScreenText.xml",
       "source": "Aetherfront-Source/LmpClient/Localization/XML/Simplified Chinese/ScreenText.xml",
       "role": "fork client/server/shared libraries/tests/tools",
       "bytes": 3216,
       "sha256": "25608f2a524ec138d441940d228ea1fd4e431023aac06f67c7e799db3b3bb179",
       "sourceSha256": "25608f2a524ec138d441940d228ea1fd4e431023aac06f67c7e799db3b3bb179",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/LmpClient/Localization/XML/Simplified Chinese/ScreenshotWindowText.xml",
+      "source": "Aetherfront-Source/LmpClient/Localization/XML/Simplified Chinese/ScreenshotWindowText.xml",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 258,
+      "sha256": "6860625dac0f29b2f4c179b66b547201344f4ac9833ceba09b0e2a23e0b9425e",
+      "sourceSha256": "6860625dac0f29b2f4c179b66b547201344f4ac9833ceba09b0e2a23e0b9425e",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -8511,22 +9461,22 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/LmpClient/Localization/XML/Spanish/ScreenshotWindowText.xml",
-      "source": "Aetherfront-Source/LmpClient/Localization/XML/Spanish/ScreenshotWindowText.xml",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 256,
-      "sha256": "b40eeafc1a53e8e7097846615a374d7c457dd7f1f564bf4b78b1776569c4ef3f",
-      "sourceSha256": "b40eeafc1a53e8e7097846615a374d7c457dd7f1f564bf4b78b1776569c4ef3f",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/LmpClient/Localization/XML/Spanish/ScreenText.xml",
       "source": "Aetherfront-Source/LmpClient/Localization/XML/Spanish/ScreenText.xml",
       "role": "fork client/server/shared libraries/tests/tools",
       "bytes": 4542,
       "sha256": "99ef856832ab16e37106ff4876010c458fbb9739e7177b2421f4d2c1c6345761",
       "sourceSha256": "99ef856832ab16e37106ff4876010c458fbb9739e7177b2421f4d2c1c6345761",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/LmpClient/Localization/XML/Spanish/ScreenshotWindowText.xml",
+      "source": "Aetherfront-Source/LmpClient/Localization/XML/Spanish/ScreenshotWindowText.xml",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 256,
+      "sha256": "b40eeafc1a53e8e7097846615a374d7c457dd7f1f564bf4b78b1776569c4ef3f",
+      "sourceSha256": "b40eeafc1a53e8e7097846615a374d7c457dd7f1f564bf4b78b1776569c4ef3f",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -8691,22 +9641,22 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/LmpClient/Localization/XML/Swedish/ScreenshotWindowText.xml",
-      "source": "Aetherfront-Source/LmpClient/Localization/XML/Swedish/ScreenshotWindowText.xml",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 261,
-      "sha256": "0a1f6eff0626b97339d7f897b829336c99453178f9c91ad2260942790b9339e6",
-      "sourceSha256": "0a1f6eff0626b97339d7f897b829336c99453178f9c91ad2260942790b9339e6",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/LmpClient/Localization/XML/Swedish/ScreenText.xml",
       "source": "Aetherfront-Source/LmpClient/Localization/XML/Swedish/ScreenText.xml",
       "role": "fork client/server/shared libraries/tests/tools",
       "bytes": 4364,
       "sha256": "6d0768c06b665ee8f76df5d02e174ce9d0674a07beb627b97fe73247f0a96a7a",
       "sourceSha256": "6d0768c06b665ee8f76df5d02e174ce9d0674a07beb627b97fe73247f0a96a7a",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/LmpClient/Localization/XML/Swedish/ScreenshotWindowText.xml",
+      "source": "Aetherfront-Source/LmpClient/Localization/XML/Swedish/ScreenshotWindowText.xml",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 261,
+      "sha256": "0a1f6eff0626b97339d7f897b829336c99453178f9c91ad2260942790b9339e6",
+      "sourceSha256": "0a1f6eff0626b97339d7f897b829336c99453178f9c91ad2260942790b9339e6",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -8891,26 +9841,6 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/LmpClient/ModuleStore/XML/Squad/FlagDecal.xml",
-      "source": "Aetherfront-Source/LmpClient/ModuleStore/XML/Squad/FlagDecal.xml",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 536,
-      "sha256": "52cdea17925a3115aa1a31cb4fca504a35864b142bfaf5e2b72921685ac84e52",
-      "sourceSha256": "52cdea17925a3115aa1a31cb4fca504a35864b142bfaf5e2b72921685ac84e52",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-Source/LmpClient/ModuleStore/XML/Squad/FlagDecalBackground.xml",
-      "source": "Aetherfront-Source/LmpClient/ModuleStore/XML/Squad/FlagDecalBackground.xml",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 505,
-      "sha256": "e474c72ab80c1a4375b23c4d1fab8460739ba70c07ebaa034aa3c5e64f8805fc",
-      "sourceSha256": "e474c72ab80c1a4375b23c4d1fab8460739ba70c07ebaa034aa3c5e64f8805fc",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/LmpClient/ModuleStore/XML/Squad/FXModuleAnimateThrottle.xml",
       "source": "Aetherfront-Source/LmpClient/ModuleStore/XML/Squad/FXModuleAnimateThrottle.xml",
       "role": "fork client/server/shared libraries/tests/tools",
@@ -8927,6 +9857,26 @@
       "bytes": 289,
       "sha256": "e485b4f4487bdd11ec183094563d1b08f4defbeaf965dc93287e5a6e27600d97",
       "sourceSha256": "e485b4f4487bdd11ec183094563d1b08f4defbeaf965dc93287e5a6e27600d97",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/LmpClient/ModuleStore/XML/Squad/FlagDecal.xml",
+      "source": "Aetherfront-Source/LmpClient/ModuleStore/XML/Squad/FlagDecal.xml",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 536,
+      "sha256": "52cdea17925a3115aa1a31cb4fca504a35864b142bfaf5e2b72921685ac84e52",
+      "sourceSha256": "52cdea17925a3115aa1a31cb4fca504a35864b142bfaf5e2b72921685ac84e52",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/LmpClient/ModuleStore/XML/Squad/FlagDecalBackground.xml",
+      "source": "Aetherfront-Source/LmpClient/ModuleStore/XML/Squad/FlagDecalBackground.xml",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 505,
+      "sha256": "e474c72ab80c1a4375b23c4d1fab8460739ba70c07ebaa034aa3c5e64f8805fc",
+      "sourceSha256": "e474c72ab80c1a4375b23c4d1fab8460739ba70c07ebaa034aa3c5e64f8805fc",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -9391,6 +10341,16 @@
       "transformations": []
     },
     {
+      "path": "Aetherfront-Source/LmpClient/ModuleStore/XML/Squad/ModuleSAS.xml",
+      "source": "Aetherfront-Source/LmpClient/ModuleStore/XML/Squad/ModuleSAS.xml",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 300,
+      "sha256": "61b46fa22698ee242a4bd521f26d268943a1e8e0c2ae5d80a68344b6c37a3451",
+      "sourceSha256": "61b46fa22698ee242a4bd521f26d268943a1e8e0c2ae5d80a68344b6c37a3451",
+      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
+      "transformations": []
+    },
+    {
       "path": "Aetherfront-Source/LmpClient/ModuleStore/XML/Squad/ModuleSampleCollector.xml",
       "source": "Aetherfront-Source/LmpClient/ModuleStore/XML/Squad/ModuleSampleCollector.xml",
       "role": "fork client/server/shared libraries/tests/tools",
@@ -9407,16 +10367,6 @@
       "bytes": 428,
       "sha256": "255289ba01c3a9844e1e43d8be859955fc56e9829020b6cec52af688a770a977",
       "sourceSha256": "255289ba01c3a9844e1e43d8be859955fc56e9829020b6cec52af688a770a977",
-      "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-Source/LmpClient/ModuleStore/XML/Squad/ModuleSAS.xml",
-      "source": "Aetherfront-Source/LmpClient/ModuleStore/XML/Squad/ModuleSAS.xml",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 300,
-      "sha256": "61b46fa22698ee242a4bd521f26d268943a1e8e0c2ae5d80a68344b6c37a3451",
-      "sourceSha256": "61b46fa22698ee242a4bd521f26d268943a1e8e0c2ae5d80a68344b6c37a3451",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
       "transformations": []
     },
@@ -9658,16 +10608,6 @@
       "sha256": "50009fd22bad52c2663c69a8cb0adfd044863802c7f4d11fdbc254cd4ecaf4c9",
       "sourceSha256": "50009fd22bad52c2663c69a8cb0adfd044863802c7f4d11fdbc254cd4ecaf4c9",
       "sourceModifiedUtc": "2026-08-07T04:22:48Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-Source/LmpClient/packages.config",
-      "source": "Aetherfront-Source/LmpClient/packages.config",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 477,
-      "sha256": "9066a159b238ea5e44abdb7a3f1f0585891af37ed30f8761c91f4db0281f6f14",
-      "sourceSha256": "9066a159b238ea5e44abdb7a3f1f0585891af37ed30f8761c91f4db0281f6f14",
-      "sourceModifiedUtc": "2026-08-07T04:22:49Z",
       "transformations": []
     },
     {
@@ -12601,6 +13541,16 @@
       "transformations": []
     },
     {
+      "path": "Aetherfront-Source/LmpClient/Windows/WindowUtil.cs",
+      "source": "Aetherfront-Source/LmpClient/Windows/WindowUtil.cs",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 464,
+      "sha256": "ee8932a010c4038e0af33896eeae322fabdb94ba0b2d8e8588f33c7c5b263c00",
+      "sourceSha256": "ee8932a010c4038e0af33896eeae322fabdb94ba0b2d8e8588f33c7c5b263c00",
+      "sourceModifiedUtc": "2026-08-07T04:22:49Z",
+      "transformations": []
+    },
+    {
       "path": "Aetherfront-Source/LmpClient/Windows/WindowsHandler.cs",
       "source": "Aetherfront-Source/LmpClient/Windows/WindowsHandler.cs",
       "role": "fork client/server/shared libraries/tests/tools",
@@ -12611,12 +13561,12 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/LmpClient/Windows/WindowUtil.cs",
-      "source": "Aetherfront-Source/LmpClient/Windows/WindowUtil.cs",
+      "path": "Aetherfront-Source/LmpClient/packages.config",
+      "source": "Aetherfront-Source/LmpClient/packages.config",
       "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 464,
-      "sha256": "ee8932a010c4038e0af33896eeae322fabdb94ba0b2d8e8588f33c7c5b263c00",
-      "sourceSha256": "ee8932a010c4038e0af33896eeae322fabdb94ba0b2d8e8588f33c7c5b263c00",
+      "bytes": 477,
+      "sha256": "9066a159b238ea5e44abdb7a3f1f0585891af37ed30f8761c91f4db0281f6f14",
+      "sourceSha256": "9066a159b238ea5e44abdb7a3f1f0585891af37ed30f8761c91f4db0281f6f14",
       "sourceModifiedUtc": "2026-08-07T04:22:49Z",
       "transformations": []
     },
@@ -15471,16 +16421,6 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/LmpCommonTest/packages.config",
-      "source": "Aetherfront-Source/LmpCommonTest/packages.config",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 639,
-      "sha256": "e87a301737c9ff5ac9ac9520217aa3ba8c76439d9370d61350c6bea4be71a4d7",
-      "sourceSha256": "e87a301737c9ff5ac9ac9520217aa3ba8c76439d9370d61350c6bea4be71a4d7",
-      "sourceModifiedUtc": "2026-08-07T04:22:49Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/LmpCommonTest/Properties/AssemblyInfo.cs",
       "source": "Aetherfront-Source/LmpCommonTest/Properties/AssemblyInfo.cs",
       "role": "fork client/server/shared libraries/tests/tools",
@@ -15537,6 +16477,16 @@
       "bytes": 864,
       "sha256": "fa644a739c20418f24ceffc533dbc5adb74198c9c4a74ce8b9a4772010345b24",
       "sourceSha256": "fa644a739c20418f24ceffc533dbc5adb74198c9c4a74ce8b9a4772010345b24",
+      "sourceModifiedUtc": "2026-08-07T04:22:49Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/LmpCommonTest/packages.config",
+      "source": "Aetherfront-Source/LmpCommonTest/packages.config",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 639,
+      "sha256": "e87a301737c9ff5ac9ac9520217aa3ba8c76439d9370d61350c6bea4be71a4d7",
+      "sourceSha256": "e87a301737c9ff5ac9ac9520217aa3ba8c76439d9370d61350c6bea4be71a4d7",
       "sourceModifiedUtc": "2026-08-07T04:22:49Z",
       "transformations": []
     },
@@ -16071,22 +17021,22 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/LmpUpdater/packages.config",
-      "source": "Aetherfront-Source/LmpUpdater/packages.config",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 138,
-      "sha256": "2d59bc48c107224b16d0ee3a686fc4dade87ac66f6e4a7fd20bd99eec7662745",
-      "sourceSha256": "2d59bc48c107224b16d0ee3a686fc4dade87ac66f6e4a7fd20bd99eec7662745",
-      "sourceModifiedUtc": "2026-08-07T04:22:49Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/LmpUpdater/Properties/AssemblyInfo.cs",
       "source": "Aetherfront-Source/LmpUpdater/Properties/AssemblyInfo.cs",
       "role": "fork client/server/shared libraries/tests/tools",
       "bytes": 667,
       "sha256": "dfd052086000d2461a0e4417998533771c579861c6c676fcaab17f7b4f32a1d7",
       "sourceSha256": "dfd052086000d2461a0e4417998533771c579861c6c676fcaab17f7b4f32a1d7",
+      "sourceModifiedUtc": "2026-08-07T04:22:49Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/LmpUpdater/packages.config",
+      "source": "Aetherfront-Source/LmpUpdater/packages.config",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 138,
+      "sha256": "2d59bc48c107224b16d0ee3a686fc4dade87ac66f6e4a7fd20bd99eec7662745",
+      "sourceSha256": "2d59bc48c107224b16d0ee3a686fc4dade87ac66f6e4a7fd20bd99eec7662745",
       "sourceModifiedUtc": "2026-08-07T04:22:49Z",
       "transformations": []
     },
@@ -17121,6 +18071,16 @@
       "transformations": []
     },
     {
+      "path": "Aetherfront-Source/Server/Resources/Scenario/ROCScenario.txt",
+      "source": "Aetherfront-Source/Server/Resources/Scenario/ROCScenario.txt",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 29,
+      "sha256": "02a5adee578ed32fc63032b9dd8164ddb5c8dbc42b3fcea08122330e128140db",
+      "sourceSha256": "02a5adee578ed32fc63032b9dd8164ddb5c8dbc42b3fcea08122330e128140db",
+      "sourceModifiedUtc": "2026-08-07T04:22:49Z",
+      "transformations": []
+    },
+    {
       "path": "Aetherfront-Source/Server/Resources/Scenario/Reputation.txt",
       "source": "Aetherfront-Source/Server/Resources/Scenario/Reputation.txt",
       "role": "fork client/server/shared libraries/tests/tools",
@@ -17147,16 +18107,6 @@
       "bytes": 151,
       "sha256": "18eaffb69cb919ccdc48e90736d853064528b607473fc1fee1cdbd891ed0d8cb",
       "sourceSha256": "18eaffb69cb919ccdc48e90736d853064528b607473fc1fee1cdbd891ed0d8cb",
-      "sourceModifiedUtc": "2026-08-07T04:22:49Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-Source/Server/Resources/Scenario/ROCScenario.txt",
-      "source": "Aetherfront-Source/Server/Resources/Scenario/ROCScenario.txt",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 29,
-      "sha256": "02a5adee578ed32fc63032b9dd8164ddb5c8dbc42b3fcea08122330e128140db",
-      "sourceSha256": "02a5adee578ed32fc63032b9dd8164ddb5c8dbc42b3fcea08122330e128140db",
       "sourceModifiedUtc": "2026-08-07T04:22:49Z",
       "transformations": []
     },
@@ -18508,16 +19458,6 @@
       "sha256": "e67406abe53a706d85dc91bfb7f0916d144d7680f82a9369d362aeb216916626",
       "sourceSha256": "e67406abe53a706d85dc91bfb7f0916d144d7680f82a9369d362aeb216916626",
       "sourceModifiedUtc": "2026-08-07T04:22:49Z",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-Source/ServerTest/packages.config",
-      "source": "Aetherfront-Source/ServerTest/packages.config",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 301,
-      "sha256": "5592e1543fdde77cd8fe2643abc11ce9b9b9b0ab97365aa13893bc065be04a0e",
-      "sourceSha256": "5592e1543fdde77cd8fe2643abc11ce9b9b9b0ab97365aa13893bc065be04a0e",
-      "sourceModifiedUtc": "2026-08-07T04:22:51Z",
       "transformations": []
     },
     {
@@ -25601,6 +26541,26 @@
       "transformations": []
     },
     {
+      "path": "Aetherfront-Source/ServerTest/packages.config",
+      "source": "Aetherfront-Source/ServerTest/packages.config",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 301,
+      "sha256": "5592e1543fdde77cd8fe2643abc11ce9b9b9b0ab97365aa13893bc065be04a0e",
+      "sourceSha256": "5592e1543fdde77cd8fe2643abc11ce9b9b9b0ab97365aa13893bc065be04a0e",
+      "sourceModifiedUtc": "2026-08-07T04:22:51Z",
+      "transformations": []
+    },
+    {
+      "path": "Aetherfront-Source/global.json",
+      "source": "Aetherfront-Source/global.json",
+      "role": "fork SDK pin",
+      "bytes": 112,
+      "sha256": "05065126a73eaf13a593499baa96afe3524db9d8019e99c41d44fd22a694f9f5",
+      "sourceSha256": "05065126a73eaf13a593499baa96afe3524db9d8019e99c41d44fd22a694f9f5",
+      "sourceModifiedUtc": "2026-08-07T04:34:27Z",
+      "transformations": []
+    },
+    {
       "path": "Aetherfront-Source/uhttpsharp/Attributes/HttpMethodAttribute.cs",
       "source": "Aetherfront-Source/uhttpsharp/Attributes/HttpMethodAttribute.cs",
       "role": "fork client/server/shared libraries/tests/tools",
@@ -26151,16 +27111,6 @@
       "transformations": []
     },
     {
-      "path": "Aetherfront-Source/uhttpsharp/packages.config",
-      "source": "Aetherfront-Source/uhttpsharp/packages.config",
-      "role": "fork client/server/shared libraries/tests/tools",
-      "bytes": 211,
-      "sha256": "26e5d64a50a4d5623461e2108c680806028b5d046699b4d0d4d081e21a7ca2df",
-      "sourceSha256": "26e5d64a50a4d5623461e2108c680806028b5d046699b4d0d4d081e21a7ca2df",
-      "sourceModifiedUtc": "2026-08-07T04:22:51Z",
-      "transformations": []
-    },
-    {
       "path": "Aetherfront-Source/uhttpsharp/RequestProviders/HttpRequestMethodDecorator.cs",
       "source": "Aetherfront-Source/uhttpsharp/RequestProviders/HttpRequestMethodDecorator.cs",
       "role": "fork client/server/shared libraries/tests/tools",
@@ -26211,6 +27161,16 @@
       "transformations": []
     },
     {
+      "path": "Aetherfront-Source/uhttpsharp/packages.config",
+      "source": "Aetherfront-Source/uhttpsharp/packages.config",
+      "role": "fork client/server/shared libraries/tests/tools",
+      "bytes": 211,
+      "sha256": "26e5d64a50a4d5623461e2108c680806028b5d046699b4d0d4d081e21a7ca2df",
+      "sourceSha256": "26e5d64a50a4d5623461e2108c680806028b5d046699b4d0d4d081e21a7ca2df",
+      "sourceModifiedUtc": "2026-08-07T04:22:51Z",
+      "transformations": []
+    },
+    {
       "path": "Aetherfront-Source/uhttpsharp/uhttpsharp.csproj",
       "source": "Aetherfront-Source/uhttpsharp/uhttpsharp.csproj",
       "role": "fork client/server/shared libraries/tests/tools",
@@ -26221,513 +27181,170 @@
       "transformations": []
     },
     {
-      "path": "APFDiscordBot/.env.example",
-      "source": "APFDiscordBot/.env.example",
-      "role": "environment variable placeholders only",
-      "bytes": 19,
-      "sha256": "29eafb40fd0969a24cf03b2ddff620d035c025bd151ce63db0b9434eba471491",
-      "sourceSha256": "29eafb40fd0969a24cf03b2ddff620d035c025bd151ce63db0b9434eba471491",
-      "sourceModifiedUtc": "2026-08-12T21:24:18.1434386Z",
+      "path": "BINARY-PREREQUISITES.json",
+      "source": null,
+      "role": "publication metadata, license or export tooling",
+      "bytes": 2613,
+      "sha256": "9fa8a4af2563ea8dbcbe4f55d4a4787759bc3e7e95ecf305ecd991e661c45e5c",
+      "sourceSha256": null,
       "transformations": []
     },
     {
-      "path": "APFDiscordBot/config.example.json",
-      "source": "APFDiscordBot/config.example.json",
-      "role": "example configuration only",
-      "bytes": 2437,
-      "sha256": "0b5df2d1fc955107d214ad97fb7b09b6ed09dcafde1fbbba8a23875c35456b02",
-      "sourceSha256": "d381211f0ccc8a052a927bb20828740db201b1af6ed1079515680e774be3807c",
-      "sourceModifiedUtc": "2026-10-18T05:30:55.9813468Z",
-      "transformations": [
-        "absolute workspace root replaced by ."
-      ]
-    },
-    {
-      "path": "APFDiscordBot/docs/ACTIVATION-CHECKLIST.md",
-      "source": "APFDiscordBot/docs/ACTIVATION-CHECKLIST.md",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 2923,
-      "sha256": "8987b515dcd7512d46fa9684f215272d812263b315fdf908a4b7da077efd9a29",
-      "sourceSha256": "8987b515dcd7512d46fa9684f215272d812263b315fdf908a4b7da077efd9a29",
-      "sourceModifiedUtc": "2026-08-13T03:24:43.580851Z",
+      "path": "DEPENDENCIES.json",
+      "source": null,
+      "role": "publication metadata, license or export tooling",
+      "bytes": 6074,
+      "sha256": "d18a8cf1affd334c20068be7d185ca0f92b5854b1bb58e6dd5866510ab9921bf",
+      "sourceSha256": null,
       "transformations": []
     },
     {
-      "path": "APFDiscordBot/docs/DISCORD-SETUP.md",
-      "source": "APFDiscordBot/docs/DISCORD-SETUP.md",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 7551,
-      "sha256": "231450ccdaa666e171dbc18e3bf46722c1cf2ee3c61642137d3fde0f9992a4cf",
-      "sourceSha256": "d02db3856abbf3b229984a802e6edadaa50fbf7c3cdad93290753f149981cc5a",
-      "sourceModifiedUtc": "2026-08-13T02:41:03.4096016Z",
-      "transformations": [
-        "absolute workspace root replaced by ."
-      ]
-    },
-    {
-      "path": "APFDiscordBot/docs/FEATURE-ROADMAP.md",
-      "source": "APFDiscordBot/docs/FEATURE-ROADMAP.md",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 7120,
-      "sha256": "0ecd13881c8da85743252aff582d2c08aace61421ba561d9fd45d4b9afef3935",
-      "sourceSha256": "0ecd13881c8da85743252aff582d2c08aace61421ba561d9fd45d4b9afef3935",
-      "sourceModifiedUtc": "2026-08-13T03:24:31.5052753Z",
+      "path": "Development/SHIPPING-RUNTIME-TESTS.md",
+      "source": "Development/SHIPPING-RUNTIME-TESTS.md",
+      "bytes": 3653,
+      "sha256": "954df93849dfa03a01089b6993d9920625b5962d354d1c9bea3ddc617fb061b9",
+      "sourceSha256": "954df93849dfa03a01089b6993d9920625b5962d354d1c9bea3ddc617fb061b9",
+      "sourceModifiedUtc": "2026-10-18T09:10:34.099037+00:00",
+      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
     {
-      "path": "APFDiscordBot/docs/GITHUB-DEPLOYMENT.md",
-      "source": "APFDiscordBot/docs/GITHUB-DEPLOYMENT.md",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 10087,
-      "sha256": "64eadc451060bc8ab57484631b441f7c15a647d7f37ab6b17d9fa807aa452ef1",
-      "sourceSha256": "64eadc451060bc8ab57484631b441f7c15a647d7f37ab6b17d9fa807aa452ef1",
-      "sourceModifiedUtc": "2026-10-18T05:34:52.7222538Z",
+      "path": "Development/ShippingCoreTests/Program.cs",
+      "source": "Development/ShippingCoreTests/Program.cs",
+      "bytes": 45502,
+      "sha256": "7818765a1fbacd87bdfe2acfa44b12f86e651355c6a0753e27619c7a1c91f5ee",
+      "sourceSha256": "7818765a1fbacd87bdfe2acfa44b12f86e651355c6a0753e27619c7a1c91f5ee",
+      "sourceModifiedUtc": "2026-10-18T09:10:34.111132+00:00",
+      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
     {
-      "path": "APFDiscordBot/docs/REQUIREMENT-AUDIT.md",
-      "source": "APFDiscordBot/docs/REQUIREMENT-AUDIT.md",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 3627,
-      "sha256": "039fb7a083355022ed272c8dc5dba58d9f6fbf64170de0f20620219363523e74",
-      "sourceSha256": "039fb7a083355022ed272c8dc5dba58d9f6fbf64170de0f20620219363523e74",
-      "sourceModifiedUtc": "2026-08-13T05:10:49.6113144Z",
+      "path": "Development/ShippingCoreTests/ShippingCoreTests.csproj",
+      "source": "Development/ShippingCoreTests/ShippingCoreTests.csproj",
+      "bytes": 682,
+      "sha256": "8df770b4fc3a00058180a705e7218f887fe81cfb58f707a219b1cd820b1658dd",
+      "sourceSha256": "8df770b4fc3a00058180a705e7218f887fe81cfb58f707a219b1cd820b1658dd",
+      "sourceModifiedUtc": "2026-10-18T09:10:34.116345+00:00",
+      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
     {
-      "path": "APFDiscordBot/package-lock.json",
-      "source": "APFDiscordBot/package-lock.json",
-      "role": "Node dependency lock",
-      "bytes": 11787,
-      "sha256": "33fcb0168aaf32c5a593306ed1d7312cb93fed4e60d8f5711f9f8ba6f1a0a9c7",
-      "sourceSha256": "33fcb0168aaf32c5a593306ed1d7312cb93fed4e60d8f5711f9f8ba6f1a0a9c7",
-      "sourceModifiedUtc": "2026-08-12T21:57:15.2735636Z",
+      "path": "Development/ShippingCoreTests/ShippingTestLinks.cs",
+      "source": "Development/ShippingCoreTests/ShippingTestLinks.cs",
+      "bytes": 1094,
+      "sha256": "94ba66bb8f45f855b47bb9be501dd7e7abda4c20f1b275a2756f9a1209782232",
+      "sourceSha256": "94ba66bb8f45f855b47bb9be501dd7e7abda4c20f1b275a2756f9a1209782232",
+      "sourceModifiedUtc": "2026-10-18T09:10:34.125888+00:00",
+      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
     {
-      "path": "APFDiscordBot/package.json",
-      "source": "APFDiscordBot/package.json",
-      "role": "Node dependency versions",
-      "bytes": 652,
-      "sha256": "17cf1d3425ef7fc8ef30320ef23fc900c6d5bc5792cbffc896c7c281f5a68522",
-      "sourceSha256": "17cf1d3425ef7fc8ef30320ef23fc900c6d5bc5792cbffc896c7c281f5a68522",
-      "sourceModifiedUtc": "2026-08-14T00:21:34.7406822Z",
+      "path": "Development/ShippingDomainTests/Program.cs",
+      "source": "Development/ShippingDomainTests/Program.cs",
+      "bytes": 34810,
+      "sha256": "0772ae64a289dc556a24d8f80db4e94f3713c403ebedd5fb45541db0811635bd",
+      "sourceSha256": "0772ae64a289dc556a24d8f80db4e94f3713c403ebedd5fb45541db0811635bd",
+      "sourceModifiedUtc": "2026-10-18T09:10:34.140039+00:00",
+      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
     {
-      "path": "APFDiscordBot/README.md",
-      "source": "APFDiscordBot/README.md",
-      "role": "bot operator documentation",
-      "bytes": 7162,
-      "sha256": "95355ddf27926b9b18ff2915973a69ee079d872b9fb87344f98939b8cd5ed917",
-      "sourceSha256": "95355ddf27926b9b18ff2915973a69ee079d872b9fb87344f98939b8cd5ed917",
-      "sourceModifiedUtc": "2026-08-13T05:10:49.6095815Z",
+      "path": "Development/ShippingDomainTests/Runner.cs",
+      "source": "Development/ShippingDomainTests/Runner.cs",
+      "bytes": 1326,
+      "sha256": "9fcd5d2a0baecfadec5aff3097922a67466cf607d6d697f9ae520f8985a58c46",
+      "sourceSha256": "9fcd5d2a0baecfadec5aff3097922a67466cf607d6d697f9ae520f8985a58c46",
+      "sourceModifiedUtc": "2026-10-18T09:10:34.148598+00:00",
+      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
     {
-      "path": "APFDiscordBot/scripts/Build-APFDiscordBridge.ps1",
-      "source": "APFDiscordBot/scripts/Build-APFDiscordBridge.ps1",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 1939,
-      "sha256": "f9483bf6a6a0eb4a23037da5bc1dc86de4e67ee8e5a81688330665a3cdb454f8",
-      "sourceSha256": "f9483bf6a6a0eb4a23037da5bc1dc86de4e67ee8e5a81688330665a3cdb454f8",
-      "sourceModifiedUtc": "2026-08-13T03:25:36.0584548Z",
+      "path": "Development/ShippingDomainTests/SecurityCases.cs",
+      "source": "Development/ShippingDomainTests/SecurityCases.cs",
+      "bytes": 10445,
+      "sha256": "5e84b219a3bcbead7c786d1d4f339cb5a46c05699878dffc6eca0a36084446ed",
+      "sourceSha256": "5e84b219a3bcbead7c786d1d4f339cb5a46c05699878dffc6eca0a36084446ed",
+      "sourceModifiedUtc": "2026-10-18T09:10:34.160124+00:00",
+      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
     {
-      "path": "APFDiscordBot/scripts/Initialize-APFDiscordConfig.ps1",
-      "source": "APFDiscordBot/scripts/Initialize-APFDiscordConfig.ps1",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 1757,
-      "sha256": "ebd1e8558a6b97736bf5d6954224f87fba22b54f86e1125282a302ad8722cdbc",
-      "sourceSha256": "ebd1e8558a6b97736bf5d6954224f87fba22b54f86e1125282a302ad8722cdbc",
-      "sourceModifiedUtc": "2026-08-13T02:38:35.4517463Z",
+      "path": "Development/ShippingDomainTests/ShippingDomainTests.csproj",
+      "source": "Development/ShippingDomainTests/ShippingDomainTests.csproj",
+      "bytes": 664,
+      "sha256": "98f306578cc1cadd5457d4cc34a32131c1d00a8b82882a4898b96689a9de8b42",
+      "sourceSha256": "98f306578cc1cadd5457d4cc34a32131c1d00a8b82882a4898b96689a9de8b42",
+      "sourceModifiedUtc": "2026-10-18T09:10:34.164406+00:00",
+      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
     {
-      "path": "APFDiscordBot/scripts/Install-APFDiscordBotTask.ps1",
-      "source": "APFDiscordBot/scripts/Install-APFDiscordBotTask.ps1",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 1681,
-      "sha256": "1a1fa28ad92254feb499631e9e9a4db287468d877a4978c5eccb0de5d7db935f",
-      "sourceSha256": "1a1fa28ad92254feb499631e9e9a4db287468d877a4978c5eccb0de5d7db935f",
-      "sourceModifiedUtc": "2026-08-13T01:46:16.0936736Z",
+      "path": "Development/ShippingIdentityTests/Program.cs",
+      "source": "Development/ShippingIdentityTests/Program.cs",
+      "bytes": 4261,
+      "sha256": "f8e53c452d931aaf2bb0322d57d58161c03aa9c721c73b3aab088f9fb68cac58",
+      "sourceSha256": "f8e53c452d931aaf2bb0322d57d58161c03aa9c721c73b3aab088f9fb68cac58",
+      "sourceModifiedUtc": "2026-10-18T09:10:34.172277+00:00",
+      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
     {
-      "path": "APFDiscordBot/scripts/Install-APFDiscordBridge.ps1",
-      "source": "APFDiscordBot/scripts/Install-APFDiscordBridge.ps1",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 1452,
-      "sha256": "719f6abd4255e0071bdde38645793954e059ab0e236987305466eec548e23adc",
-      "sourceSha256": "719f6abd4255e0071bdde38645793954e059ab0e236987305466eec548e23adc",
-      "sourceModifiedUtc": "2026-08-13T00:32:07.1916484Z",
+      "path": "Development/ShippingIdentityTests/ShippingIdentityTests.csproj",
+      "source": "Development/ShippingIdentityTests/ShippingIdentityTests.csproj",
+      "bytes": 443,
+      "sha256": "5db2c4631916eb512149259cf0cd8f6ef12259b6100f55569355bc8e0a21f8e9",
+      "sourceSha256": "5db2c4631916eb512149259cf0cd8f6ef12259b6100f55569355bc8e0a21f8e9",
+      "sourceModifiedUtc": "2026-10-18T09:10:34.177214+00:00",
+      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
     {
-      "path": "APFDiscordBot/scripts/Install-APFUniverseBackupTask.ps1",
-      "source": "APFDiscordBot/scripts/Install-APFUniverseBackupTask.ps1",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 1631,
-      "sha256": "f7345b57119e0bed7e6fca1aef1703cb13bb77dd305e1b6e3ceef87f3fc437ce",
-      "sourceSha256": "f7345b57119e0bed7e6fca1aef1703cb13bb77dd305e1b6e3ceef87f3fc437ce",
-      "sourceModifiedUtc": "2026-08-13T02:01:57.5400895Z",
+      "path": "Development/ShippingNetworkTests/FuzzIngress.cs",
+      "source": "Development/ShippingNetworkTests/FuzzIngress.cs",
+      "bytes": 1711,
+      "sha256": "e7dca82a80e12e42564986c20fb5d7c247570375aabc0d6cf8ca224a1df73e62",
+      "sourceSha256": "e7dca82a80e12e42564986c20fb5d7c247570375aabc0d6cf8ca224a1df73e62",
+      "sourceModifiedUtc": "2026-10-18T09:10:34.177214+00:00",
+      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
     {
-      "path": "APFDiscordBot/scripts/Optimize-APFFlags.ps1",
-      "source": "APFDiscordBot/scripts/Optimize-APFFlags.ps1",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 4504,
-      "sha256": "cc1a82d9435e9683f95d682860c5e9e0d544ee5ef1f874d1d45251d3609179f1",
-      "sourceSha256": "cc1a82d9435e9683f95d682860c5e9e0d544ee5ef1f874d1d45251d3609179f1",
-      "sourceModifiedUtc": "2026-08-26T02:15:33.8604479Z",
+      "path": "Development/ShippingNetworkTests/Program.cs",
+      "source": "Development/ShippingNetworkTests/Program.cs",
+      "bytes": 772,
+      "sha256": "079df6ec58ac96ab5ee56e30da49f34c6e6e2f9ba00bc1c247cf9f93671e249e",
+      "sourceSha256": "079df6ec58ac96ab5ee56e30da49f34c6e6e2f9ba00bc1c247cf9f93671e249e",
+      "sourceModifiedUtc": "2026-10-18T09:10:34.178212+00:00",
+      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
     {
-      "path": "APFDiscordBot/scripts/Publish-GitHubDeployment.ps1",
-      "source": "APFDiscordBot/scripts/Publish-GitHubDeployment.ps1",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 16634,
-      "sha256": "078e2634a88d1289b989c2653a215e3b630cc9b065e290ab7ac9cfc60fff4d25",
-      "sourceSha256": "078e2634a88d1289b989c2653a215e3b630cc9b065e290ab7ac9cfc60fff4d25",
-      "sourceModifiedUtc": "2026-10-18T05:34:52.7205244Z",
+      "path": "Development/ShippingNetworkTests/Scenario.cs",
+      "source": "Development/ShippingNetworkTests/Scenario.cs",
+      "bytes": 22424,
+      "sha256": "b049b52729387e6784e58569e1cc3d728482fbdfb9f48b16000225176a7a3746",
+      "sourceSha256": "b049b52729387e6784e58569e1cc3d728482fbdfb9f48b16000225176a7a3746",
+      "sourceModifiedUtc": "2026-10-18T09:10:34.178212+00:00",
+      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
     {
-      "path": "APFDiscordBot/scripts/silent-restart-when-empty.mjs",
-      "source": "APFDiscordBot/scripts/silent-restart-when-empty.mjs",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 2382,
-      "sha256": "c1530c4f24d09d571d567bc7ad0634435c44debf11a4bf5795bf3097a599e0be",
-      "sourceSha256": "c1530c4f24d09d571d567bc7ad0634435c44debf11a4bf5795bf3097a599e0be",
-      "sourceModifiedUtc": "2026-08-27T00:03:58.3645948Z",
+      "path": "Development/ShippingNetworkTests/ShippingNetworkTests.csproj",
+      "source": "Development/ShippingNetworkTests/ShippingNetworkTests.csproj",
+      "bytes": 717,
+      "sha256": "c8d472e577fcb71c0089a09060cfbc4b9faec191f7e0688c2485219b88b9090a",
+      "sourceSha256": "c8d472e577fcb71c0089a09060cfbc4b9faec191f7e0688c2485219b88b9090a",
+      "sourceModifiedUtc": "2026-10-18T09:10:34.182031+00:00",
+      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
       "transformations": []
     },
     {
-      "path": "APFDiscordBot/scripts/Start-APFDiscordBot.ps1",
-      "source": "APFDiscordBot/scripts/Start-APFDiscordBot.ps1",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 1363,
-      "sha256": "8010a7a93ca06b98ff4632d4975e9c3a0cfec227ccfdb946b30d9f6b677676a8",
-      "sourceSha256": "8010a7a93ca06b98ff4632d4975e9c3a0cfec227ccfdb946b30d9f6b677676a8",
-      "sourceModifiedUtc": "2026-10-16T03:17:05.5556408Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/scripts/Stop-APFLmpGracefully.ps1",
-      "source": "APFDiscordBot/scripts/Stop-APFLmpGracefully.ps1",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 2445,
-      "sha256": "beaf357d47d32944b83a54a038e51e7c01c2853699ab0fb61c950aabbeae5d34",
-      "sourceSha256": "beaf357d47d32944b83a54a038e51e7c01c2853699ab0fb61c950aabbeae5d34",
-      "sourceModifiedUtc": "2026-08-13T02:04:44.8843866Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/scripts/Stop-KesasGracefully.ps1",
-      "source": "APFDiscordBot/scripts/Stop-KesasGracefully.ps1",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 1066,
-      "sha256": "24723e69d44fc559b6f50dd95bb6038e28883103b211453cde9c9744c3515935",
-      "sourceSha256": "24723e69d44fc559b6f50dd95bb6038e28883103b211453cde9c9744c3515935",
-      "sourceModifiedUtc": "2026-10-16T03:11:26.2197743Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/scripts/Test-APFAll.ps1",
-      "source": "APFDiscordBot/scripts/Test-APFAll.ps1",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 1231,
-      "sha256": "3639fc44c7382453a52e92eb0507857464cbe979905f41c4e89330a94ff760ec",
-      "sourceSha256": "3639fc44c7382453a52e92eb0507857464cbe979905f41c4e89330a94ff760ec",
-      "sourceModifiedUtc": "2026-08-13T00:46:58.8067513Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/scripts/Test-APFDiscordBridge.ps1",
-      "source": "APFDiscordBot/scripts/Test-APFDiscordBridge.ps1",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 3969,
-      "sha256": "247175eb1c7fd8a81629f256157391c7ee7afff788127d3434a52e3654b4e333",
-      "sourceSha256": "2e0ff9cd2126a4faee64287739e9dadad98dcac2529dad9aa737a2120036475b",
-      "sourceModifiedUtc": "2026-08-20T19:57:06.8362049Z",
-      "transformations": [
-        "absolute workspace root replaced by ."
-      ]
-    },
-    {
-      "path": "APFDiscordBot/scripts/Test-APFLifecycle.ps1",
-      "source": "APFDiscordBot/scripts/Test-APFLifecycle.ps1",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 2686,
-      "sha256": "f1ceff014f02de8d899ba6c2f524763a6da15fc803bd2efed79bed7e6b2729d6",
-      "sourceSha256": "3fa6af32902fb3c71ea2bb5e5c6374d97e860bb07edfe3426443017f1d6a3be2",
-      "sourceModifiedUtc": "2026-08-20T19:57:06.8344651Z",
-      "transformations": [
-        "absolute workspace root replaced by ."
-      ]
-    },
-    {
-      "path": "APFDiscordBot/scripts/Uninstall-APFDiscordBotTask.ps1",
-      "source": "APFDiscordBot/scripts/Uninstall-APFDiscordBotTask.ps1",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 350,
-      "sha256": "fb25befba2805d14a8245280c54e36511fe674950fb8f7322c70fb9466efa4cc",
-      "sourceSha256": "fb25befba2805d14a8245280c54e36511fe674950fb8f7322c70fb9466efa4cc",
-      "sourceModifiedUtc": "2026-08-13T00:40:26.8373581Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/scripts/Verify-KesasRelease.ps1",
-      "source": "APFDiscordBot/scripts/Verify-KesasRelease.ps1",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 4643,
-      "sha256": "c4e85961b949b8283c1911747f58919a15f5f3cb76ca408ef02ff5f7e75ce0bd",
-      "sourceSha256": "c4e85961b949b8283c1911747f58919a15f5f3cb76ca408ef02ff5f7e75ce0bd",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.058759+00:00",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/src/backup-once.js",
-      "source": "APFDiscordBot/src/backup-once.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 310,
-      "sha256": "b37fe27035e54c4994aa94dc0900c7acce6fce69a0a612b59f362731c58c4fac",
-      "sourceSha256": "b37fe27035e54c4994aa94dc0900c7acce6fce69a0a612b59f362731c58c4fac",
-      "sourceModifiedUtc": "2026-08-12T22:07:42.2734352Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/src/bot.js",
-      "source": "APFDiscordBot/src/bot.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 111492,
-      "sha256": "34d8bb1a847bc2370fe1dcedd3541860b82b214c1cb0cfe644da6f78dc995317",
-      "sourceSha256": "34d8bb1a847bc2370fe1dcedd3541860b82b214c1cb0cfe644da6f78dc995317",
-      "sourceModifiedUtc": "2026-10-20T00:59:50.698Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/src/config.js",
-      "source": "APFDiscordBot/src/config.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 1663,
-      "sha256": "6f9854a89b7e5a25dacac2d0a173dfd28a2a0b1ac7b369a8b88b9c628300dd82",
-      "sourceSha256": "6f9854a89b7e5a25dacac2d0a173dfd28a2a0b1ac7b369a8b88b9c628300dd82",
-      "sourceModifiedUtc": "2026-08-13T19:22:53.4387332Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/src/doctor.js",
-      "source": "APFDiscordBot/src/doctor.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 6684,
-      "sha256": "a2f6c950e07328e8ae29b9c3885af42fab04e0cf829f8895d1ee4a2af083a0f8",
-      "sourceSha256": "a2f6c950e07328e8ae29b9c3885af42fab04e0cf829f8895d1ee4a2af083a0f8",
-      "sourceModifiedUtc": "2026-08-13T05:09:29.3256364Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/src/github-deployment.js",
-      "source": "APFDiscordBot/src/github-deployment.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 14274,
-      "sha256": "f5b9b30994d43aec53efc94c644f4fcf60a9dbf429d0ae35b947b9d11da07122",
-      "sourceSha256": "f5b9b30994d43aec53efc94c644f4fcf60a9dbf429d0ae35b947b9d11da07122",
-      "sourceModifiedUtc": "2026-10-18T05:37:19.4732732Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/src/health.js",
-      "source": "APFDiscordBot/src/health.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 12561,
-      "sha256": "e7df76ae2c5a42c015e623ad3d32a67227e7649c55aa4bd237ec903e44cd6dc5",
-      "sourceSha256": "e7df76ae2c5a42c015e623ad3d32a67227e7649c55aa4bd237ec903e44cd6dc5",
-      "sourceModifiedUtc": "2026-10-20T00:59:50.695Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/src/index.js",
-      "source": "APFDiscordBot/src/index.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 11478,
-      "sha256": "d8a761653adb12dc8d37a7e1b5f68031b4e16f4a5d78b6d625857d4b3b919f3a",
-      "sourceSha256": "d8a761653adb12dc8d37a7e1b5f68031b4e16f4a5d78b6d625857d4b3b919f3a",
-      "sourceModifiedUtc": "2026-10-18T05:30:55.9791651Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/src/lifecycle-smoke.js",
-      "source": "APFDiscordBot/src/lifecycle-smoke.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 1303,
-      "sha256": "956b68cf74789c76c7d7f9b1837bee56b5b9798f47b1baac064fcd084cdc88fd",
-      "sourceSha256": "956b68cf74789c76c7d7f9b1837bee56b5b9798f47b1baac064fcd084cdc88fd",
-      "sourceModifiedUtc": "2026-08-13T00:10:06.1677608Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/src/lmp.js",
-      "source": "APFDiscordBot/src/lmp.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 55346,
-      "sha256": "b2de5b5a02242f0d90a636bf053d026f7ec46cbba15202cb2558a953a374fb0c",
-      "sourceSha256": "b2de5b5a02242f0d90a636bf053d026f7ec46cbba15202cb2558a953a374fb0c",
-      "sourceModifiedUtc": "2026-10-20T00:56:47.528Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/src/provision-channels.js",
-      "source": "APFDiscordBot/src/provision-channels.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 1601,
-      "sha256": "962bae02452bd034dffd5cf182a3355d6a86015b85c8de19ffda8d91d7365f36",
-      "sourceSha256": "962bae02452bd034dffd5cf182a3355d6a86015b85c8de19ffda8d91d7365f36",
-      "sourceModifiedUtc": "2026-08-13T02:38:35.4497506Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/src/schedule-update.js",
-      "source": "APFDiscordBot/src/schedule-update.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 770,
-      "sha256": "c5aceb1550e130fea211019d44474c67e9bdc4774010a9dc3254835a209a248a",
-      "sourceSha256": "c5aceb1550e130fea211019d44474c67e9bdc4774010a9dc3254835a209a248a",
-      "sourceModifiedUtc": "2026-08-14T00:21:34.7423723Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/src/single-instance.js",
-      "source": "APFDiscordBot/src/single-instance.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 1318,
-      "sha256": "6c7a1fb762b424e4fe84a5aba3e91d4ca7edb7de569fd3d1a7b6e2012d6a2237",
-      "sourceSha256": "6c7a1fb762b424e4fe84a5aba3e91d4ca7edb7de569fd3d1a7b6e2012d6a2237",
-      "sourceModifiedUtc": "2026-08-13T21:15:53.4650867Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/src/stage-update.js",
-      "source": "APFDiscordBot/src/stage-update.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 812,
-      "sha256": "9059e3f2875188a3a2b464c39f596ea1515c6c191300c7a24136d5c37984d461",
-      "sourceSha256": "9059e3f2875188a3a2b464c39f596ea1515c6c191300c7a24136d5c37984d461",
-      "sourceModifiedUtc": "2026-08-13T19:22:50.1679824Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/src/timeout-help.js",
-      "source": "APFDiscordBot/src/timeout-help.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 6526,
-      "sha256": "0be5729a80548b302238592c4dbd01cd9bb3a89383e4ce5c6cfcb4bc06321a74",
-      "sourceSha256": "0be5729a80548b302238592c4dbd01cd9bb3a89383e4ce5c6cfcb4bc06321a74",
-      "sourceModifiedUtc": "2026-08-21T17:43:43.8571739Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/src/universe.js",
-      "source": "APFDiscordBot/src/universe.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 29208,
-      "sha256": "5009f2bed17153cc265da08ca585e907c5e0ba003af0f5a55cb2d6231b35521d",
-      "sourceSha256": "5009f2bed17153cc265da08ca585e907c5e0ba003af0f5a55cb2d6231b35521d",
-      "sourceModifiedUtc": "2026-08-27T22:41:45.2429018Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/src/update-manager.js",
-      "source": "APFDiscordBot/src/update-manager.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 29810,
-      "sha256": "32817f3b38d3a2134972f8dc8e4c5caa03bac97c92c3e3ec782ab326969a43f6",
-      "sourceSha256": "32817f3b38d3a2134972f8dc8e4c5caa03bac97c92c3e3ec782ab326969a43f6",
-      "sourceModifiedUtc": "2026-10-20T00:56:47.533Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/src/util.js",
-      "source": "APFDiscordBot/src/util.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 3990,
-      "sha256": "62f77c19c891f286ee4a7c685d226fe21b9782e6fe06194f322ad15648f55793",
-      "sourceSha256": "62f77c19c891f286ee4a7c685d226fe21b9782e6fe06194f322ad15648f55793",
-      "sourceModifiedUtc": "2026-08-14T01:50:16.2978865Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/src/validate-config.js",
-      "source": "APFDiscordBot/src/validate-config.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 6365,
-      "sha256": "15066d003828fa31099db26bfc6fcea4da858d3c691744b1962be5686886a777",
-      "sourceSha256": "15066d003828fa31099db26bfc6fcea4da858d3c691744b1962be5686886a777",
-      "sourceModifiedUtc": "2026-08-16T03:44:56.8406992Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/test/fixtures/bridge-message.json",
-      "source": "APFDiscordBot/test/fixtures/bridge-message.json",
-      "role": "synthetic protocol test input, not runtime state",
-      "bytes": 62,
-      "sha256": "ada8cbc3be2723133131d61566bac6b1819797e730f14a2147a0ffe9aaaedbda",
-      "sourceSha256": "ada8cbc3be2723133131d61566bac6b1819797e730f14a2147a0ffe9aaaedbda",
-      "sourceModifiedUtc": "2026-08-12T22:13:18.7752347Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/test/elevated-process.test.js",
-      "source": "APFDiscordBot/test/elevated-process.test.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 5917,
-      "sha256": "51ae2cc0cbfb9cff31f2a27690e22b1f018c888060b71164b8810f071ed228bb",
-      "sourceSha256": "51ae2cc0cbfb9cff31f2a27690e22b1f018c888060b71164b8810f071ed228bb",
-      "sourceModifiedUtc": "2026-10-20T00:55:08.116Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/test/github-deployment.test.js",
-      "source": "APFDiscordBot/test/github-deployment.test.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 14949,
-      "sha256": "abdbfec5ca54ef023d0ee83cc947f11c788b5ac557f31680cd735752845afb4f",
-      "sourceSha256": "abdbfec5ca54ef023d0ee83cc947f11c788b5ac557f31680cd735752845afb4f",
-      "sourceModifiedUtc": "2026-10-18T05:41:15.0807969Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/test/kesas.test.js",
-      "source": "APFDiscordBot/test/kesas.test.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 9417,
-      "sha256": "2339b2bcd50f6c0cea2bbb8529025e2d34c419dbd8cd0e604e69da5b2ffab8c7",
-      "sourceSha256": "1674d5b0d5de61827c409ff364fd897e5402e53e55aecb19041d90c8eb68fe5b",
-      "sourceModifiedUtc": "2026-10-20T01:00:24.659Z",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/test/smoke.test.js",
-      "source": "APFDiscordBot/test/smoke.test.js",
-      "role": "Discord integration source/tests/operator scripts",
-      "bytes": 114262,
-      "sha256": "c0b25b633d5ad064b40b32b8880e8bc21fb45da11aa770635fa021160d109de3",
-      "sourceSha256": "1d8f662d82915c1ad96202c9cff72bd975af5ceeebf29d26ba7221fdce3fec6e",
-      "sourceModifiedUtc": "2026-10-20T01:00:24.663Z",
-      "transformations": [
-        "absolute workspace root replaced by ."
-      ]
-    },
-    {
-      "path": "APFDiscordBot/UPDATES.md",
-      "source": "APFDiscordBot/UPDATES.md",
-      "role": "bot release workflow",
-      "bytes": 2170,
-      "sha256": "7da4f0856aae1d88dfca22a1cf2c71918150aa388a9c73c85283fb76221d63c9",
-      "sourceSha256": "7da4f0856aae1d88dfca22a1cf2c71918150aa388a9c73c85283fb76221d63c9",
-      "sourceModifiedUtc": "2026-08-14T00:30:12.7422917Z",
+      "path": "EXPORT-REVIEW.md",
+      "source": null,
+      "role": "publication metadata, license or export tooling",
+      "bytes": 3133,
+      "sha256": "accc6456210b29d0630ab115cd0e33c649dac487766ddad6d50da06772caed37",
+      "sourceSha256": null,
       "transformations": []
     },
     {
@@ -27372,10 +27989,10 @@
       "path": "KESAS-VPS-Server/Publish-Release.ps1",
       "source": "KESAS-VPS-Server/Publish-Release.ps1",
       "role": "current deployment implementation, not executed",
-      "bytes": 24991,
-      "sha256": "335ede03f5e97da3553e9e8bac90578f695490e9c66387dd48a3d07a48bf615e",
-      "sourceSha256": "335ede03f5e97da3553e9e8bac90578f695490e9c66387dd48a3d07a48bf615e",
-      "sourceModifiedUtc": "2026-10-17T10:26:37.4446625Z",
+      "bytes": 27992,
+      "sha256": "e60b6984cade0c0f5aae5a3fdc3634036c1cca1aace4eb672d5a090ef7526f6e",
+      "sourceSha256": "e60b6984cade0c0f5aae5a3fdc3634036c1cca1aace4eb672d5a090ef7526f6e",
+      "sourceModifiedUtc": "2026-10-21T03:14:58.727287Z",
       "transformations": []
     },
     {
@@ -27409,11 +28026,11 @@
       "transformations": []
     },
     {
-      "path": "licenses/LGPL-2.1.txt",
+      "path": "LICENSE",
       "source": null,
       "role": "publication metadata, license or export tooling",
-      "bytes": 26419,
-      "sha256": "20e50fe7aae3e56378ebf0417d9de904f55a0e61e4df315333e632a4d3555d95",
+      "bytes": 1093,
+      "sha256": "3b20235b53b76a1b7d19045acaab15323047703c12a410263a0b29020a020908",
       "sourceSha256": null,
       "transformations": []
     },
@@ -27426,6 +28043,51 @@
       "sourceSha256": "6e5fbebc90933061d3374f83d7c3fea627ca076435475ee49f4da89e04a42e51",
       "transformations": [],
       "sourceModifiedUtc": "2026-10-18T09:10:34.068929+00:00"
+    },
+    {
+      "path": "SOURCE-PROVENANCE.md",
+      "source": null,
+      "role": "publication metadata, license or export tooling",
+      "bytes": 14935,
+      "sha256": "bd4c675f0737dd9b5d68109d4f7a2ce442f4988b221ffd82cb95ecded01163e3",
+      "sourceSha256": null,
+      "transformations": []
+    },
+    {
+      "path": "TESTING.md",
+      "source": null,
+      "role": "publication metadata, license or export tooling",
+      "bytes": 34070,
+      "sha256": "f30b7bed40d755d9306a65e3f025477954167156911d669759123887a7caf494",
+      "sourceSha256": null,
+      "transformations": []
+    },
+    {
+      "path": "THIRD-PARTY-NOTICES.md",
+      "source": null,
+      "role": "publication metadata, license or export tooling",
+      "bytes": 1657,
+      "sha256": "7d43c80cebbf009de2b54102adbeb04e8cfbded3f177abca808999cda3d6c6c5",
+      "sourceSha256": null,
+      "transformations": []
+    },
+    {
+      "path": "export-policy.json",
+      "source": null,
+      "role": "publication metadata, license or export tooling",
+      "bytes": 23812,
+      "sha256": "9d7f249ea4fa2196d070381319662565075a15606adc05b4c44f6ee9051061e8",
+      "sourceSha256": null,
+      "transformations": []
+    },
+    {
+      "path": "licenses/LGPL-2.1.txt",
+      "source": null,
+      "role": "publication metadata, license or export tooling",
+      "bytes": 26419,
+      "sha256": "20e50fe7aae3e56378ebf0417d9de904f55a0e61e4df315333e632a4d3555d95",
+      "sourceSha256": null,
+      "transformations": []
     },
     {
       "path": "scripts/Export-GitHubSource.ps1",
@@ -27444,661 +28106,9 @@
       "sha256": "5e622f4365426d610b907d576461761377feab6b3c7fdb8c348922033bded532",
       "sourceSha256": null,
       "transformations": []
-    },
-    {
-      "path": "LICENSE",
-      "source": null,
-      "role": "publication metadata, license or export tooling",
-      "bytes": 1093,
-      "sha256": "3b20235b53b76a1b7d19045acaab15323047703c12a410263a0b29020a020908",
-      "sourceSha256": null,
-      "transformations": []
-    },
-    {
-      "path": "SOURCE-PROVENANCE.md",
-      "source": null,
-      "role": "publication metadata, license or export tooling",
-      "bytes": 14935,
-      "sha256": "bd4c675f0737dd9b5d68109d4f7a2ce442f4988b221ffd82cb95ecded01163e3",
-      "sourceSha256": null,
-      "transformations": []
-    },
-    {
-      "path": ".gitattributes",
-      "source": null,
-      "role": "publication metadata, license or export tooling",
-      "bytes": 8,
-      "sha256": "705fd4d6451a31d36b3df7de96f83f30ac976c9b4a6d1e51671d8e2f33e2d0da",
-      "sourceSha256": null,
-      "transformations": []
-    },
-    {
-      "path": "export-policy.json",
-      "source": null,
-      "role": "publication metadata, license or export tooling",
-      "bytes": 23812,
-      "sha256": "9d7f249ea4fa2196d070381319662565075a15606adc05b4c44f6ee9051061e8",
-      "sourceSha256": null,
-      "transformations": []
-    },
-    {
-      "path": "DEPENDENCIES.json",
-      "source": null,
-      "role": "publication metadata, license or export tooling",
-      "bytes": 6074,
-      "sha256": "d18a8cf1affd334c20068be7d185ca0f92b5854b1bb58e6dd5866510ab9921bf",
-      "sourceSha256": null,
-      "transformations": []
-    },
-    {
-      "path": "BINARY-PREREQUISITES.json",
-      "source": null,
-      "role": "publication metadata, license or export tooling",
-      "bytes": 2613,
-      "sha256": "9fa8a4af2563ea8dbcbe4f55d4a4787759bc3e7e95ecf305ecd991e661c45e5c",
-      "sourceSha256": null,
-      "transformations": []
-    },
-    {
-      "path": "TESTING.md",
-      "source": null,
-      "role": "publication metadata, license or export tooling",
-      "bytes": 34070,
-      "sha256": "f30b7bed40d755d9306a65e3f025477954167156911d669759123887a7caf494",
-      "sourceSha256": null,
-      "transformations": []
-    },
-    {
-      "path": ".gitignore",
-      "source": null,
-      "role": "publication metadata, license or export tooling",
-      "bytes": 592,
-      "sha256": "0b17412f5bd110fd5599f8e443e9fca2f0da9a2c8fa5dd2c1ef39c882be9d21a",
-      "sourceSha256": null,
-      "transformations": []
-    },
-    {
-      "path": "EXPORT-REVIEW.md",
-      "source": null,
-      "role": "publication metadata, license or export tooling",
-      "bytes": 3133,
-      "sha256": "accc6456210b29d0630ab115cd0e33c649dac487766ddad6d50da06772caed37",
-      "sourceSha256": null,
-      "transformations": []
-    },
-    {
-      "path": "THIRD-PARTY-NOTICES.md",
-      "source": null,
-      "role": "publication metadata, license or export tooling",
-      "bytes": 1657,
-      "sha256": "7d43c80cebbf009de2b54102adbeb04e8cfbded3f177abca808999cda3d6c6c5",
-      "sourceSha256": null,
-      "transformations": []
-    },
-    {
-      "path": ".github/workflows/windows-bot-checks.yml",
-      "source": ".github/workflows/windows-bot-checks.yml",
-      "bytes": 891,
-      "sha256": "2de2fa9fdbc358f9a3fa63a47d1b2fb5c308dad38755fcc1c6bfcdbc772bda59",
-      "sourceSha256": "2de2fa9fdbc358f9a3fa63a47d1b2fb5c308dad38755fcc1c6bfcdbc772bda59",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.076971+00:00",
-      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC30-Work/Build-Engine.ps1",
-      "source": "Aetherfront-RC30-Work/Build-Engine.ps1",
-      "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 3077,
-      "sha256": "6957b694cafd66a1ac3987c502062cf8268553600721ef87bd72569805b01c1c",
-      "sourceSha256": "6957b694cafd66a1ac3987c502062cf8268553600721ef87bd72569805b01c1c"
-    },
-    {
-      "path": "Aetherfront-RC30-Work/Build-Release.py",
-      "source": "Aetherfront-RC30-Work/Build-Release.py",
-      "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 7033,
-      "sha256": "12943863abd191e33fd7e2f4295721443f484538b9bae18a023710e96ea85224",
-      "sourceSha256": "12943863abd191e33fd7e2f4295721443f484538b9bae18a023710e96ea85224"
-    },
-    {
-      "path": "Aetherfront-RC30-Work/CasingTests/CasingTests.csproj",
-      "source": "Aetherfront-RC30-Work/CasingTests/CasingTests.csproj",
-      "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 769,
-      "sha256": "8f320463bef50f64321ccc2ee825845fb1bf1626e0ae1390394f2c11add2aa13",
-      "sourceSha256": "8f320463bef50f64321ccc2ee825845fb1bf1626e0ae1390394f2c11add2aa13"
-    },
-    {
-      "path": "Aetherfront-RC30-Work/CasingTests/Program.cs",
-      "source": "Aetherfront-RC30-Work/CasingTests/Program.cs",
-      "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 42374,
-      "sha256": "0be04c68b49b536a06c1ac14aaa0ba4c336a7f14b0a14010100c04558f3fbf45",
-      "sourceSha256": "0be04c68b49b536a06c1ac14aaa0ba4c336a7f14b0a14010100c04558f3fbf45"
-    },
-    {
-      "path": "Aetherfront-RC30-Work/Engine/AssemblyInfo.cs",
-      "source": "Aetherfront-RC30-Work/Engine/AssemblyInfo.cs",
-      "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 107,
-      "sha256": "8a1336238caf1699e8dd5697dfe5330ee2ed3350ee538638c22f258632765970",
-      "sourceSha256": "8a1336238caf1699e8dd5697dfe5330ee2ed3350ee538638c22f258632765970"
-    },
-    {
-      "path": "Aetherfront-RC30-Work/Engine/AtomicFiles.cs",
-      "source": "Aetherfront-RC30-Work/Engine/AtomicFiles.cs",
-      "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 2079,
-      "sha256": "2638836990399e136ca0ff7453a30dee3c60353458c62876ed62316b61d29e87",
-      "sourceSha256": "2638836990399e136ca0ff7453a30dee3c60353458c62876ed62316b61d29e87"
-    },
-    {
-      "path": "Aetherfront-RC30-Work/Engine/Installer.cs",
-      "source": "Aetherfront-RC30-Work/Engine/Installer.cs",
-      "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 56350,
-      "sha256": "bdccddf5d5b826c14f85bb11b1588ce604f6f5b952501b9439175417c31fac46",
-      "sourceSha256": "bdccddf5d5b826c14f85bb11b1588ce604f6f5b952501b9439175417c31fac46",
-      "sourceModifiedUtc": "2026-10-18T20:02:55.544435+00:00"
-    },
-    {
-      "path": "Aetherfront-RC30-Work/Engine/LegacySettingsRecovery.cs",
-      "source": "Aetherfront-RC30-Work/Engine/LegacySettingsRecovery.cs",
-      "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 44951,
-      "sha256": "b985acf0a3379ca1ea93fdda5dbbcdd8c8efe259d040a3db9ba32848f9a8f471",
-      "sourceSha256": "b985acf0a3379ca1ea93fdda5dbbcdd8c8efe259d040a3db9ba32848f9a8f471",
-      "sourceModifiedUtc": "2026-10-18T19:42:06.848013+00:00"
-    },
-    {
-      "path": "Aetherfront-RC30-Work/Engine/NativeInstall.cs",
-      "source": "Aetherfront-RC30-Work/Engine/NativeInstall.cs",
-      "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 14924,
-      "sha256": "0ecf0740c7c062a3f681e95b2e8a3f068b364bef915de0d8059e8d7bef07128e",
-      "sourceSha256": "0ecf0740c7c062a3f681e95b2e8a3f068b364bef915de0d8059e8d7bef07128e"
-    },
-    {
-      "path": "Aetherfront-RC30-Work/Engine/PackageCasing.cs",
-      "source": "Aetherfront-RC30-Work/Engine/PackageCasing.cs",
-      "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 1477,
-      "sha256": "cd12756ff56732becd59a7f3a227a9fce8039dc31cb45a44790b6c4ed12a1f64",
-      "sourceSha256": "cd12756ff56732becd59a7f3a227a9fce8039dc31cb45a44790b6c4ed12a1f64"
-    },
-    {
-      "path": "Aetherfront-RC30-Work/Engine/PostExit.cs",
-      "source": "Aetherfront-RC30-Work/Engine/PostExit.cs",
-      "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 2499,
-      "sha256": "4d042158deba0b73122795bb121bcbb34ccd1278127e6fbd4a29a181df1c2a6b",
-      "sourceSha256": "4d042158deba0b73122795bb121bcbb34ccd1278127e6fbd4a29a181df1c2a6b"
-    },
-    {
-      "path": "Aetherfront-RC30-Work/Engine/PreparedPack.cs",
-      "source": "Aetherfront-RC30-Work/Engine/PreparedPack.cs",
-      "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 27472,
-      "sha256": "a9ca91cc104bf534e1f4f75d97e90d7c978e149ad6f16366705bde428d2a3aaa",
-      "sourceSha256": "a9ca91cc104bf534e1f4f75d97e90d7c978e149ad6f16366705bde428d2a3aaa"
-    },
-    {
-      "path": "Aetherfront-RC30-Work/Engine/RuntimeFiles.cs",
-      "source": "Aetherfront-RC30-Work/Engine/RuntimeFiles.cs",
-      "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 6499,
-      "sha256": "d7aafa99ba359960622cc3ae393b185ea0cb89579e52c0831d3685fc88991a41",
-      "sourceSha256": "d7aafa99ba359960622cc3ae393b185ea0cb89579e52c0831d3685fc88991a41"
-    },
-    {
-      "path": "Aetherfront-RC30-Work/Engine/StartupCasing.cs",
-      "source": "Aetherfront-RC30-Work/Engine/StartupCasing.cs",
-      "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 17272,
-      "sha256": "36cbb5a5914dd7c698443b9225cb241a16c6b687fd7f91d0161c424079424976",
-      "sourceSha256": "36cbb5a5914dd7c698443b9225cb241a16c6b687fd7f91d0161c424079424976",
-      "sourceModifiedUtc": "2026-10-18T20:02:55.544435+00:00"
-    },
-    {
-      "path": "Aetherfront-RC30-Work/Engine/TerrainPolicy.cs",
-      "source": "Aetherfront-RC30-Work/Engine/TerrainPolicy.cs",
-      "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 4258,
-      "sha256": "acc989338d87c147aeb5ff5ea6c61e7ac24ce5081a518b76f2ef483ee703040e",
-      "sourceSha256": "acc989338d87c147aeb5ff5ea6c61e7ac24ce5081a518b76f2ef483ee703040e",
-      "sourceModifiedUtc": "2026-10-18T20:03:37.246286+00:00"
-    },
-    {
-      "path": "Aetherfront-RC30-Work/Engine/UserSettings.cs",
-      "source": "Aetherfront-RC30-Work/Engine/UserSettings.cs",
-      "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 3288,
-      "sha256": "026da12d8dff750292bb00045817cb500bf0d015523f68ff6d91b255c64ccd59",
-      "sourceSha256": "026da12d8dff750292bb00045817cb500bf0d015523f68ff6d91b255c64ccd59"
-    },
-    {
-      "path": "Aetherfront-RC30-Work/Prepare-MonoRecoveryProbe.py",
-      "source": "Aetherfront-RC30-Work/Prepare-MonoRecoveryProbe.py",
-      "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 2421,
-      "sha256": "3e157692745144705dfbf52f0d68ffbd11b41d448d11af619286f69d670d969a",
-      "sourceSha256": "3e157692745144705dfbf52f0d68ffbd11b41d448d11af619286f69d670d969a"
-    },
-    {
-      "path": "Aetherfront-RC30-Work/RELEASE-REVIEW.md",
-      "source": "Aetherfront-RC30-Work/RELEASE-REVIEW.md",
-      "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 3220,
-      "sha256": "aca79cba32d4d19b706bb582a9e97d2f954fba650c80195af35ad2d7dda56503",
-      "sourceSha256": "aca79cba32d4d19b706bb582a9e97d2f954fba650c80195af35ad2d7dda56503",
-      "sourceModifiedUtc": "2026-10-18T20:35:42.688508+00:00"
-    },
-    {
-      "path": "Aetherfront-RC30-Work/SettingsTests/Program.cs",
-      "source": "Aetherfront-RC30-Work/SettingsTests/Program.cs",
-      "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 60441,
-      "sha256": "b6183fb9a2b6088c217972c86fcb7edb06cb07ae337aa2baa68a0671236251f5",
-      "sourceSha256": "b6183fb9a2b6088c217972c86fcb7edb06cb07ae337aa2baa68a0671236251f5",
-      "sourceModifiedUtc": "2026-10-18T20:08:23.347533+00:00"
-    },
-    {
-      "path": "Aetherfront-RC30-Work/SettingsTests/SettingsTests.csproj",
-      "source": "Aetherfront-RC30-Work/SettingsTests/SettingsTests.csproj",
-      "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 861,
-      "sha256": "0f3f2289f5228844f7d86a814439d86d9b01b2048f4fee67ffd8a949330f52af",
-      "sourceSha256": "0f3f2289f5228844f7d86a814439d86d9b01b2048f4fee67ffd8a949330f52af"
-    },
-    {
-      "path": "Aetherfront-RC30-Work/VersionPatcher/Program.cs",
-      "source": "Aetherfront-RC30-Work/VersionPatcher/Program.cs",
-      "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 25625,
-      "sha256": "ab14a1b2993d1ad62716fb29dc20aa7079fddbb7c1498eadcb984fd1797ae823",
-      "sourceSha256": "ab14a1b2993d1ad62716fb29dc20aa7079fddbb7c1498eadcb984fd1797ae823"
-    },
-    {
-      "path": "Aetherfront-RC30-Work/VersionPatcher/VersionPatcher.csproj",
-      "source": "Aetherfront-RC30-Work/VersionPatcher/VersionPatcher.csproj",
-      "role": "RC30 audited settings preservation and release regression sources",
-      "bytes": 388,
-      "sha256": "bab0ca3bb9e42596392f218185ecd90b156f47ee8f1cdd9784b58512237c7854",
-      "sourceSha256": "bab0ca3bb9e42596392f218185ecd90b156f47ee8f1cdd9784b58512237c7854"
-    },
-    {
-      "path": "APFDiscordBot/scripts/Test-KesasReleasePreflight.ps1",
-      "source": "APFDiscordBot/scripts/Test-KesasReleasePreflight.ps1",
-      "bytes": 4622,
-      "sha256": "559617055d566739e9c8d9f78ce8dd34860deda1effa38238306062a077b8956",
-      "sourceSha256": "559617055d566739e9c8d9f78ce8dd34860deda1effa38238306062a077b8956",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.091483+00:00",
-      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/test/native-verifier.test.js",
-      "source": "APFDiscordBot/test/native-verifier.test.js",
-      "bytes": 1309,
-      "sha256": "ec30ee4982e337b7ec06ba9b1ee9e146c228178d5588fce4c1135bb2b01fe698",
-      "sourceSha256": "ec30ee4982e337b7ec06ba9b1ee9e146c228178d5588fce4c1135bb2b01fe698",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.091988+00:00",
-      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
-      "transformations": []
-    },
-    {
-      "path": "Development/SHIPPING-RUNTIME-TESTS.md",
-      "source": "Development/SHIPPING-RUNTIME-TESTS.md",
-      "bytes": 3653,
-      "sha256": "954df93849dfa03a01089b6993d9920625b5962d354d1c9bea3ddc617fb061b9",
-      "sourceSha256": "954df93849dfa03a01089b6993d9920625b5962d354d1c9bea3ddc617fb061b9",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.099037+00:00",
-      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
-      "transformations": []
-    },
-    {
-      "path": "Development/ShippingCoreTests/Program.cs",
-      "source": "Development/ShippingCoreTests/Program.cs",
-      "bytes": 45502,
-      "sha256": "7818765a1fbacd87bdfe2acfa44b12f86e651355c6a0753e27619c7a1c91f5ee",
-      "sourceSha256": "7818765a1fbacd87bdfe2acfa44b12f86e651355c6a0753e27619c7a1c91f5ee",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.111132+00:00",
-      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
-      "transformations": []
-    },
-    {
-      "path": "Development/ShippingCoreTests/ShippingCoreTests.csproj",
-      "source": "Development/ShippingCoreTests/ShippingCoreTests.csproj",
-      "bytes": 682,
-      "sha256": "8df770b4fc3a00058180a705e7218f887fe81cfb58f707a219b1cd820b1658dd",
-      "sourceSha256": "8df770b4fc3a00058180a705e7218f887fe81cfb58f707a219b1cd820b1658dd",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.116345+00:00",
-      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
-      "transformations": []
-    },
-    {
-      "path": "Development/ShippingCoreTests/ShippingTestLinks.cs",
-      "source": "Development/ShippingCoreTests/ShippingTestLinks.cs",
-      "bytes": 1094,
-      "sha256": "94ba66bb8f45f855b47bb9be501dd7e7abda4c20f1b275a2756f9a1209782232",
-      "sourceSha256": "94ba66bb8f45f855b47bb9be501dd7e7abda4c20f1b275a2756f9a1209782232",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.125888+00:00",
-      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
-      "transformations": []
-    },
-    {
-      "path": "Development/ShippingDomainTests/Program.cs",
-      "source": "Development/ShippingDomainTests/Program.cs",
-      "bytes": 34810,
-      "sha256": "0772ae64a289dc556a24d8f80db4e94f3713c403ebedd5fb45541db0811635bd",
-      "sourceSha256": "0772ae64a289dc556a24d8f80db4e94f3713c403ebedd5fb45541db0811635bd",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.140039+00:00",
-      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
-      "transformations": []
-    },
-    {
-      "path": "Development/ShippingDomainTests/Runner.cs",
-      "source": "Development/ShippingDomainTests/Runner.cs",
-      "bytes": 1326,
-      "sha256": "9fcd5d2a0baecfadec5aff3097922a67466cf607d6d697f9ae520f8985a58c46",
-      "sourceSha256": "9fcd5d2a0baecfadec5aff3097922a67466cf607d6d697f9ae520f8985a58c46",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.148598+00:00",
-      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
-      "transformations": []
-    },
-    {
-      "path": "Development/ShippingDomainTests/SecurityCases.cs",
-      "source": "Development/ShippingDomainTests/SecurityCases.cs",
-      "bytes": 10445,
-      "sha256": "5e84b219a3bcbead7c786d1d4f339cb5a46c05699878dffc6eca0a36084446ed",
-      "sourceSha256": "5e84b219a3bcbead7c786d1d4f339cb5a46c05699878dffc6eca0a36084446ed",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.160124+00:00",
-      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
-      "transformations": []
-    },
-    {
-      "path": "Development/ShippingDomainTests/ShippingDomainTests.csproj",
-      "source": "Development/ShippingDomainTests/ShippingDomainTests.csproj",
-      "bytes": 664,
-      "sha256": "98f306578cc1cadd5457d4cc34a32131c1d00a8b82882a4898b96689a9de8b42",
-      "sourceSha256": "98f306578cc1cadd5457d4cc34a32131c1d00a8b82882a4898b96689a9de8b42",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.164406+00:00",
-      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
-      "transformations": []
-    },
-    {
-      "path": "Development/ShippingIdentityTests/Program.cs",
-      "source": "Development/ShippingIdentityTests/Program.cs",
-      "bytes": 4261,
-      "sha256": "f8e53c452d931aaf2bb0322d57d58161c03aa9c721c73b3aab088f9fb68cac58",
-      "sourceSha256": "f8e53c452d931aaf2bb0322d57d58161c03aa9c721c73b3aab088f9fb68cac58",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.172277+00:00",
-      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
-      "transformations": []
-    },
-    {
-      "path": "Development/ShippingIdentityTests/ShippingIdentityTests.csproj",
-      "source": "Development/ShippingIdentityTests/ShippingIdentityTests.csproj",
-      "bytes": 443,
-      "sha256": "5db2c4631916eb512149259cf0cd8f6ef12259b6100f55569355bc8e0a21f8e9",
-      "sourceSha256": "5db2c4631916eb512149259cf0cd8f6ef12259b6100f55569355bc8e0a21f8e9",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.177214+00:00",
-      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
-      "transformations": []
-    },
-    {
-      "path": "Development/ShippingNetworkTests/FuzzIngress.cs",
-      "source": "Development/ShippingNetworkTests/FuzzIngress.cs",
-      "bytes": 1711,
-      "sha256": "e7dca82a80e12e42564986c20fb5d7c247570375aabc0d6cf8ca224a1df73e62",
-      "sourceSha256": "e7dca82a80e12e42564986c20fb5d7c247570375aabc0d6cf8ca224a1df73e62",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.177214+00:00",
-      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
-      "transformations": []
-    },
-    {
-      "path": "Development/ShippingNetworkTests/Program.cs",
-      "source": "Development/ShippingNetworkTests/Program.cs",
-      "bytes": 772,
-      "sha256": "079df6ec58ac96ab5ee56e30da49f34c6e6e2f9ba00bc1c247cf9f93671e249e",
-      "sourceSha256": "079df6ec58ac96ab5ee56e30da49f34c6e6e2f9ba00bc1c247cf9f93671e249e",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.178212+00:00",
-      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
-      "transformations": []
-    },
-    {
-      "path": "Development/ShippingNetworkTests/Scenario.cs",
-      "source": "Development/ShippingNetworkTests/Scenario.cs",
-      "bytes": 22424,
-      "sha256": "b049b52729387e6784e58569e1cc3d728482fbdfb9f48b16000225176a7a3746",
-      "sourceSha256": "b049b52729387e6784e58569e1cc3d728482fbdfb9f48b16000225176a7a3746",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.178212+00:00",
-      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
-      "transformations": []
-    },
-    {
-      "path": "Development/ShippingNetworkTests/ShippingNetworkTests.csproj",
-      "source": "Development/ShippingNetworkTests/ShippingNetworkTests.csproj",
-      "bytes": 717,
-      "sha256": "c8d472e577fcb71c0089a09060cfbc4b9faec191f7e0688c2485219b88b9090a",
-      "sourceSha256": "c8d472e577fcb71c0089a09060cfbc4b9faec191f7e0688c2485219b88b9090a",
-      "sourceModifiedUtc": "2026-10-18T09:10:34.182031+00:00",
-      "role": "Reviewed runtime regression tests or synthetic CI; not shipping runtime binaries",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC31-Work/Build-Engine.ps1",
-      "source": "Aetherfront-RC31-Work/Build-Engine.ps1",
-      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
-      "bytes": 3077,
-      "sha256": "96851731d584e29f5d7aa8dc864e01d323549c6696bc57324771cad74e708199",
-      "sourceSha256": "96851731d584e29f5d7aa8dc864e01d323549c6696bc57324771cad74e708199",
-      "sourceModifiedUtc": "2026-10-19T01:01:55.648858+00:00",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC31-Work/Build-Release.py",
-      "source": "Aetherfront-RC31-Work/Build-Release.py",
-      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
-      "bytes": 5995,
-      "sha256": "b8335a2c50c47fca54db8625e0825a27c622019e6068b9af0e22ef071823df74",
-      "sourceSha256": "b8335a2c50c47fca54db8625e0825a27c622019e6068b9af0e22ef071823df74",
-      "sourceModifiedUtc": "2026-10-19T01:05:01.734756+00:00",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC31-Work/Engine/AssemblyInfo.cs",
-      "source": "Aetherfront-RC31-Work/Engine/AssemblyInfo.cs",
-      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
-      "bytes": 107,
-      "sha256": "8a1336238caf1699e8dd5697dfe5330ee2ed3350ee538638c22f258632765970",
-      "sourceSha256": "8a1336238caf1699e8dd5697dfe5330ee2ed3350ee538638c22f258632765970",
-      "sourceModifiedUtc": "2026-10-18T06:44:18.941018+00:00",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC31-Work/Engine/AtomicFiles.cs",
-      "source": "Aetherfront-RC31-Work/Engine/AtomicFiles.cs",
-      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
-      "bytes": 2079,
-      "sha256": "2638836990399e136ca0ff7453a30dee3c60353458c62876ed62316b61d29e87",
-      "sourceSha256": "2638836990399e136ca0ff7453a30dee3c60353458c62876ed62316b61d29e87",
-      "sourceModifiedUtc": "2026-10-18T19:00:13.143134+00:00",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC31-Work/Engine/Installer.cs",
-      "source": "Aetherfront-RC31-Work/Engine/Installer.cs",
-      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
-      "bytes": 56350,
-      "sha256": "bdccddf5d5b826c14f85bb11b1588ce604f6f5b952501b9439175417c31fac46",
-      "sourceSha256": "bdccddf5d5b826c14f85bb11b1588ce604f6f5b952501b9439175417c31fac46",
-      "sourceModifiedUtc": "2026-10-18T20:02:55.544435+00:00",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC31-Work/Engine/LegacySettingsRecovery.cs",
-      "source": "Aetherfront-RC31-Work/Engine/LegacySettingsRecovery.cs",
-      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
-      "bytes": 44951,
-      "sha256": "019f1c51f297d99b16d1562f0aafd1aed03f19c16f9bec7740b014ac3832ce23",
-      "sourceSha256": "019f1c51f297d99b16d1562f0aafd1aed03f19c16f9bec7740b014ac3832ce23",
-      "sourceModifiedUtc": "2026-10-19T01:01:55.662471+00:00",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC31-Work/Engine/NativeInstall.cs",
-      "source": "Aetherfront-RC31-Work/Engine/NativeInstall.cs",
-      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
-      "bytes": 14924,
-      "sha256": "0ecf0740c7c062a3f681e95b2e8a3f068b364bef915de0d8059e8d7bef07128e",
-      "sourceSha256": "0ecf0740c7c062a3f681e95b2e8a3f068b364bef915de0d8059e8d7bef07128e",
-      "sourceModifiedUtc": "2026-10-18T05:58:57.653675+00:00",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC31-Work/Engine/ObsoleteScripts.cs",
-      "source": "Aetherfront-RC31-Work/Engine/ObsoleteScripts.cs",
-      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
-      "bytes": 1908,
-      "sha256": "8127f4775690427ee69bb654bfc847ec3d10a8c28680a2ad7544d51e4c3861b7",
-      "sourceSha256": "8127f4775690427ee69bb654bfc847ec3d10a8c28680a2ad7544d51e4c3861b7",
-      "sourceModifiedUtc": "2026-10-19T01:05:01.733247+00:00",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC31-Work/Engine/PackageCasing.cs",
-      "source": "Aetherfront-RC31-Work/Engine/PackageCasing.cs",
-      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
-      "bytes": 1477,
-      "sha256": "cd12756ff56732becd59a7f3a227a9fce8039dc31cb45a44790b6c4ed12a1f64",
-      "sourceSha256": "cd12756ff56732becd59a7f3a227a9fce8039dc31cb45a44790b6c4ed12a1f64",
-      "sourceModifiedUtc": "2026-10-18T05:58:57.653675+00:00",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC31-Work/Engine/PostExit.cs",
-      "source": "Aetherfront-RC31-Work/Engine/PostExit.cs",
-      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
-      "bytes": 2499,
-      "sha256": "4d042158deba0b73122795bb121bcbb34ccd1278127e6fbd4a29a181df1c2a6b",
-      "sourceSha256": "4d042158deba0b73122795bb121bcbb34ccd1278127e6fbd4a29a181df1c2a6b",
-      "sourceModifiedUtc": "2026-10-18T05:58:57.654680+00:00",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC31-Work/Engine/PreparedPack.cs",
-      "source": "Aetherfront-RC31-Work/Engine/PreparedPack.cs",
-      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
-      "bytes": 27472,
-      "sha256": "a9ca91cc104bf534e1f4f75d97e90d7c978e149ad6f16366705bde428d2a3aaa",
-      "sourceSha256": "a9ca91cc104bf534e1f4f75d97e90d7c978e149ad6f16366705bde428d2a3aaa",
-      "sourceModifiedUtc": "2026-10-18T19:00:13.144643+00:00",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC31-Work/Engine/RuntimeFiles.cs",
-      "source": "Aetherfront-RC31-Work/Engine/RuntimeFiles.cs",
-      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
-      "bytes": 6499,
-      "sha256": "d7aafa99ba359960622cc3ae393b185ea0cb89579e52c0831d3685fc88991a41",
-      "sourceSha256": "d7aafa99ba359960622cc3ae393b185ea0cb89579e52c0831d3685fc88991a41",
-      "sourceModifiedUtc": "2026-10-18T05:58:57.655184+00:00",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC31-Work/Engine/StartupCasing.cs",
-      "source": "Aetherfront-RC31-Work/Engine/StartupCasing.cs",
-      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
-      "bytes": 17321,
-      "sha256": "f737f29221abbe4e354d8e0aa9af12d04bcdd18165e2184e24862d1c9377ac8c",
-      "sourceSha256": "f737f29221abbe4e354d8e0aa9af12d04bcdd18165e2184e24862d1c9377ac8c",
-      "sourceModifiedUtc": "2026-10-19T01:05:01.732733+00:00",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC31-Work/Engine/TerrainPolicy.cs",
-      "source": "Aetherfront-RC31-Work/Engine/TerrainPolicy.cs",
-      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
-      "bytes": 4258,
-      "sha256": "acc989338d87c147aeb5ff5ea6c61e7ac24ce5081a518b76f2ef483ee703040e",
-      "sourceSha256": "acc989338d87c147aeb5ff5ea6c61e7ac24ce5081a518b76f2ef483ee703040e",
-      "sourceModifiedUtc": "2026-10-18T20:03:37.246286+00:00",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC31-Work/Engine/UserSettings.cs",
-      "source": "Aetherfront-RC31-Work/Engine/UserSettings.cs",
-      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
-      "bytes": 3288,
-      "sha256": "026da12d8dff750292bb00045817cb500bf0d015523f68ff6d91b255c64ccd59",
-      "sourceSha256": "026da12d8dff750292bb00045817cb500bf0d015523f68ff6d91b255c64ccd59",
-      "sourceModifiedUtc": "2026-10-18T09:21:39.492718+00:00",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC31-Work/RELEASE-REVIEW.md",
-      "source": "Aetherfront-RC31-Work/RELEASE-REVIEW.md",
-      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
-      "bytes": 2284,
-      "sha256": "359960e9a9574e22364faebc131e027325724ad2c2e48c198941c2f83f95aee3",
-      "sourceSha256": "359960e9a9574e22364faebc131e027325724ad2c2e48c198941c2f83f95aee3",
-      "sourceModifiedUtc": "2026-10-19T01:07:41.282532+00:00",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC31-Work/SettingsTests/Program.cs",
-      "source": "Aetherfront-RC31-Work/SettingsTests/Program.cs",
-      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
-      "bytes": 65659,
-      "sha256": "3a1accb08cd9ce118620b04c4e524329fa2a7456cc52f6c9c868a28647536e41",
-      "sourceSha256": "3a1accb08cd9ce118620b04c4e524329fa2a7456cc52f6c9c868a28647536e41",
-      "sourceModifiedUtc": "2026-10-19T01:06:47.228506+00:00",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC31-Work/SettingsTests/SettingsTests.csproj",
-      "source": "Aetherfront-RC31-Work/SettingsTests/SettingsTests.csproj",
-      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
-      "bytes": 861,
-      "sha256": "0f3f2289f5228844f7d86a814439d86d9b01b2048f4fee67ffd8a949330f52af",
-      "sourceSha256": "0f3f2289f5228844f7d86a814439d86d9b01b2048f4fee67ffd8a949330f52af",
-      "sourceModifiedUtc": "2026-10-18T19:14:49.119413+00:00",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC31-Work/VersionPatcher/Program.cs",
-      "source": "Aetherfront-RC31-Work/VersionPatcher/Program.cs",
-      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
-      "bytes": 25625,
-      "sha256": "261b8103070f7f2e9566faae512d0eb6da08b598b9563363538b8185a89ada8b",
-      "sourceSha256": "261b8103070f7f2e9566faae512d0eb6da08b598b9563363538b8185a89ada8b",
-      "sourceModifiedUtc": "2026-10-19T01:01:55.673577+00:00",
-      "transformations": []
-    },
-    {
-      "path": "Aetherfront-RC31-Work/VersionPatcher/VersionPatcher.csproj",
-      "source": "Aetherfront-RC31-Work/VersionPatcher/VersionPatcher.csproj",
-      "role": "RC31 optional distribution script cleanup, authenticated startup compatibility and regression tests",
-      "bytes": 388,
-      "sha256": "bab0ca3bb9e42596392f218185ecd90b156f47ee8f1cdd9784b58512237c7854",
-      "sourceSha256": "bab0ca3bb9e42596392f218185ecd90b156f47ee8f1cdd9784b58512237c7854",
-      "sourceModifiedUtc": "2026-10-18T19:14:49.120412+00:00",
-      "transformations": []
-    },
-    {
-      "path": "APFDiscordBot/test/offline-alerts.test.js",
-      "source": "APFDiscordBot/test/offline-alerts.test.js",
-      "role": "Discord bot regression test source",
-      "transformations": [],
-      "bytes": 8344,
-      "sha256": "20020248842d06a2b503cb19fdf99cc4953eec57894d0ad022060fc6bb8b2de0",
-      "sourceSha256": "20020248842d06a2b503cb19fdf99cc4953eec57894d0ad022060fc6bb8b2de0",
-      "sourceModifiedUtc": "2026-10-20T00:59:50.699Z"
     }
   ],
-  "totalFileBytes": 15861458,
+  "totalFileBytes": 15868840,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",
@@ -28117,5 +28127,5 @@
     "report": "PRIVACY-SCAN.json",
     "limitation": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
   },
-  "fileCount": 2810
+  "fileCount": 2811
 }

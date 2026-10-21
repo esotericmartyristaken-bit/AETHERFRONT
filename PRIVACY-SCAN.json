@@ -72,5 +72,17 @@
     }
   ],
   "contentOrMatchedValuesPrinted": false,
-  "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
+  "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check.",
+  "incrementalReviews": [
+    {
+      "scannedUtc": "2026-10-21T03:19:07.569574Z",
+      "paths": [
+        "KESAS-VPS-Server/Publish-Release.ps1",
+        "APFDiscordBot/scripts/Verify-KesasRelease.ps1",
+        "APFDiscordBot/scripts/Test-KesasReleaseMedia.ps1"
+      ],
+      "findingCount": 0,
+      "matchedValuesPrinted": false
+    }
+  ]
 }

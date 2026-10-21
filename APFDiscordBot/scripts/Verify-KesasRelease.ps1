@@ -48,7 +48,8 @@ try {
         Require-ReleasePath $file.path
         if(!$seen.Add($file.path) -or
             ($file.path -cnotin @('ClientTemplate.zip','APFPack-template.json','AetherfrontTechnology.json') -and
-             $file.path -cnotmatch '^(ServerPayload|PackHostPayload|CertificateToolPayload)/')){throw 'Unsupported or duplicate release path'}
+             $file.path -cnotmatch '^(ServerPayload|PackHostPayload|CertificateToolPayload)/' -and
+             $file.path -cnotmatch '^MediaPayload/kesas-[a-z0-9-]+-[a-f0-9]{64}\.zip$')){throw 'Unsupported or duplicate release path'}
         if($file.path -match '^(ServerPayload|PackHostPayload|CertificateToolPayload)/(Config|Universe|Aetherfront|Logs|secrets)(/|$)'){throw 'Protected server state in release'}
         $item=$zip.GetEntry($file.path)
         if(!$item -or $file.sha256 -notmatch '^[a-fA-F0-9]{64}$'){throw 'Missing release entry/hash'}

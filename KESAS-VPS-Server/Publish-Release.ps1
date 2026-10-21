@@ -2,6 +2,39 @@
 param([Parameter(Mandatory=$true)][string]$ReleaseZip,[string]$Notes='KESAS update',[switch]$AllowActivePlayers)
 . "$PSScriptRoot/Update.Common.ps1"
 
+function Add-ReleaseMedia([string]$ReleaseRoot,[string]$ConfigRoot,$Release,$Catalog) {
+    # Only additive, content-addressed public archives. Operator configuration,
+    # existing media, state and keys are never replacement targets here.
+    $pending=[Collections.Generic.List[object]]::new()
+    $config=Assert-UpdatePath $ConfigRoot
+    if(-not [IO.Directory]::Exists($config)){throw 'Media destination must already exist.'}
+    foreach($file in @($Release.files | Where-Object {$_.path -clike 'MediaPayload/*'})){
+        if($file.path -cnotmatch '^MediaPayload/(kesas-[a-z0-9-]+-([a-f0-9]{64})\.zip)$' -or $Matches[2] -cne $file.sha256){throw 'Media filename must contain its full declared SHA256.'}
+        $name=$Matches[1]
+        $source=Assert-UpdatePath (Join-Path $ReleaseRoot $file.path)
+        if(-not [IO.File]::Exists($source) -or ([IO.FileInfo]$source).Length -gt 512MB -or (Get-FileHash -LiteralPath $source).Hash -ine $file.sha256){throw 'Media source differs from the verified release.'}
+        $references=@(foreach($profile in @($Catalog.full,$Catalog.potato)){foreach($package in @($profile.managedPackages)){if(([Uri]$package.archiveUrl).AbsolutePath -ceq ('/'+$name)){$package}}})
+        if(!$references.Count -or @($references | Where-Object {$_.sha256 -cne $file.sha256 -or $_.sizeBytes -ne ([IO.FileInfo]$source).Length}).Count){throw 'Media must match every referring signed catalog declaration.'}
+        Assert-GhpPublicZip $source
+        $target=Assert-UpdatePath (Join-Path $config $name)
+        if([IO.Directory]::Exists($target) -or ([IO.File]::Exists($target) -and (Get-FileHash -LiteralPath $target).Hash -ine $file.sha256)){throw 'Existing media is immutable; conflicting content will not be overwritten.'}
+        $pending.Add([pscustomobject]@{source=$source;target=$target;sha256=$file.sha256})
+    }
+    # Validate the entire batch before its first append. New unreferenced media
+    # may remain after a later publication failure; it never replaces live data.
+    foreach($item in $pending){
+        if([IO.File]::Exists($item.target)){continue}
+        $temporary=Assert-UpdatePath ($item.target+'.incoming-'+[Guid]::NewGuid().ToString('N'))
+        try{
+            [IO.File]::Copy($item.source,$temporary,$false)
+            if((Get-FileHash -LiteralPath $temporary).Hash -ine $item.sha256){throw 'Media changed during staging.'}
+            try{[IO.File]::Move($temporary,$item.target)}catch{
+                if(-not [IO.File]::Exists($item.target) -or (Get-FileHash -LiteralPath $item.target).Hash -ine $item.sha256){throw}
+            }
+        }finally{if([IO.File]::Exists($temporary)){[IO.File]::Delete($temporary)}}
+    }
+}
+
 function Get-PublisherFingerprint($Root,$Config,[string]$ReleaseSha,[string]$ReleaseNotes) {
     [pscustomobject][ordered]@{
         releaseZipSha256=$ReleaseSha;notes=$ReleaseNotes;packOrigin=[string]$Config.packOrigin
@@ -172,7 +205,7 @@ try{
     foreach($file in $release.files){
         $relative=Get-UpdateRelativePath $file.path
         if(!$declared.Add($relative)){throw 'Duplicate release manifest entry'}
-        if(@('ClientTemplate.zip','APFPack-template.json','AetherfrontTechnology.json') -cnotcontains $relative -and $relative -cnotmatch '^(ServerPayload|PackHostPayload|CertificateToolPayload)/'){throw "Unsupported release file: $relative"}
+        if(@('ClientTemplate.zip','APFPack-template.json','AetherfrontTechnology.json') -cnotcontains $relative -and $relative -cnotmatch '^(ServerPayload|PackHostPayload|CertificateToolPayload)/' -and $relative -cnotmatch '^MediaPayload/kesas-[a-z0-9-]+-[a-f0-9]{64}\.zip$'){throw "Unsupported release file: $relative"}
         if($relative -match '^(ServerPayload|PackHostPayload|CertificateToolPayload)/(Config|Universe|Aetherfront|Logs|secrets)(/|$)'){throw 'Release contains protected server state'}
         if($file.sha256 -notmatch '^[a-fA-F0-9]{64}$'){throw "Invalid release SHA256: $relative"}
         $path=Get-UpdateChildPath "$stage/Release" $relative
@@ -197,6 +230,10 @@ try{
             $bootstrapSource="$prepared/KESAS-Client-Bootstrap.zip"
             $reuse=$true
         }
+    }
+    if(@($release.files | Where-Object {$_.path -clike 'MediaPayload/*'}).Count){
+        if(-not $githubEnabled){. "$root/GitHub.Publish.ps1"}
+        Add-ReleaseMedia "$stage/Release" "$root/Server/Config" $release $clientCatalog
     }
     if(-not $reuse){
         New-UpdateDirectory "$stage/Published"
