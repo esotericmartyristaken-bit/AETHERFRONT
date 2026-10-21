@@ -1,9 +1,18 @@
 {
-  "schemaVersion": 1,
-  "version": "kesas-rc31",
-  "releaseTag": "host-kesas-rc31",
-  "assetName": "Aetherfront-Release-kesas-rc31.zip",
-  "sha256": "d6f59d568d3704dac9b21e60590aaa157a30b341a12001a95b0e3deccb658f4a",
-  "sizeBytes": 1767893,
-  "notes": "Remove optional manual launcher, casing repair and verification scripts; retain the signed in-game updater. Sandbox and mod payloads unchanged."
+  "schemaVersion": 2,
+  "version": "kesas-rc33",
+  "releaseTag": "host-kesas-rc33",
+  "assetName": "Aetherfront-Release-kesas-rc33.zip",
+  "sha256": "e8b62d2defaaf0a4886a9cfff02bca5115e6f2cac8fdc7aae97903fc831e33d1",
+  "sizeBytes": 2634562,
+  "notes": "Personal progression and universal 50% science sharing; shadow and launch-site compatibility; Potato plumes restored; PAPI removed. Sandbox beta retained.",
+  "requirements": {
+    "contractVersion": 1,
+    "capabilities": [
+      "application-v1",
+      "guard-15m-empty-v1",
+      "host-report-v1",
+      "media-payload-v1"
+    ]
+  }
 }
