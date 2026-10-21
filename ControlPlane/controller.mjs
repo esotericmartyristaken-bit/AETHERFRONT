@@ -269,7 +269,7 @@ export function runGh(arguments_, input) {
   }));
 }
 async function api(options, endpoint, method = 'GET', body, projection) {
-  const args = ['api', '--hostname', 'github.com', '--method', method, `repos/${REPOSITORY}/${endpoint}`];
+  const args = ['api', '--hostname', 'github.com', '--method', method, `repos/${REPOSITORY}${endpoint ? `/${endpoint}` : ''}`];
   if (body !== undefined) args.push('--input', '-');
   if (projection) args.push('--jq', projection);
   const output = await checked('GITHUB_FAILED', () => (options.gh || runGh)(args, body === undefined ? undefined : JSON.stringify(body)));

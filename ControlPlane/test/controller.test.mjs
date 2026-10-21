@@ -73,9 +73,14 @@ async function fixture(t, settings = {}) {
       return '';
     }
     assert.deepEqual(args.slice(0, 5), ['api', '--hostname', 'github.com', '--method', args[4]]);
-    const method = args[4], endpoint = args[5].replace(`repos/${REPOSITORY}/`, ''), body = input ? JSON.parse(input) : null;
+    const base = `repos/${REPOSITORY}`;
+    assert.ok(args[5] === base || args[5].startsWith(`${base}/`));
+    const method = args[4], endpoint = args[5] === base ? '' : args[5].slice(base.length + 1), body = input ? JSON.parse(input) : null;
     if (settings.apiFailure) throw new Error('private API stderr C:\\private github_pat_DO_NOT_PRINT');
-    if (endpoint === '') return JSON.stringify({ full_name: REPOSITORY, private: false, archived: false, disabled: false });
+    if (endpoint === '') {
+      assert.equal(args[5], base, 'GitHub repository root must not have a trailing slash');
+      return JSON.stringify({ full_name: REPOSITORY, private: false, archived: false, disabled: false });
+    }
     if (endpoint === 'git/ref/heads/deploy') { remember(); return JSON.stringify({ object: { sha: remote.head } }); }
     if (endpoint === 'git/trees/' + 'd'.repeat(40)) {
       return JSON.stringify({ truncated: false, tree: remote.descriptor ? [{ path: 'control-plane.json', type: 'blob', mode: '100644', sha: remote.fileSha }] : [] });
