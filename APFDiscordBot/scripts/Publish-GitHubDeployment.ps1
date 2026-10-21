@@ -1,7 +1,8 @@
 #requires -Version 7.0
 <#
 Publish an already built/tested native bundle, never source or a client release.
-WhatIf/DryRun perform local validation only: no gh, HTTP, uploads or file writes.
+WhatIf/DryRun perform local validation only: no gh, HTTP, uploads or durable writes.
+Media catalog validation may use private temporary staging, removed on completion.
 No signing keys are read. Repository write authority authorizes deployment.
 #>
 [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
@@ -33,6 +34,7 @@ function Test-HostCompatibility([string]$Path) {
     $zip=[IO.Compression.ZipFile]::OpenRead($Path)
     try {
         if(@($zip.Entries | Where-Object FullName -clike 'MediaPayload/*').Count){$requirements+='media-payload-v1'}
+        if($zip.GetEntry('MediaReferences.json')){$requirements+='media-reference-v1'}
         if(@($zip.Entries | Where-Object FullName -clike 'UpdateToolPayload/*').Count){$requirements+='native-tools-v1'}
     }finally{$zip.Dispose()}
     $controller=Join-Path $PSScriptRoot '../../ControlPlane/controller.mjs'
@@ -44,7 +46,7 @@ function Test-HostCompatibility([string]$Path) {
         $reported=($result -join "`n")|ConvertFrom-Json
         if($reported.error -cmatch '^[A-Z_]{1,80}$'){$reason=$reported.error}
         if($reported.PSObject.Properties['missingCapabilities']){
-            $missing=@($reported.missingCapabilities|Where-Object {$_ -cin @('application-v1','media-payload-v1','control-plane-v1','host-report-v1','guard-15m-empty-v1','atomic-control-rollback-v1','native-tools-v1')})
+            $missing=@($reported.missingCapabilities|Where-Object {$_ -cin @('application-v1','media-payload-v1','media-reference-v1','control-plane-v1','host-report-v1','guard-15m-empty-v1','atomic-control-rollback-v1','native-tools-v1')})
             if($missing.Count){$reason+=' ('+($missing -join ', ')+')'}
         }
     }catch{}
@@ -79,10 +81,10 @@ function Read-Channel([string]$Json) {
                 }
                 Require ($requiredFields.Count -eq 2 -and $property.Value.GetProperty('contractVersion').GetRawText() -ceq '1') 'Unsupported capability contract.'
                 $caps=$property.Value.GetProperty('capabilities')
-                Require ($caps.ValueKind -eq [Text.Json.JsonValueKind]::Array -and $caps.GetArrayLength() -gt 0 -and $caps.GetArrayLength() -le 7) 'Invalid capability list.'
+                Require ($caps.ValueKind -eq [Text.Json.JsonValueKind]::Array -and $caps.GetArrayLength() -gt 0 -and $caps.GetArrayLength() -le 8) 'Invalid capability list.'
                 $capSeen=[Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
                 foreach($cap in $caps.EnumerateArray()) {
-                    Require ($cap.ValueKind -eq [Text.Json.JsonValueKind]::String -and $cap.GetString() -cin @('application-v1','media-payload-v1','control-plane-v1','host-report-v1','guard-15m-empty-v1','atomic-control-rollback-v1','native-tools-v1') -and $capSeen.Add($cap.GetString())) 'Unsupported or duplicate capability.'
+                    Require ($cap.ValueKind -eq [Text.Json.JsonValueKind]::String -and $cap.GetString() -cin @('application-v1','media-payload-v1','media-reference-v1','control-plane-v1','host-report-v1','guard-15m-empty-v1','atomic-control-rollback-v1','native-tools-v1') -and $capSeen.Add($cap.GetString())) 'Unsupported or duplicate capability.'
                 }
             } else {
                 Require ($property.Value.ValueKind -eq [Text.Json.JsonValueKind]::String) 'Manifest text fields must be strings.'
@@ -256,6 +258,7 @@ try {
     $zip=[IO.Compression.ZipFile]::OpenRead($archivePath)
     try {
         if(@($zip.Entries | Where-Object FullName -clike 'MediaPayload/*').Count){$requiredCapabilities+='media-payload-v1'}
+        if($zip.GetEntry('MediaReferences.json')){$requiredCapabilities+='media-reference-v1'}
         if(@($zip.Entries | Where-Object FullName -clike 'UpdateToolPayload/*').Count){$requiredCapabilities+='native-tools-v1'}
     }finally{$zip.Dispose()}
     $requiredCapabilities=@($requiredCapabilities | Sort-Object -Unique)

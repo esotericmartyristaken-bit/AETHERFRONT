@@ -1,16 +1,16 @@
 param([Parameter(Mandatory)][string]$Settings)
 $ErrorActionPreference='Stop'
+Add-Type -AssemblyName System.Security
 $configuration=Get-Content -LiteralPath $Settings -Raw|ConvertFrom-Json
 Set-Location -LiteralPath $configuration.botRoot
-if(-not $env:APF_DISCORD_TOKEN){$env:APF_DISCORD_TOKEN=[Environment]::GetEnvironmentVariable('APF_DISCORD_TOKEN','User')}
-if(-not $env:APF_DISCORD_TOKEN){throw 'Discord credential is not provisioned in the existing user environment.'}
-$leasePath=Join-Path $configuration.root '.supervisor.lock'
-for($cursor=$leasePath;$cursor;$cursor=[IO.Path]::GetDirectoryName($cursor)){
-    if((Test-Path -LiteralPath $cursor) -and ([IO.File]::GetAttributes($cursor) -band [IO.FileAttributes]::ReparsePoint)){throw 'Unsafe supervisor lease path'}
-}
-$lease=[IO.FileStream]::new($leasePath,[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
+$credential=Join-Path $configuration.root 'bootstrap/bot-credential.dpapi'
+$bytes=[Security.Cryptography.ProtectedData]::Unprotect([IO.File]::ReadAllBytes($credential),$null,[Security.Cryptography.DataProtectionScope]::LocalMachine)
+try{$env:APF_DISCORD_TOKEN=[Text.Encoding]::UTF8.GetString($bytes)}finally{[Array]::Clear($bytes,0,$bytes.Length)}
+$pointer=Get-Content -LiteralPath (Join-Path $configuration.root 'managed/active.json') -Raw|ConvertFrom-Json
+if($pointer.directory -cnotmatch '^control-[1-9][0-9]{0,8}-[a-f0-9]{64}$'){throw 'Invalid protected control selection'}
+$release=Join-Path $configuration.root "managed/releases/$($pointer.directory)"
+$env:APF_MANAGED_CONTROL='1'
 try {
-    $env:APF_SUPERVISOR_PARENT_PID=[string]$PID
-    & $configuration.node (Join-Path $PSScriptRoot 'bootstrap.mjs') --settings $Settings
+    & $configuration.node (Join-Path $release 'ControlPlane/worker.mjs') --settings $Settings
     exit $LASTEXITCODE
-} finally {$lease.Dispose()}
+} finally {$env:APF_DISCORD_TOKEN=$null}

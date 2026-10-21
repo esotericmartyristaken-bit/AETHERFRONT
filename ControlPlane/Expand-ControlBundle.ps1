@@ -53,7 +53,7 @@ function Test-ControlPath([string]$Name) {
     foreach ($part in $Name.Split('/')) {
         if ($part -match '^(?i:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)' -or $part.EndsWith('.') -or $part.EndsWith(' ')) { return $false }
     }
-    return $Name -cmatch '\A(?:ControlPlane/(?:worker|engine|contract|github|public-status)\.mjs|ControlPlane/Read-ClientInventory\.ps1|APFDiscordBot/src/[a-z][a-z0-9-]*\.js|APFDiscordBot/package(?:-lock)?\.json|APFDiscordBot/scripts/(?:Verify-KesasRelease|Stop-KesasGracefully|Stop-APFLmpGracefully)\.ps1|KESAS-VPS-Server/(?:Publish-Release|Update.Common|GitHub.Publish|Export-Client|Start-Server|Stop-Server)\.ps1)\z'
+    return $Name -cmatch '\A(?:ControlPlane/[a-z][a-z0-9-]*\.mjs|ControlPlane/(?:Read-ClientInventory|Invoke-NativePublisher)\.ps1|APFDiscordBot/src/[a-z][a-z0-9-]*\.js|APFDiscordBot/package(?:-lock)?\.json|APFDiscordBot/scripts/(?:Verify-KesasRelease|Stop-KesasGracefully|Stop-APFLmpGracefully)\.ps1|KESAS-VPS-Server/(?:Publish-Release|Update.Common|GitHub.Publish|Export-Client|Start-Server|Stop-Server)\.ps1)\z'
 }
 function Assert-JsonUnique([System.Text.Json.JsonElement]$Value) {
     if ($Value.ValueKind -eq [System.Text.Json.JsonValueKind]::Object) {
@@ -224,11 +224,12 @@ public static class ControlZipCheck {
     if ((Get-JsonInteger $runtime.GetProperty('nodeMajor')) -ne 24 -or
         (Get-JsonInteger $runtime.GetProperty('powerShellMajor')) -ne 7 -or
         (Get-JsonInteger $runtime.GetProperty('dotnetMajor')) -ne 8) { throw 'Unsupported runtime' }
-    $capabilities = @('application-v1','media-payload-v1','control-plane-v1','host-report-v1','guard-15m-empty-v1','atomic-control-rollback-v1','native-tools-v1')
+    $capabilities = @('application-v1','media-payload-v1','control-plane-v1','host-report-v1','guard-15m-empty-v1','atomic-control-rollback-v1','native-tools-v1','versioned-broker-v1','independent-report-v1','unattended-host-v1','media-reference-v1')
     $caps = $manifest.GetProperty('capabilities')
-    if ($caps.ValueKind -ne [System.Text.Json.JsonValueKind]::Array -or $caps.GetArrayLength() -ne $capabilities.Count) { throw 'Unsupported capabilities' }
+    if ($caps.ValueKind -ne [System.Text.Json.JsonValueKind]::Array -or $caps.GetArrayLength() -lt 7 -or $caps.GetArrayLength() -gt 64) { throw 'Unsupported capabilities' }
     $seenCaps = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
-    foreach ($cap in $caps.EnumerateArray()) { $name = Get-JsonString $cap; if ($capabilities -cnotcontains $name -or -not $seenCaps.Add($name)) { throw 'Unsupported capability' } }
+    foreach ($cap in $caps.EnumerateArray()) { $name = Get-JsonString $cap; if ($name -cnotmatch '^[a-z][a-z0-9-]{0,79}$' -or -not $seenCaps.Add($name)) { throw 'Unsupported capability' } }
+    foreach($name in $capabilities[0..6]){if(-not $seenCaps.Contains($name)){throw 'Missing baseline capability'}}
     # Keep this explicit list synchronized with REQUIRED_CONTROL_FILES in contract.mjs.
     $required = @(
         'ControlPlane/worker.mjs','ControlPlane/engine.mjs','ControlPlane/contract.mjs','ControlPlane/github.mjs','ControlPlane/public-status.mjs',

@@ -255,13 +255,15 @@ if (process.send && config.__controlRoot) {
   const drain = async () => {
     if (draining) return;
     draining = true;
+    updateManager.controlDraining = true;
     githubDeployment.stop();
     while (statusCheckBusy || githubDeployment.busy || updateManager.operation) {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
     const state = await updateManager.status();
-    if (state.status !== 'idle') {
+    if (!['idle','failed'].includes(state.status)) {
       draining = false;
+      updateManager.controlDraining = false;
       if (process.connected) process.send({ type: 'control-busy' });
       githubDeployment.start();
       return;
@@ -273,7 +275,7 @@ if (process.send && config.__controlRoot) {
   };
   process.on('message', message => {
     if (message?.type === 'quiesce') drain().catch(() => { draining = false; });
-    if (message?.type === 'resume' && !shuttingDown) { draining = false; githubDeployment.start(); }
+    if (message?.type === 'resume' && !shuttingDown) { draining = false; updateManager.controlDraining = false; githubDeployment.start(); }
   });
   process.on('disconnect', () => { drain().catch(() => { process.exitCode = 1; }); });
 }

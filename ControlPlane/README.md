@@ -1,145 +1,155 @@
-# Host control contract 1
+# Host control contract 1: managed broker
 
-This is the host-side controller linkage. An ordinary source push does not deploy an application or a control release. Application releases and control releases have separate monotonic versions and separate files on the existing `deploy` branch of `esotericmartyristaken-bit/AETHERFRONT`.
+Source pushes are not deployments. The fixed public repository
+`esotericmartyristaken-bit/AETHERFRONT` has two separate monotonic intents on
+`deploy`: `deployment/control-plane.json` and `deployment/production.json`.
+Only an authenticated immutable repository intent, followed by exact archive and
+file-inventory verification, authorizes installation. An uploaded ZIP or hash
+alone does not authorize code execution.
 
-## Components and ownership
+## Executing components
 
-The configured production `APFDiscordBot` directory holds operator configuration, credentials supplied through the existing environment, bot state, native queue state and staged application releases. It is not replaced by a source checkout. The configured `KESAS-VPS-Server` directory holds the deployment settings, Universe, identities, keys, game/pack binaries, public archives and signed client feed.
+`Upgrade-HostAnchor.ps1` is the one-time, normal-UAC transition from the original
+interactive control-2 installation. It preserves task XML and bootstrap files,
+requires an idle native publisher, and does not restart the game, change its
+SYSTEM identity/action, modify the vanilla task, reboot, or change networking.
+It snapshots the existing operator GitHub and Discord credentials into
+machine-DPAPI ciphertext. File ACLs restrict GitHub ciphertext to SYSTEM and
+elevated Administrators; only the limited bot identity additionally reads its
+own Discord ciphertext. Machine DPAPI is not an ACL substitute.
 
-The initial installation creates `ProgramData/Aetherfront-Control`, under a protected system parent rather than a replaceable user-owned workspace directory. The root namespace, fixed code, host settings and privileged cache are protected; the limited coordinator receives write access only to its runtime state/staging areas. The already provisioned PowerShell runtime is copied into the protected bootstrap; the privileged Node runtime must be under Program Files.
+The `Aetherfront Native Publisher` task runs the fixed `Start-Anchor.ps1` and
+`anchor.mjs` as SYSTEM. The fixed loader retains archive/schema/path/dependency
+verification, repository authority, OS/helper lease checks, pointer switching and
+fallback. The loaded `broker-host.mjs`, `native-agent.mjs`, publisher wrapper,
+reporter, bot/watcher, verifier, publisher/export/GitHub scripts, and locked bot
+dependencies all come from a versioned authenticated control bundle. Runtime
+code is not imported from a limited bot's writable mirror.
 
-Layout:
+The `APF Discord Bot` task remains limited, uses noninteractive S4U, and launches
+the selected worker and bot. It receives no GitHub publisher token. Startup and
+five-minute recovery triggers plus restart-on-failure replace interactive-logon
+dependency. Installation checks must verify real Discord/network use under this
+identity; task registration alone is not proof. No reboot/logoff test is implied.
 
 ```
-bootstrap/                 fixed, protected supervisor/verifier/native broker
-host.json                  protected operator paths and provisioned runtime versions
-releases/control-N-HASH/   complete immutable control code plus locked dependencies
-active.json                atomically selected code directory
-fallback.json              one known-good control pointer
-verified-active.json       completed startup-health proof bound to version and hash
-transaction.json           current durable control transaction; never cleared to retry
-transactions/HASH.json     durable revisioned transaction history
-maintenance.json           narrowly owned activation gate
-native-requests/            limited bot's declarative archive requests, not commands
-native-cache/               protected authenticated code, archives and broker journals
-native-results/             sanitized completion mirrors, not authorization
-native-capabilities.json    frozen broker/wrapper hashes and recovery protocol
-host-status.json            sanitized local readback
+bootstrap/                     fixed verifier/loader, runtime, protected credentials
+managed/releases/control-N-HASH/ authenticated code and exact locked dependencies
+managed/active.json             atomic protected selection for broker and worker
+managed/fallback.json           previous known-good selection
+managed/verified-active.json    two-observation broker startup proof
+managed/transaction.json        revisioned control operation
+managed/transactions/HASH.json   retained immutable-identity history
+managed/drain.json              bounded control-only drain signal
+worker-status.json              limited observation, never privileged authority
+worker-diagnostics.json         bounded worker/inventory observation
+native-cache/                   private requests, receipts, logs, recovery evidence
+native-requests/                declarative limited inbox, not executable commands
+native-results/                 observation mirrors, never completion authority
+host-status.json                fresh sanitized report
 ```
 
-The limited `APF Discord Bot` task starts a fixed PowerShell wrapper. It holds a Windows exclusive file lease for the supervisor's lifetime. The supervisor runs a versioned coordinator, which runs the limited bot/watcher/native queue. Only the versioned worker, bot source, pinned dependencies and six native scripts are remote control-payload destinations. The executing version directory is never overwritten.
-
-The separate, fixed `Aetherfront Native Publisher` task runs elevated under the existing interactive operator account so it can inspect the SYSTEM game and use that account's existing GitHub authentication. The bot is not elevated. Requests cannot specify commands, destinations, executable paths or force switches. The broker independently authenticates the exact application intent at an immutable GitHub commit, copies and rehashes its archive into protected storage, and invokes independently verified native publisher code. It never imports release-provided JavaScript into its privileged process.
-
-The existing SYSTEM `KESAS Server` task remains the game/pack process owner. Its future-start action uses a protected launcher selector. Updating the control plane does not restart this task, the game or pack service. An application publication uses the original guarded stop/start and native rollback machinery.
-
-## Versioned contracts and coverage
-
-`contract.mjs` is shared by the controller and host. Unknown fields/types, duplicate JSON keys in control transport/archive metadata, unsupported schemas and transaction versions fail closed. Existing application channel schema 1 remains readable. Newly published application intent uses schema 2 and declares its minimum capabilities.
-
-Capabilities: `application-v1`, `media-payload-v1`, `control-plane-v1`, `host-report-v1`, `guard-15m-empty-v1`, `atomic-control-rollback-v1`, `native-tools-v1`.
-
-| Component | Update path | Inventory/readback |
-| --- | --- | --- |
-| Watcher and native queue runner | Versioned bot source in control bundle | Actual `github-deployment.js` / `update-manager.js` SHA256 |
-| Publisher, verifier, GitHub publisher, export and game launch scripts | Explicit control-file allowlist | Actual script SHA256 and control bundle SHA256 |
-| Bot dependencies | Exact direct versions, integrity-pinned public npm lock, staged `npm ci --ignore-scripts --engine-strict` | Canonical digest of the actual installed dependency inventory; lock and per-file hashes are retained in the verified release receipt |
-| Pack service | `PackHostPayload/` application family | Canonical digest of the full pack binary/runtime/dependency inventory |
-| Server runtime and plugins | `ServerPayload/` application family | Canonical digest of root executable/DLL/runtime files; complete per-file plugin inventory digest |
-| Certificate/signing update tools | `CertificateToolPayload/`, `UpdateToolPayload/` | Full tool/runtime/dependency inventory digests; operator keys are excluded |
-| Client bootstrap, in-game updater and post-exit helper | Signed `ClientTemplate.zip` application path | Bootstrap hash; verified updater DLL group and helper/embedded-helper assembly group hashes from the actual signed client ZIP |
-| Catalog and public mod archives | Pack template and additive `MediaPayload/` | Combined actual pack-document/install-catalog hash; canonical digest of public archive names and actual content hashes |
-| Fixed bootstrap and broker | Reviewed host-local operator installation only | Bootstrap hash; explicit broker/wrapper hashes in diagnostics; bootstrap contract 1 and separately advertised native recovery protocol 1 |
-
-The public hash groups are not a claim that a mod DLL or KSP itself was launched during host acceptance tests. Client package file hashes remain in the signed feed. Source provenance and running code are distinct: only a completed host readback establishes activation.
-
-Public mod ZIPs may be hardlinked to the existing immutable pack cache. Their read-only inventory checks file identity and content timestamps before and after hashing; control code, journals and writes retain the strict no-hardlinks policy. The changing `kesas-host-status.zip` and `kesas-host-diagnostics.zip` are excluded from the media digest.
-
-## Trust and prerequisites
-
-The existing trust boundary is retained: authenticated write access to this fixed repository's deployment branch authorizes host release intent. The host reads the branch through HTTPS, pins an immutable commit, rereads the descriptor there and checks archive hashes and full inventory. A standalone hash, upload or source commit does not authorize execution. Existing host-held signing keys still sign client updates; the controller does not acquire those keys.
-
-Manual prerequisites are explicit: Windows x64, protected Program Files Node 24 with npm, provisioned PowerShell 7.4 or newer in major 7, the existing .NET 8 application runtime, existing limited bot and SYSTEM game tasks, operator GitHub authentication, Discord credential, deployment configuration, certificates, signing keys and licensed KSP/client build prerequisites. The existing deployment directory and Administrator account remain trusted host boundaries; this is not an operating-system sandbox for an untrusted local administrator. Existing server paths are not relocated or re-permissioned. The fixed bootstrap contract, Windows/runtime provisioning, account/credential provisioning, and identity/key loss recovery do not self-update. A contract/runtime-major change needs a reviewed operator bootstrap. No autologon, account, VPN, RDP or firewall changes are made. Existing tasks resume after the operator's interactive logon following reboot; unattended pre-logon hosting is not newly provisioned.
+Old control-2 journals/releases and RC33 recovery evidence remain intact. Control
+installation uses `managed/`; it does not reset the old failed/successful history.
 
 ## Controller commands
 
-Use the existing host certificate SHA256 from the trusted client bootstrap. Do not replace it with a value from an unauthenticated error page. `PIN` below is a public certificate fingerprint, not a password.
+Use the certificate SHA256 from the trusted bootstrap, not an unauthenticated
+error page. `PIN` is a public fingerprint. These commands use controller-local
+GitHub authentication. They never require the host signing keys.
 
 ```powershell
-# Fresh capability/current/pending/phase/health/hash/failure readback:
-node .\ControlPlane\controller.mjs status --origin https://217.216.49.250:18866 --pin PIN
+git pull --ff-only
+node ControlPlane/controller.mjs status --origin https://217.216.49.250:18866 --pin PIN
+node ControlPlane/controller.mjs diagnostics --origin https://217.216.49.250:18866 --pin PIN
 
-# Separate sanitized diagnostics, including failures before native handoff:
-node .\ControlPlane\controller.mjs diagnostics --origin https://217.216.49.250:18866 --pin PIN
+# Build the next reviewed control revision, including broker/wrapper fixes.
+pwsh -File ControlPlane/Build-ControlBundle.ps1 -Version control-4 -Output C:/build/Aetherfront-Control-control-4.zip
+node ControlPlane/controller.mjs publish-control --origin https://217.216.49.250:18866 --pin PIN --archive C:/build/Aetherfront-Control-control-4.zip --version control-4
 
-# Explicitly authorize one proved-safe, blocked pre-publisher retry:
-node .\ControlPlane\controller.mjs recover --origin https://217.216.49.250:18866 --pin PIN
+# Combined path observes exact control version/hash/health before app intent.
+pwsh -File ControlPlane/Publish-HostRelease.ps1 -ControlArchive C:/build/Aetherfront-Control-control-4.zip -ControlVersion control-4 -Archive C:/build/Aetherfront-Release-kesas-rc34.zip -Version kesas-rc34 -HostCertificateSha256 PIN -Notes 'Reviewed changes'
 
-# Read the requested control channel (not proof of activation):
-node .\ControlPlane\controller.mjs read
+# Existing compatible host: application only.
+pwsh -File ControlPlane/Publish-HostRelease.ps1 -Archive C:/build/Aetherfront-Release-kesas-rc34.zip -Version kesas-rc34 -HostCertificateSha256 PIN -Notes 'Reviewed changes'
 
-# Build reviewed control code, never a working directory or arbitrary ZIP:
-pwsh -File .\ControlPlane\Build-ControlBundle.ps1 -Version control-2 -Output C:\Aetherfront\Aetherfront-Control-control-2.zip
-
-# Publish control only; immutable prerelease, never the latest client release:
-node .\ControlPlane\controller.mjs publish-control --origin https://217.216.49.250:18866 --pin PIN --archive C:\Aetherfront\Aetherfront-Control-control-2.zip --version control-2
-
-# Normal combined path: activate required control code, observe its exact hash
-# and completed health, recheck capabilities, then publish application intent:
-pwsh -File .\ControlPlane\Publish-HostRelease.ps1 -ControlArchive C:\Aetherfront\Aetherfront-Control-control-2.zip -ControlVersion control-2 -Archive C:\Aetherfront\Aetherfront-Release-kesas-rc33.zip -Version kesas-rc33 -HostCertificateSha256 PIN -Notes 'Reviewed changes'
-
-# Application-only path when the installed control code is already compatible:
-pwsh -File .\ControlPlane\Publish-HostRelease.ps1 -Archive C:\Aetherfront\Aetherfront-Release-kesas-rc33.zip -Version kesas-rc33 -HostCertificateSha256 PIN -Notes 'Reviewed changes'
+# Only after diagnostics advertises this precise safe preactivation action.
+node ControlPlane/controller.mjs recover --origin https://217.216.49.250:18866 --pin PIN
 ```
 
-Missing, unreachable, stale, mismatched or unsupported capability reports stop publication before the application channel is advanced. Application publication rechecks immediately before its final channel write. Schema 2 automatically requires media/tool capabilities when those payload families are present. Source push and prerelease upload are not deployment success.
+Use the actual next version, not an already consumed immutable version. Publishing
+identical bytes is idempotent. Conflicting bytes, stale readback, unknown requested
+capabilities, or app/control version mismatch fail closed. During initial
+transition only, the operator publishes the reviewed control-3 intent through the
+same fixed repository because the old stale report cannot pass normal controller
+preflight. The UAC installer independently authenticates that intent and downloads
+its public bytes; it does not trust the working tree as deployed broker code.
 
-Status is a bounded single-entry STORE ZIP, `kesas-host-status.zip`, served by the existing pinned HTTPS pack service. It is refreshed during downloads and pending transactions, contains only fixed public labels/versions/hashes/health codes, and expires after 150 seconds. No tokens, operator paths, raw errors, config contents, signing material, player names or Universe data are included. The controller uses a cache-busting URL and exact certificate pin; it has no unverified fallback.
+## Activation and failure recovery
 
-Interpret states separately: `accepted`, `staging`, `waiting-existing-guard`, `applying`, `healthy`, `rolled-back`, `blocked`. A `healthy` control version needs a durable version/hash-bound startup proof. A verified fallback can accept a newer repair control release without pretending the failed release succeeded. Application publication remains blocked until control recovery is healthy and failure-free.
+The loader stages complete control archives into protected new directories,
+validates every entry and locked dependency (`npm ci --ignore-scripts`), drains
+the broker/limited worker, checks live helper PIDs and native OS lease, and journals
+before switching one pointer. Startup requires two independently published broker
+observations. The previous pointer remains available for startup rollback. Never
+edit an immutable installed release in place.
 
-## Guards, recovery and rollback
+An ordinary failed application does not block idle control repair. A live applying
+publisher is never terminated. An ambiguous native journal can continue blocking
+application replay without blocking diagnosis or compatible idle control repair.
+The loader does not use application mirrors to authorize code.
 
-Both watchers retain a minimum 60-second poll. Native application deployment retains the 15-minute warning/early-empty behavior, fresh known player counts and existing backup/native journals. Only a completed matching 15-minute countdown with recorded warning and fresh bridge counts can produce `-AllowActivePlayers`; a request or premature operator force flag cannot.
+The existing 15-minute warning/early-empty native guards, fresh player counts,
+signing, backup, native activation journal, and completion checks still govern
+every application. Control publication does not authorize app replay. Applications
+are accepted only after healthy exact control activation and compatible fresh
+inventory. Do not reset/delete journals, forge completion receipts, or use force.
 
-Control staging validates the entire archive, allowed destinations, hashes and dependencies in a fresh directory. It waits for native idle and the native OS publisher lease, establishes its maintenance marker, drains both bot polling loops, then durably hands off. The fixed supervisor switches one pointer, checks replacement startup, and restores the known-good pointer on failure. A rollback intent precedes the rollback pointer so a reboot cannot revive a rejected candidate. Revisioned history repairs a process death between the two journal writes. Duplicate/completed/older transactions do not requeue publication.
+`recover` writes a bounded one-hour `deployment/recovery.json` intent, binding a
+unique nonce, exact original request/archive/source commit and protected-result
+digest. The broker independently authenticates it, retains the original evidence,
+consumes the nonce before acting, and only admits proved pre-publisher retries.
+The new attempt still needs a fresh normal countdown/early-empty guard. Native
+activation/GitHub-completion ambiguity is not guessed safe. Specific sanitized
+rejections identify changed results, live helpers, ambiguous activation,
+identity/baseline mismatch, or consumed authorization. A newer compatible control
+release remains available when an application retry is rejected.
 
-An orphaned applying publisher is never killed. The independent supervisor keeps a fresh blocked readback while waiting. The protected broker checks its durable result, recorded helper PID, native lease, active feed/pack and pinned health before recognizing completion. It never replays an ambiguous applying/native-activation operation. An interrupted native-activation journal remains blocked for operator recovery; deleting or clearing it is not a recovery method. Existing publisher GitHub-completion recovery remains available for the same verified bytes and notes after review.
+## Independent readback
 
-### Native diagnostics and recovery protocol 1
+The privileged reporter refreshes `kesas-host-status.zip` and
+`kesas-host-diagnostics.zip` every ten seconds. Reports expire in 30 seconds.
+Worker crashes and inventory errors produce stopped/unknown/incomplete states,
+not a retained healthy claim. Expensive archive inventory runs outside the
+heartbeat. Completion is reconstructed from protected request/attempt receipts
+and exact cached archive bytes, actual feed/catalog identity, fresh bridge state,
+and independently pinned HTTPS health. No receipt timestamp is fabricated.
 
-The original host-report contract 1 is unchanged. A separate bounded STORE ZIP, `kesas-host-diagnostics.zip`, contains only `host-diagnostics.json` and expires after 150 seconds. It reports fixed watcher/native stages and reason codes, immutable request/archive/source identities, a result digest, exit code, attempt number and actual frozen broker/wrapper hashes. Watcher download/staging errors are reported even before a native request exists. Raw exceptions, output, notes, paths, player data and credentials are never included. Detailed capped stdout, stderr, exceptions and typed publisher receipts remain under protected `native-cache/diagnostics/REQUEST/`.
+Status remains schema 1. Diagnostics schema 2 retains schema-1 fields and adds
+`host: {stage, reason, worker, broker, inventory, leaseActive, journalPhase,
+exitCode}`. All values are fixed sanitized codes; paths, raw errors, player names,
+configuration, keys, tokens and child output stay private and capped. The fixed
+loader emits a fresh blocked fallback if broker reporting stops. Its
+`versioned-broker-v1` capability permits control repair publication, never app
+publication. A disconnected host still cannot serve fresh reports.
 
-`recover` is an explicit repository-authenticated request, not automatic failure replay. It writes `deployment/recovery.json` on `deploy`, with schema 1, a unique `recoveryId`, fixed action `retry-preactivation`, request/version/archive/source identity, the exact protected-result digest and a maximum one-hour validity. The frozen broker independently pins the branch commit, rereads those exact bytes, validates the original immutable application intent and archive, consumes the nonce in protected history, and refuses any helper/lease/journal activity, prepared version, non-older active release or unhealthy baseline. Only failed stages before a publisher PID could exist qualify. A fresh normal 15-minute queue or authoritative early-empty guard remains mandatory. The limited watcher cannot authorize recovery by editing a mirror.
+Capabilities additionally include `versioned-broker-v1`, `independent-report-v1`,
+`unattended-host-v1`, and `media-reference-v1`. Application/media capabilities are
+withheld until the actual running worker and installed inventory agree.
 
-Publisher preparation, activation and GitHub-completion failures remain held for host review; this endpoint never guesses that they are safe to replay. A consumed/interrupted authorization remains audited and is not replayed. Download/staging failures before native handoff retain the watcher's existing safe polling behavior; recovery does not reset its attempt history. A waiting/cancelled recovery does not monopolize newer deployment requests.
+## Large media and remaining boundaries
 
-A host operator may separately review a completed automatic rollback: verify every restored replacement/state tree, absence of an active journal or helper, exact prepared signed bytes and the healthy older release. The operator-only `--authorize-reviewed-rollback-retry` requires the digest of that protected evidence as well as the original result digest. It retains both histories and issues a protected, readable bootstrap approval. `UpdateManager.acknowledgeReviewedRollback` consumes that approval against the exact failed queue bytes, archives the failed state and records `lastDeployment.status: rolled-back`; it does not claim the failed release succeeded. This audited terminal acknowledgement allows a repair control release to activate through the ordinary idle guard before the original application is queued again with a fresh warning/early-empty guard. It is not a remote rollback-reset endpoint. Native cold-start readiness is bounded at 180 seconds and still requires owned listeners and pinned HTTPS health.
+See [MEDIA.md](MEDIA.md) for exact separate immutable media publication/reference
+schema and command. Embedded small `MediaPayload/` remains supported. Neither
+path loosens ordinary `SquadExpansion`/stock-folder protection. A compatible
+signed expansion bootstrap must separately implement any protected DLC install.
 
-For an urgent host-local publisher correction, that same protected rollback evidence can instead bind a `publisherRepairSha256` manifest. A normal UAC-reviewed operator installs exactly the six allowed native PowerShell scripts in a new protected cache snapshot. The broker verifies the manifest/request/original-result binding, every script size/hash and all fixed destinations before selecting it for that one request. Remote recovery intent cannot create or select this operator snapshot. This permits the corrected publisher to complete the original application with its normal countdown/player/lease/signing/rollback guards without waiting for a separate control-worker rollout. No active or immutable control directory is edited in place. The ordinary source/control rollout remains a separate operation.
-
-`nativeRecoveryVersion: 1` is advertised only when the frozen agent's capability receipt matches the actual installed broker and wrapper hashes. The privileged broker and wrapper still require an idle, reviewed host-local installation under normal UAC; publishing a control bundle or pushing source does not replace them. Windows launches the hidden publisher without Node's `detached` flag, using protected regular-file handles rather than parent-owned pipes. A successful private receipt bound to the exact request/archive is required before completion; process exit 0 or a matching version string alone is insufficient. No live process-death/fault experiment is implied by deployment verification.
-
-One fallback pointer is retained. Older immutable staging/release directories and transaction evidence are not automatically deleted; they are not additional selectable fallback slots. Disk-retention cleanup is a separate operator task.
-
-## Isolated acceptance
-
-```powershell
-cd .\APFDiscordBot
-node --test
-cd ..
-# Required only for real native publication fixture: a privately provisioned
-# existing UpdateTool directory with the public ClientTemplate.zip beside it.
-$env:APF_TEST_UPDATE_TOOL='C:\Aetherfront\KESAS-VPS-Server\UpdateTool'
-node --test .\ControlPlane\test\*.test.mjs
-```
-
-Fixtures start with publisher/verifier/watcher files from `7b28642`, upgrade through the real controller publication function and host staging path, then exercise the actual upgraded verifier/publisher and signed media application path. A second/skipped control revision changes and loads its installer module. Tests cover archive/authentication/schema/path/reparse/private-media/conflict rejection, staging/activation/rollback crashes, revisioned-journal recovery, duplicates/competition, failed startup rollback and protected-state preservation. GitHub transport, bridge health and unrelated-process sentinels are test doubles; archive bytes, PowerShell extraction, native publisher and disposable signing keys are real. The optional native fixture is explicitly skipped without its private prerequisites. No production fault injection, application deployment or KSP GUI launch is part of these host tests.
-
-Initial installation is an operator action, after the tests and source review pass:
-
-```powershell
-pwsh -File .\ControlPlane\Install-HostControl.ps1 -ControlRoot C:\ProgramData\Aetherfront-Control -BotRoot C:\Aetherfront\APFDiscordBot -NativeRoot C:\Aetherfront\KESAS-VPS-Server -PowerShell C:\Tools\PowerShell7\pwsh.exe
-```
-
-It requests normal UAC for the fixed bootstrap/task setup, preserves prior task actions, verifies native idle before changing the bot launcher, restarts only the changed bot/control components and restores the prior actions if startup health fails. It does not deploy RC33 or restart the current game/pack processes.
+Routine client/updater/helper, server/plugins, pack service, catalog/mod media,
+publisher/wrapper/agent/reporter/watcher and bot dependency changes use the
+authenticated app/control paths. Manual boundaries remain OS/runtime-major and
+fixed loader contract provisioning, physical/OS recovery, unavailable/replaced
+host, lost/revoked credentials, lost/compromised trust/signing keys, and genuinely
+ambiguous native activation requiring evidence unavailable remotely. Future
+business-logic fixes do not require copying agent/wrapper files under UAC.
+The existing Administrator/deployment directories remain trusted host boundaries;
+this is not a sandbox against a malicious local administrator.

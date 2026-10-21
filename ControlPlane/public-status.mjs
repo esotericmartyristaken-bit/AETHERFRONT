@@ -24,9 +24,10 @@ const diagnosticVersion = value => diagnosticMatch(value,/^kesas-rc[1-9][0-9]{0,
 const diagnosticDate = value => diagnosticMatch(value,/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/) && Number.isFinite(Date.parse(value));
 const diagnosticObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 
+export const RECOVERY_REASONS=[null,'recovery-not-authorized','recovery-result-changed','recovery-helper-active','recovery-activation-ambiguous','recovery-identity-mismatch','recovery-baseline-invalid','recovery-already-consumed','recovery-intent-invalid'];
 export function diagnosticsZip(report) {
   const bootstrap = report?.bootstrap, watcher = report?.watcher, native = report?.native, recovery = report?.recovery;
-  if (!diagnosticObject(report) || report.schemaVersion !== 1 || !diagnosticDate(report.observedAt) || !diagnosticDate(report.expiresAt) ||
+  if (!diagnosticObject(report) || ![1,2].includes(report.schemaVersion) || !diagnosticDate(report.observedAt) || !diagnosticDate(report.expiresAt) ||
       !diagnosticMatch(report.controlVersion,/^control-[1-9][0-9]{0,8}$/) || !diagnosticObject(bootstrap) || !diagnosticObject(watcher) ||
       ![bootstrap.nativeAgentSha256,bootstrap.publisherWrapperSha256].every(value => value === null || diagnosticHash(value)) ||
       ![0,1].includes(bootstrap.nativeRecoveryVersion) || (bootstrap.nativeRecoveryVersion === 1 && (!diagnosticHash(bootstrap.nativeAgentSha256) || !diagnosticHash(bootstrap.publisherWrapperSha256))) ||
@@ -50,14 +51,26 @@ export function diagnosticsZip(report) {
   if (recovery !== null) {
     if (!diagnosticObject(recovery) || !diagnosticHash(recovery.recoveryId) || !diagnosticHash(recovery.requestId) ||
         !diagnosticCommit(recovery.commit) || !['received','authorized','blocked'].includes(recovery.status) ||
-        ![null,'recovery-not-authorized'].includes(recovery.reason)) throw new Error('Invalid host diagnostics');
+        !RECOVERY_REASONS.includes(recovery.reason)) throw new Error('Invalid host diagnostics');
     recoveryObservation = {recoveryId:recovery.recoveryId,requestId:recovery.requestId,commit:recovery.commit,status:recovery.status,reason:recovery.reason};
   }
   // Project every public field explicitly; private journal extensions never escape.
-  const data = Buffer.from(JSON.stringify({schemaVersion:1,observedAt:report.observedAt,expiresAt:report.expiresAt,controlVersion:report.controlVersion,
+  let host=null;
+  if(report.schemaVersion===2){
+    host=report.host;
+    const fields=['stage','reason','worker','broker','inventory','leaseActive','journalPhase','exitCode'];
+    if(!diagnosticObject(host)||Object.keys(host).length!==fields.length||!fields.every(key=>Object.hasOwn(host,key))||
+      !['reporting','broker','worker','inventory','application','native','control'].includes(host.stage)||
+      ![null,'broker-not-ready','broker-child-failed','worker-missing','worker-stale','worker-mismatch','worker-invalid','worker-not-ready','worker-failed','inventory-incomplete','inventory-failed','inventory-mismatch','application-observation-failed','application-version-mismatch','bridge-unavailable','native-observation-failed','native-completion-unproven','native-publication-blocked','health-unavailable','control-observation-failed'].includes(host.reason)||
+      !['missing','stale','mismatch','invalid','starting','running','draining','stopped','failed'].includes(host.worker)||
+      !['ready','starting','failed'].includes(host.broker)||!['unknown','pending','collecting','complete','failed','mismatch'].includes(host.inventory)||
+      ![null,true,false].includes(host.leaseActive)||![null,'native-activation','github-completion','unknown'].includes(host.journalPhase)||
+      !(host.exitCode===null||(Number.isInteger(host.exitCode)&&host.exitCode>=-2147483648&&host.exitCode<=2147483647)))throw new Error('Invalid host diagnostics');
+  }
+  const data = Buffer.from(JSON.stringify({schemaVersion:report.schemaVersion,observedAt:report.observedAt,expiresAt:report.expiresAt,controlVersion:report.controlVersion,
     bootstrap:{nativeAgentSha256:bootstrap.nativeAgentSha256,publisherWrapperSha256:bootstrap.publisherWrapperSha256,nativeRecoveryVersion:bootstrap.nativeRecoveryVersion},
     watcher:{stage:watcher.stage,reason:watcher.reason,version:watcher.version,sourceCommit:watcher.sourceCommit,manifestSha256:watcher.manifestSha256,archiveSha256:watcher.archiveSha256},
-    native:publication,recovery:recoveryObservation}));
+    native:publication,recovery:recoveryObservation,...(host?{host}:{} )}));
   if (data.length > 32768) throw new Error('Host diagnostics exceeds limit');
   return singleEntryZip('host-diagnostics.json',data);
 }

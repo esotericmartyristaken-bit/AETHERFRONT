@@ -190,7 +190,8 @@ export class NativeAgent {
     this.settings = validateSettings(settings);
     this.root = settings.root;
     this.cache = path.join(this.root,'native-cache');
-    this.bootstrap = options.bootstrapDirectory || bootstrapDirectory;
+    this.bootstrap = options.bootstrapDirectory || path.join(this.root,'bootstrap');
+    this.code = options.codeDirectory || bootstrapDirectory;
     this.channel = options.channel || new GitHubChannel(options.fetch);
     this.run = options.run || ((file,args,settings) => runChild(file,args,settings,options.spawn || spawn));
     this.idle = options.probeNativeIdle || (() => probeNativeIdle(this.settings,this.run));
@@ -211,8 +212,8 @@ export class NativeAgent {
     }
     if(!this.capabilitiesPublished) {
       await writeJson(path.join(this.root,'native-capabilities.json'),{schemaVersion:1,recoveryVersion:1,
-        nativeAgentSha256:await fileHash(path.join(this.bootstrap,'native-agent.mjs')),
-        publisherWrapperSha256:await fileHash(path.join(this.bootstrap,'Invoke-NativePublisher.ps1'))});
+        nativeAgentSha256:await fileHash(path.join(this.code,'native-agent.mjs')),
+        publisherWrapperSha256:await fileHash(path.join(this.code,'Invoke-NativePublisher.ps1'))});
       this.capabilitiesPublished=true;
     }
   }
@@ -281,6 +282,10 @@ export class NativeAgent {
     return path.join(directory,'Publish-Release.ps1');
   }
   async publisher(request, result) {
+    // The fixed anchor independently authenticates and stages this complete
+    // protected release. Never select privileged code from the writable bot mirror.
+    if(this.code.startsWith(path.join(this.root,'managed','releases')+path.sep))
+      return this.selectPublisher(path.join(this.code,'..','KESAS-VPS-Server','Publish-Release.ps1'));
     if(result?.recovery?.action==='host-reviewed-rollback'&&result.recovery.publisherRepairSha256) {
       return this.selectPublisher(await this.reviewedPublisher(request.id,result.recovery.priorResultSha256,result.recovery.publisherRepairSha256));
     }
@@ -466,16 +471,19 @@ export class NativeAgent {
       // Details remain private. No failed network poll can stop the agent.
       if(typeof intent?.requestId==='string'&&HASH.test(intent.requestId))await this.privateFailure({id:intent.requestId},'remote-recovery',error).catch(()=>{});
       if(ledger){
-        await writeJson(ledger,{schemaVersion:1,recoveryId:intent.recoveryId,requestId:intent.requestId,status:'blocked',reason:'recovery-not-authorized',observedAt:new Date().toISOString()}).catch(()=>{});
-        await writeJson(path.join(this.root,'native-recovery-status.json'),{recoveryId:intent.recoveryId,requestId:intent.requestId,commit:null,status:'blocked',reason:'recovery-not-authorized'}).catch(()=>{});
+        const message=String(error?.message||'');
+        const reason=message.includes('Protected result changed')?'recovery-result-changed':message.includes('busy')||message.includes('lease-idle')?'recovery-helper-active':message.includes('may have started')||message.includes('Prepared or activated')?'recovery-activation-ambiguous':message.includes('identity')||message.includes('intent mismatch')?'recovery-identity-mismatch':message.includes('not older')||message.includes('baseline')?'recovery-baseline-invalid':message.includes('already consumed')?'recovery-already-consumed':'recovery-not-authorized';
+        await writeJson(ledger,{schemaVersion:1,recoveryId:intent.recoveryId,requestId:intent.requestId,status:'blocked',reason,observedAt:new Date().toISOString()}).catch(()=>{});
+        await writeJson(path.join(this.root,'native-recovery-status.json'),{recoveryId:intent.recoveryId,requestId:intent.requestId,commit:null,status:'blocked',reason}).catch(()=>{});
       }
     }
   }
   async recoveryAdmitted(result) {
     try {
       if(result.recovery.minimumControlVersion) {
-        const pointer=validatePointer(await strictFile(path.join(this.root,'active.json')));
-        const proof=await strictFile(path.join(this.root,'verified-active.json'),65536,null);
+        const controlRoot=this.code.startsWith(path.join(this.root,'managed','releases')+path.sep)?path.join(this.root,'managed'):this.root;
+        const pointer=validatePointer(await strictFile(path.join(controlRoot,'active.json')));
+        const proof=await strictFile(path.join(controlRoot,'verified-active.json'),65536,null);
         if(pointer.sequence<Number(result.recovery.minimumControlVersion.slice(8))||proof?.version!==pointer.version||proof.bundleSha256!==pointer.bundleSha256||!Number.isFinite(Date.parse(proof.verifiedAt)))return false;
       }
       const state=await strictFile(path.join(this.settings.botRoot,'state','kesas-update-state.json'));
@@ -528,7 +536,7 @@ export class NativeAgent {
       const archive = await this.copyApplication(request);
       stage='fixed-verifier';
       result=await this.save(result,result.phase,{stage});
-      const verifier = path.join(this.bootstrap,'Verify-KesasRelease.ps1'); await noLinks(verifier);
+      const verifier = this.code.startsWith(path.join(this.root,'managed','releases')+path.sep) ? path.join(this.code,'..','APFDiscordBot','scripts','Verify-KesasRelease.ps1') : path.join(this.bootstrap,'Verify-KesasRelease.ps1'); await noLinks(verifier);
       await this.run(this.settings.powershell,['-NoProfile','-NonInteractive','-File',verifier,'-Archive',archive,'-ExpectedVersion',request.version]);
       stage='publisher-validation';
       result=await this.save(result,result.phase,{stage});
@@ -540,7 +548,7 @@ export class NativeAgent {
       await this.fault('applying',result);
       const guard = await this.guardArgs(request);
       stage='publisher-execution';
-      const wrapper=path.join(this.bootstrap,'Invoke-NativePublisher.ps1');await noLinks(wrapper);
+      const wrapper=path.join(this.code,'Invoke-NativePublisher.ps1');await noLinks(wrapper);
       const invocationArgs=['-NoProfile','-NonInteractive','-File',wrapper,
         '-Settings',path.join(this.root,'host.json'),'-RequestId',id,'-Attempt',String(result.attempt),'-Publisher',publisher,'-Archive',archive,'-Notes',request.notes,...guard];
       const launchDirectory=path.join(this.cache,'diagnostics',id,`agent-${result.attempt}`);

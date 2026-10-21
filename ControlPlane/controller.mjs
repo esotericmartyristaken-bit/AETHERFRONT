@@ -6,6 +6,7 @@ import os from 'node:os';
 import { spawn, execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { pathToFileURL } from 'node:url';
+import {diagnosticsZip,RECOVERY_REASONS} from './public-status.mjs';
 
 export const REPOSITORY = 'esotericmartyristaken-bit/AETHERFRONT';
 export const CHANNEL = 'deployment/control-plane.json';
@@ -236,7 +237,8 @@ export async function readDiagnostics(options = {}) {
   const commit=row=>typeof row==='string'&&/^[a-f0-9]{40}$/.test(row);
   const stages=['request-validation','intent-authentication','archive-copy','fixed-verifier','publisher-validation','publisher-execution','completion-health','awaiting-new-guard','guard-admission','preparation-signing','media-publication','native-activation','github-completion'];
   const watcherStages=['channel-observation','requirements','active-health','intent-authentication','archive-download','archive-staging','queue-admission'];
-  if(!fields(value,['schemaVersion','observedAt','expiresAt','controlVersion','bootstrap','watcher','native','recovery'])||value.schemaVersion!==1||!/^control-[1-9][0-9]{0,8}$/.test(value.controlVersion))fail('INVALID_STATUS');
+  if(!fields(value,['schemaVersion','observedAt','expiresAt','controlVersion','bootstrap','watcher','native','recovery',...(value.schemaVersion===2?['host']:[])])||![1,2].includes(value.schemaVersion)||!/^control-[1-9][0-9]{0,8}$/.test(value.controlVersion))fail('INVALID_STATUS');
+  await checked('INVALID_STATUS',()=>diagnosticsZip(value));
   const observed=Date.parse(value.observedAt),expires=Date.parse(value.expiresAt),now=typeof options.now==='function'?options.now():options.now??Date.now();
   if(!Number.isFinite(observed)||!Number.isFinite(expires)||new Date(observed).toISOString()!==value.observedAt||new Date(expires).toISOString()!==value.expiresAt||observed>now+5000||expires<=now||expires<=observed||now-observed>180000||expires-observed>180000)fail('STALE_STATUS');
   if(!fields(value.bootstrap,['nativeAgentSha256','publisherWrapperSha256','nativeRecoveryVersion'])||!nullable(value.bootstrap.nativeAgentSha256,hash)||!nullable(value.bootstrap.publisherWrapperSha256,hash)||![0,1].includes(value.bootstrap.nativeRecoveryVersion))fail('INVALID_STATUS');
@@ -245,7 +247,7 @@ export async function readDiagnostics(options = {}) {
   const native=value.native;
   if(native!==null&&(!fields(native,['requestId','version','archiveSha256','sourceCommit','resultSha256','phase','stage','reason','exitCode','attempt','recoveryAction'])||!hash(native.requestId)||!version(native.version)||!hash(native.archiveSha256)||!nullable(native.sourceCommit,commit)||!hash(native.resultSha256)||!['accepted','recovery-authorized','applying','healthy','blocked'].includes(native.phase)||!nullable(native.stage,row=>stages.includes(row))||![null,'native-publication-blocked'].includes(native.reason)||!nullable(native.exitCode,row=>Number.isInteger(row)&&row>=-2147483648&&row<=2147483647)||!integer(native.attempt)||native.attempt>1000000||![null,'retry-preactivation'].includes(native.recoveryAction)))fail('INVALID_STATUS');
   const recovery=value.recovery;
-  if(recovery!==null&&(!fields(recovery,['recoveryId','requestId','commit','status','reason'])||!hash(recovery.recoveryId)||!hash(recovery.requestId)||!nullable(recovery.commit,commit)||!['received','authorized','blocked'].includes(recovery.status)||![null,'recovery-not-authorized'].includes(recovery.reason)))fail('INVALID_STATUS');
+  if(recovery!==null&&(!fields(recovery,['recoveryId','requestId','commit','status','reason'])||!hash(recovery.recoveryId)||!hash(recovery.requestId)||!nullable(recovery.commit,commit)||!['received','authorized','blocked'].includes(recovery.status)||!RECOVERY_REASONS.includes(recovery.reason)))fail('INVALID_STATUS');
   return value;
 }
 
@@ -293,7 +295,11 @@ export async function preflight(options = {}) {
     error.missingCapabilities=requirements.filter(item=>contract.CAPABILITIES?.includes(item)&&!report.capabilities.includes(item));
     throw error;
   }
-  await checked('UNSUPPORTED_REQUIREMENT', () => contract.assertCapabilities(report, requirements));
+  // The fixed independent loader remains an update authority when repairable
+  // worker/broker business logic is unavailable. This never authorizes app replay.
+  if(options.purpose==='control-publication'&&report.capabilities.includes('versioned-broker-v1'))
+    await checked('INVALID_STATUS',()=>contract.validateHostReport(report));
+  else await checked('UNSUPPORTED_REQUIREMENT', () => contract.assertCapabilities(report, requirements));
   // Shared version 1 contract establishes bootstrap 1, never inferred newer support.
   if ((options.minimumBootstrap ?? 1) !== 1 || report.bootstrapVersion !== 1) fail('INCOMPATIBLE_CONTRACT');
   if (options.purpose !== 'control-publication') {

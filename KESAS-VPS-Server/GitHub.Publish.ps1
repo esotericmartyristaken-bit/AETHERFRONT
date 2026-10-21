@@ -97,7 +97,7 @@ function Assert-GhpDeclaredAsset {
 }
 
 function Assert-GhpPublicZip {
-    param([string]$Path)
+    param([string]$Path, [ValidateRange(1L,8589934592L)][long]$MaximumExpandedBytes = 512MB)
     Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction Stop
     $zip = $null; $checking=''
     try {
@@ -112,7 +112,7 @@ function Assert-GhpPublicZip {
             $checking=$name
             $normalized = $name.Replace('\', '/')
             if ($name -ne $normalized -or $normalized.StartsWith('/') -or $normalized -match '[:\x00-\x1f]' -or
-                $normalized -match '(^|/)\.\.?(/|$)' -or $seen.ContainsKey($normalized) -or
+                $normalized -match '(^|/)\.\.?(/|$)' -or $seen.ContainsKey($normalized.TrimEnd('/')) -or
                 (($entry.ExternalAttributes -shr 16) -band 0xF000) -eq 0xA000 -or
                 ($entry.ExternalAttributes -band 0x400)) { throw 'Unsafe ZIP entry.' }
             foreach ($component in $normalized.TrimEnd('/').Split('/')) {
@@ -120,13 +120,17 @@ function Assert-GhpPublicZip {
                     $component.EndsWith('.') -or $component.EndsWith(' ') -or
                     $component -match '(?i)^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\.|$)') { throw 'Ambiguous Windows ZIP entry.' }
             }
-            $seen[$normalized] = $true
+            if ($normalized.EndsWith('/') -and $entry.Length -ne 0) { throw 'Unsafe ZIP entry.' }
+            $seen[$normalized.TrimEnd('/')] = $normalized.EndsWith('/')
             if ($normalized -match '(?i)(^|/)(secrets?|state|universe|saves|\.git|\.ssh|\.aws|\.azure)(/|$)' -or
                 $normalized -match '(?i)(^|/)(private[^/]*|credentials?[^/]*|deployment\.json|\.env(?:\.[^/]*)?|[^/]*\.(?:key|pem|pfx|p12|kdbx))$' -or
                 $normalized -match '(?i)(^|[/._ -])(?:privatekey|private-key|signing-private|credentials)(?:[./_ -]|$)' -or
                 $normalized -match '(?i)(^|/)(?:APFState|server-state|gh-token)(?:[./_-]|$)') { throw 'Private ZIP entry.' }
             $total += $entry.Length
-            if ($total -gt 512MB) { throw 'Public ZIP exceeds the 512 MiB expanded safety bound.' }
+            if ($total -gt $MaximumExpandedBytes) {
+                if ($MaximumExpandedBytes -eq 512MB) { throw 'Public ZIP exceeds the 512 MiB expanded safety bound.' }
+                throw 'Public ZIP exceeds the media expanded safety bound.'
+            }
             if ($normalized.EndsWith('/')) { continue }
             $stream = $entry.Open()
             try {
@@ -146,13 +150,186 @@ function Assert-GhpPublicZip {
                 if ($readTotal -ne $entry.Length) { throw 'ZIP entry length mismatch.' }
             } finally { $stream.Dispose() }
         }
+        foreach ($name in @($seen.Keys)) {
+            $parent = $name
+            while ($parent.Contains('/')) {
+                $parent = $parent.Substring(0, $parent.LastIndexOf('/'))
+                if ($seen.ContainsKey($parent) -and -not $seen[$parent]) { throw 'Unsafe ZIP entry.' }
+            }
+        }
     } catch {
         $reason=$_.Exception.Message
-        if($reason -notin @('Invalid entry count.','Unsafe ZIP entry.','Ambiguous Windows ZIP entry.','Private ZIP entry.','Public ZIP exceeds the 512 MiB expanded safety bound.','ZIP entry length mismatch.','Secret content in public ZIP.')){$reason='Invalid ZIP.'}
+        if($reason -notin @('Invalid entry count.','Unsafe ZIP entry.','Ambiguous Windows ZIP entry.','Private ZIP entry.','Public ZIP exceeds the 512 MiB expanded safety bound.','Public ZIP exceeds the media expanded safety bound.','ZIP entry length mismatch.','Secret content in public ZIP.')){$reason='Invalid ZIP.'}
         $label=([regex]::Replace($checking,'[\x00-\x1f]','?'));if($label.Length-gt 200){$label=$label.Substring(0,200)}
         throw "Public ZIP safety guard rejected archive ($reason Entry: $label)."
     }
     finally { if ($zip) { $zip.Dispose() } }
+}
+
+function Assert-GhpExactFields($Value, [string[]]$Fields) {
+    if ($null -eq $Value -or $Value -isnot [pscustomobject] -or
+        @($Value.PSObject.Properties).Count -ne $Fields.Count -or
+        @($Value.PSObject.Properties | Where-Object Name -cnotin $Fields).Count) { throw 'Unsupported media reference schema.' }
+}
+
+function Assert-GhpCatalogMedia($Catalog, [string]$Name, [long]$Size, [string]$Sha256) {
+    $matchesFound = 0
+    foreach ($profileName in @('full','potato')) {
+        $profile = $Catalog.$profileName
+        if ($null -eq $profile -or $null -eq $profile.managedPackages) { throw 'Missing signed catalog package list.' }
+        foreach ($package in @($profile.managedPackages)) {
+            $uri = $null
+            if (-not [Uri]::TryCreate([string]$package.archiveUrl,[UriKind]::Absolute,[ref]$uri)) { throw 'Invalid catalog media URL.' }
+            $publicUrl = "https://github.com/esotericmartyristaken-bit/AETHERFRONT/releases/download/pack-media/$Name"
+            $packageName = [Uri]::UnescapeDataString(($uri.AbsolutePath -split '/')[-1])
+            if ($packageName -ine $Name) { continue }
+            # Catalog URLs identify packages, never the transport to fetch. Only
+            # the fixed public release URL constructed below is downloaded.
+            if ($package.archiveUrl -isnot [string] -or $packageName -cne $Name -or $package.archiveUrl.Contains('%') -or
+                ($uri.AbsolutePath -cne ('/'+$Name) -and $package.archiveUrl -cne $publicUrl) -or
+                $uri.Scheme -cne 'https' -or $uri.UserInfo -or $uri.Query -or $uri.Fragment -or
+                (Get-GhpUrlName ([string]$package.archiveUrl)) -cne $Name -or
+                $package.sha256 -isnot [string] -or $package.sha256 -cne $Sha256 -or
+                ($package.sizeBytes -isnot [int] -and $package.sizeBytes -isnot [long]) -or $package.sizeBytes -ne $Size) {
+                throw 'Media reference differs from a referring signed catalog package.'
+            }
+            $matchesFound++
+        }
+    }
+    if (-not $matchesFound) { throw 'Media reference has no matching signed catalog package.' }
+}
+
+function Assert-GhpMediaReferences($Document, $Catalog, [string]$Version) {
+    Assert-GhpExactFields $Document @('schemaVersion','applicationVersion','repository','tag','assets')
+    if (($Document.schemaVersion -isnot [int] -and $Document.schemaVersion -isnot [long]) -or $Document.schemaVersion -ne 1 -or
+        $Document.applicationVersion -isnot [string] -or $Document.applicationVersion -cne $Version -or
+        $Version -cnotmatch '^kesas-rc[1-9][0-9]{0,14}$' -or $Catalog.version -isnot [string] -or $Catalog.version -cne $Version -or
+        $Document.repository -isnot [string] -or $Document.repository -cne 'esotericmartyristaken-bit/AETHERFRONT' -or
+        $Document.tag -isnot [string] -or $Document.tag -cne 'pack-media' -or
+        $Catalog.gitHub.enabled -isnot [bool] -or -not $Catalog.gitHub.enabled -or
+        $Catalog.gitHub.repository -isnot [string] -or $Catalog.gitHub.repository -cne $Document.repository -or
+        $Catalog.gitHub.mediaTag -isnot [string] -or $Catalog.gitHub.mediaTag -cne $Document.tag -or
+        $Document.assets -isnot [array] -or $Document.assets.Count -lt 1 -or $Document.assets.Count -gt 1000) {
+        throw 'Unsupported media reference authority, version, or bounds.'
+    }
+    $seen = @{}; [long]$total = 0
+    foreach ($asset in $Document.assets) {
+        Assert-GhpExactFields $asset @('name','sizeBytes','sha256')
+        if ($asset.name -isnot [string] -or $asset.name.Length -gt 200 -or
+            $asset.name -cnotmatch '^kesas-[a-z0-9-]+-([a-f0-9]{64})\.zip$' -or $Matches[1] -cne $asset.sha256 -or
+            $asset.sha256 -isnot [string] -or $asset.sha256 -cnotmatch '^[a-f0-9]{64}$' -or
+            ($asset.sizeBytes -isnot [int] -and $asset.sizeBytes -isnot [long]) -or
+            $asset.sizeBytes -le 0 -or $asset.sizeBytes -ge 2GB -or $seen.ContainsKey($asset.name)) {
+            throw 'Invalid or duplicate immutable media reference.'
+        }
+        Assert-GhpPublicName $asset.name
+        $seen[$asset.name] = $true; $total += $asset.sizeBytes
+        if ($total -gt 8GB) { throw 'Referenced media batch exceeds 8 GiB.' }
+        Assert-GhpCatalogMedia $Catalog $asset.name $asset.sizeBytes $asset.sha256
+    }
+}
+
+function Save-GhpReferencedMedia($Asset, [string]$Destination) {
+    # No token, default credentials, cookies, arbitrary URL, or automatic
+    # redirects. The entire body is bounded, including chunked responses.
+    Assert-GhpExactFields $Asset @('name','sizeBytes','sha256')
+    if ($Asset.name -isnot [string] -or $Asset.name.Length -gt 200 -or
+        $Asset.name -cnotmatch '^kesas-[a-z0-9-]+-([a-f0-9]{64})\.zip$' -or $Matches[1] -cne $Asset.sha256 -or
+        $Asset.sha256 -isnot [string] -or $Asset.sha256 -cnotmatch '^[a-f0-9]{64}$' -or
+        ($Asset.sizeBytes -isnot [int] -and $Asset.sizeBytes -isnot [long]) -or $Asset.sizeBytes -le 0 -or $Asset.sizeBytes -ge 2GB) {
+        throw 'Invalid immutable media download bounds.'
+    }
+    Assert-GhpPublicName $Asset.name
+    Add-Type -AssemblyName System.Net.Http
+    $target = Assert-UpdatePath $Destination
+    $url = "https://github.com/esotericmartyristaken-bit/AETHERFRONT/releases/download/pack-media/$($Asset.name)"
+    $handler = [Net.Http.HttpClientHandler]::new()
+    $handler.AllowAutoRedirect = $false; $handler.UseCookies = $false; $handler.UseDefaultCredentials = $false
+    $client = [Net.Http.HttpClient]::new($handler)
+    $client.Timeout = [TimeSpan]::FromMinutes(30)
+    $client.DefaultRequestHeaders.UserAgent.ParseAdd('Aetherfront-Media/1')
+    $deadline = [Threading.CancellationTokenSource]::new([TimeSpan]::FromMinutes(30))
+    $current = [Uri]$url
+    try {
+        for ($hop = 0; $hop -le 5; $hop++) {
+            if ($current.Scheme -cne 'https' -or $current.Port -ne 443 -or $current.UserInfo -or $current.Fragment -or
+                $current.IdnHost -cnotin @('github.com','release-assets.githubusercontent.com','objects.githubusercontent.com','github-releases.githubusercontent.com') -or
+                ($current.IdnHost -ceq 'github.com' -and $current.AbsoluteUri -cne $url)) { throw 'Untrusted media redirect.' }
+            $response = $client.GetAsync($current,[Net.Http.HttpCompletionOption]::ResponseHeadersRead,$deadline.Token).GetAwaiter().GetResult()
+            try {
+                if ([int]$response.StatusCode -in @(301,302,303,307,308)) {
+                    if ($hop -eq 5 -or $null -eq $response.Headers.Location) { throw 'Media redirect limit.' }
+                    $current = [Uri]::new($current,$response.Headers.Location); continue
+                }
+                if ([int]$response.StatusCode -ne 200 -or
+                    ($null -ne $response.Content.Headers.ContentLength -and $response.Content.Headers.ContentLength -ne $Asset.sizeBytes)) { throw 'Media response mismatch.' }
+                $inputStream = $response.Content.ReadAsStreamAsync().GetAwaiter().GetResult()
+                try {
+                    $outputStream = [IO.FileStream]::new($target,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
+                    try {
+                        $buffer = [byte[]]::new(1MB); [long]$total = 0
+                        while (($count = $inputStream.ReadAsync($buffer,0,$buffer.Length,$deadline.Token).GetAwaiter().GetResult()) -gt 0) {
+                            if ($count -gt $Asset.sizeBytes-$total) { throw 'Media exceeds declared size.' }
+                            $total += $count; $outputStream.Write($buffer,0,$count)
+                        }
+                        if ($total -ne $Asset.sizeBytes) { throw 'Truncated media.' }
+                        $outputStream.Flush($true)
+                    } finally { $outputStream.Dispose() }
+                } finally { $inputStream.Dispose() }
+                if ((Get-GhpSha256 $target) -cne $Asset.sha256) { throw 'Media SHA256 mismatch.' }
+                return
+            } finally { $response.Dispose() }
+        }
+    } catch { throw 'Public media download failed size/SHA256/transport verification; no media replaced.' }
+    finally { $deadline.Dispose(); $client.Dispose() }
+}
+
+function Publish-GhpReferencedMedia([string]$CatalogPath, [string[]]$AssetPaths, [string]$OutputPath) {
+    # Controller-only helper: uploads pack-media assets, never application
+    # releases, deployment channels, signing keys, or existing asset contents.
+    $catalogFile = Assert-GhpPath $CatalogPath
+    $text = Read-UpdateText $catalogFile 1MB; Assert-ReleaseJsonUnique $text
+    $catalog = $text | ConvertFrom-Json
+    if ($OutputPath.StartsWith('\\')) { throw 'Reference output must be a local path.' }
+    $output = Assert-UpdatePath $OutputPath
+    if ([IO.Path]::GetFileName($output) -cne 'MediaReferences.json') { throw 'Output must be MediaReferences.json.' }
+    $null = Assert-GhpPath ([IO.Path]::GetDirectoryName($output)) -Directory
+    if ($AssetPaths.Count -lt 1 -or $AssetPaths.Count -gt 1000) { throw 'Invalid media asset count.' }
+    $locks = [Collections.Generic.List[object]]::new()
+    try {
+        $assets = @(foreach ($path in $AssetPaths) {
+            $full = Assert-GhpPath $path
+            # Keep local bytes immutable across scan, hashing, and gh upload.
+            $locks.Add([IO.FileStream]::new($full,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read))
+            Get-GhpAsset $full 'media' 'pack-media' 'esotericmartyristaken-bit/AETHERFRONT'
+        })
+        $document = [pscustomobject][ordered]@{
+            schemaVersion=1; applicationVersion=$catalog.version; repository='esotericmartyristaken-bit/AETHERFRONT'; tag='pack-media'
+            assets=@(foreach ($asset in $assets) { [pscustomobject][ordered]@{name=$asset.Name;sizeBytes=$asset.Size;sha256=$asset.Sha256} })
+        }
+        Assert-GhpMediaReferences $document $catalog $catalog.version
+        $json = $document | ConvertTo-Json -Depth 8
+        if ([IO.File]::Exists($output) -and (Read-UpdateText $output 1MB).Trim() -cne $json.Trim()) { throw 'Reference output already exists with different intent.' }
+        if ([IO.Directory]::Exists($output)) { throw 'Reference output is a directory.' }
+        foreach ($asset in $assets) { Assert-GhpPublicZip $asset.Path -MaximumExpandedBytes 8GB }
+        Assert-GhpRepository $document.repository
+        $media = Ensure-GhpRelease $document.repository 'pack-media' $false
+        if ($media.draft -or $media.prerelease) { throw 'pack-media must be a published stable media release.' }
+        Sync-GhpAssets -Repository $document.repository -Release $media -Assets $assets
+        if (-not [IO.File]::Exists($output)) {
+            $temporary = $output+'.incoming-'+[Guid]::NewGuid().ToString('N')
+            try {
+                $stream = [IO.FileStream]::new($temporary,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
+                try { $bytes=$UpdateUtf8.GetBytes($json+"`n"); $stream.Write($bytes,0,$bytes.Length); $stream.Flush($true) } finally { $stream.Dispose() }
+                try { [IO.File]::Move($temporary,$output) } catch {
+                    $null = Assert-UpdatePath $output
+                    if (-not [IO.File]::Exists($output) -or (Read-UpdateText $output 1MB).Trim() -cne $json.Trim()) { throw }
+                }
+            } finally { if ([IO.File]::Exists($temporary)) { [IO.File]::Delete($temporary) } }
+        }
+        if ((Read-UpdateText $output 1MB).Trim() -cne $json.Trim()) { throw 'Reference output changed during publication.' }
+        return $document
+    } finally { foreach ($handle in $locks) { $handle.Dispose() } }
 }
 
 function New-GitHubPublicationPlan {

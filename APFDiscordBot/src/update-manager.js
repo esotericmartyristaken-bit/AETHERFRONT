@@ -334,6 +334,7 @@ export class UpdateManager {
   }
 
   async queue(id, queuedBy = 'operator', options = {}) {
+    if(this.controlDraining)return {ok:false,reason:'control-plane-activation'};
     if (await this.controlMaintenance()) return { ok: false, reason: 'control-plane-activation' };
     await this.load();
     const { manifest } = await this.readManifest(id);
@@ -351,6 +352,9 @@ export class UpdateManager {
     const now = Number.isFinite(Number(options.now)) ? Number(options.now) : Date.now();
     const minutes = countdownMinutes(options.countdownMinutes, this.defaultCountdownMinutes);
     const changelog = text(options.changelog || manifest.notes || '', 320);
+    // Quiescence closes queue admission synchronously, including requests that
+    // began before the control drain and awaited archive/state validation.
+    if(this.controlDraining)return {ok:false,reason:'control-plane-activation'};
     this.state = {
       ...initialState(),
       status: 'queued',
@@ -600,9 +604,14 @@ export class UpdateManager {
     if (!this.config.__controlRoot) return false;
     const setup=await fs.lstat(path.join(this.config.__controlRoot,'setup-in-progress.json')).catch(error=>{if(error.code==='ENOENT')return null;throw error;});
     if(setup)return true;
-    const proof=await readJson(path.join(this.config.__controlRoot,'verified-active.json'),{});
-    const pointer=await readJson(path.join(this.config.__controlRoot,'active.json'),{});
+    const controlRoot=process.env.APF_MANAGED_CONTROL==='1'?path.join(this.config.__controlRoot,'managed'):this.config.__controlRoot;
+    const proof=await readJson(path.join(controlRoot,'verified-active.json'),{});
+    const pointer=await readJson(path.join(controlRoot,'active.json'),{});
     if(proof.schemaVersion!==1||proof.version!==pointer.version||proof.bundleSha256!==pointer.bundleSha256)return true;
+    if(process.env.APF_MANAGED_CONTROL==='1'){
+      const drain=await readJson(path.join(controlRoot,'drain.json'),{});
+      if(drain.bundleSha256===pointer.bundleSha256)return true;
+    }
     try {
       await fs.lstat(path.join(this.config.__controlRoot, 'maintenance.json'));
       return true;

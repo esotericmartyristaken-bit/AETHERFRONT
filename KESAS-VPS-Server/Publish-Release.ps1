@@ -6,15 +6,17 @@ function Write-PublisherStage([string]$Stage) {
     Write-Information -MessageData $Stage -Tags 'Aetherfront-PublisherStage' -InformationAction Continue
 }
 
-function Add-ReleaseMedia([string]$ReleaseRoot,[string]$ConfigRoot,$Release,$Catalog) {
+function Add-ReleaseMedia([string]$ReleaseRoot,[string]$ConfigRoot,$Release,$Catalog,[string]$PrivateStage) {
     # Only additive, content-addressed public archives. Operator configuration,
     # existing media, state and keys are never replacement targets here.
     $pending=[Collections.Generic.List[object]]::new()
+    $names=@{}
     $config=Assert-UpdatePath $ConfigRoot
     if(-not [IO.Directory]::Exists($config)){throw 'Media destination must already exist.'}
     foreach($file in @($Release.files | Where-Object {$_.path -clike 'MediaPayload/*'})){
         if($file.path -cnotmatch '^MediaPayload/(kesas-[a-z0-9-]+-([a-f0-9]{64})\.zip)$' -or $Matches[2] -cne $file.sha256){throw 'Media filename must contain its full declared SHA256.'}
         $name=$Matches[1]
+        $names[$name]=$true
         $source=Assert-UpdatePath (Join-Path $ReleaseRoot $file.path)
         if(-not [IO.File]::Exists($source) -or ([IO.FileInfo]$source).Length -gt 512MB -or (Get-FileHash -LiteralPath $source).Hash -ine $file.sha256){throw 'Media source differs from the verified release.'}
         $references=@(foreach($profile in @($Catalog.full,$Catalog.potato)){foreach($package in @($profile.managedPackages)){if(([Uri]$package.archiveUrl).AbsolutePath -ceq ('/'+$name)){$package}}})
@@ -22,18 +24,60 @@ function Add-ReleaseMedia([string]$ReleaseRoot,[string]$ConfigRoot,$Release,$Cat
         Assert-GhpPublicZip $source
         $target=Assert-UpdatePath (Join-Path $config $name)
         if([IO.Directory]::Exists($target) -or ([IO.File]::Exists($target) -and (Get-FileHash -LiteralPath $target).Hash -ine $file.sha256)){throw 'Existing media is immutable; conflicting content will not be overwritten.'}
-        $pending.Add([pscustomobject]@{source=$source;target=$target;sha256=$file.sha256})
+        $pending.Add([pscustomobject]@{source=$source;target=$target;sha256=$file.sha256;sizeBytes=([IO.FileInfo]$source).Length;move=$false})
+    }
+    if (@($Release.files | Where-Object path -ceq 'MediaReferences.json').Count) {
+        $text=Read-UpdateText (Get-UpdateChildPath $ReleaseRoot 'MediaReferences.json') 1MB
+        Assert-ReleaseJsonUnique $text
+        $document=$text | ConvertFrom-Json
+        # This file and ClientTemplate.zip were both hashed against RELEASE.json
+        # inside the already repository-authenticated application archive.
+        Assert-GhpMediaReferences $document $Catalog $Release.version
+        foreach($asset in $document.assets){
+            if($names.ContainsKey($asset.name)){throw 'Media cannot be both embedded and referenced.'}
+            $names[$asset.name]=$true
+        }
+        # Private per-application directory, same volume as final Config files.
+        # No bytes become public until the entire batch passes its full scan.
+        Protect-UpdateSecrets $PrivateStage
+        foreach($asset in $document.assets){
+            $target=Get-UpdateChildPath $config $asset.name
+            if([IO.Directory]::Exists($target)){throw 'Existing media is immutable; conflicting content will not be overwritten.'}
+            if([IO.File]::Exists($target)){
+                if(([IO.FileInfo]$target).Length -ne $asset.sizeBytes -or (Get-GhpSha256 $target) -cne $asset.sha256){throw 'Existing media is immutable; conflicting content will not be overwritten.'}
+                Assert-GhpPublicZip $target -MaximumExpandedBytes 8GB
+                continue
+            }
+            $source=Get-UpdateChildPath $PrivateStage $asset.name
+            Save-GhpReferencedMedia $asset $source
+            Assert-GhpPublicZip $source -MaximumExpandedBytes 8GB
+            $pending.Add([pscustomobject]@{source=$source;target=$target;sha256=$asset.sha256;sizeBytes=$asset.sizeBytes;move=$true})
+        }
     }
     # Validate the entire batch before its first append. New unreferenced media
     # may remain after a later publication failure; it never replaces live data.
     foreach($item in $pending){
-        if([IO.File]::Exists($item.target)){continue}
+        $null=Assert-UpdatePath $item.target
+        if([IO.Directory]::Exists($item.target)){throw 'Existing media is immutable; conflicting content will not be overwritten.'}
+        if([IO.File]::Exists($item.target)){
+            if(([IO.FileInfo]$item.target).Length -ne $item.sizeBytes -or (Get-GhpSha256 $item.target) -cne $item.sha256){throw 'Existing media is immutable; conflicting content will not be overwritten.'}
+            continue
+        }
+        if($item.move){
+            if(([IO.FileInfo]$item.source).Length -ne $item.sizeBytes -or (Get-GhpSha256 $item.source) -cne $item.sha256){throw 'Media changed during private staging.'}
+            try{[IO.File]::Move($item.source,$item.target)}catch{
+                $null=Assert-UpdatePath $item.target
+                if(-not [IO.File]::Exists($item.target) -or ([IO.FileInfo]$item.target).Length -ne $item.sizeBytes -or (Get-GhpSha256 $item.target) -cne $item.sha256){throw}
+            }
+            continue
+        }
         $temporary=Assert-UpdatePath ($item.target+'.incoming-'+[Guid]::NewGuid().ToString('N'))
         try{
             [IO.File]::Copy($item.source,$temporary,$false)
-            if((Get-FileHash -LiteralPath $temporary).Hash -ine $item.sha256){throw 'Media changed during staging.'}
+            if(([IO.FileInfo]$temporary).Length -ne $item.sizeBytes -or (Get-GhpSha256 $temporary) -cne $item.sha256.ToLowerInvariant()){throw 'Media changed during staging.'}
             try{[IO.File]::Move($temporary,$item.target)}catch{
-                if(-not [IO.File]::Exists($item.target) -or (Get-FileHash -LiteralPath $item.target).Hash -ine $item.sha256){throw}
+                $null=Assert-UpdatePath $item.target
+                if(-not [IO.File]::Exists($item.target) -or ([IO.FileInfo]$item.target).Length -ne $item.sizeBytes -or (Get-GhpSha256 $item.target) -cne $item.sha256.ToLowerInvariant()){throw}
             }
         }finally{if([IO.File]::Exists($temporary)){[IO.File]::Delete($temporary)}}
     }
@@ -216,7 +260,7 @@ try{
         if(@($file.PSObject.Properties).Count -ne 2 -or @($file.PSObject.Properties | Where-Object Name -cnotin @('path','sha256')).Count -or $file.path -isnot [string] -or $file.sha256 -isnot [string]){throw 'Unsupported release file schema'}
         $relative=Get-UpdateRelativePath $file.path
         if(!$declared.Add($relative)){throw 'Duplicate release manifest entry'}
-        if(@('ClientTemplate.zip','APFPack-template.json','AetherfrontTechnology.json') -cnotcontains $relative -and $relative -cnotmatch '^(ServerPayload|PackHostPayload|CertificateToolPayload|UpdateToolPayload)/' -and $relative -cnotmatch '^MediaPayload/kesas-[a-z0-9-]+-[a-f0-9]{64}\.zip$'){throw "Unsupported release file: $relative"}
+        if(@('ClientTemplate.zip','APFPack-template.json','AetherfrontTechnology.json','MediaReferences.json') -cnotcontains $relative -and $relative -cnotmatch '^(ServerPayload|PackHostPayload|CertificateToolPayload|UpdateToolPayload)/' -and $relative -cnotmatch '^MediaPayload/kesas-[a-z0-9-]+-[a-f0-9]{64}\.zip$'){throw "Unsupported release file: $relative"}
         if($relative -match '^(ServerPayload|PackHostPayload|CertificateToolPayload|UpdateToolPayload)/(Config|Universe|Aetherfront|Logs|secrets)(/|$)'){throw 'Release contains protected server state'}
         if($file.sha256 -notmatch '^[a-fA-F0-9]{64}$'){throw "Invalid release SHA256: $relative"}
         $path=Get-UpdateChildPath "$stage/Release" $relative
@@ -225,7 +269,10 @@ try{
     foreach($required in @('ClientTemplate.zip','APFPack-template.json','AetherfrontTechnology.json')){if(!$declared.Contains($required)){throw "Missing required release file: $required"}}
     if(@(Get-ChildItem -LiteralPath "$stage/Release" -Recurse -Force -File).Count -ne $declared.Count+1){throw 'Release contains undeclared files'}
     Expand-UpdateArchive "$stage/Release/ClientTemplate.zip" "$stage/Client"
-    $clientCatalog=Read-UpdateText "$stage/Client/GameData/LunaMultiplayer/Launcher/install-catalog.json" | ConvertFrom-Json
+    $hasMediaReferences=$declared.Contains('MediaReferences.json')
+    $clientCatalogText=Read-UpdateText "$stage/Client/GameData/LunaMultiplayer/Launcher/install-catalog.json" $(if($hasMediaReferences){1MB}else{16MB})
+    if($hasMediaReferences){Assert-ReleaseJsonUnique $clientCatalogText}
+    $clientCatalog=$clientCatalogText | ConvertFrom-Json
     $githubSettings=$clientCatalog.PSObject.Properties['gitHub']
     $githubEnabled=$githubSettings -and $githubSettings.Value.enabled
     $fingerprint=$null;$prepared=$null;$reuse=$false
@@ -242,9 +289,10 @@ try{
             $reuse=$true
         }
     }
-    if(@($release.files | Where-Object {$_.path -clike 'MediaPayload/*'}).Count){
+    if(@($release.files | Where-Object {$_.path -clike 'MediaPayload/*' -or $_.path -ceq 'MediaReferences.json'}).Count){
         if(-not $githubEnabled){. "$PSScriptRoot/GitHub.Publish.ps1"}
-        Add-ReleaseMedia "$stage/Release" "$root/Server/Config" $release $clientCatalog
+        Write-PublisherStage 'media-publication'
+        Add-ReleaseMedia "$stage/Release" "$root/Server/Config" $release $clientCatalog "$stage/Media"
     }
     if(-not $reuse){
         New-UpdateDirectory "$stage/Published"

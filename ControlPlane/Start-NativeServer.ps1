@@ -6,7 +6,9 @@ $selected=Get-Content -LiteralPath (Join-Path $configuration.root 'native-cache/
 $directory=[IO.Path]::GetFullPath($selected.directory)
 $cache=[IO.Path]::GetFullPath((Join-Path $configuration.root 'native-cache')).TrimEnd('\')+'\'
 $seed=[IO.Path]::GetFullPath((Join-Path $configuration.root 'bootstrap/native'))
-if($directory -ine $seed -and -not $directory.StartsWith($cache,[StringComparison]::OrdinalIgnoreCase)){throw 'Untrusted server launcher selection'}
+$managed=[IO.Path]::GetFullPath((Join-Path $configuration.root 'managed/releases')).TrimEnd('\')+'\'
+$isManaged=$directory.StartsWith($managed,[StringComparison]::OrdinalIgnoreCase) -and $directory.Substring($managed.Length).Replace('\','/') -cmatch '^control-[1-9][0-9]{0,8}-[a-f0-9]{64}/KESAS-VPS-Server$'
+if($directory -ine $seed -and -not $directory.StartsWith($cache,[StringComparison]::OrdinalIgnoreCase) -and -not $isManaged){throw 'Untrusted server launcher selection'}
 $launcher=Join-Path $directory 'Start-Server.ps1'
 for($cursor=$launcher;$cursor;$cursor=[IO.Path]::GetDirectoryName($cursor)){
     if([IO.File]::GetAttributes($cursor) -band [IO.FileAttributes]::ReparsePoint){throw 'Unsafe server launcher path'}

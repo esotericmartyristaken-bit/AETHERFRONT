@@ -139,7 +139,15 @@ try{
     foreach($path in @($nativeBootstrap,$nativeFrozen,$nativeCommon)){Assert-NativeProtection $path}
     . $nativeCommon *> $null
     $null=Assert-UpdatePath $nativeControlRoot
-    $null=Get-NativeExactPath $PSCommandPath (Join-Path $nativeBootstrap 'Invoke-NativePublisher.ps1')
+    $nativeManaged=Join-Path $nativeControlRoot 'managed/releases'
+    $nativeWrapper=[IO.Path]::GetFullPath($PSCommandPath)
+    $nativeManagedPrefix=[IO.Path]::GetFullPath($nativeManaged).TrimEnd([IO.Path]::DirectorySeparatorChar)+[IO.Path]::DirectorySeparatorChar
+    if($nativeWrapper.StartsWith($nativeManagedPrefix,[StringComparison]::OrdinalIgnoreCase)){
+        $nativeRelative=$nativeWrapper.Substring($nativeManagedPrefix.Length).Replace([IO.Path]::DirectorySeparatorChar,[char]'/')
+        if($nativeRelative -cnotmatch '^control-[1-9][0-9]{0,8}-[a-f0-9]{64}/ControlPlane/Invoke-NativePublisher.ps1$'){throw 'Unexpected versioned wrapper path.'}
+        Assert-NativeProtection $nativeManaged
+        Assert-NativeNoReparse $nativeWrapper
+    }else{$null=Get-NativeExactPath $PSCommandPath (Join-Path $nativeBootstrap 'Invoke-NativePublisher.ps1')}
     Assert-NativeProtection $PSCommandPath
     $nativeCache=Assert-UpdatePath (Join-Path $nativeControlRoot 'native-cache')
     if(-not [IO.Directory]::Exists($nativeCache)){throw 'Protected native cache is missing.'}
@@ -178,7 +186,13 @@ try{
     if(-not [IO.Path]::IsPathFullyQualified($nativeSelected) -or $nativeSelected -match '^[\\/]{2}'){throw 'Invalid selected native directory.'}
     $nativeSelected=Assert-UpdatePath $nativeSelected
     $nativeControlCache=Join-Path $nativeCache 'control'
-    if(-not [string]::Equals($nativeSelected,$nativeFrozen,[StringComparison]::OrdinalIgnoreCase)){
+    if($nativeSelected.StartsWith($nativeManagedPrefix,[StringComparison]::OrdinalIgnoreCase)){
+        $relative=$nativeSelected.Substring($nativeManagedPrefix.Length).Replace([IO.Path]::DirectorySeparatorChar,[char]'/')
+        if($relative -cnotmatch '^control-[1-9][0-9]{0,8}-[a-f0-9]{64}/KESAS-VPS-Server$'){throw 'Unexpected versioned publisher path.'}
+        for($cursor=$nativeSelected;$cursor -ine $nativeControlRoot;$cursor=[IO.Path]::GetDirectoryName($cursor)){Assert-NativeProtection $cursor}
+        $expectedWrapper=Join-Path ([IO.Path]::GetDirectoryName($nativeSelected)) 'ControlPlane/Invoke-NativePublisher.ps1'
+        $null=Get-NativeExactPath $PSCommandPath $expectedWrapper
+    }elseif(-not [string]::Equals($nativeSelected,$nativeFrozen,[StringComparison]::OrdinalIgnoreCase)){
         $prefix=$nativeControlCache+[IO.Path]::DirectorySeparatorChar
         if(-not $nativeSelected.StartsWith($prefix,[StringComparison]::OrdinalIgnoreCase) -or
             [IO.Path]::GetFileName($nativeSelected) -ine 'KESAS-VPS-Server' -or

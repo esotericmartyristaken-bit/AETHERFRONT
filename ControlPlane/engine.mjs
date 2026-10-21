@@ -106,7 +106,7 @@ export class ControlEngine {
   async phase(transaction,phase,extra={}) { return this.save({...transaction,...extra,phase,updatedAt:new Date().toISOString()}); }
   async isNativeIdle() {
     const state=await readJson(path.join(this.settings.botRoot,'state','kesas-update-state.json'));
-    if(state.schemaVersion!==1 || state.status!=='idle') return false;
+    if(state.schemaVersion!==1 || !['idle','failed'].includes(state.status)) return false;
     const journal=await fs.stat(path.join(this.settings.nativeRoot,'.update-transaction.json')).catch(error=>{if(error.code==='ENOENT')return null;throw error;});
     if(journal) return false;
     // Probe the existing OS-owned publisher lease. Never terminate its owner.
@@ -134,7 +134,7 @@ export class ControlEngine {
     requireValue(bytes.length===descriptor.sizeBytes && digest(bytes)===descriptor.sha256,'Invalid authenticated control bytes');
     const archive=path.join(this.root,'staging',`${transaction.id}.zip`);
     await atomic(archive,bytes);await this.fault('staging');
-    await this.execute(this.settings.powershell,['-NoProfile','-NonInteractive','-File',path.join(this.root,'bootstrap','Expand-ControlBundle.ps1'),'-Archive',archive,'-Destination',stage,'-ExpectedVersion',descriptor.version,'-ExpectedSha256',descriptor.sha256,'-ExpectedSize',String(descriptor.sizeBytes)],{windowsHide:true,maxBuffer:65536,timeout:60000});
+    await this.execute(this.settings.powershell,['-NoProfile','-NonInteractive','-File',this.settings.extractor||path.join(this.root,'bootstrap','Expand-ControlBundle.ps1'),'-Archive',archive,'-Destination',stage,'-ExpectedVersion',descriptor.version,'-ExpectedSha256',descriptor.sha256,'-ExpectedSize',String(descriptor.sizeBytes)],{windowsHide:true,maxBuffer:65536,timeout:60000});
     const raw=await fs.readFile(path.join(stage,'CONTROL.json'));
     const manifest=validateControlManifest(parseStrictJson(raw.toString('utf8')),descriptor);
     requireValue(Number(process.versions.node.split('.')[0])===manifest.runtime.nodeMajor,'Required Node runtime is not provisioned');

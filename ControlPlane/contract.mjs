@@ -2,7 +2,7 @@
 export const REPOSITORY = 'esotericmartyristaken-bit/AETHERFRONT';
 export const CONTRACT = 1;
 export const BOOTSTRAP = 1;
-export const CAPABILITIES = Object.freeze(['application-v1', 'media-payload-v1', 'control-plane-v1', 'host-report-v1', 'guard-15m-empty-v1', 'atomic-control-rollback-v1', 'native-tools-v1']);
+export const CAPABILITIES = Object.freeze(['application-v1', 'media-payload-v1', 'control-plane-v1', 'host-report-v1', 'guard-15m-empty-v1', 'atomic-control-rollback-v1', 'native-tools-v1', 'versioned-broker-v1', 'independent-report-v1', 'unattended-host-v1', 'media-reference-v1']);
 export const MAX_CONTROL_BYTES = 128 * 1024 * 1024;
 export const HASH = /^[a-f0-9]{64}$/;
 export function requireValue(condition, message) { if (!condition) throw new Error(message); }
@@ -24,8 +24,8 @@ export function validateControlDescriptor(value) {
 }
 export function allowedControlPath(name) {
   return typeof name === 'string' && (
-    /^ControlPlane\/(worker|engine|contract|github|public-status)\.mjs$/.test(name) ||
-    name==='ControlPlane/Read-ClientInventory.ps1' ||
+    /^ControlPlane\/[a-z][a-z0-9-]*\.mjs$/.test(name) ||
+    /^ControlPlane\/(Read-ClientInventory|Invoke-NativePublisher)\.ps1$/.test(name) ||
     /^APFDiscordBot\/src\/[a-z][a-z0-9-]*\.js$/.test(name) ||
     /^APFDiscordBot\/package(?:-lock)?\.json$/.test(name) ||
     /^APFDiscordBot\/scripts\/(Verify-KesasRelease|Stop-KesasGracefully|Stop-APFLmpGracefully)\.ps1$/.test(name) ||
@@ -46,7 +46,7 @@ export function validateControlManifest(value, descriptor) {
   requireValue(value.schemaVersion === 1 && value.transactionVersion === 1 && value.version === descriptor.version, 'Unsupported control manifest');
   exact(value.runtime, ['nodeMajor','powerShellMajor','dotnetMajor'], 'runtime requirements');
   requireValue(value.runtime.nodeMajor === 24 && value.runtime.powerShellMajor === 7 && value.runtime.dotnetMajor === 8, 'Unsupported runtime provisioning requirement');
-  requireValue(Array.isArray(value.capabilities) && value.capabilities.length === CAPABILITIES.length && CAPABILITIES.every(capability => value.capabilities.includes(capability)), 'Unsupported capabilities');
+  requireValue(Array.isArray(value.capabilities) && value.capabilities.length<=64 && new Set(value.capabilities).size===value.capabilities.length && value.capabilities.every(capability=>typeof capability==='string'&&/^[a-z][a-z0-9-]{0,79}$/.test(capability)) && CAPABILITIES.slice(0,7).every(capability => value.capabilities.includes(capability)), 'Unsupported capabilities');
   requireValue(Array.isArray(value.files) && value.files.length >= REQUIRED_CONTROL_FILES.length && value.files.length <= 200, 'Invalid control inventory');
   const seen = new Set();
   let total = 0;
@@ -67,7 +67,7 @@ function validDate(value) { return typeof value === 'string' && /^\d{4}-\d\d-\d\
 export function validateHostReport(value) {
   exact(value, ['schemaVersion','contractVersion','bootstrapVersion','observedAt','expiresAt','capabilities','control','application','components','runtime'], 'host report');
   requireValue(value.schemaVersion === 1 && value.contractVersion === 1 && value.bootstrapVersion === 1 && validDate(value.observedAt) && validDate(value.expiresAt), 'Unsupported host report');
-  requireValue(Array.isArray(value.capabilities) && new Set(value.capabilities).size === value.capabilities.length && value.capabilities.every(item => CAPABILITIES.includes(item)), 'Invalid host capabilities');
+  requireValue(Array.isArray(value.capabilities) && value.capabilities.length<=64 && new Set(value.capabilities).size === value.capabilities.length && value.capabilities.every(item => typeof item==='string'&&/^[a-z][a-z0-9-]{0,79}$/.test(item)), 'Invalid host capabilities');
   exact(value.control, ['version','sequence','sha256','status','phase','pendingVersion','lastSuccess','rollback','failure'], 'control status');
   requireValue(HASH.test(value.control.sha256), 'Invalid installed control hash');
   requireValue(value.control.version === `control-${value.control.sequence}` && Number.isSafeInteger(value.control.sequence) && value.control.sequence > 0 && STATUSES.includes(value.control.status) && safeCode(value.control.phase) && nullableVersion(value.control.pendingVersion) && nullableVersion(value.control.lastSuccess) && nullableVersion(value.control.rollback) && safeCode(value.control.failure), 'Invalid control status');
