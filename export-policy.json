@@ -17,6 +17,11 @@
   "deniedFilePattern": "(?i)(?:^|/)(?:Aetherfront-Client-Handoff\\.md|SetDirectories\\.bat|CopyToKSPDirectory\\.bat|Publish-Release\\.before\\.ps1|config\\.json|WORK-STATE\\.json|TEST-RESULTS\\.json|EVIDENCE\\.json|LIVE-RESULT\\.json)|\\.(?:user|suo|log|cache|pem|key|pfx|p12|crt|cer|snk)$|^Aetherfront-Source/(?:LmpMasterServer|MasterServer)/app\\.config$",
   "groups": [
     {
+      "role": "RC33 personal progression, compatibility, targeted runtime grafts, reproducible keyless release and regression sources",
+      "directories": ["Aetherfront-RC33-Work", "Development/PersonalProgressionTests", "Development/PersonalServerTests", "Development/PersonalUdpTests", "Development/ProgressionPatch"],
+      "extensions": [".cs", ".csproj", ".ps1", ".py", ".cfg", ".md"]
+    },
+    {
       "role": "RC28 exact runtime settings, post-exit preservation, authenticated legacy recovery and regression tests",
       "directories": ["Aetherfront-RC28-Work/Engine", "Aetherfront-RC28-Work/NativeTests", "Aetherfront-RC28-Work/CasingTests", "Aetherfront-RC28-Work/SettingsTests", "Aetherfront-RC28-Work/VersionPatcher"],
       "extensions": [".cs", ".csproj", ".ps1"]

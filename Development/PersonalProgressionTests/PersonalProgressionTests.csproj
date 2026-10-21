@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFrameworks>net8.0;net472</TargetFrameworks><EnableDefaultCompileItems>false</EnableDefaultCompileItems><LangVersion>10</LangVersion></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="../../Aetherfront-RC33-Work/PersonalClient/ScienceClaim.cs" />
+    <Compile Include="../../Aetherfront-Source/AetherfrontCore/*.cs" Condition="'$(RuntimeCore)' == ''" />
+    <Reference Include="AetherfrontCore" Condition="'$(RuntimeCore)' != ''"><HintPath>$(RuntimeCore)</HintPath></Reference>
+    <Reference Include="JsonFx"><HintPath>../../../staging/Server/JsonFx.dll</HintPath></Reference>
+    <Reference Include="Newtonsoft.Json"><HintPath>../../../staging/Server/Newtonsoft.Json.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>

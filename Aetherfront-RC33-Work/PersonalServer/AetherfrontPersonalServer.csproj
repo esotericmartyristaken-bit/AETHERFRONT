@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net8.0</TargetFramework><AssemblyName>AetherfrontPersonalServer</AssemblyName><LangVersion>10</LangVersion></PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Server"><HintPath>$(ServerReference)</HintPath><Private>false</Private></Reference>
+    <Reference Include="AetherfrontCore"><HintPath>$(PersonalCore)</HintPath><Private>false</Private></Reference>
+    <Reference Include="Lidgren.Core"><HintPath>$(ServerRuntime)/Lidgren.Core.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Newtonsoft.Json"><HintPath>$(ServerRuntime)/Newtonsoft.Json.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

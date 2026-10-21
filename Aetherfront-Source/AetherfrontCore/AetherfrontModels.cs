@@ -137,6 +137,7 @@ namespace Aetherfront.Core
         public List<ResearchProjectProgress> ResearchProgress { get; set; } = new List<ResearchProjectProgress>();
         public List<TechnologyDefinition> TechnologyDefinitions { get; set; } = new List<TechnologyDefinition>();
         public List<AetherfrontAccountRecord> Accounts { get; set; } = new List<AetherfrontAccountRecord>();
+        public PersonalProgressionState PersonalProgression { get; set; } = new PersonalProgressionState();
         public AetherfrontEventMode EventMode { get; set; } = new AetherfrontEventMode();
         public List<StoreItem> StoreItems { get; set; } = new List<StoreItem>();
 
@@ -291,6 +292,7 @@ namespace Aetherfront.Core
         public string Description { get; set; } = string.Empty;
         public long ScienceCost { get; set; } = AetherfrontConstants.TechnologyUnlockCost;
         public List<string> PrerequisiteIds { get; set; } = new List<string>();
+        public bool AnyPrerequisite { get; set; }
         public bool Starter { get; set; }
     }
     public sealed class FactionMember

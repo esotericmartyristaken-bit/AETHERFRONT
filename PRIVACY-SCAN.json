@@ -78,5 +78,49 @@
     }
   ],
   "contentOrMatchedValuesPrinted": false,
-  "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
+  "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check.",
+  "incrementalReviews": [
+    {
+      "scannedUtc": "2026-10-21T06:59:08.9347030Z",
+      "filesScanned": 34,
+      "findingCount": 0,
+      "paths": [
+        ".gitignore",
+        "Aetherfront-RC33-Work/Build-Engine.ps1",
+        "Aetherfront-RC33-Work/Build-Progression.ps1",
+        "Aetherfront-RC33-Work/Build-Release.py",
+        "Aetherfront-RC33-Work/Compatibility/KopernicusShadows.cfg",
+        "Aetherfront-RC33-Work/PackPolicy.py",
+        "Aetherfront-RC33-Work/PersonalClient/AetherfrontPersonalClient.csproj",
+        "Aetherfront-RC33-Work/PersonalClient/DefaultDisplay.cs",
+        "Aetherfront-RC33-Work/PersonalClient/DefaultDisplayPolicy.cs",
+        "Aetherfront-RC33-Work/PersonalClient/LaunchPositionCompatibility.cs",
+        "Aetherfront-RC33-Work/PersonalClient/PersonalClient.cs",
+        "Aetherfront-RC33-Work/PersonalClient/ScienceClaim.cs",
+        "Aetherfront-RC33-Work/PersonalClient/ScienceOutbox.cs",
+        "Aetherfront-RC33-Work/PersonalServer/AetherfrontPersonalServer.csproj",
+        "Aetherfront-RC33-Work/PersonalServer/PersonalServer.cs",
+        "Aetherfront-RC33-Work/README.md",
+        "Aetherfront-RC33-Work/SettingsTests/Program.cs",
+        "Aetherfront-RC33-Work/SettingsTests/SettingsTests.csproj",
+        "Aetherfront-Source/AetherfrontCore/AetherfrontModels.cs",
+        "Aetherfront-Source/AetherfrontCore/PersonalProgression.cs",
+        "Development/PersonalProgressionTests/PersonalProgressionTests.csproj",
+        "Development/PersonalProgressionTests/Program.cs",
+        "Development/PersonalServerTests/Build-ScienceCatalog.py",
+        "Development/PersonalServerTests/Build-TechnologyCatalog.py",
+        "Development/PersonalServerTests/PersonalServerTests.csproj",
+        "Development/PersonalServerTests/Prepare-Client.py",
+        "Development/PersonalServerTests/Prepare-Overlay.py",
+        "Development/PersonalServerTests/Prepare-Server.py",
+        "Development/PersonalServerTests/Program.cs",
+        "Development/PersonalUdpTests/PersonalUdpTests.csproj",
+        "Development/PersonalUdpTests/Program.cs",
+        "Development/ProgressionPatch/Program.cs",
+        "Development/ProgressionPatch/ProgressionPatch.csproj",
+        "export-policy.json"
+      ],
+      "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
+    }
+  ]
 }
