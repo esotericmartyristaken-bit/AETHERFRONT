@@ -206,7 +206,7 @@ async function publishStatus() {
       phase:/^[a-z][a-z0-9-]{0,79}$/.test(native.phase||'')?native.phase:null,
       pendingVersion:native.version||null,
       health:consistent&&['healthy','offline','unknown'].includes(health)?health:'unknown',
-      lastSuccess:native.lastDeployment?.status==='cancelled'?null:native.lastDeployment?.version||null,
+      lastSuccess:['cancelled','rolled-back'].includes(native.lastDeployment?.status)?null:native.lastDeployment?.version||null,
       failure:!consistent?'application-version-mismatch':native.status==='failed'?'native-deployment-failed':null
     },components,runtime:settings.runtime
   });

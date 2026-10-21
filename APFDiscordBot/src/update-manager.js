@@ -5,6 +5,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { readJson, writeJsonAtomic } from './util.js';
 import { observePublication } from './native-broker.js';
+import { noLinks } from '../../ControlPlane/public-status.mjs';
 const execFileAsync = promisify(execFile);
 
 const SCHEMA_VERSION = 1;
@@ -196,6 +197,42 @@ export class UpdateManager {
     };
   }
 
+  async acknowledgeReviewedRollback(requestId, priorResultSha256) {
+    if(!this.config.__controlRoot||![requestId,priorResultSha256].every(value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value)))throw new Error('Invalid reviewed rollback identity');
+    await this.refreshFromDisk();
+    if(this.operation||this.state.status!=='failed')throw new Error('Only an inactive failed queue can acknowledge rollback');
+    const approvalPath=path.join(this.config.__controlRoot,'bootstrap','recovery-approvals',`${requestId}-${priorResultSha256}.json`);
+    await noLinks(approvalPath);
+    const approval=JSON.parse(await fs.readFile(approvalPath,'utf8'));
+    const bytes=await fs.readFile(this.statePath);
+    if(approval.schemaVersion!==1||approval.action!=='host-reviewed-rollback'||approval.requestId!==requestId||approval.priorResultSha256!==priorResultSha256||
+      approval.version!==this.state.version||crypto.createHash('sha256').update(bytes).digest('hex')!==approval.failedStateSha256)throw new Error('Protected rollback approval does not match failed queue');
+    const resultPath=path.join(this.config.__controlRoot,'native-results',`${requestId}.json`);await noLinks(resultPath);
+    const result=JSON.parse(await fs.readFile(resultPath,'utf8'));
+    if(result.phase!=='recovery-authorized'||result.id!==requestId||result.version!==approval.version||result.recovery?.action!=='host-reviewed-rollback'||
+      result.recovery.priorResultSha256!==priorResultSha256||result.recovery.rollbackEvidenceSha256!==approval.evidenceSha256)throw new Error('Broker rollback authorization is not current');
+    const root=this.config.lmp.deploymentRoot;
+    const feed=JSON.parse(await fs.readFile(path.join(root,'Updates','APFClientUpdate.json'),'utf8'));
+    const pack=JSON.parse(await fs.readFile(path.join(root,'Server','Config','APFPack.json'),'utf8'));
+    if(feed.version!==approval.activeVersion||pack.packVersion!==feed.version||pack.requiredClientVersion!==feed.version)throw new Error('Restored active release changed');
+    const history=path.join(this.config.__root,'state','reviewed-native-rollbacks');await noLinks(history);await fs.mkdir(history,{recursive:true});
+    if(crypto.createHash('sha256').update(await fs.readFile(this.statePath)).digest('hex')!==approval.failedStateSha256)throw new Error('Queue changed during rollback acknowledgement');
+    const record=path.join(history,`${requestId}-${priorResultSha256}.json`);await noLinks(record);
+    let handle;
+    try{
+      handle=await fs.open(record,'wx');
+      await handle.writeFile(JSON.stringify({schemaVersion:1,approval,failedState:JSON.parse(bytes.toString('utf8')),acknowledgedAt:new Date().toISOString()}));await handle.sync();
+    }catch(error){
+      if(error.code!=='EEXIST')throw error;
+      const previous=JSON.parse(await fs.readFile(record,'utf8'));
+      if(previous.schemaVersion!==1||JSON.stringify(previous.approval)!==JSON.stringify(approval)||JSON.stringify(previous.failedState)!==JSON.stringify(JSON.parse(bytes.toString('utf8'))))throw new Error('Conflicting rollback acknowledgement history');
+    }finally{await handle?.close();}
+    if(crypto.createHash('sha256').update(await fs.readFile(this.statePath)).digest('hex')!==approval.failedStateSha256)throw new Error('Queue changed; rollback history retained without queue transition');
+    this.state={...initialState(),lastDeployment:{id:this.state.packageId,version:this.state.version,status:'rolled-back',activeVersion:approval.activeVersion,review:priorResultSha256}};
+    await this.save();
+    return {ok:true,status:'rollback-acknowledged',activeVersion:approval.activeVersion};
+  }
+
   async readManifest(id) {
     const normalizedId = packageId(id);
     const packageDir = safeJoin(this.stagingRoot, normalizedId);
@@ -307,7 +344,7 @@ export class UpdateManager {
       if (this.state.lastDeployment?.status === 'cancelled' && this.state.lastDeployment.version === manifest.version) {
         return { ok: false, reason: 'update-was-cancelled' };
       }
-      const lastVersion = this.state.lastDeployment?.version;
+      const lastVersion = this.state.lastDeployment?.status==='rolled-back'?null:this.state.lastDeployment?.version;
       if (/^kesas-rc[1-9][0-9]*$/.test(lastVersion || '') && /^kesas-rc[1-9][0-9]*$/.test(manifest.version) &&
           BigInt(lastVersion.slice(8)) >= BigInt(manifest.version.slice(8))) return { ok: false, reason: 'version-already-deployed' };
     }

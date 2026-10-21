@@ -262,7 +262,28 @@ export class NativeAgent {
     await writeJson(path.join(this.cache,'current-native.json'),{directory,sha256});
     return file;
   }
-  async publisher() {
+  async reviewedPublisher(id, priorHash, manifestHash) {
+    const file=path.join(this.cache,'recoveries',id,`publisher-repair-${priorHash}.json`);
+    requireValue(await fileHash(file)===manifestHash,'Reviewed publisher manifest changed');
+    const manifest=await strictFile(file,16384);
+    exact(manifest,['schemaVersion','requestId','priorResultSha256','files'],'reviewed publisher manifest');
+    const names=['Publish-Release.ps1','Update.Common.ps1','GitHub.Publish.ps1','Export-Client.ps1','Start-Server.ps1','Stop-Server.ps1'];
+    requireValue(manifest.schemaVersion===1&&manifest.requestId===id&&manifest.priorResultSha256===priorHash&&Array.isArray(manifest.files)&&manifest.files.length===names.length,'Reviewed publisher identity mismatch');
+    const directory=path.join(this.cache,'control',`host-repair-${id}-${manifestHash}`,'KESAS-VPS-Server');
+    const seen=new Set();
+    for(const row of manifest.files) {
+      exact(row,['name','sha256','sizeBytes'],'reviewed publisher file');
+      requireValue(names.includes(row.name)&&!seen.has(row.name)&&typeof row.sha256==='string'&&HASH.test(row.sha256)&&Number.isSafeInteger(row.sizeBytes)&&row.sizeBytes>0&&row.sizeBytes<=2*1024*1024,'Invalid reviewed publisher inventory');
+      seen.add(row.name);
+      const target=path.join(directory,row.name);await noLinks(target);
+      requireValue((await fs.stat(target)).size===row.sizeBytes&&await fileHash(target)===row.sha256,'Reviewed publisher bytes changed');
+    }
+    return path.join(directory,'Publish-Release.ps1');
+  }
+  async publisher(request, result) {
+    if(result?.recovery?.action==='host-reviewed-rollback'&&result.recovery.publisherRepairSha256) {
+      return this.selectPublisher(await this.reviewedPublisher(request.id,result.recovery.priorResultSha256,result.recovery.publisherRepairSha256));
+    }
     const pointer = validatePointer(await strictFile(path.join(this.root,'active.json')));
     const seed = await strictFile(path.join(this.bootstrap,'seed.json'));
     validatePointer(seed.pointer);
@@ -355,6 +376,20 @@ export class NativeAgent {
       requireValue(await fileHash(file)===expectedHash,'Protected result changed; obtain fresh evidence');
       const previous=await this.result(id);
       requireValue(previous?.phase==='blocked' && (!previous.nativePid || !await this.isAlive(previous.nativePid)) && await this.idle() && !await this.journalPresent(),'Recovery requires a blocked, exited, lease-idle preactivation attempt');
+      let rollback=null;
+      if(options.rollbackEvidenceSha256) {
+        requireValue(HASH.test(options.rollbackEvidenceSha256)&&!options.remote,'Rollback review is host-operator only');
+        const evidence=path.join(this.cache,'recoveries',id,`rollback-review-${expectedHash}.json`);
+        requireValue(await fileHash(evidence)===options.rollbackEvidenceSha256,'Protected rollback evidence changed');
+        rollback=await strictFile(evidence,65536);
+        requireValue(rollback.schemaVersion===1&&rollback.action==='host-reviewed-rollback'&&rollback.requestId===id&&rollback.priorResultSha256===expectedHash&&
+          rollback.archiveSha256===previous.sha256&&rollback.version===previous.version&&HASH.test(rollback.failedStateSha256)&&HASH.test(rollback.preparedRecordSha256)&&
+          typeof rollback.requiredControlVersion==='string'&&/^control-[1-9][0-9]{0,8}$/.test(rollback.requiredControlVersion),'Rollback evidence identity mismatch');
+        if(rollback.publisherRepairSha256) {
+          requireValue(typeof rollback.publisherRepairSha256==='string'&&HASH.test(rollback.publisherRepairSha256),'Invalid reviewed publisher digest');
+          await this.reviewedPublisher(id,expectedHash,rollback.publisherRepairSha256);
+        }
+      }
       if(options.remote) {
         requireValue(PREACTIVATION_STAGES.has(previous.stage)&&previous.nativePid===null,'Remote recovery cannot replay a publisher that may have started');
         requireValue(previous.version===options.remote.version&&previous.sha256===options.remote.archiveSha256&&previous.sourceCommit===options.remote.sourceCommit,'Remote recovery immutable identity mismatch');
@@ -364,22 +399,31 @@ export class NativeAgent {
       const archive=path.join(this.cache,'applications',`${id}.zip`);
       if(options.remote)await this.copyApplication(request);
       requireValue(await fileHash(archive)===request.sha256,'Protected archive changed');
-      for(const relative of [`Updates/${request.version}`,`.github-prepared/${request.version}`]) {
+      for(const relative of [`Updates/${request.version}`,...(rollback?[]:[`.github-prepared/${request.version}`])]) {
         const target=path.join(this.settings.nativeRoot,relative);await noLinks(target);
         requireValue(!await fs.stat(target).then(()=>true,error=>{if(error.code==='ENOENT')return false;throw error;}),'Prepared or activated version requires separate recovery review');
       }
       const feed=await strictFile(path.join(this.settings.nativeRoot,'Updates','APFClientUpdate.json'),1024*1024);
       const pack=await strictFile(path.join(this.settings.nativeRoot,'Server','Config','APFPack.json'),1024*1024);
       requireValue(/^kesas-rc[1-9][0-9]*$/.test(feed.version) && feed.version===pack.packVersion && feed.version===pack.requiredClientVersion && BigInt(feed.version.slice(8))<BigInt(request.version.slice(8)),'Active release is inconsistent or not older');
+      if(rollback)requireValue(rollback.activeVersion===feed.version&&await fileHash(path.join(this.settings.nativeRoot,'.github-prepared',request.version,'prepared.json'))===rollback.preparedRecordSha256,'Reviewed rollback baseline or prepared release changed');
       await this.health();
       requireValue(await this.idle() && !await this.journalPresent(),'Native state changed during recovery review');
       const directory=path.join(this.cache,'recoveries',id);await noLinks(directory);await fs.mkdir(directory,{recursive:true});
       const history=path.join(directory,`${expectedHash}.json`);
       try {const handle=await fs.open(history,'wx');try{await handle.writeFile(JSON.stringify(previous));await handle.sync();}finally{await handle.close();}}
       catch(error){if(error.code!=='EEXIST')throw error;throw new Error('Recovery authorization already consumed; preserve history');}
-      const authorization={schemaVersion:1,action:options.remote?'github-reviewed-preactivation':'host-reviewed-preactivation',priorResultSha256:expectedHash,authorizedAt:new Date().toISOString(),activeVersion:feed.version,
-        ...(options.remote?{recoveryId:options.remote.recoveryId,recoveryCommit:options.remote.recoveryCommit}:{})};
+      const authorization={schemaVersion:1,action:rollback?'host-reviewed-rollback':options.remote?'github-reviewed-preactivation':'host-reviewed-preactivation',priorResultSha256:expectedHash,authorizedAt:new Date().toISOString(),activeVersion:feed.version,
+        ...(options.remote?{recoveryId:options.remote.recoveryId,recoveryCommit:options.remote.recoveryCommit}:{}),...(rollback?{rollbackEvidenceSha256:options.rollbackEvidenceSha256,
+          ...(rollback.publisherRepairSha256?{publisherRepairSha256:rollback.publisherRepairSha256}:{minimumControlVersion:rollback.requiredControlVersion})}:{} )};
       await writeJson(path.join(directory,`${expectedHash}.authorization.json`),authorization);
+      if(rollback) {
+        // Inherit the fixed bootstrap's protected-write/readable permissions.
+        // The limited queue may consume this approval, never create one.
+        const approvals=path.join(this.bootstrap,'recovery-approvals');await noLinks(approvals);await fs.mkdir(approvals,{recursive:true});
+        await writeJson(path.join(approvals,`${id}-${expectedHash}.json`),{schemaVersion:1,action:'host-reviewed-rollback',requestId:id,priorResultSha256:expectedHash,
+          version:request.version,activeVersion:feed.version,failedStateSha256:rollback.failedStateSha256,evidenceSha256:options.rollbackEvidenceSha256,authorizedAt:authorization.authorizedAt});
+      }
       return await this.save({...previous,attempt:(previous.attempt||1)+1,recovery:authorization},'recovery-authorized',{nativePid:null,failure:null,stage:'awaiting-new-guard',exitCode:null});
     } catch(error) {await this.privateFailure({id},'recovery-authorization',error).catch(()=>{});throw error;
     } finally {await release();}
@@ -429,6 +473,11 @@ export class NativeAgent {
   }
   async recoveryAdmitted(result) {
     try {
+      if(result.recovery.minimumControlVersion) {
+        const pointer=validatePointer(await strictFile(path.join(this.root,'active.json')));
+        const proof=await strictFile(path.join(this.root,'verified-active.json'),65536,null);
+        if(pointer.sequence<Number(result.recovery.minimumControlVersion.slice(8))||proof?.version!==pointer.version||proof.bundleSha256!==pointer.bundleSha256||!Number.isFinite(Date.parse(proof.verifiedAt)))return false;
+      }
       const state=await strictFile(path.join(this.settings.botRoot,'state','kesas-update-state.json'));
       const started=Date.parse(state.countdownStartedAt),authorized=Date.parse(result.recovery.authorizedAt),deadline=Date.parse(state.deployAt);
       if(state.status!=='deploying'||state.phase!=='installing'||state.version!==result.version||state.notes!==result.notes||
@@ -483,7 +532,7 @@ export class NativeAgent {
       await this.run(this.settings.powershell,['-NoProfile','-NonInteractive','-File',verifier,'-Archive',archive,'-ExpectedVersion',request.version]);
       stage='publisher-validation';
       result=await this.save(result,result.phase,{stage});
-      const publisher = await this.publisher();
+      const publisher = await this.publisher(request,result);
       // Recheck after downloads/validation, before making publication durable.
       if (!await this.idle()) return this.mirror(result);
       requireValue(!await this.journalPresent() && await fileHash(archive) === request.sha256,'Native pre-publication state changed');
@@ -573,10 +622,11 @@ export class NativeAgent {
 export async function runCli(argv = process.argv.slice(2), options = {}) {
   try {
     const recovering=argv.length===6&&argv[2]==='--authorize-reviewed-retry'&&argv[4]==='--expected-result-sha256';
-    requireValue((argv.length === 2||recovering) && argv[0] === '--settings' && path.isAbsolute(argv[1]),'Expected fixed native agent settings or reviewed retry');
+    const rollback=argv.length===8&&argv[2]==='--authorize-reviewed-rollback-retry'&&argv[4]==='--expected-result-sha256'&&argv[6]==='--expected-rollback-evidence-sha256';
+    requireValue((argv.length === 2||recovering||rollback) && argv[0] === '--settings' && path.isAbsolute(argv[1]),'Expected fixed native agent settings or reviewed retry');
     const settings = validateSettings(await strictFile(argv[1],32768));
     const agent = new NativeAgent(settings,options);
-    if(recovering){await agent.authorizeReviewedRetry(argv[3],argv[5]);return 0;}
+    if(recovering||rollback){await agent.authorizeReviewedRetry(argv[3],argv[5],rollback?{rollbackEvidenceSha256:argv[7]}:{});return 0;}
     const stop = () => { agent.stop = true; };
     process.on('SIGINT',stop); process.on('SIGTERM',stop);
     try { await agent.runForever(); }
