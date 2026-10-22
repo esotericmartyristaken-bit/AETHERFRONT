@@ -98,7 +98,10 @@ async function publishStatus() {
   reporting=true;
   try {
     const now=Date.now(),observedAt=new Date(now).toISOString();
-    const currentHealth=ready&&!closed&&Number.isFinite(healthObservedAt)&&now-healthObservedAt>=0&&now-healthObservedAt<=30000&&['healthy','offline'].includes(health)?health:'unknown';
+    // Match the bot's bounded observation lifetime. Worker evidence still
+    // refreshes every ten seconds; the independent reporter separately requires
+    // a fresh bridge and pinned native health before enabling app publication.
+    const currentHealth=ready&&!closed&&Number.isFinite(healthObservedAt)&&now-healthObservedAt>=0&&now-healthObservedAt<=90000&&['healthy','offline'].includes(health)?health:'unknown';
     const feed=await readJson(path.join(settings.nativeRoot,'Updates','APFClientUpdate.json'),null).catch(()=>null);
     const matching=inventoryStatus==='complete'&&version(feed?.version)&&componentVersion===feed.version;
     const identity={schemaVersion:1,observedAt,controlVersion:pointer.version,controlSha256:pointer.bundleSha256};

@@ -507,7 +507,12 @@ export class LmpController extends EventEmitter {
     const playerCountText = lastMatch(log.text, /(?:Online Players|Players Online|connected clients|connected):\s*(\d+)/gi, null);
     const connectedText = lastMatch(log.text, /(?:connected clients|connected):\s*(\d+)/gi, null);
     const nat = lastMatch(log.text, /Detected NAT addresses:\s*([^\r\n]+)/gi, 'unknown');
-    const ready = /All systems up and running/i.test(log.text);
+    // The startup line can leave the bounded log window on a long-running
+    // server. A fresh PID-bound bridge snapshot plus that process's owned UDP
+    // listener also establishes readiness without trusting an old PID file.
+    const ready = /All systems up and running/i.test(log.text) || Boolean(
+      process && bridge.ready && playerSnapshot.source === 'bridge' &&
+      udpBinding.checked && udpBinding.ownedByProcess);
     const registration = /Master server registration is active/i.test(log.text);
     const logStat = log.file ? await fs.stat(log.file).catch(() => null) : null;
     const logAgeMs = logStat ? Date.now() - logStat.mtimeMs : null;

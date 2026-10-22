@@ -1,5 +1,5 @@
 #requires -Version 7.0
-param([Parameter(Mandatory)][string]$Baseline,[Parameter(Mandatory)][string]$KspManaged,[Parameter(Mandatory)][string]$Compiler,[Parameter(Mandatory)][string]$Output)
+param([Parameter(Mandatory)][string]$Baseline,[Parameter(Mandatory)][string]$KspManaged,[Parameter(Mandatory)][string]$Compiler,[Parameter(Mandatory)][string]$Output,[ValidatePattern('^kesas-rc[1-9][0-9]*$')][string]$Version='kesas-rc33')
 $ErrorActionPreference='Stop'
 $Baseline=(Resolve-Path -LiteralPath $Baseline).Path
 $KspManaged=(Resolve-Path -LiteralPath $KspManaged).Path
@@ -18,7 +18,7 @@ $generated=Join-Path $Output 'sources'
 New-Item -ItemType Directory -Path $generated -Force | Out-Null
 $legacy=Get-Content -Raw -LiteralPath (Join-Path $prior 'Engine/LegacySettingsRecovery.cs')
 if(([regex]::Matches($legacy,'kesas-rc31')).Count -ne 1 -or ([regex]::Matches($legacy,'LegacySettingsRecovery-rc31')).Count -ne 1){throw 'Unexpected prior recovery source'}
-$legacy=$legacy.Replace('kesas-rc31','kesas-rc33').Replace('LegacySettingsRecovery-rc31','LegacySettingsRecovery-rc33').Replace('completed RC31 release','completed RC33 release')
+$legacy=$legacy.Replace('kesas-rc31',$Version).Replace('LegacySettingsRecovery-rc31',('LegacySettingsRecovery-'+$Version.Substring(6))).Replace('completed RC31 release',('completed '+$Version.Substring(6).ToUpperInvariant()+' release'))
 $replacement=Join-Path $generated 'LegacySettingsRecovery.cs'
 [IO.File]::WriteAllText($replacement,$legacy)
 $references=@(foreach($name in @('mscorlib','System','System.Core','System.Xml','System.Security')){Join-Path $KspManaged "$name.dll"})
@@ -35,4 +35,4 @@ $response=Join-Path $Output 'build.rsp'
 & dotnet $Compiler /noconfig "@$response"
 if($LASTEXITCODE -ne 0){throw 'RC33 KSP engine compilation failed'}
 foreach($file in $before){if((Get-FileHash -LiteralPath $file.path).Hash -cne $file.sha256){throw 'Build inputs changed'}}
-@{version='kesas-rc33';engineSha256=(Get-FileHash -LiteralPath (Join-Path $Output 'KesasInstall.dll')).Hash;preparedProtocol='prepared28';completionProtocol='prepared30';preservedPreferences=16;inputs=$before} | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $Output 'ENGINE-RESULT.json')
+@{version=$Version;engineSha256=(Get-FileHash -LiteralPath (Join-Path $Output 'KesasInstall.dll')).Hash;preparedProtocol='prepared28';completionProtocol='prepared30';preservedPreferences=16;inputs=$before} | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $Output 'ENGINE-RESULT.json')

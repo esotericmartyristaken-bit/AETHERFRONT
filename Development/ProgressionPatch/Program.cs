@@ -3,8 +3,10 @@ using System.Text.Json;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-if (args.Length == 4 && args[0] == "engine-review33")
+if ((args.Length == 4 && args[0] == "engine-review33") || (args.Length == 5 && args[0] == "engine-review"))
 {
+    var reviewVersion = args.Length == 5 ? args[4] : "kesas-rc33";
+    if (!System.Text.RegularExpressions.Regex.IsMatch(reviewVersion, "^kesas-rc[1-9][0-9]*$")) throw new IOException("Invalid release version");
     if (Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(args[1]))) != "ED61774722CDD37505472568999B3E889CC25E527E2A25F8A4FFE2C2CEFD3D0A") throw new IOException("Unreviewed prior engine");
     using var prior = AssemblyDefinition.ReadAssembly(args[1]);
     using var next = AssemblyDefinition.ReadAssembly(args[2]);
@@ -15,16 +17,19 @@ if (args.Length == 4 && args[0] == "engine-review33")
     var engineChanges = newMethods.Where(m => oldMethods[m.FullName] != Image(m)).Select(m => m.FullName).ToArray();
     foreach (var method in newMethods.Where(m => m.HasBody))
         foreach (var instruction in method.Body.Instructions.Where(i => i.OpCode == OpCodes.Ldstr))
-            instruction.Operand = ((string)instruction.Operand).Replace("kesas-rc33", "kesas-rc31").Replace("LegacySettingsRecovery-rc33", "LegacySettingsRecovery-rc31").Replace("completed RC33 release", "completed RC31 release");
+            instruction.Operand = ((string)instruction.Operand).Replace(reviewVersion, "kesas-rc31").Replace("LegacySettingsRecovery-" + reviewVersion.Substring(6), "LegacySettingsRecovery-rc31").Replace("completed " + reviewVersion.Substring(6).ToUpperInvariant() + " release", "completed RC31 release");
     if (newMethods.Any(m => oldMethods[m.FullName] != Image(m))) throw new IOException("Engine changes exceed recovery version/marker retargeting");
     if (engineChanges.Length == 0 || engineChanges.Any(n => !n.Contains("KesasInstall.LegacySettingsRecovery"))) throw new IOException("Unexpected changed engine methods");
-    File.WriteAllText(args[3], JsonSerializer.Serialize(new { version = "kesas-rc33", oldSha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(args[1]))), newSha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(args[2]))), methodCount = oldMethods.Count, engineChanges, allOtherMethodsUnchanged = true }, new JsonSerializerOptions { WriteIndented = true }));
+    File.WriteAllText(args[3], JsonSerializer.Serialize(new { version = reviewVersion, oldSha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(args[1]))), newSha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(args[2]))), methodCount = oldMethods.Count, engineChanges, allOtherMethodsUnchanged = true }, new JsonSerializerOptions { WriteIndented = true }));
     Console.WriteLine("Engine retarget reviewed; all other method bodies unchanged.");
     return;
 }
 
-if (args.Length == 5 && args[0] == "release33")
+if ((args.Length == 5 && args[0] == "release33") || (args.Length == 7 && args[0] == "release-version"))
 {
+    var oldVersion = args.Length == 7 ? args[5] : "kesas-rc31";
+    var newVersion = args.Length == 7 ? args[6] : "kesas-rc33";
+    if (!System.Text.RegularExpressions.Regex.IsMatch(oldVersion, "^kesas-rc[1-9][0-9]*$") || !System.Text.RegularExpressions.Regex.IsMatch(newVersion, "^kesas-rc[1-9][0-9]*$")) throw new IOException("Invalid release version");
     using var resolver = new DefaultAssemblyResolver();
     resolver.AddSearchDirectory(Path.GetDirectoryName(Path.GetFullPath(args[1]))!);
     resolver.AddSearchDirectory(Path.GetFullPath(args[4]));
@@ -33,15 +38,15 @@ if (args.Length == 5 && args[0] == "release33")
     var versionGetter = assembly.MainModule.GetType("LmpClient.Apf.ApfClientSettings").Methods.Single(m => m.Name == "get_ClientVersion");
     var value = assembly.MainModule.GetType("LmpClient.Apf.ApfClientBuildVersion").Fields.Single(f => f.Name == "Value");
     var literal = versionGetter.Body.Instructions.Single(i => i.OpCode == OpCodes.Ldstr);
-    if (!Equals(value.Constant, "kesas-rc31") || !Equals(literal.Operand, "kesas-rc31")) throw new IOException("Expected reviewed RC31-based candidate");
-    value.Constant = "kesas-rc33"; literal.Operand = "kesas-rc33";
+    if (!Equals(value.Constant, oldVersion) || !Equals(literal.Operand, oldVersion)) throw new IOException("Expected reviewed release baseline");
+    value.Constant = newVersion; literal.Operand = newVersion;
     Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(args[2]))!);
     assembly.Write(args[2]);
     using var verification = AssemblyDefinition.ReadAssembly(args[2]);
     var versionChanges = verification.MainModule.Types.SelectMany(AllTypes).SelectMany(t => t.Methods).Where(m => before[m.FullName] != Image(m)).Select(m => m.FullName).ToArray();
     if (versionChanges.Length != 1 || versionChanges[0] != versionGetter.FullName) throw new IOException("Unexpected release-version method changes");
-    File.WriteAllText(args[3], JsonSerializer.Serialize(new { version = "kesas-rc33", inputSha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(args[1]))), outputSha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(args[2]))), changed = versionChanges }, new JsonSerializerOptions { WriteIndented = true }));
-    Console.WriteLine("RC33 version graft: one getter and one build constant; existing startup authorization retained.");
+    File.WriteAllText(args[3], JsonSerializer.Serialize(new { version = newVersion, inputSha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(args[1]))), outputSha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(args[2]))), changed = versionChanges }, new JsonSerializerOptions { WriteIndented = true }));
+    Console.WriteLine(newVersion + " version graft: one getter and one build constant; existing startup authorization retained.");
     return;
 }
 

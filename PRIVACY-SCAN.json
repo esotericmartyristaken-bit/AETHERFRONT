@@ -78,5 +78,26 @@
     }
   ],
   "contentOrMatchedValuesPrinted": false,
-  "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
+  "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check.",
+  "incrementalReviews": [
+    {
+      "scannedUtc": "2026-10-22T02:05:54.6149973Z",
+      "filesScanned": 11,
+      "findingCount": 0,
+      "paths": [
+        "Aetherfront-RC33-Work/Build-Engine.ps1",
+        "Aetherfront-RC34-Work/Build-Expansions.ps1",
+        "Aetherfront-RC34-Work/Build-Release.py",
+        "Aetherfront-RC34-Work/EditorCamera.json",
+        "Aetherfront-RC34-Work/ExpansionBootstrap.cs",
+        "Aetherfront-RC34-Work/README.md",
+        "APFDiscordBot/src/lmp.js",
+        "ControlPlane/host-reporter.mjs",
+        "ControlPlane/worker.mjs",
+        "Development/ProgressionPatch/Program.cs",
+        "export-policy.json"
+      ],
+      "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
+    }
+  ]
 }

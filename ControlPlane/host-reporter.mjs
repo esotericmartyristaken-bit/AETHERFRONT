@@ -225,6 +225,7 @@ async function reportOnce(settings,options) {
   if(bootstrap.nativeRecoveryVersion!==1)problem('broker','broker-not-ready');
   host.worker=worker.state;host.inventory=worker.inventory;
   if(!['running','draining'].includes(worker.state))problem('worker',['missing','stale','mismatch','invalid'].includes(worker.state)?'worker-'+worker.state:worker.state==='failed'||worker.state==='stopped'?'worker-failed':'worker-not-ready');
+  else if(worker.state==='running'&&(worker.status?.ready!==true||worker.status?.health!=='healthy'))problem('worker','worker-not-ready');
   if(host.exitCode===null&&worker.diagnostic?.exitCode!==null)host.exitCode=worker.diagnostic?.exitCode??null;
   const clientVersion=version(feed?.version)?feed.version:null,packVersion=version(pack?.packVersion)?pack.packVersion:null;
   const consistent=clientVersion!==null&&packVersion===clientVersion&&pack.requiredClientVersion===clientVersion;

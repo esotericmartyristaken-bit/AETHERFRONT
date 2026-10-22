@@ -1,0 +1,39 @@
+{
+  "pendingRelease": "kesas-rc34",
+  "published": false,
+  "profiles": [
+    "full",
+    "potato"
+  ],
+  "managedPackage": {
+    "id": "kesas-wasd-editor-camera",
+    "version": "0.7.3.3-sha-282a639f675dbc93",
+    "archiveUrl": "https://217.216.49.250:18866/kesas-wasd-editor-camera-282a639f675dbc934e8b997d27c827f558630687a8af8cd5914f039f4da7a650.zip",
+    "sha256": "282a639f675dbc934e8b997d27c827f558630687a8af8cd5914f039f4da7a650",
+    "sizeBytes": 25109,
+    "destination": "GameData",
+    "stripPrefix": "WasdEditorCamera"
+  },
+  "expandedBytes": 53697,
+  "serverClientOnly": {
+    "id": "wasd-editor-camera",
+    "pathRoots": [
+      "GameData/WasdEditorCamera"
+    ],
+    "dlls": [
+      {
+        "path": "GameData/WasdEditorCamera/Plugins/WasdEditorCameraContinued.dll",
+        "sha256": "06872d046294a382f37557ad5318c267ba97acd8827489f79d492aed35c27131"
+      }
+    ]
+  },
+  "ckan": {
+    "name": "WasdEditorCameraContinued",
+    "version": "0.7.3.3"
+  },
+  "sourceUrl": "https://github.com/linuxgurugamer/WasdEditorCameraContinued/releases/tag/0.7.3.3",
+  "dependenciesAlreadyInPack": [
+    "ClickThroughBlocker",
+    "ToolbarController"
+  ]
+}
