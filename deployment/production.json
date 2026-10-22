@@ -1,18 +1,18 @@
 {
   "schemaVersion": 2,
-  "version": "kesas-rc33",
-  "releaseTag": "host-kesas-rc33",
-  "assetName": "Aetherfront-Release-kesas-rc33.zip",
-  "sha256": "e8b62d2defaaf0a4886a9cfff02bca5115e6f2cac8fdc7aae97903fc831e33d1",
-  "sizeBytes": 2634562,
-  "notes": "Personal progression and universal 50% science sharing; shadow and launch-site compatibility; Potato plumes restored; PAPI removed. Sandbox beta retained.",
+  "version": "kesas-rc34",
+  "releaseTag": "host-kesas-rc34",
+  "assetName": "Aetherfront-Release-kesas-rc34.zip",
+  "sha256": "69b137c0602e91c270a0c5bb493f3cbde0df55d90f7943d6d9f85e55be370fb8",
+  "sizeBytes": 1790996,
+  "notes": "Add Making History, Breaking Ground and WASD Editor Camera Continued to Regular and Potato. Licensed expansion bootstrap retains stock-folder protection. Sandbox beta retained.",
   "requirements": {
     "contractVersion": 1,
     "capabilities": [
       "application-v1",
       "guard-15m-empty-v1",
       "host-report-v1",
-      "media-payload-v1"
+      "media-reference-v1"
     ]
   }
 }
