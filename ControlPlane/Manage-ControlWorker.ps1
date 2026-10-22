@@ -6,7 +6,7 @@ if($Operation -in @('state','start')){
     $scheduler=New-Object -ComObject 'Schedule.Service';$scheduler.Connect()
     $task=$scheduler.GetFolder([string][IO.Path]::DirectorySeparatorChar).GetTask('APF Discord Bot')
     if($Operation -eq 'state'){[Console]::WriteLine($(if($task.State -eq 4){'Running'}else{'Ready'}))}
-    else{$null=$task.Run($null)}
+    elseif($task.State -ne 4){$null=$task.Run($null)}
     exit
 }
 $settings=Get-Content -LiteralPath "$PSScriptRoot/../host.json" -Raw|ConvertFrom-Json

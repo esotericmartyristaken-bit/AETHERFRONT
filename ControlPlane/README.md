@@ -52,6 +52,11 @@ host-status.json                fresh sanitized report
 Old control-2 journals/releases and RC33 recovery evidence remain intact. Control
 installation uses `managed/`; it does not reset the old failed/successful history.
 
+SYSTEM receives execute permission on the fixed limited bot task, preserving its
+existing descriptor and S4U/limited principal. Starting an already-running task
+is skipped. Loader shutdown waits for outstanding staging before releasing its
+process-owned lease; no replacement broker may launch after shutdown starts.
+
 ## Controller commands
 
 Use the certificate SHA256 from the trusted bootstrap, not an unauthenticated
@@ -64,11 +69,11 @@ node ControlPlane/controller.mjs status --origin https://217.216.49.250:18866 --
 node ControlPlane/controller.mjs diagnostics --origin https://217.216.49.250:18866 --pin PIN
 
 # Build the next reviewed control revision, including broker/wrapper fixes.
-pwsh -File ControlPlane/Build-ControlBundle.ps1 -Version control-5 -Output C:/build/Aetherfront-Control-control-5.zip
-node ControlPlane/controller.mjs publish-control --origin https://217.216.49.250:18866 --pin PIN --archive C:/build/Aetherfront-Control-control-5.zip --version control-5
+pwsh -File ControlPlane/Build-ControlBundle.ps1 -Version control-6 -Output C:/build/Aetherfront-Control-control-6.zip
+node ControlPlane/controller.mjs publish-control --origin https://217.216.49.250:18866 --pin PIN --archive C:/build/Aetherfront-Control-control-6.zip --version control-6
 
 # Combined path observes exact control version/hash/health before app intent.
-pwsh -File ControlPlane/Publish-HostRelease.ps1 -ControlArchive C:/build/Aetherfront-Control-control-5.zip -ControlVersion control-5 -Archive C:/build/Aetherfront-Release-kesas-rc34.zip -Version kesas-rc34 -HostCertificateSha256 PIN -Notes 'Reviewed changes'
+pwsh -File ControlPlane/Publish-HostRelease.ps1 -ControlArchive C:/build/Aetherfront-Control-control-6.zip -ControlVersion control-6 -Archive C:/build/Aetherfront-Release-kesas-rc34.zip -Version kesas-rc34 -HostCertificateSha256 PIN -Notes 'Reviewed changes'
 
 # Existing compatible host: application only.
 pwsh -File ControlPlane/Publish-HostRelease.ps1 -Archive C:/build/Aetherfront-Release-kesas-rc34.zip -Version kesas-rc34 -HostCertificateSha256 PIN -Notes 'Reviewed changes'

@@ -35,14 +35,15 @@ const emptyWatcher=()=>({stage:null,reason:null,version:null,sourceCommit:null,m
 const inFlight=new Map(),archiveCache=new Map();
 let archiveWork=Promise.resolve(),pendingArchives=0;
 
-// One bounded snapshot supplies both the strict JSON identity and raw-byte digest.
-// Only native bridge files may have a UTF-8 BOM.
-async function snapshot(file,maximum=65536,bridgeBom=false) {
+// Ignore access time (the read can change it), but compare exact file identity,
+// metadata and nanosecond content timestamps, including the final named path.
+const sameEvidenceStat=(left,right)=>['dev','ino','mode','nlink','uid','gid','rdev','size','mtimeNs','ctimeNs','birthtimeNs'].every(key=>left[key]===right[key]);
+async function rawSnapshot(file,maximum) {
   await noLinks(file);
   const handle=await fs.open(file,'r');
   try {
-    const before=await handle.stat();
-    if(!before.isFile()||before.nlink!==1||before.size>maximum)throw new Error('Invalid report evidence');
+    const before=await handle.stat({bigint:true});
+    if(!before.isFile()||before.nlink!==1n||before.size<1n||before.size>BigInt(maximum))throw new Error('Invalid report evidence');
     const bytes=Buffer.alloc(maximum+1);
     let length=0;
     while(length<bytes.length) {
@@ -50,12 +51,20 @@ async function snapshot(file,maximum=65536,bridgeBom=false) {
       if(!bytesRead)break;
       length+=bytesRead;
     }
-    const after=await handle.stat();
-    if(length>maximum||before.size!==after.size||before.mtimeMs!==after.mtimeMs||before.ctimeMs!==after.ctimeMs)throw new Error('Report evidence changed');
+    const after=await handle.stat({bigint:true});
     await noLinks(file);
-    const content=bytes.subarray(0,length),offset=bridgeBom&&content[0]===0xef&&content[1]===0xbb&&content[2]===0xbf?3:0;
-    return {value:JSON.parse(content.subarray(offset).toString('utf8')),sha256:digest(content)};
+    const named=await fs.lstat(file,{bigint:true});
+    if(length>maximum||BigInt(length)!==before.size||!sameEvidenceStat(before,after)||!sameEvidenceStat(after,named))throw new Error('Report evidence changed');
+    const content=bytes.subarray(0,length);
+    return {content,sha256:digest(content)};
   } finally {await handle.close();}
+}
+// JSON evidence reuses the same bounded bytes and digest. Only native bridge
+// files may have a UTF-8 BOM; executable code is never parsed as JSON.
+async function snapshot(file,maximum=65536,bridgeBom=false) {
+  const {content,sha256}=await rawSnapshot(file,maximum);
+  const offset=bridgeBom&&content[0]===0xef&&content[1]===0xbb&&content[2]===0xbf?3:0;
+  return {value:JSON.parse(content.subarray(offset).toString('utf8')),sha256};
 }
 const stamp=stat=>[stat.dev,stat.ino,stat.size,stat.mtimeMs,stat.ctimeMs].join(':');
 async function archiveVerified(settings,result) {
@@ -173,8 +182,8 @@ async function recoveryEvidence(settings) {
     !['received','authorized','blocked'].includes(value.status)||!RECOVERY_REASONS.includes(value.reason??null))return null;
   return {recoveryId:value.recoveryId,requestId:value.requestId,commit:value.commit??null,status:value.status,reason:value.reason??null};
 }
-async function bootstrapEvidence(directory,ready) {
-  const read=async name=>directory?(await snapshot(path.join(directory,'ControlPlane',name),1024*1024).catch(()=>null))?.sha256??null:null;
+export async function bootstrapEvidence(directory,ready) {
+  const read=async name=>directory?(await rawSnapshot(path.join(directory,'ControlPlane',name),1024*1024).catch(()=>null))?.sha256??null:null;
   const [nativeAgentSha256,publisherWrapperSha256]=await Promise.all([read('native-agent.mjs'),read('Invoke-NativePublisher.ps1')]);
   return {nativeAgentSha256,publisherWrapperSha256,nativeRecoveryVersion:ready&&hash(nativeAgentSha256)&&hash(publisherWrapperSha256)?1:0};
 }
@@ -213,6 +222,7 @@ async function reportOnce(settings,options) {
     bootstrapEvidence(directory,brokerReady),
     readJson(path.join(settings.root,'bootstrap','unattended-host.json'),null).catch(()=>null)
   ]);
+  if(bootstrap.nativeRecoveryVersion!==1)problem('broker','broker-not-ready');
   host.worker=worker.state;host.inventory=worker.inventory;
   if(!['running','draining'].includes(worker.state))problem('worker',['missing','stale','mismatch','invalid'].includes(worker.state)?'worker-'+worker.state:worker.state==='failed'||worker.state==='stopped'?'worker-failed':'worker-not-ready');
   if(host.exitCode===null&&worker.diagnostic?.exitCode!==null)host.exitCode=worker.diagnostic?.exitCode??null;

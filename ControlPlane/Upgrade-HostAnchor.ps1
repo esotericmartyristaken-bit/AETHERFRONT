@@ -88,6 +88,18 @@ try{
     $system=New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest
     Register-ScheduledTask -TaskName 'APF Discord Bot' -Action $botAction -Principal $limited -Trigger $startup,$repeat -Settings $taskSettings -Force|Out-Null
     Register-ScheduledTask -TaskName 'Aetherfront Native Publisher' -Action $anchorAction -Principal $system -Trigger $startup,$repeat -Settings $taskSettings -Force|Out-Null
+    # Some task-folder DACLs inherit read/write without execute for SYSTEM.
+    # Preserve every existing ACE and grant only the trusted broker's missing
+    # right to start this fixed-name limited task; never elevate the bot.
+    $scheduler=New-Object -ComObject 'Schedule.Service';$scheduler.Connect()
+    $registered=$scheduler.GetFolder('\').GetTask('APF Discord Bot')
+    $descriptor=[Security.AccessControl.RawSecurityDescriptor]::new($registered.GetSecurityDescriptor(7))
+    $systemSid=[Security.Principal.SecurityIdentifier]::new('S-1-5-18')
+    if(-not @($descriptor.DiscretionaryAcl|Where-Object {$_.SecurityIdentifier -eq $systemSid -and $_.AceQualifier -eq 'AccessAllowed' -and ($_.AccessMask -band 0x20000020)}).Count){
+        if(@($descriptor.DiscretionaryAcl|Where-Object {$_.SecurityIdentifier -eq $systemSid -and $_.AceQualifier -eq 'AccessDenied'}).Count){throw 'Explicit SYSTEM task deny requires review.'}
+        $descriptor.DiscretionaryAcl.InsertAce(0,[Security.AccessControl.CommonAce]::new([Security.AccessControl.AceFlags]::None,[Security.AccessControl.AceQualifier]::AccessAllowed,0x20000000,$systemSid,$false,$null))
+        $registered.SetSecurityDescriptor($descriptor.GetSddlForm([Security.AccessControl.AccessControlSections]'Owner,Group,Access'),0x10)
+    }
     # Existing SYSTEM game task/action/trigger are deliberately not changed.
     [IO.File]::WriteAllText("$root/bootstrap/unattended-host.json",'{"schemaVersion":1,"ready":true,"broker":"SYSTEM","bot":"S4U-Limited"}')
     Set-Protection "$root/bootstrap/unattended-host.json" -Readable
