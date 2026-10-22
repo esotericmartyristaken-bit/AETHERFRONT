@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-22T02:05:54.681480+00:00",
+  "createdUtc": "2026-10-22T02:11:16.233318+00:00",
   "publication": "Reviewed source update; ordinary source pushes do not deploy",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -391,8 +391,8 @@
       "path": "APFDiscordBot/src/github-deployment.js",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 23025,
-      "sha256": "41436222275c8c0e3b35de6f387582404361ef0774bbe66658e053ca7dce92f6",
+      "bytes": 23071,
+      "sha256": "d6adf86d295b13903444646d82f989963a92521f312c735e8086ae49ea8d1201",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -27795,8 +27795,8 @@
       "path": "ControlPlane/worker.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 11979,
-      "sha256": "f7587515178323cdc37e63d95663d68c2097edcf9a506927443a45be0ee3ea50",
+      "bytes": 12320,
+      "sha256": "d62c3ca2d49a43bd5e1cc1593dea0af1f0abe9c1f929c2e761e5fd5bd7a65e3d",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -28825,7 +28825,7 @@
       "transformations": []
     }
   ],
-  "totalFileBytes": 16648846,
+  "totalFileBytes": 16649233,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",

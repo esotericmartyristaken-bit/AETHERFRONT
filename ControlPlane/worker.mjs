@@ -62,12 +62,17 @@ async function watcherDiagnostics() {
 }
 async function collectComponents() {
   if(collecting)return;
-  collecting=true;inventoryStatus='collecting';
+  collecting=true;
+  // A same-release refresh does not invalidate its completed inventory. The
+  // feed identity below and the reporter's version match still gate admission;
+  // failures explicitly withdraw capabilities instead of retaining old health.
+  if(inventoryStatus!=='complete')inventoryStatus='collecting';
   try {
     const next=Object.fromEntries(labels.map(label=>[label,null]));
     const code=path.join(releaseRoot,'APFDiscordBot'),native=path.join(releaseRoot,'KESAS-VPS-Server');
     const feed=await readJson(path.join(settings.nativeRoot,'Updates','APFClientUpdate.json'));
     if(!version(feed.version))throw new Error('Invalid application inventory version');
+    if(componentVersion!==feed.version)inventoryStatus='collecting';
     for(const [label,file] of Object.entries({watcher:path.join(code,'src','github-deployment.js'),nativeRunner:path.join(code,'src','update-manager.js'),publisher:path.join(native,'Publish-Release.ps1'),verifier:path.join(code,'scripts','Verify-KesasRelease.ps1'),packService:path.join(settings.nativeRoot,'PackHost','ApfPackHost.exe'),clientBootstrap:path.join(settings.nativeRoot,'KESAS-Client-Bootstrap.zip'),catalog:path.join(settings.nativeRoot,'Server','Config','APFPack.json')}))next[label]=await hashIfFile(file);
     next.dependencies=digest(Buffer.from(JSON.stringify(await inventory(path.join(code,'node_modules')))));
     for(const [label,name] of [['packService','PackHost'],['updateTool','UpdateTool'],['certificateTool','CertificateTool']])next[label]=digest(Buffer.from(JSON.stringify(await inventory(path.join(settings.nativeRoot,name)))));

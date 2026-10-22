@@ -98,6 +98,16 @@
         "export-policy.json"
       ],
       "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
+    },
+    {
+      "scannedUtc": "2026-10-22T02:11:16.1664694Z",
+      "filesScanned": 2,
+      "findingCount": 0,
+      "paths": [
+        "ControlPlane/worker.mjs",
+        "APFDiscordBot/src/github-deployment.js"
+      ],
+      "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
     }
   ]
 }

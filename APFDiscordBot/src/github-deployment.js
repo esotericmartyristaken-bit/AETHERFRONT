@@ -260,7 +260,7 @@ export class GitHubDeployment {
       stage = 'channel-observation';
       await noLinks(this.statePath);
       const saved = await readState(this.statePath);
-      const observation = await this.json(`https://raw.githubusercontent.com/${REPOSITORY}/refs/heads/deploy/${MANIFEST_PATH}`);
+      const observation = await this.json(`https://raw.githubusercontent.com/${REPOSITORY}/refs/heads/deploy/${MANIFEST_PATH}?apfCheck=${Date.now()}`);
       let manifest = validateDeployment(observation.value);
       // Archive identity is declared by the validated manifest, not a partial download.
       identity = { version: manifest.version, manifestSha256: observation.sha256, archiveSha256: manifest.sha256 };
@@ -333,7 +333,7 @@ export class GitHubDeployment {
       }
       // Re-read channel intent and active version after a potentially long fetch.
       stage = 'intent-authentication';
-      const latest = await this.json(`https://raw.githubusercontent.com/${REPOSITORY}/refs/heads/deploy/${MANIFEST_PATH}`);
+      const latest = await this.json(`https://raw.githubusercontent.com/${REPOSITORY}/refs/heads/deploy/${MANIFEST_PATH}?apfCheck=${Date.now()}`);
       if (latest.sha256 !== pinned.sha256) {
         return await this.save({ status: 'superseded-before-queue', version: manifest.version, error: null, diagnostic: diagnostic('channel-changed') });
       }
