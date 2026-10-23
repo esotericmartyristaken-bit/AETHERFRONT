@@ -72,6 +72,7 @@ try{
     Assert ($text.IndexOf('$backupRows=@(Backup-RepairBootstrap') -lt $text.IndexOf('Suspend-RepairTasks $priorTasks')) 'Complete backup must precede control stop'
     Assert ($text.IndexOf('Restore-RepairBootstrap $bootstrap $backup $backupRows') -lt $text.IndexOf('Restore-RepairTaskState $priorTasks')) 'Rollback files must precede task restart'
     Assert ($text.Contains('show "${SourceCommit}:SOURCE-MANIFEST.json"')) 'Expected hashes must come from immutable commit'
+    Assert ($text.Contains('Stop-Process -Id $process.ProcessId -Force -ErrorAction Stop')) 'Validated cross-owner control stops must not wait for hidden confirmation'
     'PASS: parse; pinned snapshot; source race; partial-copy rollback; ACL/absence restore; task-state restore; preservation; maintenance ordering'
 }finally{
     $resolved=[IO.Path]::GetFullPath($fixture)

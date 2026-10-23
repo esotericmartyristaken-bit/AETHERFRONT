@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-23T09:00:28.6440607Z",
+  "createdUtc": "2026-10-23T09:26:20.1396585Z",
   "publication": "Reviewed source update; ordinary source pushes do not deploy",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -28850,8 +28850,8 @@
       "path": "ControlPlane/Repair-HostControl.ps1",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 15190,
-      "sha256": "63da32a74f39f109d15714b62a53df6af4886a07eb6363e84607f0e2aca81f2d",
+      "bytes": 15197,
+      "sha256": "9ae02f35cc6d48db217e16670455a3ebfb835584171550b5c8d7d667083fcc3b",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -28927,8 +28927,8 @@
       "path": "ControlPlane/test/repair-host-control.test.ps1",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 7003,
-      "sha256": "546e33d5a87e8ed3986574592b6133d5914e9ffff114a8f7fe7c0ec738357037",
+      "bytes": 7171,
+      "sha256": "d811ff046e9ed1c0626c712bbc51ffb3e7a4363add2657f647687b4282602b17",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -28977,9 +28977,31 @@
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
       ]
+    },
+    {
+      "path": "ControlPlane/Resume-HostControlRepair.ps1",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 8972,
+      "sha256": "6218313d0e6b704acc7671c42055e88a1619fc41aa401fe7798de658e1caeafb",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/test/resume-host-control.test.ps1",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 2389,
+      "sha256": "765060f51b519ca157d8511b5ebf34d6925002eb6634880e0c439dae712773d1",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
     }
   ],
-  "totalFileBytes": 16754095,
+  "totalFileBytes": 16817160,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",
@@ -28998,5 +29020,5 @@
     "report": "PRIVACY-SCAN.json",
     "limitation": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
   },
-  "fileCount": 2901
+  "fileCount": 2903
 }

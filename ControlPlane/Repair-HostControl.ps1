@@ -150,7 +150,7 @@ try{
     $controlTouched=$true
     Suspend-RepairTasks $priorTasks
     Native-Idle
-    foreach($process in $processes){$current=Get-CimInstance Win32_Process -Filter "ProcessId=$($process.ProcessId)" -ErrorAction SilentlyContinue;if($current -and $current.CreationDate -eq $process.CreationDate -and $current.CommandLine -ceq $process.CommandLine){Stop-Process -Id $process.ProcessId -ErrorAction Stop}}
+    foreach($process in $processes){$current=Get-CimInstance Win32_Process -Filter "ProcessId=$($process.ProcessId)" -ErrorAction SilentlyContinue;if($current -and $current.CreationDate -eq $process.CreationDate -and $current.CommandLine -ceq $process.CommandLine){Stop-Process -Id $process.ProcessId -Force -ErrorAction Stop}}
     $result.stage='installing-reviewed-bootstrap'
     $installationStarted=$true
     $result.hashes=@(Install-RepairBootstrap $bootstrap $snapshot $selected $expectedHashes)
