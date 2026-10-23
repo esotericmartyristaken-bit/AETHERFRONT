@@ -167,7 +167,12 @@ endpoint, credential-sharing interface, arbitrary URL, destination or shell exis
 readback only after a transport failure. A wrong pin or malformed HTTPS report
 never silently falls back. `--transport github` explicitly uses the signed
 readback; `--transport https` disables fallback. Raw reads use generated cache
-busters, bounded bodies/timeouts and no redirects or GitHub token. Host upload
+busters, bounded bodies/timeouts and no redirects or GitHub token. If a valid
+signed raw report is expired because of CDN branch caching, the controller reads
+the fixed `host-observation:readback.json` Contents API using its existing `gh`
+authentication (20-second deadline). Exact Git blob bytes, the original host pin,
+signature and 30-second lifetime are checked again. No stale report is accepted;
+invalid signatures or wrong pins never trigger this alternate read. Host upload
 credentials stay in the existing protected SYSTEM environment. App publication
 still requires actual app readiness; a working control transport does not make
 an unhealthy game/pack healthy.

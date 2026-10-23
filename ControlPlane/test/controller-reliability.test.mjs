@@ -10,7 +10,7 @@ import { PassThrough } from 'node:stream';
 import * as contract from '../contract.mjs';
 import { statusZip } from '../public-status.mjs';
 import { CHANNEL, REPOSITORY, SIGNED_READBACK_URL, ControllerError, requestPinnedStatus,
-  readStatus, readDiagnostics, publishControl, recoverControl, observeControl, runCli } from '../controller.mjs';
+  readStatus, readDiagnostics, publishControl, recoverControl, observeControl, runCli, fetchGithubCurrentReadback } from '../controller.mjs';
 
 const hash = value => crypto.createHash('sha256').update(value).digest('hex');
 const origin = 'https://controller-test.invalid', pin = 'a'.repeat(64);
@@ -18,6 +18,23 @@ const bytes = Buffer.from('controller reliability fixture; never a production bu
 const descriptor = version => ({ schemaVersion: 1, transactionVersion: 1, version,
   releaseTag: `host-${version}`, assetName: `Aetherfront-Control-${version}.zip`,
   sha256: hash(bytes), sizeBytes: bytes.length, minimumBootstrap: 1 });
+
+test('current readback uses only the fixed authenticated GET and verifies exact blob bytes', async () => {
+  const bytes = Buffer.from('{"fixture":true}\n');
+  const file = {type:'file',path:'readback.json',encoding:'base64',size:bytes.length,
+    sha:crypto.createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex'),content:bytes.toString('base64')};
+  const gh = async (args, input, limits) => {
+    assert.deepEqual(args.slice(0,5),['api','--hostname','github.com','--method','GET']);
+    assert.match(args[5],/^repos\/esotericmartyristaken-bit\/AETHERFRONT\/contents\/readback\.json\?ref=host-observation&observation=[0-9]+$/);
+    assert.deepEqual(args.slice(6),['-H','Cache-Control: no-cache']);
+    assert.equal(input,undefined);assert.equal(limits.timeoutMs,20_000);
+    return JSON.stringify(file);
+  };
+  assert.deepEqual(await fetchGithubCurrentReadback({gh}),bytes);
+  for(const change of [{path:'other.json'},{type:'symlink'},{sha:'a'.repeat(40)},{size:128*1024+1},{content:'invalid!'}]){
+    await assert.rejects(fetchGithubCurrentReadback({gh:async()=>JSON.stringify({...file,...change})}),/INVALID_STATUS/);
+  }
+});
 function report(control = {}) {
   const now = Date.now();
   return { schemaVersion: 1, contractVersion: 1, bootstrapVersion: 1,
@@ -288,7 +305,7 @@ test('fallback preserves pin and stale transport errors; never masks them with a
 function assertReadbackUrl(value) {
   const url = new URL(value);
   assert.equal(url.origin, 'https://raw.githubusercontent.com');
-  assert.equal(url.pathname, '/esotericmartyristaken-bit/AETHERFRONT/refs/heads/host-observation/readback.json');
+  assert.equal(url.pathname, '/esotericmartyristaken-bit/AETHERFRONT/host-observation/readback.json');
   assert.equal(url.username, ''); assert.equal(url.password, ''); assert.equal(url.hash, '');
   assert.deepEqual([...url.searchParams.keys()], ['observation']);
   assert.match(url.search, /^\?observation=[0-9]+$/);

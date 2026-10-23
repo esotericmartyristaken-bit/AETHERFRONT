@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-23T09:44:19.9575059Z",
+  "createdUtc": "2026-10-23T18:44:39.6791285Z",
   "publication": "Reviewed source update; ordinary source pushes do not deploy",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -27476,8 +27476,8 @@
       "path": "ControlPlane/README.md",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 15491,
-      "sha256": "703d5a1c23548c8b613b62cd3f565f326e6b015463bc302bca00a019b3652244",
+      "bytes": 15894,
+      "sha256": "00d45096a3a03c0c87988c74e792c1cf08cd2f6bd0c739ab2dd2ec5efdd72eab",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -27608,8 +27608,8 @@
       "path": "ControlPlane/controller.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 46330,
-      "sha256": "640fb0692e5c28d6c25a8f597832f370aebb9b9f1d6435ca438af34a7bfd330d",
+      "bytes": 48314,
+      "sha256": "94ad02bb6694b62127edf71813e559284eea79a94f97f4a23d90cec53d5a6f84",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -28905,8 +28905,8 @@
       "path": "ControlPlane/test/controller-reliability.test.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 31122,
-      "sha256": "92811b6537055d9699310a8248a83090acdc23b5faa87d891df722b280b628bc",
+      "bytes": 32294,
+      "sha256": "bb4d823977358f97fd5eb8ac037c65ff1319b32af0ba4caff23bfc9f8a617e51",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -29001,7 +29001,7 @@
       ]
     }
   ],
-  "totalFileBytes": 16839528,
+  "totalFileBytes": 16760161,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",

@@ -12,7 +12,7 @@ export const REPOSITORY = 'esotericmartyristaken-bit/AETHERFRONT';
 export const CHANNEL = 'deployment/control-plane.json';
 export const MAX_STATUS_BYTES = 64 * 1024;
 export const MAX_CONTROL_BYTES = 128 * 1024 * 1024;
-export const SIGNED_READBACK_URL = 'https://raw.githubusercontent.com/esotericmartyristaken-bit/AETHERFRONT/refs/heads/host-observation/readback.json';
+export const SIGNED_READBACK_URL = 'https://raw.githubusercontent.com/esotericmartyristaken-bit/AETHERFRONT/host-observation/readback.json';
 const MAX_READBACK_BYTES = 128 * 1024;
 const PUBLICATION_ATTEMPTS = 3;
 const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
@@ -210,12 +210,44 @@ async function fetchGithubReadback() {
   }));
 }
 
-async function signedStatus({ pin, resource, fetchSignedReadback }) {
+export async function fetchGithubCurrentReadback(options = {}) {
+  // A mutable raw/CDN branch can lag despite cache busters. The fixed Contents
+  // API uses the controller's existing gh authentication, never a host secret.
+  const args = ['api', '--hostname', 'github.com', '--method', 'GET',
+    `repos/${REPOSITORY}/contents/readback.json?ref=host-observation&observation=${Date.now()}`,
+    '-H', 'Cache-Control: no-cache'];
+  const output = await checked('STATUS_UNREACHABLE', () =>
+    (options.gh || runGh)(args, undefined, { timeoutMs: 20_000 }));
+  if (typeof output !== 'string' || Buffer.byteLength(output) > 256 * 1024) fail('INVALID_STATUS');
+  const value = await parseStrictJson(Buffer.from(output));
+  if (value?.type !== 'file' || value.path !== 'readback.json' || value.encoding !== 'base64' ||
+      !integer(value.size) || value.size > MAX_READBACK_BYTES || !/^[a-f0-9]{40}$/.test(value.sha) ||
+      typeof value.content !== 'string' || value.content.length > 192 * 1024) fail('INVALID_STATUS');
+  const encoded = value.content.replace(/\n/g, '');
+  const bytes = Buffer.from(encoded, 'base64');
+  if (bytes.length !== value.size || bytes.toString('base64') !== encoded ||
+      crypto.createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex') !== value.sha) fail('INVALID_STATUS');
+  return bytes;
+}
+
+async function signedStatus({ pin, resource, fetchSignedReadback, gh }) {
   const bytes = await checked('STATUS_UNREACHABLE', () => (fetchSignedReadback || fetchGithubReadback)());
   if (!Buffer.isBuffer(bytes) || bytes.length > MAX_READBACK_BYTES) fail('INVALID_STATUS');
   try {
     const { verifyReadbackEnvelope } = await import('./signed-readback.mjs');
-    return await verifyReadbackEnvelope(bytes, { pin, resource });
+    try { return verifyReadbackEnvelope(bytes, { pin, resource }); }
+    catch (error) {
+      // Invalid signatures/pins never trigger alternate reads. Each returned
+      // current-file envelope is independently checked with the original pin.
+      if (error?.code !== 'STALE_STATUS' || fetchSignedReadback) throw error;
+      for (let attempt = 0; ; attempt++) {
+        try { return verifyReadbackEnvelope(await fetchGithubCurrentReadback({ gh }), { pin, resource }); }
+        catch (currentError) {
+          if (currentError?.code !== 'STALE_STATUS' || attempt >= 2) throw currentError;
+          await sleep(2000);
+        }
+      }
+    }
   } catch (error) {
     // Verifier errors belong to its module; preserve only the fail-closed codes.
     fail(['TLS_PIN_MISMATCH', 'STALE_STATUS', 'INVALID_STATUS_ZIP'].includes(error?.code) ? error.code : 'INVALID_STATUS');
@@ -228,7 +260,7 @@ export async function requestPinnedStatus(options = {}) {
   const transport = statusTransport(options);
   if (transport === 'github') {
     if (request !== https.request && !fetchSignedReadback) fail('STATUS_UNREACHABLE');
-    return signedStatus({ pin, resource, fetchSignedReadback });
+    return signedStatus({ pin, resource, fetchSignedReadback, gh: options.gh });
   }
   try { return await checked('STATUS_UNREACHABLE', () => new Promise((resolve, reject) => {
     let verified = false, settled = false, timer, req;
@@ -277,7 +309,7 @@ export async function requestPinnedStatus(options = {}) {
   })); } catch (error) {
     if (transport !== 'auto' || error.code !== 'STATUS_UNREACHABLE' ||
         (request !== https.request && !fetchSignedReadback)) throw error;
-    return signedStatus({ pin, resource, fetchSignedReadback });
+    return signedStatus({ pin, resource, fetchSignedReadback, gh: options.gh });
   }
 }
 
@@ -385,7 +417,7 @@ export async function preflight(options = {}) {
   return { ok: true, report };
 }
 
-export function runGh(arguments_, input) {
+export function runGh(arguments_, input, { timeoutMs = 5 * 60_000 } = {}) {
   return checked('GITHUB_FAILED', () => new Promise((resolve, reject) => {
     const child = spawn('gh', arguments_, { windowsHide: true, shell: false, stdio: ['pipe', 'pipe', 'ignore'] });
     const chunks = []; let length = 0; let finished = false;
@@ -393,7 +425,7 @@ export function runGh(arguments_, input) {
       if (finished) return; finished = true; clearTimeout(timer);
       if (error) reject(new ControllerError('GITHUB_FAILED')); else resolve(result);
     };
-    const timer = setTimeout(() => { child.kill(); finish(true); }, 5 * 60_000);
+    const timer = setTimeout(() => { child.kill(); finish(true); }, timeoutMs);
     child.stdout.on('data', chunk => {
       length += chunk.length;
       if (length > 256 * 1024) { child.kill(); finish(true); } else chunks.push(chunk);
