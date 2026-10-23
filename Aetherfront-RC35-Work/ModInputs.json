@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "profiles": { "visualEffects": ["regular"], "sharedParts": ["regular", "potato"] },
+  "inputs": [
+    { "mod": "KerbalFX AeroFX", "version": "0.8.1", "bytes": 32250, "url": "https://github.com/bimo1d/KerbalFX/releases/download/0.8.1/KerbalFX-AeroFX-0.8.1.zip" },
+    { "mod": "KerbalFX BlastFX", "version": "0.8.1", "bytes": 677590, "url": "https://github.com/bimo1d/KerbalFX/releases/download/0.8.1/KerbalFX-BlastFX-0.8.1.zip" },
+    { "mod": "KerbalFX Core", "version": "0.8.1", "bytes": 20665, "url": "https://github.com/bimo1d/KerbalFX/releases/download/0.8.1/KerbalFX-Core-0.8.1.zip" },
+    { "mod": "KerbalFX ImpactPuffs", "version": "0.8.1", "bytes": 35200, "url": "https://github.com/bimo1d/KerbalFX/releases/download/0.8.1/KerbalFX-ImpactPuffs-0.8.1.zip" },
+    { "mod": "KerbalFX RoverDust", "version": "0.8.1", "bytes": 23482, "url": "https://github.com/bimo1d/KerbalFX/releases/download/0.8.1/KerbalFX-RoverDust-0.8.1.zip" },
+    { "mod": "Firefly", "version": "1.0.6", "bytes": 1412574, "url": "https://github.com/M1rageDev/Firefly/releases/download/1.0.6/Firefly-1.0.6.zip" },
+    { "mod": "FireflyAPI", "version": "1.0.0.0", "bytes": 17573, "url": "https://github.com/M1rageDev/FireflyAPI/releases/download/1.0.0.0/FireflyAPI-1.0.0.0.zip" },
+    { "mod": "Camera Tools Continued", "version": "1.37.1", "bytes": 3576314, "url": "https://github.com/BrettRyland/CameraTools/releases/download/v1.37.1/CameraTools.1.37.1.0_2025-10-22T10.51.54%2B00.00.zip" },
+    { "mod": "Neptune Camera", "version": "4.3", "bytes": 38102, "url": "https://github.com/Tantares/NeptuneCamera/releases/download/v4.3/neptune_camera.zip" },
+    { "mod": "Planetside Exploration Technologies", "version": "1.0.2", "bytes": 74742651, "url": "https://github.com/benjee10/Benjee10_MMSEV/releases/download/v1.0.2/Planetside_v1.0.2.zip" },
+    { "mod": "BetterBurnTime", "version": "1.10", "file": "BetterBurnTime-1.10.zip", "bytes": 94992, "url": "https://spacedock.info/mod/21/BetterBurnTime/download/1.10" },
+    { "mod": "Conformal Decals", "version": "0.4.2", "file": "ConformalDecals-0.4.2.zip", "bytes": 20075206, "url": "https://spacedock.info/mod/2451/Conformal%20Decals/download/0.4.2" },
+    { "mod": "Tarsier Space Technology", "version": "7.13", "file": "TarsierSpaceTechnology-7.13.zip", "bytes": 6193462, "url": "https://spacedock.info/mod/143/Tarsier%20Space%20Technology%20with%20Galaxies%20Continued.../download/v7.13" }
+  ],
+  "pendingAuthoritativeDownloadMetadata": [],
+  "publicationApprovedByTestGates": false
+}

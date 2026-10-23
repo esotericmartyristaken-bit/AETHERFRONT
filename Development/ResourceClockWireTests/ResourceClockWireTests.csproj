@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><OutputType>Exe</OutputType><TargetFrameworks>net8.0;net472</TargetFrameworks><LangVersion>10</LangVersion><ImplicitUsings>disable</ImplicitUsings></PropertyGroup>
+ <ItemGroup><Compile Include="../../Aetherfront-RC35-Work/Continuity/ResourceClockPayloads.cs" Link="ResourceClockPayloads.cs" /><Compile Include="../../Aetherfront-RC35-Work/Continuity/ResourceClockWire.cs" Link="ResourceClockWire.cs" /></ItemGroup>
+ <ItemGroup Condition="'$(TargetFramework)'=='net8.0'"><Reference Include="Lidgren.Core"><HintPath>$(ServerRuntime)/Lidgren.Core.dll</HintPath></Reference></ItemGroup>
+ <ItemGroup Condition="'$(TargetFramework)'=='net472'"><Reference Include="Lidgren.Network"><HintPath>$(ClientPlugins)/Lidgren.Network.dll</HintPath></Reference></ItemGroup>
+</Project>

@@ -1,0 +1,60 @@
+name = DeepFreeze
+scene = 5,6,7,8
+DFGameSettings
+{
+	Enabled = True
+	KerbalInfo
+	{
+		lastUpdate = 1987.8416250998882
+		status = Dead
+		type = Unowned
+		vesselID = ab7a5d6a-fd9d-4818-8750-69bd97035ad1
+		VesselName = RC35 Cryo Fixture
+		partID = 2711714309
+		seatIdx = 0
+		seatName = Seat1
+		experienceTraitName = Pilot
+		kerbalName = Jebediah Kerman
+	}
+	VesselInfo
+	{
+		vesselName = RC35 Cryo Fixture
+		vesselType = Ship
+		numSeats = 2
+		numCrew = 0
+		numOccupiedParts = 1
+		numFrznCrew = 1
+		hibernating = False
+		hasextDoor = False
+		hasextPod = False
+		lastUpdate = 2153.9616250997374
+		storedEC = 89946.5625
+		predictedECOut = 0
+		Guid = ab7a5d6a-fd9d-4818-8750-69bd97035ad1
+	}
+	PartInfo
+	{
+		vesselID = ab7a5d6a-fd9d-4818-8750-69bd97035ad1
+		PartName = CRY-0300Freezer
+		numSeats = 1
+		numCrew = 0
+		crewMembers = 
+		crewMemberTraits = 
+		numFrznCrew = 1
+		hibernating = False
+		hasextDoor = False
+		hasextPod = False
+		timeLastElectricity = 2153.941650390625
+		frznChargeRequired = 10
+		timeLastTempCheck = 0
+		deathCounter = 0
+		tmpdeathCounter = 0
+		outofEC = False
+		TmpStatus = OK
+		cabinTemp = 39.8582458
+		ECWarning = False
+		TempWarning = False
+		lastUpdate = 1869.7416250999956
+		flightID = 2711714309
+	}
+}

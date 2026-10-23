@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net8.0</TargetFramework><AssemblyName>AetherfrontContinuityServer</AssemblyName><LangVersion>10</LangVersion></PropertyGroup>
+  <ItemGroup><Compile Include="../Continuity/ClockStore.cs" Link="ClockStore.cs" /><Compile Include="../Continuity/ResourceClockPayloads.cs" Link="ResourceClockPayloads.cs" /><Compile Include="../Continuity/ResourceClockWire.cs" Link="ResourceClockWire.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../Continuity/DeepFreezeStates.cs" Link="DeepFreezeStates.cs" /></ItemGroup>
+  <ItemGroup>
+    <Reference Include="Server"><HintPath>$(ServerReference)</HintPath><Private>false</Private></Reference>
+    <Reference Include="AetherfrontCore"><HintPath>$(CandidateCore)</HintPath><Private>false</Private></Reference>
+    <Reference Include="Lidgren.Core"><HintPath>$(ServerRuntime)/Lidgren.Core.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="LunaConfigNode"><HintPath>$(ServerRuntime)/LunaConfigNode.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

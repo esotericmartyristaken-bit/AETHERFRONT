@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net472</TargetFramework><AssemblyName>AetherfrontContinuityClient</AssemblyName><LangVersion>10</LangVersion></PropertyGroup>
+  <ItemGroup><Compile Include="../Continuity/DeepFreezeStates.cs" Link="DeepFreezeStates.cs" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../Continuity/AuthorityPolicy.cs" Link="AuthorityPolicy.cs" />
+    <Compile Include="../Continuity/SurvivalEpoch.cs" Link="SurvivalEpoch.cs" />
+    <Compile Include="../Continuity/ResourceClockPayloads.cs" Link="ResourceClockPayloads.cs" />
+    <Compile Include="../Continuity/ResourceClockWire.cs" Link="ResourceClockWire.cs" />
+    <Reference Include="Lidgren.Network"><HintPath>$(ClientPlugins)/Lidgren.Network.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="USILifeSupport"><HintPath>$(LifeSupportDll)</HintPath><Private>false</Private></Reference>
+    <Reference Include="0Harmony"><HintPath>$(HarmonyPath)</HintPath><Private>false</Private></Reference>
+    <Reference Include="AetherfrontCore"><HintPath>$(ClientPlugins)/AetherfrontCore.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="LmpClient"><HintPath>$(ClientPlugins)/LmpClient.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Assembly-CSharp"><HintPath>$(KspManaged)/Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine"><HintPath>$(KspManaged)/UnityEngine.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(KspManaged)/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

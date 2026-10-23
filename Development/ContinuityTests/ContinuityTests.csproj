@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFrameworks>net8.0;net472</TargetFrameworks>
+    <LangVersion>10</LangVersion><ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Aetherfront-RC35-Work/Continuity/ClockStore.cs" Link="ClockStore.cs" />
+    <Compile Include="../../Aetherfront-RC35-Work/Continuity/AuthorityPolicy.cs" Link="AuthorityPolicy.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net472" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+<ItemGroup><Compile Include="../../Aetherfront-RC35-Work/Continuity/SurvivalEpoch.cs" Link="SurvivalEpoch.cs" /><Compile Include="../../Aetherfront-RC35-Work/Continuity/ResourceClockPayloads.cs" Link="ResourceClockPayloads.cs" /></ItemGroup>
+</Project>
