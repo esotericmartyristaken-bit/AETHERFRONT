@@ -1,4 +1,14 @@
-# RC35 beta release review
+# Continuity beta release: RC36 supersedes withdrawn RC35
+
+RC35 was uploaded but never activated. A native signing smoke test then rejected
+its new license notices under `KESAS/Licenses`. RC36 retains the identical tested
+gameplay helper and server code, moves notices into `GameData/LunaMultiplayer`,
+and retargets only the client version getter/build constant and two legacy
+recovery marker methods. Existing immutable mod media is reused byte for byte.
+The corrected final template passed native signing and signature verification
+with the isolated disposable test key, 477 signed files. Finalization now requires
+that result to match the exact template hash. Never activate the withdrawn RC35
+bundle or replace its immutable published bytes.
 
 The controller requested publication after the focused checks on 2026-10-23.
 This is a beta release, not a claim that every mod interaction has been tested.

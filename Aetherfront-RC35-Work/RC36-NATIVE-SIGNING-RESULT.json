@@ -1,0 +1,13 @@
+{
+  "version": "kesas-rc36",
+  "templateSha256": "88d15f053fa478378b05f915016408b7b9692b55c33256089c23cd0ac436db18",
+  "nativeReleaseSha256": "de9b1ca8b97e811eba231f5a8c28cc90dd58999e80b3b6b12b6f66095a911acf",
+  "nativeReleaseBytes": 2746871,
+  "signedClientFiles": 477,
+  "templateSignedAndVerified": true,
+  "productionKeyUsed": false,
+  "productionChanged": false,
+  "gameplayOrApplyTest": false,
+  "correctedFailure": "RC35 notice paths outside GameData failed native patch-path policy; RC36 notices are under GameData/LunaMultiplayer.",
+  "scope": "Actual native builder and verifier using an isolated disposable local key, not a production signed release or a full updater restart test."
+}

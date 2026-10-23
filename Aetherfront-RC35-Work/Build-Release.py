@@ -1,4 +1,4 @@
-"""Build a keyless RC35 native release from the signed RC34 baseline.
+"""Build a keyless continuity release from the signed RC34 baseline.
 
 No game installs or private state are read. Immutable mod media is published
 separately; the guarded production host retains signing and activation authority.
@@ -7,11 +7,14 @@ import argparse, hashlib, json, pathlib, re, shutil, subprocess, zipfile
 
 p = argparse.ArgumentParser()
 p.add_argument('phase', choices=('prepare', 'finalize'))
+p.add_argument('--version', default='kesas-rc36')
 for name in ('controller', 'inputs', 'public-key', 'output'):
     p.add_argument('--' + name, required=True, type=pathlib.Path)
 a = p.parse_args()
 C = a.controller.resolve()
-VERSION = 'kesas-rc35'
+VERSION = a.version
+assert re.fullmatch(r'kesas-rc[1-9][0-9]*', VERSION)
+release_folder = VERSION.replace('kesas-', '')
 DATE = (2026, 10, 23, 0, 0, 0)
 def sha(data): return hashlib.sha256(data).hexdigest()
 def digest(file):
@@ -31,6 +34,10 @@ def write_zip(file, files):
 
 native = a.output / 'Native'
 if a.phase == 'finalize':
+    smoke = load(a.output / 'NATIVE-SIGNING-SMOKE.json')
+    assert smoke['version'] == VERSION and smoke['templateSignedAndVerified'] is True
+    assert smoke['templateSha256'].lower() == digest(native / 'ClientTemplate.zip')
+    assert smoke['productionKeyUsed'] is False and smoke['productionChanged'] is False
     refs = load(native / 'MediaReferences.json')
     prepared = load(a.output / 'PREPARED.json')
     assert refs['applicationVersion'] == VERSION and refs['schemaVersion'] == 1
@@ -70,8 +77,8 @@ with zipfile.ZipFile(baseline / 'APFClient-kesas-rc34.zip') as z:
 assert all(sha(data) == records[name]['sha256'] and len(data) == records[name]['sizeBytes'] for name, data in files.items())
 plugins = 'GameData/LunaMultiplayer/Plugins/'
 client = C / 'build/rc35-client'
-versioned = C / 'build/rc35-release-client'
-engine = C / 'build/rc35-engine'
+versioned = C / ('build/' + release_folder + '-release-client')
+engine = C / ('build/' + release_folder + '-engine')
 audit = load(client / 'LmpClient.dll.continuity-audit.json')
 version_audit = load(versioned / 'version-audit.json')
 assert audit['inputSha256'].lower() == records[plugins + 'LmpClient.dll']['sha256'] and len(audit['changed']) == 9
@@ -87,7 +94,7 @@ files[plugins + 'KesasInstall.dll'] = (engine / 'KesasInstall.dll').read_bytes()
 files['GameData/AetherfrontCompatibility/BetterBurnTime.cfg'] = (pathlib.Path(__file__).parent / 'Compatibility/BetterBurnTime.cfg').read_bytes()
 for notice in (a.inputs / 'notices').rglob('*'):
     if notice.is_file() and ('licen' in notice.name.lower() or 'copying' in notice.name.lower()):
-        files['KESAS/Licenses/RC35/' + notice.relative_to(a.inputs / 'notices').as_posix()] = notice.read_bytes()
+        files['GameData/LunaMultiplayer/Licenses/' + release_folder.upper() + '/' + notice.relative_to(a.inputs / 'notices').as_posix()] = notice.read_bytes()
 catalog_path = 'GameData/LunaMultiplayer/Launcher/install-catalog.json'
 catalog = json.loads(files[catalog_path]); assert catalog['version'] == 'kesas-rc34'
 catalog['version'] = VERSION
