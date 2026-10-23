@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-23T18:54:08.2144368Z",
+  "createdUtc": "2026-10-23T19:01:52.2310514Z",
   "publication": "Reviewed source update; ordinary source pushes do not deploy",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -28894,8 +28894,8 @@
       "path": "ControlPlane/test/coherent-reporting.test.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 12046,
-      "sha256": "e4a19abc5ebb996e4c9d4d0b20ad416bba802d0de78ce6f54f180a391e67ab5f",
+      "bytes": 13299,
+      "sha256": "d7f77c1e8486d58013f085813c0252373b8246a47925fd8409d3ea777be5bbdf",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -29001,7 +29001,7 @@
       ]
     }
   ],
-  "totalFileBytes": 16776055,
+  "totalFileBytes": 16846860,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",

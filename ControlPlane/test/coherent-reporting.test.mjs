@@ -238,3 +238,25 @@ test('concurrent publication shares one report and independently atomic output f
     assert.equal(value.observedAt,left.report.observedAt);
   }
 });
+
+for(const code of ['EBUSY','EPERM'])test(`HTTP ZIP ${code} cannot suppress coherent independent observation or mark a live broker failed`,async t=>{
+  const f=await fixture(t),rename=fs.rename.bind(fs);
+  let failures=0;
+  t.mock.method(fs,'rename',async(from,to)=>{
+    if(['kesas-host-status.zip','kesas-host-diagnostics.zip'].some(name=>to===path.join(f.settings.nativeRoot,'Server','Config',name))){
+      failures++;throw Object.assign(new Error('isolated HTTP ZIP sharing failure'),{code});
+    }
+    return rename(from,to);
+  });
+  const first=await f.publish();healthy(first);
+  // The existing atomic writer tries each destination at most nine times.
+  assert.equal(failures,18);
+  const observation=JSON.parse(await fs.readFile(path.join(f.state,'host-observation.json'),'utf8'));
+  assert.deepEqual(observation.status,first.report);
+  assert.deepEqual(observation.diagnostics,first.diagnostics);
+  assert.notEqual(observation.diagnostics.host.broker,'failed');
+  f.time(base+1);
+  const second=await f.publish();healthy(second);
+  assert.equal(second.report.observedAt,iso(base+1));assert.equal(failures,36);
+  assert.equal(JSON.parse(await fs.readFile(path.join(f.state,'host-observation.json'),'utf8')).status.observedAt,iso(base+1));
+});
