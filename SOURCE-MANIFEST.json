@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-23T18:44:39.6791285Z",
+  "createdUtc": "2026-10-23T18:54:08.2144368Z",
   "publication": "Reviewed source update; ordinary source pushes do not deploy",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -27608,8 +27608,8 @@
       "path": "ControlPlane/controller.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 48314,
-      "sha256": "94ad02bb6694b62127edf71813e559284eea79a94f97f4a23d90cec53d5a6f84",
+      "bytes": 48550,
+      "sha256": "1784e28ec934e5684677054a628bac2a7db615568e3dc35f7e45ae8675c2ec61",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -28905,8 +28905,8 @@
       "path": "ControlPlane/test/controller-reliability.test.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 32294,
-      "sha256": "bb4d823977358f97fd5eb8ac037c65ff1319b32af0ba4caff23bfc9f8a617e51",
+      "bytes": 34301,
+      "sha256": "274cbd3079bcd02731283abc45ebf392030a346affd41ebfa00063d3512ee7bd",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -29001,7 +29001,7 @@
       ]
     }
   ],
-  "totalFileBytes": 16760161,
+  "totalFileBytes": 16776055,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",

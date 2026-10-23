@@ -216,8 +216,9 @@ export async function fetchGithubCurrentReadback(options = {}) {
   const args = ['api', '--hostname', 'github.com', '--method', 'GET',
     `repos/${REPOSITORY}/contents/readback.json?ref=host-observation&observation=${Date.now()}`,
     '-H', 'Cache-Control: no-cache'];
-  const output = await checked('STATUS_UNREACHABLE', () =>
-    (options.gh || runGh)(args, undefined, { timeoutMs: 20_000 }));
+  let output;
+  try { output = await (options.gh || runGh)(args, undefined, { timeoutMs: 20_000 }); }
+  catch { fail('STATUS_UNREACHABLE'); }
   if (typeof output !== 'string' || Buffer.byteLength(output) > 256 * 1024) fail('INVALID_STATUS');
   const value = await parseStrictJson(Buffer.from(output));
   if (value?.type !== 'file' || value.path !== 'readback.json' || value.encoding !== 'base64' ||
@@ -250,7 +251,7 @@ async function signedStatus({ pin, resource, fetchSignedReadback, gh }) {
     }
   } catch (error) {
     // Verifier errors belong to its module; preserve only the fail-closed codes.
-    fail(['TLS_PIN_MISMATCH', 'STALE_STATUS', 'INVALID_STATUS_ZIP'].includes(error?.code) ? error.code : 'INVALID_STATUS');
+    fail(['TLS_PIN_MISMATCH', 'STALE_STATUS', 'STATUS_UNREACHABLE', 'INVALID_STATUS_ZIP'].includes(error?.code) ? error.code : 'INVALID_STATUS');
   }
 }
 
@@ -591,7 +592,9 @@ export async function observeControl(options = {}) {
       if (control.sha256 !== options.sha256) return result('hash-conflict', false);
       if (['healthy', 'idle'].includes(control.status) && control.lastSuccess === options.version && !control.pendingVersion && !control.failure)
         return result('healthy', true);
-      if (['blocked', 'rolled-back'].includes(control.status)) return result(control.status, false);
+      // Independent reporting deliberately marks unavailable business logic as
+      // degraded. Only an attributed transaction failure is terminal there.
+      if (['blocked', 'rolled-back'].includes(control.status) && control.phase !== 'broker-unavailable') return result(control.status, false);
     } else if (control && controlNumber(control.version) > controlNumber(options.version)) return result('superseded', false);
     if (performance.now() >= deadline) return result('timeout', false);
     await (options.sleep || sleep)(Math.max(1, Math.min(interval, deadline - performance.now())));

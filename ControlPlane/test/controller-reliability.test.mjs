@@ -31,6 +31,7 @@ test('current readback uses only the fixed authenticated GET and verifies exact 
     return JSON.stringify(file);
   };
   assert.deepEqual(await fetchGithubCurrentReadback({gh}),bytes);
+  await assert.rejects(fetchGithubCurrentReadback({gh:async()=>{throw new ControllerError('GITHUB_FAILED');}}),{code:'STATUS_UNREACHABLE'});
   for(const change of [{path:'other.json'},{type:'symlink'},{sha:'a'.repeat(40)},{size:128*1024+1},{content:'invalid!'}]){
     await assert.rejects(fetchGithubCurrentReadback({gh:async()=>JSON.stringify({...file,...change})}),/INVALID_STATUS/);
   }
@@ -211,6 +212,13 @@ test('observation tolerates transport interruption and waits through pending tar
     return statusZip(reads === 2 ? report({ pendingVersion: 'control-8', status: 'waiting-existing-guard' }) : healthy());
   } }));
   assert.equal(result.status, 'healthy'); assert.equal(reads, 3);
+});
+
+test('fresh degraded fallback during broker startup is not a terminal transaction failure', async () => {
+  let reads=0;
+  const result=await observeControl(observation({timeoutMs:1000,fetchStatus:async()=>statusZip(++reads===1?
+    report({version:'control-8',sequence:8,sha256:hash(bytes),status:'blocked',phase:'broker-unavailable',failure:'broker-report-unavailable'}):healthy())}));
+  assert.equal(result.ok,true);assert.equal(reads,2);
 });
 test('observation distinguishes target hash conflict, exact failure and supersession', async () => {
   for (const [control, expected] of [
@@ -495,13 +503,13 @@ test('control recovery rechecks failure identity before mutation; stale authoriz
   assert.equal(f.remote.uploads + f.remote.puts + f.remote.creates, 0);
 });
 
-function signedEnvelope(status = report()) {
+function signedEnvelope(status = report(), keys = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 })) {
   const der = (tag, ...parts) => {
     const body = Buffer.concat(parts), length = body.length;
     const encoded = length < 128 ? [length] : length < 256 ? [0x81, length] : [0x82, length >> 8, length & 255];
     return Buffer.concat([Buffer.from([tag, ...encoded]), body]);
   };
-  const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
+  const { privateKey, publicKey } = keys;
   const algorithm = Buffer.from('300d06092a864886f70d01010b0500', 'hex');
   const name = der(0x30, der(0x31, der(0x30, Buffer.from('0603550403', 'hex'), der(0x0c, Buffer.from('offline fixture')))));
   const tbs = der(0x30, der(0x02, Buffer.from([1])), algorithm, name,
@@ -516,6 +524,27 @@ function signedEnvelope(status = report()) {
   return { pin: hash(certificate), bytes: Buffer.from(JSON.stringify({ schemaVersion: 1, payload: payload.toString('base64'),
     certificate: certificate.toString('base64'), signature: signature.toString('base64') })) };
 }
+
+test('stale CDN then transient authenticated API failure is retried by observer with the same host pin', async t => {
+  const keys=crypto.generateKeyPairSync('rsa',{modulusLength:2048}),now=Date.now();
+  const value=healthy();value.observedAt=new Date(now-100).toISOString();value.expiresAt=new Date(now+29000).toISOString();
+  const fresh=signedEnvelope(value,keys);
+  const stale=signedEnvelope({...value,observedAt:new Date(now-60000).toISOString(),expiresAt:new Date(now-30000).toISOString()},keys);
+  assert.equal(stale.pin,fresh.pin);
+  t.mock.method(https,'request',(_url,_options,callback)=>{
+    const req=new EventEmitter();req.destroy=()=>{};req.setTimeout=()=>req;
+    req.end=()=>queueMicrotask(()=>{const response=new PassThrough();response.statusCode=200;response.headers={};callback(response);response.end(stale.bytes);});
+    return req;
+  });
+  let reads=0;
+  const result=await observeControl(observation({pin:fresh.pin,transport:'github',fetchStatus:undefined,timeoutMs:2000,
+    gh:async()=>{
+      if(++reads===1)throw new ControllerError('GITHUB_FAILED');
+      return JSON.stringify({type:'file',path:'readback.json',encoding:'base64',size:fresh.bytes.length,
+        sha:crypto.createHash('sha1').update(`blob ${fresh.bytes.length}\0`).update(fresh.bytes).digest('hex'),content:fresh.bytes.toString('base64')});
+    }}));
+  assert.equal(result.ok,true);assert.equal(reads,2);
+});
 
 test('real signed fallback verifies certificate pin, signature, freshness and both resource ZIPs offline', async () => {
   const status = report(); status.expiresAt = new Date(Date.parse(status.observedAt) + 30_000).toISOString();
