@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
-  "version": "kesas-rc34",
-  "releaseTag": "host-kesas-rc34",
-  "assetName": "Aetherfront-Release-kesas-rc34.zip",
-  "sha256": "69b137c0602e91c270a0c5bb493f3cbde0df55d90f7943d6d9f85e55be370fb8",
-  "sizeBytes": 1790996,
-  "notes": "Add Making History, Breaking Ground and WASD Editor Camera Continued to Regular and Potato. Licensed expansion bootstrap retains stock-folder protection. Sandbox beta retained.",
+  "version": "kesas-rc36",
+  "releaseTag": "host-kesas-rc36",
+  "assetName": "Aetherfront-Release-kesas-rc36.zip",
+  "sha256": "de9b1ca8b97e811eba231f5a8c28cc90dd58999e80b3b6b12b6f66095a911acf",
+  "sizeBytes": 2746871,
+  "notes": "Personal timelines, survival compatibility, editor and tracking fixes, requested mods; native signing verified. Sandbox beta.",
   "requirements": {
     "contractVersion": 1,
     "capabilities": [
