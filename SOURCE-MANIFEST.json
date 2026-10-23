@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-23T08:46:02.4161068Z",
+  "createdUtc": "2026-10-23T09:00:28.6440607Z",
   "publication": "Reviewed source update; ordinary source pushes do not deploy",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -27432,8 +27432,8 @@
       "path": "ControlPlane/Manage-ControlWorker.ps1",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 1647,
-      "sha256": "2bc80a777afca33cfb44220bb597e21d0e27d96cde38457f218f4cd13d6f29dd",
+      "bytes": 2644,
+      "sha256": "bf6ec571ff7af02c1f5c5aa4123685a114ce9d3cc541ff8f98adab28a37a8933",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -27476,8 +27476,8 @@
       "path": "ControlPlane/README.md",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 14829,
-      "sha256": "667d4fb3d432231560d5e4c8a30acb7756f750bfff612d5fe036700e2cfd4fd1",
+      "bytes": 15491,
+      "sha256": "703d5a1c23548c8b613b62cd3f565f326e6b015463bc302bca00a019b3652244",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -27564,8 +27564,8 @@
       "path": "ControlPlane/anchor.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 26445,
-      "sha256": "3df6b0c7d900c124ae95ac53a42177e010dc3d7f3ad5532104a2e1eb070e00a1",
+      "bytes": 26457,
+      "sha256": "5c3fd0e57db16b4066da74772b7fdad4c13a40185e52370fd52825a93c8fa295",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -27795,8 +27795,8 @@
       "path": "ControlPlane/worker.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 12351,
-      "sha256": "23830dc40901fe5685476e2cb70e24be9d30eb9e705429ec73df9dd22ff126bf",
+      "bytes": 12450,
+      "sha256": "f23c77a4ee6a6254b54825610357986469f8a132cac730c0afacb706e872050c",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -28883,8 +28883,8 @@
       "path": "ControlPlane/supervision.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 1836,
-      "sha256": "9bc16b755ed3f5cfce8e58c0f2a6bee14e179220376c99cdc408ad64b48ed1cb",
+      "bytes": 2380,
+      "sha256": "01a5d3c5f7b4c4e9c2a7265c97cec4b82d32bf2e6c51cc2f0829c5136a83753e",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -28960,15 +28960,26 @@
       "path": "ControlPlane/test/supervision-recovery.test.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 15542,
-      "sha256": "34a127c221949db41ec1a4cd31ec39d41761619d6edc2ab6d3d5a2bcd87b2757",
+      "bytes": 22272,
+      "sha256": "1545319872b9623cf519f93947e15f093b9473bab937ea5cd71573a4a1987170",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/test/manage-control-worker.test.ps1",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 3564,
+      "sha256": "74d8796456f18f039e93e621e9d03ee3abba768e21dfd59fbbf0c82eea61be2a",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
       ]
     }
   ],
-  "totalFileBytes": 16423669,
+  "totalFileBytes": 16754095,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",
@@ -28987,5 +28998,5 @@
     "report": "PRIVACY-SCAN.json",
     "limitation": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
   },
-  "fileCount": 2900
+  "fileCount": 2901
 }

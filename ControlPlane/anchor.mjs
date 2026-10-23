@@ -124,7 +124,7 @@ async function recoverWorker(){
     if(policy.action==='wait')return;
     workerRetryAt=Date.now()+policy.delay;
     if(!await idle(true))return;
-    if(policy.action==='restart')await task('stop');
+    if(policy.action==='restart')await task('recover-worker');
     if(!await idle(true))return;
     await task('start');workerStarted=Date.now();workerRestarts++;
     await writeJson(path.join(settings.root,'native-cache','worker-recovery.json'),{at:new Date().toISOString(),version:pointer.version,action:policy.action,restarts:workerRestarts});
@@ -241,7 +241,7 @@ async function poll(){
     if(stopping)return; // Preserve the durable phase for the replacement loader.
     reason=error.controlReason||'broker-update-failed';await privateError('control-publication',error);
     const durable=await engine.state().catch(()=>null);
-    if(durable&&!['activating','health-check','rolling-back'].includes(durable.phase))
+    if(durable&&['accepted','staging','waiting-existing-guard'].includes(durable.phase))
       await save({...durable,phase:'blocked',failure:error.controlReason||'broker-update-failed'}).catch(()=>{});
   }
   finally{polling=false;}

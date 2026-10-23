@@ -4,12 +4,26 @@ import { fork } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import vm from 'node:vm';
 import { brokerRecoveryState, stopIdleControlChild, workerRecoveryState } from '../supervision.mjs';
 import { projectControlAttempt, controlHistory } from '../control-evidence.mjs';
 
+for(const phase of ['healthy','blocked','rolled-back'])test(`GitHub observation failure cannot rewrite retained ${phase} transaction history`,async()=>{
+  const source=await fs.readFile(new URL('../anchor.mjs',import.meta.url),'utf8');
+  const begin=source.indexOf('async function poll(){'),end=source.indexOf('async function fallback(){',begin);
+  assert.ok(begin>=0&&end>begin);
+  const transaction={phase,descriptor:{version:'control-8'}};let writes=0;
+  const context=vm.createContext({polling:false,recovering:false,stopping:false,pointer:{sequence:7},reason:null,
+    engine:{state:async()=>transaction},channel:{intent:async()=>{throw new Error('isolated transport failure');}},
+    privateError:async()=>{},save:async()=>{writes++;}});
+  vm.runInContext(source.slice(begin,end),context);
+  await context.poll();
+  assert.equal(writes,0);assert.equal(context.polling,false);assert.equal(transaction.phase,phase);
+});
+
 test('independent worker recovery detects stopped tasks and stalled evidence, not inventory or generation refreshes',()=>{
   const now=Date.now(),identity={controlVersion:'control-9',controlSha256:'a'.repeat(64)};
-  const status={...identity,observedAt:new Date(now).toISOString(),expiresAt:new Date(now+30000).toISOString(),inventory:{status:'collecting'}};
+  const status={...identity,observedAt:new Date(now).toISOString(),expiresAt:new Date(now+30000).toISOString(),childObservedAt:now,inventory:{status:'collecting'}};
   const diagnostics={...identity,observedAt:new Date(now-1).toISOString(),stage:'running'};
   const base={running:true,status,diagnostics,version:'control-9',sha256:'a'.repeat(64),startedAt:now-90001,now};
   assert.equal(workerRecoveryState(base).action,'wait');
@@ -21,6 +35,85 @@ test('independent worker recovery detects stopped tasks and stalled evidence, no
   assert.equal(workerRecoveryState({...base,status:null,restarts:999}).delay,300000);
   assert.equal(workerRecoveryState({...base,status:{...status,controlSha256:'b'.repeat(64)}}).action,'restart');
   assert.equal(workerRecoveryState({...base,status:{...status,observedAt:new Date(now+1).toISOString()}}).action,'restart');
+});
+
+test('fresh wrapper reports cannot extend the 90-second child startup deadline',()=>{
+  const startedAt=Date.parse('2026-10-23T10:00:00.000Z'),identity={controlVersion:'control-9',controlSha256:'a'.repeat(64)};
+  for(const age of [89999,90000,90001,300000]){
+    const now=startedAt+age;
+    const status={...identity,observedAt:new Date(now).toISOString(),expiresAt:new Date(now+30000).toISOString(),childObservedAt:now};
+    const diagnostics={...identity,observedAt:new Date(now-1).toISOString(),stage:'starting'};
+    const base={running:true,status,diagnostics,version:'control-9',sha256:identity.controlSha256,startedAt,now};
+    assert.equal(workerRecoveryState(base).action,age<90000?'wait':'restart',`startup age ${age}`);
+    assert.equal(workerRecoveryState({...base,running:false}).action,'start');
+    assert.equal(workerRecoveryState({...base,retryAt:now+1}).action,'wait');
+  }
+});
+
+test('child IPC freshness, not application health, governs running worker recovery',()=>{
+  const now=Date.parse('2026-10-23T10:05:00.000Z'),identity={controlVersion:'control-9',controlSha256:'a'.repeat(64)};
+  const status={...identity,observedAt:new Date(now).toISOString(),expiresAt:new Date(now+30000).toISOString(),ready:true};
+  const diagnostics={...identity,observedAt:new Date(now-1).toISOString(),stage:'running'};
+  const base={running:true,status,diagnostics,version:'control-9',sha256:identity.controlSha256,startedAt:now-300000,now};
+  for(const health of ['healthy','offline','unknown']){
+    for(const age of [0,89999,90000,90001]){
+      const input={...base,status:{...status,health,childObservedAt:now-age}};
+      assert.equal(workerRecoveryState(input).action,age<=90000?'wait':'restart',`${health}; heartbeat age ${age}`);
+      assert.equal(workerRecoveryState({...input,running:false}).action,'start');
+    }
+  }
+  for(const childObservedAt of [undefined,null,0,NaN,Infinity,now+1,'invalid']){
+    const input={...base,status:{...status,health:'healthy',childObservedAt}};
+    assert.equal(workerRecoveryState(input).action,'restart');
+    assert.equal(workerRecoveryState({...input,startedAt:now-89999}).action,'wait');
+    assert.equal(workerRecoveryState({...input,startedAt:now-90000}).action,'restart');
+    assert.equal(workerRecoveryState({...input,retryAt:now+1}).action,'wait');
+  }
+});
+
+test('legacy control-7 without child evidence receives startup grace only while task is running',()=>{
+  const now=Date.parse('2026-10-23T10:05:00.000Z'),identity={controlVersion:'control-7',controlSha256:'7'.repeat(64)};
+  const status={...identity,observedAt:new Date(now).toISOString(),expiresAt:new Date(now+30000).toISOString()};
+  for(const stage of ['starting','running','draining']){
+    const diagnostics={...identity,observedAt:new Date(now-1).toISOString(),stage};
+    const base={running:true,status,diagnostics,version:'control-7',sha256:identity.controlSha256,startedAt:now-89999,now};
+    assert.equal(workerRecoveryState(base).action,'wait');
+    assert.equal(workerRecoveryState({...base,startedAt:now-90000}).action,'restart');
+    assert.equal(workerRecoveryState({...base,running:false}).action,'start');
+  }
+});
+
+test('previously ready legacy worker remains stable until authenticated upgrade; new workers cannot omit their child clock',()=>{
+  const now=Date.now(),identity={controlVersion:'control-7',controlSha256:'7'.repeat(64)};
+  const status={...identity,ready:true,observedAt:new Date(now).toISOString(),expiresAt:new Date(now+30000).toISOString()};
+  const base={running:true,status,diagnostics:{...identity,stage:'running'},version:identity.controlVersion,sha256:identity.controlSha256,startedAt:now-300000,now};
+  assert.equal(workerRecoveryState(base).action,'wait');
+  assert.equal(workerRecoveryState({...base,status:{...status,childObservedAt:null}}).action,'restart');
+  assert.equal(workerRecoveryState({...base,status:{...status,ready:false}}).action,'restart');
+  assert.equal(workerRecoveryState({...base,version:'control-9',status:{...status,controlVersion:'control-9'},diagnostics:{...base.diagnostics,controlVersion:'control-9'}}).action,'restart');
+});
+
+test('protected worker status projects actual child IPC time without refreshing it or using app health',async()=>{
+  // Execute only the status producer with isolated dependencies, never the worker entry point.
+  const source=await fs.readFile(new URL('../worker.mjs',import.meta.url),'utf8');
+  const begin=source.indexOf('async function publishStatus() {'),end=source.indexOf("process.on('message'",begin);
+  assert.ok(begin>=0&&end>begin);
+  const now=Date.parse('2026-10-23T10:05:00.000Z'),writes=new Map();
+  const context=vm.createContext({path,Date:class extends Date{static now(){return now;}},reporting:false,ready:true,closed:false,
+    health:'unknown',healthObservedAt:now-12345,inventoryStatus:'collecting',componentVersion:null,inventoryObservedAt:null,components:{},
+    collecting:true,nextInventory:0,workerStage:'running',workerReason:null,workerExitCode:null,CAPABILITIES:[],
+    pointer:{version:'control-9',bundleSha256:'a'.repeat(64)},settings:{root:'fixture-only',nativeRoot:'fixture-native'},
+    readJson:async()=>({version:'kesas-rc1'}),watcherDiagnostics:async()=>({}),version:()=>true,
+    writeJson:async(file,value)=>writes.set(path.basename(file),value)});
+  vm.runInContext(source.slice(begin,end),context);
+  for(const healthObservedAt of [now-12345,now-90001,0,undefined]){
+    context.healthObservedAt=healthObservedAt;
+    await context.publishStatus();
+    const status=writes.get('worker-status.json');
+    assert.equal(status.childObservedAt,healthObservedAt>0?healthObservedAt:null);
+    assert.equal(status.observedAt,new Date(now).toISOString());
+    assert.equal(status.health,'unknown');
+  }
 });
 
 // Only this generated program is forked. No production entry point, service,

@@ -176,11 +176,11 @@ an unhealthy game/pack healthy.
 # Fresh independent readback and read-only resume after controller interruption.
 node ControlPlane/controller.mjs status --origin https://217.216.49.250:18866 --pin PIN --transport github
 node ControlPlane/controller.mjs diagnostics --origin https://217.216.49.250:18866 --pin PIN --transport github
-node ControlPlane/controller.mjs observe-control --origin https://217.216.49.250:18866 --pin PIN --version control-N --sha256 EXACT_ARCHIVE_SHA256
+node ControlPlane/controller.mjs observe-control --origin https://217.216.49.250:18866 --pin PIN --transport github --version control-N --sha256 EXACT_ARCHIVE_SHA256
 
 # When live status offers publish-reviewed-newer-control, use a reviewed NEW
 # version plus the exact retained failure identity. Never replay/reset it.
-node ControlPlane/controller.mjs recover-control --origin https://217.216.49.250:18866 --pin PIN --archive C:/build/Aetherfront-Control-control-N.zip --version control-N --failed-version control-M --failed-transaction EXACT_FAILED_TRANSACTION_ID
+node ControlPlane/controller.mjs recover-control --origin https://217.216.49.250:18866 --pin PIN --transport github --archive C:/build/Aetherfront-Control-control-N.zip --version control-N --failed-version control-M --failed-transaction EXACT_FAILED_TRANSACTION_ID
 ```
 
 Replace `N`, `M` and digest placeholders with the actual next unused version and
@@ -212,6 +212,15 @@ evidence before and after stopping the limited worker. An applying helper is
 never terminated. Native ambiguity blocks application replay, not truthful
 diagnostics or publication of a compatible newer control repair. Genuine OS,
 trust-anchor, credential or unavailable-host failures remain operator boundaries.
+
+Worker recovery separately bounds bot startup and actual IPC heartbeat age at
+90 seconds. Fresh wrapper reports and an inventory refresh cannot renew that
+child clock. Previously ready legacy control-7/8 workers retain their existing
+liveness evidence until the authenticated upgrade, avoiding a restart loop;
+their unavailable child-clock evidence is not claimed to be proved. Fixed
+worker-only recovery can stop a stalled task during queued/deploying state only
+under the native OS lease and without a live or ambiguous applying helper. It
+does not change countdowns, application journals or authorize application retry.
 
 ## Large media and remaining boundaries
 

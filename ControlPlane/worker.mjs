@@ -114,6 +114,7 @@ async function publishStatus() {
     const identity={schemaVersion:1,observedAt,controlVersion:pointer.version,controlSha256:pointer.bundleSha256};
     // Evidence only. The privileged independent reporter owns every public file.
     await writeJson(path.join(settings.root,'worker-status.json'),{...identity,expiresAt:new Date(now+30000).toISOString(),ready:ready&&!closed,health:currentHealth,
+      childObservedAt:Number.isFinite(healthObservedAt)&&healthObservedAt>0?healthObservedAt:null,
       capabilities:ready&&!closed&&matching&&currentHealth==='healthy'?[...CAPABILITIES]:[],
       applicationVersion:version(feed?.version)?feed.version:null,
       inventory:{status:inventoryStatus,version:componentVersion,observedAt:inventoryObservedAt},components});

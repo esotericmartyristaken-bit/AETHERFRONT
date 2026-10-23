@@ -19,7 +19,13 @@ export function workerRecoveryState({running,status,diagnostics,version,sha256,s
   // Liveness only; independently replaced generations do not grant readiness.
   // The reporter still requires a coherent pair for capability admission.
   const matching=status?.controlVersion===version&&status?.controlSha256===sha256&&diagnostics?.controlVersion===version&&diagnostics?.controlSha256===sha256;
-  if(running&&fresh&&matching&&['starting','running','draining'].includes(diagnostics?.stage))return {action:'wait'};
+  const childObservedAt=status?.childObservedAt;
+  const childFresh=Number.isFinite(childObservedAt)&&childObservedAt>0&&childObservedAt<=now&&now-childObservedAt<=90000;
+  // Wrapper reports cannot extend child startup or substitute for child IPC.
+  // A previously ready legacy worker has no child clock; preserve it until the
+  // authenticated upgrade instead of manufacturing a recurring restart loop.
+  const legacyReady=Number(version?.slice(8))<=8&&status&&!Object.hasOwn(status,'childObservedAt')&&status.ready===true;
+  if(running&&fresh&&matching&&(childFresh||legacyReady)&&['running','draining'].includes(diagnostics?.stage))return {action:'wait'};
   if(now<retryAt||(running&&now-startedAt<90000))return {action:'wait'};
   return {action:running?'restart':'start',delay:Math.min(300000,5000*2**Math.min(restarts,6))};
 }
