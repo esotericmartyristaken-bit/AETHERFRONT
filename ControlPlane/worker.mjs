@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fork, execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import crypto from 'node:crypto';
 import { ControlEngine, validatePointer, inventory } from './engine.mjs';
 import { CAPABILITIES } from './contract.mjs';
 import { writeJson, readJson, fileHash, digest, noLinks, publicMediaInventory } from './public-status.mjs';
@@ -17,6 +18,46 @@ let components=Object.fromEntries(labels.map(label=>[label,null]));
 let child=null,ready=false,closed=false,health='unknown',healthObservedAt=0,quiescence=null,exitRequested=false;
 let reporting=false,collecting=false,componentVersion=null,inventoryObservedAt=null,inventoryStatus='pending',mediaHashCache={},nextInventory=0;
 let shutdownPending=false,workerStage='starting',workerReason=null,workerExitCode=null;
+let parentShutdown=false;
+const parent=process.ppid;
+function workerShutdownRequested(requested,drain,sha,parentAlive){
+  return requested||drain?.bundleSha256===sha||!parentAlive;
+}
+function parentAlive(){try{process.kill(parent,0);return true;}catch(error){if(error.code==='ESRCH')return false;throw error;}}
+async function acquireWorkerOwner(){
+  const file=path.join(settings.root,'worker-owner.json'),owner={pid:process.pid,token:crypto.randomUUID()};
+  const deadline=Date.now()+120000;
+  await noLinks(file);
+  for(;;){
+    if(!parentAlive())throw new Error('Worker parent exited before ownership');
+    try{
+      const handle=await fs.open(file,'wx');
+      try{await handle.writeFile(JSON.stringify(owner));await handle.sync();}finally{await handle.close();}
+      return async()=>{if((await readJson(file,null))?.token===owner.token)await fs.unlink(file);};
+    }catch(error){
+      if(error.code!=='EEXIST')throw error;
+      const previous=await readJson(file);
+      if(!Number.isSafeInteger(previous?.pid)||previous.pid<=0||typeof previous.token!=='string'||!previous.token)throw new Error('Uncertain worker owner');
+      let alive=true;
+      try{process.kill(previous.pid,0);}catch(probe){if(probe.code!=='ESRCH')throw probe;alive=false;}
+      if(!alive){if((await readJson(file))?.token===previous.token)await fs.unlink(file);continue;}
+      if(Date.now()>=deadline)throw new Error('Prior worker remains alive; shared evidence untouched');
+      await new Promise(resolve=>setTimeout(resolve,250));
+    }
+  }
+}
+async function waitForPriorBot(){
+  const deadline=Date.now()+120000;
+  for(;;){
+    if(!parentAlive())throw new Error('Worker parent exited while bot drains');
+    const previous=await readJson(path.join(settings.botRoot,'state','bot-instance.lock'),null);
+    if(!previous)return;
+    if(!Number.isSafeInteger(previous.pid)||previous.pid<=0)throw new Error('Uncertain prior bot ownership');
+    try{process.kill(previous.pid,0);}catch(error){if(error.code==='ESRCH')return;throw error;}
+    if(Date.now()>=deadline)throw new Error('Prior bot remains alive; native helper untouched');
+    await new Promise(resolve=>setTimeout(resolve,250));
+  }
+}
 
 async function launchBot() {
   await noLinks(path.join(settings.botRoot,'state','bot-runtime.log'));
@@ -122,23 +163,31 @@ async function publishStatus() {
     if(ready&&!closed&&!collecting&&version(feed?.version)&&(now>=nextInventory||(componentVersion!==feed.version&&inventoryStatus!=='failed')))void collectComponents();
   } finally {reporting=false;}
 }
-process.on('message',message=>{if(message?.type==='shutdown-when-idle')shutdownPending=true;});
-process.on('disconnect',()=>{shutdownPending=true;});
-process.on('SIGTERM',()=>{shutdownPending=true;});
-process.on('SIGINT',()=>{shutdownPending=true;});
-await publishStatus().catch(()=>{});
-const reportTimer=setInterval(()=>{void publishStatus().catch(()=>{});},10000);
-reportTimer.unref();
+function requestShutdown(){parentShutdown=true;shutdownPending=true;}
+process.on('message',message=>{if(message?.type==='shutdown-when-idle')requestShutdown();});
+process.on('disconnect',requestShutdown);
+process.on('SIGTERM',requestShutdown);
+process.on('SIGINT',requestShutdown);
+// Ownership is acquired before any shared report or bot process is created.
+// A live draining predecessor remains authoritative; no stale writer competes.
+const releaseWorkerOwner=await acquireWorkerOwner();
+let reportTimer=null;
 let nextTick=0;
 try {
+  await waitForPriorBot();
+  await publishStatus().catch(()=>{});
+  reportTimer=setInterval(()=>{void publishStatus().catch(()=>{});},10000);
+  reportTimer.unref();
   await launchBot();
   void collectComponents();
   while(!exitRequested) {
     if(closed)break;
+    if(!parentAlive())requestShutdown();
     if(managed) {
       const drain=await readJson(path.join(controlRoot,'drain.json'),null).catch(()=>null);
-      shutdownPending=drain?.bundleSha256===pointer.bundleSha256;
+      shutdownPending=workerShutdownRequested(parentShutdown,drain,pointer.bundleSha256,true);
     }
+    if(!shutdownPending&&ready)workerStage='running';
     if(shutdownPending){workerStage='draining';if((managed||await engine.isNativeIdle())&&await quiesce()){exitRequested=true;workerStage='stopped';break;}}
     if(!managed&&ready&&Date.now()>=nextTick) {
       nextTick=Date.now()+60000;
@@ -152,5 +201,8 @@ try {
 finally {
   if(!exitRequested)process.exitCode=1;
   clearInterval(reportTimer);
+  // An in-flight asynchronous timer must finish before ownership is released.
+  while(reporting)await new Promise(resolve=>setTimeout(resolve,25));
   await publishStatus().catch(()=>{});
+  await releaseWorkerOwner();
 }

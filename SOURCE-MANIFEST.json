@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-23T19:01:52.2310514Z",
+  "createdUtc": "2026-10-23T19:21:00.9969214Z",
   "publication": "Reviewed source update; ordinary source pushes do not deploy",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -27476,8 +27476,8 @@
       "path": "ControlPlane/README.md",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 15894,
-      "sha256": "00d45096a3a03c0c87988c74e792c1cf08cd2f6bd0c739ab2dd2ec5efdd72eab",
+      "bytes": 16362,
+      "sha256": "f996b8b3ccd4953c2267ecd0fad566a7171d1cd61752b5400e07fb745a247143",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -27795,8 +27795,8 @@
       "path": "ControlPlane/worker.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 12450,
-      "sha256": "f23c77a4ee6a6254b54825610357986469f8a132cac730c0afacb706e872050c",
+      "bytes": 15258,
+      "sha256": "e2e9604280af0d426d6c94749b6edc61d93501604630e3d14cab0cd7d7b0fad2",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -28999,9 +28999,20 @@
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
       ]
+    },
+    {
+      "path": "ControlPlane/test/worker-lifecycle.test.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 11372,
+      "sha256": "e227ff5207b18fb7a07df7ff5c3abf61c6ee941dda24bfe6e200ba6bbed0be07",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
     }
   ],
-  "totalFileBytes": 16846860,
+  "totalFileBytes": 16831815,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",
@@ -29020,5 +29031,5 @@
     "report": "PRIVACY-SCAN.json",
     "limitation": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
   },
-  "fileCount": 2903
+  "fileCount": 2904
 }

@@ -227,6 +227,13 @@ worker-only recovery can stop a stalled task during queued/deploying state only
 under the native OS lease and without a live or ambiguous applying helper. It
 does not change countdowns, application journals or authorize application retry.
 
+Managed workers hold a PID/token ownership record until their final report has
+finished. A replacement waits for a live predecessor and prior bot to drain;
+it does not publish competing status or kill either process. Task-parent loss
+and shutdown signals remain sticky even if the managed drain marker is cleared.
+This prevents orphan workers after a Windows task stop from overwriting the new
+worker's evidence. Native helpers still drain under the existing guards.
+
 ## Large media and remaining boundaries
 
 See [MEDIA.md](MEDIA.md) for exact separate immutable media publication/reference
