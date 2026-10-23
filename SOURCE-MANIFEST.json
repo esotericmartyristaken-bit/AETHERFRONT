@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-23T09:26:20.1396585Z",
+  "createdUtc": "2026-10-23T09:44:19.9575059Z",
   "publication": "Reviewed source update; ordinary source pushes do not deploy",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -28982,8 +28982,8 @@
       "path": "ControlPlane/Resume-HostControlRepair.ps1",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 8972,
-      "sha256": "6218313d0e6b704acc7671c42055e88a1619fc41aa401fe7798de658e1caeafb",
+      "bytes": 10963,
+      "sha256": "8d0b9bf6ad66be2481b6a4d3c3eebc828ccdf4dee82d4a385ed558b5ea76a4c9",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -28993,15 +28993,15 @@
       "path": "ControlPlane/test/resume-host-control.test.ps1",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 2389,
-      "sha256": "765060f51b519ca157d8511b5ebf34d6925002eb6634880e0c439dae712773d1",
+      "bytes": 2613,
+      "sha256": "088854a2f132fae9b69f9fa50d53ffbc787d3d2f99839e0d1ea33e5be00057c0",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
       ]
     }
   ],
-  "totalFileBytes": 16817160,
+  "totalFileBytes": 16839528,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",

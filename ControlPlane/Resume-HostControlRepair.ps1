@@ -2,7 +2,8 @@
 param(
     [Parameter(Mandatory)][ValidatePattern('^[a-f0-9]{40}$')][string]$SourceCommit,
     [Parameter(Mandatory)][ValidateRange(1,2147483647)][int]$InstallerPid,
-    [Parameter(Mandatory)][string]$InstallerStartedAt
+    [Parameter(Mandatory)][string]$InstallerStartedAt,
+    [switch]$InstallerAlreadyStopped
 )
 $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
@@ -52,12 +53,25 @@ try{
         if($definition.Count -ne 1){throw 'Reviewed rollback helper is ambiguous'}
         Invoke-Expression $definition[0].Extent.Text
     }
-    $old=Get-CimInstance Win32_Process -Filter "ProcessId=$InstallerPid"
+    $old=if($InstallerAlreadyStopped){$null}else{Get-CimInstance Win32_Process -Filter "ProcessId=$InstallerPid" -ErrorAction SilentlyContinue}
     $started=[DateTimeOffset]::Parse($InstallerStartedAt).UtcDateTime
-    if(-not (Test-ResumeIdentity $old $configuration.powershell $installerPath $started)){throw 'Stalled installer identity differs'}
+    if(-not $old -and -not $InstallerAlreadyStopped){throw 'Installer is absent; explicitly select protected stopped-installer recovery'}
+    if($old -and -not (Test-ResumeIdentity $old $configuration.powershell $installerPath $started)){throw 'Stalled installer identity differs'}
     $candidates=@(Get-ChildItem -LiteralPath "$root/native-cache" -Directory|Where-Object {$_.Name -match '^control-repair-\d{8}-\d{6}-[a-f0-9]{32}$' -and $_.CreationTimeUtc -ge $started.AddSeconds(-2)})
     if($candidates.Count -ne 1){throw 'Protected prior maintenance snapshot is ambiguous'}
     $history=Assert-UpdatePath $candidates[0].FullName
+    # An explicitly resumed, already-stopped installer is identified by its
+    # protected maintenance snapshot, not by an untrusted public progress file.
+    $originalText=(& git -C $repository show '660486ea9c180c1716fd75b38edd7f8c24174293:SOURCE-MANIFEST.json'|Out-String)
+    if($LASTEXITCODE -ne 0){throw 'Original reviewed source manifest unavailable'}
+    $original=$originalText|ConvertFrom-Json
+    $snapshotHashes=Get-Content -LiteralPath (Join-Path $history 'reviewed-hashes.json') -Raw|ConvertFrom-Json -AsHashtable
+    if($snapshotHashes.Count -ne $selected.Count){throw 'Original maintenance source identity differs'}
+    foreach($name in $selected){
+        $expected=@($original.files|Where-Object path -CEQ "ControlPlane/$name")
+        if($expected.Count -ne 1 -or -not $snapshotHashes.ContainsKey($name) -or $snapshotHashes[$name] -cne $expected[0].sha256){throw 'Original maintenance source identity differs'}
+        Assert-RepairHash (Join-Path $history "reviewed-source/$name") $expected[0].sha256
+    }
     $rows=@(Get-Content -LiteralPath (Join-Path $history 'bootstrap-before.json') -Raw|ConvertFrom-Json)
     if($rows.Count -ne $selected.Count -or @($rows.name|Sort-Object -Unique).Count -ne $selected.Count -or @($rows|Where-Object {$_.name -cnotin $selected}).Count){throw 'Prior bootstrap inventory differs'}
     $backup=Join-Path $history 'prior-bootstrap'
@@ -70,13 +84,23 @@ try{
     Native-Idle
     $before=Game-Identity
     if($InstallerPid -in (@($before.game)+@($before.pack))){throw 'Invalid installer stop target'}
-    Report 'stopping-stalled-control-installer'
-    $current=Get-CimInstance Win32_Process -Filter "ProcessId=$InstallerPid"
-    if(-not $current -or $current.CreationDate -ne $old.CreationDate -or $current.CommandLine -cne $old.CommandLine){throw 'Stalled installer identity changed'}
-    Stop-Process -Id $InstallerPid -Force -ErrorAction Stop
-    $deadline=[DateTime]::UtcNow.AddSeconds(10)
-    while(Get-Process -Id $InstallerPid -ErrorAction SilentlyContinue){if([DateTime]::UtcNow -ge $deadline){throw 'Control installer did not stop'};Start-Sleep -Milliseconds 100}
-    $lease=[IO.FileStream]::new((Join-Path $configuration.nativeRoot '.publish.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
+    if($old){
+        Report 'stopping-stalled-control-installer'
+        $current=Get-CimInstance Win32_Process -Filter "ProcessId=$InstallerPid"
+        if(-not $current -or $current.CreationDate -ne $old.CreationDate -or $current.CommandLine -cne $old.CommandLine){throw 'Stalled installer identity changed'}
+        Stop-Process -Id $InstallerPid -Force -ErrorAction Stop
+        $deadline=[DateTime]::UtcNow.AddSeconds(10)
+        while(Get-Process -Id $InstallerPid -ErrorAction SilentlyContinue){if([DateTime]::UtcNow -ge $deadline){throw 'Control installer did not stop'};Start-Sleep -Milliseconds 100}
+    }else{
+        $result.installerAlreadyStopped=$true
+        Report 'resuming-protected-stopped-installer-snapshot'
+    }
+    $deadline=[DateTime]::UtcNow.AddSeconds(15)
+    while(-not $lease){
+        Native-Idle
+        try{$lease=[IO.FileStream]::new((Join-Path $configuration.nativeRoot '.publish.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)}
+        catch [IO.IOException]{$failure=$_.Exception;while($failure.InnerException){$failure=$failure.InnerException};if(($failure.HResult -band 65535) -notin @(32,33,170) -or [DateTime]::UtcNow -ge $deadline){throw};Start-Sleep -Milliseconds 250}
+    }
     Native-Idle
     Report 'restoring-prior-control-baseline'
     $processes=@(Get-CimInstance Win32_Process|Where-Object {$_.Name -eq 'node.exe' -and $_.ExecutablePath -ieq $configuration.node -and $_.CommandLine -match 'Aetherfront-Control[\\/]managed[\\/]releases[\\/]control-[1-9][0-9]{0,8}-[a-f0-9]{64}[\\/](ControlPlane[\\/](broker-host|worker|observation-publisher)\.mjs|APFDiscordBot[\\/]src[\\/]index\.js)'})
@@ -97,6 +121,7 @@ try{
     Report 'completed'
 }catch{
     $result.reason='CONTROL_RESUME_FAILED';$result.errorLine=$_.InvocationInfo.ScriptLineNumber
+    $failure=$_.Exception;if($failure.InnerException){$failure=$failure.InnerException};$result.errorType=$failure.GetType().FullName;$result.errorHResult=$failure.HResult.ToString('X8')
     [IO.File]::WriteAllText((Join-Path $root 'native-cache/control-resume-error.json'),($_|Out-String))
     Report $result.stage
 }finally{if($lease){$lease.Dispose()}}

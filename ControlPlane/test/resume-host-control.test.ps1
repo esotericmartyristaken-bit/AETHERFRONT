@@ -23,4 +23,5 @@ $text=$ast.Extent.Text
 if($text.IndexOf('Native-Idle') -gt $text.IndexOf('Stop-Process -Id $InstallerPid -Force')){throw 'Native guard must precede installer stop'}
 if(-not $text.Contains('-NoProfile -NonInteractive -File $installerPath -SourceCommit $SourceCommit')){throw 'Retry must prohibit hidden interactive prompts'}
 if(-not $text.Contains('Restore-RepairBootstrap (Join-Path $root')){throw 'Protected rollback source missing'}
+if(-not $text.Contains('[switch]$InstallerAlreadyStopped') -or -not $text.Contains('Original maintenance source identity differs')){throw 'Stopped-installer recovery must be explicit and bound to protected reviewed source'}
 'PASS: exact process image/script/source/creation; absent and reused PID rejection; noninteractive retry; protected rollback retained'
