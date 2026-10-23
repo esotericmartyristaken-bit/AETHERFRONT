@@ -1,16 +1,16 @@
 {
-  "scannedUtc": "2026-10-22T01:16:58.1345637Z",
-  "filesScanned": 2907,
-  "elapsedSeconds": 31.6650313,
+  "scannedUtc": "2026-10-23T08:46:01.6956036Z",
+  "filesScanned": 2990,
+  "elapsedSeconds": 27.4288998,
   "ruleMilliseconds": {
-    "credential-literal": 4478.752500000001,
-    "credential-url": 2135.4030000000107,
-    "private-key": 2912.3004999999994,
-    "discord-token": 3885.4504000000056,
-    "private-host": 4518.470799999996,
-    "cloud-key": 1820.5756000000054,
-    "user-home": 1921.6525999999938,
-    "github-token": 1957.5405999999984
+    "credential-literal": 3484.5885999999973,
+    "user-home": 1423.1695,
+    "discord-token": 3971.5795999999978,
+    "private-key": 1541.5769000000012,
+    "cloud-key": 1934.7022000000031,
+    "private-host": 3830.9803000000043,
+    "github-token": 1389.4411000000068,
+    "credential-url": 1801.4942999999967
   },
   "regexTimeoutSecondsPerFileRule": 5,
   "findingCount": 0,
@@ -78,36 +78,5 @@
     }
   ],
   "contentOrMatchedValuesPrinted": false,
-  "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check.",
-  "incrementalReviews": [
-    {
-      "scannedUtc": "2026-10-22T02:05:54.6149973Z",
-      "filesScanned": 11,
-      "findingCount": 0,
-      "paths": [
-        "Aetherfront-RC33-Work/Build-Engine.ps1",
-        "Aetherfront-RC34-Work/Build-Expansions.ps1",
-        "Aetherfront-RC34-Work/Build-Release.py",
-        "Aetherfront-RC34-Work/EditorCamera.json",
-        "Aetherfront-RC34-Work/ExpansionBootstrap.cs",
-        "Aetherfront-RC34-Work/README.md",
-        "APFDiscordBot/src/lmp.js",
-        "ControlPlane/host-reporter.mjs",
-        "ControlPlane/worker.mjs",
-        "Development/ProgressionPatch/Program.cs",
-        "export-policy.json"
-      ],
-      "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
-    },
-    {
-      "scannedUtc": "2026-10-22T02:11:16.1664694Z",
-      "filesScanned": 2,
-      "findingCount": 0,
-      "paths": [
-        "ControlPlane/worker.mjs",
-        "APFDiscordBot/src/github-deployment.js"
-      ],
-      "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
-    }
-  ]
+  "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
 }

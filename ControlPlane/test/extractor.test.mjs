@@ -129,7 +129,7 @@ const schemas = [
   ['runtime extra field', m => { m.runtime.extra = 1; }],
   ['runtime wrong type', m => { m.runtime.nodeMajor = '24'; }],
   ['runtime wrong major', m => { m.runtime.dotnetMajor = 9; }],
-  ['capability missing', m => { m.capabilities.pop(); }],
+  ['capability missing', m => { m.capabilities = m.capabilities.filter(name => name !== 'application-v1'); }],
   ['capability duplicate', m => { m.capabilities[1] = m.capabilities[0]; }],
   ['files not array', m => { m.files = {}; }],
   ['file extra field', m => { m.files[0].extra = 1; }],

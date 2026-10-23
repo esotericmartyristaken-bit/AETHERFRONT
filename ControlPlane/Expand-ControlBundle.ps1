@@ -290,6 +290,11 @@ public static class ControlZipCheck {
     $scratch = $null
     [Console]::Out.WriteLine('verified ' + $ExpectedVersion)
 } catch {
+    $nativeCode=$_.Exception.HResult -band 0xffff
+    if($_.Exception -is [IO.IOException] -and $nativeCode -in @(32,33,170)){
+        [Console]::Error.WriteLine('CONTROL_EXTRACT_IO_BUSY')
+        exit 75
+    }
     [Console]::Error.WriteLine('Control bundle rejected.')
     exit 1
 } finally {

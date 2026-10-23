@@ -9,9 +9,28 @@ import { GitHubChannel, parseStrictJson } from './github.mjs';
 
 const execute = promisify(execFile);
 const TERMINAL = new Set(['healthy','rolled-back','blocked']);
+const STAGE_CODES = new Set(['download','archive-write','extract','dependencies','inventory','verify','activate','startup']);
+const OUTPUT_LIMIT = 16 * 1024;
+function sanitized(value) {
+  const source=Buffer.isBuffer(value)?value.subarray(0,OUTPUT_LIMIT*4).toString('utf8'):String(value??'').slice(0,OUTPUT_LIMIT*4);
+  const clean=source.replace(/\x1b\[[0-?]*[ -/]*[@-~]/g,'').replace(/[\x00-\x08\x0b-\x1f\x7f]/g,'')
+    .replace(/(?:https?:\/\/|file:\/\/)[^\s"'<>]+/gi,'[redacted-url]')
+    .replace(/\b(?:[A-Z]:[\\/]|\\\\)[^\r\n"'<>]*/gi,'[redacted-path]')
+    .replace(/(^|[\s"'=])\/(?:[^\s"'<>]+\/)[^\s"'<>]*/g,'$1[redacted-path]')
+    .replace(/\b(?:gh[pousr]_[A-Za-z0-9_]+|github_pat_[A-Za-z0-9_]+)\b/g,'[redacted-token]')
+    .replace(/\b(authorization|token|password|secret)\s*[:=]\s*[^\r\n]+/gi,'$1=[redacted]');
+  let text=Buffer.from(clean).subarray(0,OUTPUT_LIMIT).toString('utf8');
+  while(Buffer.byteLength(text)>OUTPUT_LIMIT)text=text.slice(0,-1);
+  return text;
+}
+function extractionBusy(error) {
+  if(error?.killed||error?.signal||['ETIMEDOUT','ERR_CHILD_PROCESS_STDIO_MAXBUFFER'].includes(error?.code))return false;
+  return ['EBUSY','EAGAIN'].includes(error?.code)||
+    ((error?.code===75||error?.exitCode===75)&&/(?:^|\r?\n)CONTROL_EXTRACT_IO_BUSY(?:\r?\n|$)/.test(String(error?.stderr||'').trim()));
+}
 export function validateTransaction(value) {
   const required=['schemaVersion','transactionVersion','id','descriptor','commit','phase','from','to'];
-  const allowed=[...required,'failure','acceptedAt','updatedAt','completedAt','stage','revision'];
+  const allowed=[...required,'failure','acceptedAt','updatedAt','completedAt','stage','stageCode','revision'];
   requireValue(value&&typeof value==='object'&&!Array.isArray(value)&&required.every(key=>Object.hasOwn(value,key))&&Object.keys(value).every(key=>allowed.includes(key)),'Unsupported transaction journal fields');
   requireValue(value.schemaVersion===1&&value.transactionVersion===1&&HASH.test(value.id)&&/^[a-f0-9]{40}$/.test(value.commit),'Unsupported transaction journal');
   validateControlDescriptor(value.descriptor);
@@ -19,6 +38,7 @@ export function validateTransaction(value) {
   if(value.from!==null)validatePointer(value.from);
   if(value.to!==null)validatePointer(value.to);
   requireValue(value.revision===undefined||(Number.isSafeInteger(value.revision)&&value.revision>0),'Invalid journal revision');
+  requireValue(value.stageCode===undefined||STAGE_CODES.has(value.stageCode),'Invalid transaction stage code');
   return value;
 }
 export function validatePointer(value) {
@@ -78,6 +98,7 @@ export class ControlEngine {
   constructor(settings,options={}) {
     this.settings=settings;this.root=settings.root;this.channel=options.channel||new GitHubChannel();
     this.execute=options.execute||execute;this.prepare=options.prepare||null;
+    this.diagnosticsRoot=options.diagnosticsRoot||settings.diagnosticsRoot||path.join(settings.root,'diagnostics');
     this.quiesce=options.quiesce||(async()=>false);this.handoff=options.handoff||(async()=>{});
     this.nativeIdle=options.nativeIdle||(()=>this.isNativeIdle());this.fault=options.fault||(async()=>{});
     this.busy=false;
@@ -104,6 +125,30 @@ export class ControlEngine {
     return value;
   }
   async phase(transaction,phase,extra={}) { return this.save({...transaction,...extra,phase,updatedAt:new Date().toISOString()}); }
+  async step(transaction,stageCode,operation,attempt=1) {
+    requireValue(STAGE_CODES.has(stageCode)&&HASH.test(transaction.id),'Invalid diagnostic step');
+    Object.assign(transaction,await this.phase(transaction,transaction.phase,{stageCode}));
+    const directory=path.join(this.diagnosticsRoot,transaction.id);
+    await noLinks(directory);await fs.mkdir(directory,{recursive:true});
+    const startedAt=new Date().toISOString(),started=performance.now();
+    const name=`${Date.now()}-${crypto.randomUUID()}-${stageCode}`;
+    const record=async(status,extra={})=>{
+      const file=path.join(directory,`${name}-${status}.json`);await noLinks(file);
+      await fs.writeFile(file,JSON.stringify({schemaVersion:1,transactionId:transaction.id,stageCode,attempt,status,startedAt,elapsedMs:Math.max(0,Math.round(performance.now()-started)),...extra}),{flag:'wx',mode:0o600});
+    };
+    await record('started');
+    try {
+      const result=await operation();
+      await record('completed',{completedAt:new Date().toISOString(),stdout:sanitized(result?.stdout),stderr:sanitized(result?.stderr)});
+      return result;
+    } catch(thrown) {
+      const error=thrown instanceof Error?thrown:new Error(String(thrown));
+      const code=typeof error.code==='number'||/^[A-Za-z0-9_-]{1,64}$/.test(error.code||'')?error.code:null;
+      await record('failed',{failedAt:new Date().toISOString(),message:sanitized(error.message),code,exitCode:Number.isInteger(error.exitCode)?error.exitCode:Number.isInteger(error.code)?error.code:null,signal:/^[A-Z0-9]{1,32}$/.test(error.signal||'')?error.signal:null,killed:error.killed===true,stdout:sanitized(error.stdout),stderr:sanitized(error.stderr)}).catch(()=>{});
+      error.controlReason='control-validation-failed';
+      throw error;
+    }
+  }
   async isNativeIdle() {
     const state=await readJson(path.join(this.settings.botRoot,'state','kesas-update-state.json'));
     if(state.schemaVersion!==1 || !['idle','failed'].includes(state.status)) return false;
@@ -123,34 +168,57 @@ export class ControlEngine {
     const final=path.join(this.root,'releases',`${descriptor.version}-${descriptor.sha256}`);
     let existing=await fs.stat(final).catch(error=>{if(error.code==='ENOENT')return null;throw error;});
     if(existing) {
-      requireValue(transaction.to,'Unverified control directory conflict');
-      await verifyRelease(this.root,transaction.to);return transaction.to;
+      return this.step(transaction,'verify',async()=>{
+        requireValue(transaction.to,'Unverified control directory conflict');
+        await verifyRelease(this.root,transaction.to);return transaction.to;
+      });
     }
-    const stage=path.join(this.root,'staging',`${transaction.id}-${crypto.randomUUID()}`);
+    let stage=path.join(this.root,'staging',`${transaction.id}-${crypto.randomUUID()}`);
     await noLinks(stage);await fs.mkdir(path.dirname(stage),{recursive:true});
     transaction=await this.phase(transaction,'staging',{stage:path.basename(stage)});
-    const bytes=await this.channel.archive(descriptor);
-    // Authenticated fixed-repository descriptor is mandatory even on recovery.
-    requireValue(bytes.length===descriptor.sizeBytes && digest(bytes)===descriptor.sha256,'Invalid authenticated control bytes');
-    const archive=path.join(this.root,'staging',`${transaction.id}.zip`);
-    await atomic(archive,bytes);await this.fault('staging');
-    await this.execute(this.settings.powershell,['-NoProfile','-NonInteractive','-File',this.settings.extractor||path.join(this.root,'bootstrap','Expand-ControlBundle.ps1'),'-Archive',archive,'-Destination',stage,'-ExpectedVersion',descriptor.version,'-ExpectedSha256',descriptor.sha256,'-ExpectedSize',String(descriptor.sizeBytes)],{windowsHide:true,maxBuffer:65536,timeout:60000});
-    const raw=await fs.readFile(path.join(stage,'CONTROL.json'));
-    const manifest=validateControlManifest(parseStrictJson(raw.toString('utf8')),descriptor);
-    requireValue(Number(process.versions.node.split('.')[0])===manifest.runtime.nodeMajor,'Required Node runtime is not provisioned');
-    const pkg=parseStrictJson(await fs.readFile(path.join(stage,'APFDiscordBot','package.json'),'utf8'));
-    const lock=parseStrictJson(await fs.readFile(path.join(stage,'APFDiscordBot','package-lock.json'),'utf8'));
-    validateDependencyLock(pkg,lock);
-    if(this.prepare) await this.prepare(stage);
-    else await this.execute(this.settings.node,[this.settings.npm,'ci','--ignore-scripts','--engine-strict','--no-audit','--no-fund','--registry=https://registry.npmjs.org'],{cwd:path.join(stage,'APFDiscordBot'),windowsHide:true,maxBuffer:65536,timeout:180000});
-    const receipt={schemaVersion:1,version:descriptor.version,bundleSha256:descriptor.sha256,manifestSha256:digest(raw),commit:transaction.commit,dependencies:await inventory(path.join(stage,'APFDiscordBot','node_modules'))};
-    const receiptBytes=Buffer.from(JSON.stringify(receipt));await atomic(path.join(stage,'.verified.json'),receiptBytes);
-    const pointer={schemaVersion:1,version:descriptor.version,sequence:sequence(descriptor.version),directory:path.basename(final),bundleSha256:descriptor.sha256,manifestSha256:digest(raw),receiptSha256:digest(receiptBytes)};
-    // Persist the intended immutable directory identity before its rename. A
-    // process death on either side can verify/reuse it without repeating npm.
-    await this.phase(transaction,'staging',{to:pointer});await noLinks(final);
-    await fs.mkdir(path.dirname(final),{recursive:true});await fs.rename(stage,final);
-    await verifyRelease(this.root,pointer);return pointer;
+    const bytes=await this.step(transaction,'download',async()=>{
+      const bytes=await this.channel.archive(descriptor);
+      // Authenticated fixed-repository descriptor is mandatory even on recovery.
+      requireValue(bytes.length===descriptor.sizeBytes && digest(bytes)===descriptor.sha256,'Invalid authenticated control bytes');
+      return bytes;
+    });
+    const archive=`${stage}.zip`;
+    await this.step(transaction,'archive-write',async()=>{await atomic(archive,bytes);await this.fault('staging');});
+    for(let attempt=1;attempt<=3;attempt++) {
+      if(attempt>1) {
+        stage=path.join(this.root,'staging',`${transaction.id}-${crypto.randomUUID()}`);
+        await noLinks(stage);
+        transaction=await this.phase(transaction,'staging',{stage:path.basename(stage)});
+      }
+      try {
+        await this.step(transaction,'extract',()=>this.execute(this.settings.powershell,['-NoProfile','-NonInteractive','-File',this.settings.extractor||path.join(this.root,'bootstrap','Expand-ControlBundle.ps1'),'-Archive',archive,'-Destination',stage,'-ExpectedVersion',descriptor.version,'-ExpectedSha256',descriptor.sha256,'-ExpectedSize',String(descriptor.sizeBytes)],{windowsHide:true,maxBuffer:65536,timeout:60000}),attempt);
+        break;
+      } catch(error) {
+        if(error?.simulatedCrash||attempt===3||!extractionBusy(error))throw error;
+        await new Promise(resolve=>setTimeout(resolve,100*attempt));
+      }
+    }
+    const raw=await this.step(transaction,'verify',async()=>{
+      const raw=await fs.readFile(path.join(stage,'CONTROL.json'));
+      const manifest=validateControlManifest(parseStrictJson(raw.toString('utf8')),descriptor);
+      requireValue(Number(process.versions.node.split('.')[0])===manifest.runtime.nodeMajor,'Required Node runtime is not provisioned');
+      const pkg=parseStrictJson(await fs.readFile(path.join(stage,'APFDiscordBot','package.json'),'utf8'));
+      const lock=parseStrictJson(await fs.readFile(path.join(stage,'APFDiscordBot','package-lock.json'),'utf8'));
+      validateDependencyLock(pkg,lock);
+      return raw;
+    });
+    await this.step(transaction,'dependencies',()=>this.prepare?this.prepare(stage):this.execute(this.settings.node,[this.settings.npm,'ci','--ignore-scripts','--engine-strict','--no-audit','--no-fund','--registry=https://registry.npmjs.org'],{cwd:path.join(stage,'APFDiscordBot'),windowsHide:true,maxBuffer:65536,timeout:180000}));
+    const dependencies=await this.step(transaction,'inventory',()=>inventory(path.join(stage,'APFDiscordBot','node_modules')));
+    return this.step(transaction,'verify',async()=>{
+      const receipt={schemaVersion:1,version:descriptor.version,bundleSha256:descriptor.sha256,manifestSha256:digest(raw),commit:transaction.commit,dependencies};
+      const receiptBytes=Buffer.from(JSON.stringify(receipt));await atomic(path.join(stage,'.verified.json'),receiptBytes);
+      const pointer={schemaVersion:1,version:descriptor.version,sequence:sequence(descriptor.version),directory:path.basename(final),bundleSha256:descriptor.sha256,manifestSha256:digest(raw),receiptSha256:digest(receiptBytes)};
+      // Persist the intended immutable directory identity before its rename. A
+      // process death on either side can verify/reuse it without repeating npm.
+      await this.phase(transaction,'staging',{to:pointer});await noLinks(final);
+      await fs.mkdir(path.dirname(final),{recursive:true});await fs.rename(stage,final);
+      await verifyRelease(this.root,pointer);return pointer;
+    });
   }
   async tick() {
     if(this.busy)return {status:'busy'};this.busy=true;
@@ -190,9 +258,10 @@ export class ControlEngine {
           await noLinks(pending);await fs.mkdir(path.dirname(final),{recursive:true});
           await fs.rename(pending,final);
         }
-        await verifyRelease(this.root,pointer);
+        await this.step(transaction,'verify',()=>verifyRelease(this.root,pointer));
       }
       else pointer=await this.stage(transaction);
+      transaction=await this.state();
       transaction=await this.phase(transaction,'waiting-existing-guard',{to:pointer});
       if(!await this.nativeIdle()) return {status:'waiting-existing-guard'};
       await writeJson(path.join(this.root,'maintenance.json'),{schemaVersion:1,transactionId:transaction.id});
@@ -200,11 +269,13 @@ export class ControlEngine {
       // Quiescence acknowledges that both polling loops and any native helper
       // have drained. The supervisor performs one final OS lease probe.
       if(!await this.nativeIdle()) {await this.clearMaintenance(transaction.id);return {status:'waiting-existing-guard'};}
-      transaction=await this.phase(transaction,'activating');await this.fault('activation');
-      await this.handoff(transaction);return {status:'handoff'};
+      transaction=await this.phase(transaction,'activating');
+      await this.step(transaction,'activate',async()=>{await this.fault('activation');await this.handoff(transaction);});return {status:'handoff'};
     } catch(error) {
       if(error?.simulatedCrash) throw error;
       if(transaction && !TERMINAL.has(transaction.phase)) {
+        const latest=await this.state();
+        if(latest?.id===transaction.id)transaction=latest;
         await this.phase(transaction,'blocked',{failure:'control-validation-failed'});
         await this.clearMaintenance(transaction.id);
       }

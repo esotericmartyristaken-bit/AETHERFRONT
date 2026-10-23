@@ -7,7 +7,7 @@ $source=[IO.Path]::GetFullPath($SourceRoot)
 $outputPath=[IO.Path]::GetFullPath($Output)
 if([IO.Path]::GetFileName($outputPath) -cne "Aetherfront-Control-$Version.zip" -or [IO.File]::Exists($outputPath)){throw 'Use a new immutable control archive path'}
 $names=@(
-    @('worker','engine','contract','github','public-status','native-agent','broker-host','host-reporter') | ForEach-Object {"ControlPlane/$_.mjs"}
+    @('worker','engine','contract','github','public-status','native-agent','broker-host','host-reporter','control-evidence','signed-readback','observation-publisher','supervision') | ForEach-Object {"ControlPlane/$_.mjs"}
     'ControlPlane/Invoke-NativePublisher.ps1'
     'ControlPlane/Read-ClientInventory.ps1'
     Get-ChildItem -LiteralPath "$source/APFDiscordBot/src" -File | Where-Object Name -cmatch '^[a-z][a-z0-9-]*\.js$' | ForEach-Object {"APFDiscordBot/src/$($_.Name)"}
@@ -31,7 +31,7 @@ try {
         $stream=$entry.Open();try{$stream.Write($bytes,0,$bytes.Length)}finally{$stream.Dispose()}
         [ordered]@{path=$name;sha256=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant();sizeBytes=$bytes.Length}
     })
-    $manifest=[ordered]@{schemaVersion=1;transactionVersion=1;version=$Version;runtime=[ordered]@{nodeMajor=24;powerShellMajor=7;dotnetMajor=8};capabilities=@('application-v1','media-payload-v1','control-plane-v1','host-report-v1','guard-15m-empty-v1','atomic-control-rollback-v1','native-tools-v1','versioned-broker-v1','independent-report-v1','unattended-host-v1','media-reference-v1');files=$files}
+    $manifest=[ordered]@{schemaVersion=1;transactionVersion=1;version=$Version;runtime=[ordered]@{nodeMajor=24;powerShellMajor=7;dotnetMajor=8};capabilities=@('application-v1','media-payload-v1','control-plane-v1','host-report-v1','guard-15m-empty-v1','atomic-control-rollback-v1','native-tools-v1','versioned-broker-v1','independent-report-v1','unattended-host-v1','media-reference-v1','signed-readback-v1');files=$files}
     $entry=$zip.CreateEntry('CONTROL.json',[IO.Compression.CompressionLevel]::Optimal)
     $writer=[IO.StreamWriter]::new($entry.Open(),[Text.UTF8Encoding]::new($false))
     try{$writer.Write(($manifest|ConvertTo-Json -Depth 8 -Compress))}finally{$writer.Dispose()}

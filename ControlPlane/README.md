@@ -69,11 +69,11 @@ node ControlPlane/controller.mjs status --origin https://217.216.49.250:18866 --
 node ControlPlane/controller.mjs diagnostics --origin https://217.216.49.250:18866 --pin PIN
 
 # Build the next reviewed control revision, including broker/wrapper fixes.
-pwsh -File ControlPlane/Build-ControlBundle.ps1 -Version control-6 -Output C:/build/Aetherfront-Control-control-6.zip
-node ControlPlane/controller.mjs publish-control --origin https://217.216.49.250:18866 --pin PIN --archive C:/build/Aetherfront-Control-control-6.zip --version control-6
+pwsh -File ControlPlane/Build-ControlBundle.ps1 -Version control-11 -Output C:/build/Aetherfront-Control-control-11.zip
+node ControlPlane/controller.mjs publish-control --origin https://217.216.49.250:18866 --pin PIN --archive C:/build/Aetherfront-Control-control-11.zip --version control-11 --wait
 
 # Combined path observes exact control version/hash/health before app intent.
-pwsh -File ControlPlane/Publish-HostRelease.ps1 -ControlArchive C:/build/Aetherfront-Control-control-6.zip -ControlVersion control-6 -Archive C:/build/Aetherfront-Release-kesas-rc34.zip -Version kesas-rc34 -HostCertificateSha256 PIN -Notes 'Reviewed changes'
+pwsh -File ControlPlane/Publish-HostRelease.ps1 -ControlArchive C:/build/Aetherfront-Control-control-11.zip -ControlVersion control-11 -Archive C:/build/Aetherfront-Release-kesas-rcN.zip -Version kesas-rcN -HostCertificateSha256 PIN -Notes 'Reviewed changes'
 
 # Existing compatible host: application only.
 pwsh -File ControlPlane/Publish-HostRelease.ps1 -Archive C:/build/Aetherfront-Release-kesas-rc34.zip -Version kesas-rc34 -HostCertificateSha256 PIN -Notes 'Reviewed changes'
@@ -141,6 +141,77 @@ publication. A disconnected host still cannot serve fresh reports.
 Capabilities additionally include `versioned-broker-v1`, `independent-report-v1`,
 `unattended-host-v1`, and `media-reference-v1`. Application/media capabilities are
 withheld until the actual running worker and installed inventory agree.
+
+## Independent signed observation and control recovery
+
+The HTTPS pack process and the game are currently supervised by one existing
+launcher. A pack-process restart can therefore shut down the game. A control-only
+repair must not restart that launcher or either service. `Repair-HostControl.ps1`
+is the reviewed one-time bootstrap repair: it requires normal UAC, an idle native
+publisher and exact committed source inventory; preserves control history and
+game/pack PIDs, configuration, Universe and keys; and restarts only the two control
+tasks. It does not change application intent or publish a game release.
+
+The independent observation process publishes a bounded public envelope to
+`host-observation:readback.json` in the same fixed repository. This is a separate
+branch, not `deploy`; observation updates cannot race application/control intents.
+The host signs the existing coherent status/diagnostics bytes with its existing
+TLS certificate's RSA key and the domain separator
+`AETHERFRONT CONTROL READBACK v1\n`. Private keys remain on the host. The controller
+requires the exact existing certificate SHA256 pin, RSA signature, strict schema,
+matching generations and unexpired observation lifetime of at most 30 seconds.
+Repository access alone cannot forge an observation. No new administrative HTTP
+endpoint, credential-sharing interface, arbitrary URL, destination or shell exists.
+
+`--transport auto` is the default: try pinned HTTPS, then the fixed signed GitHub
+readback only after a transport failure. A wrong pin or malformed HTTPS report
+never silently falls back. `--transport github` explicitly uses the signed
+readback; `--transport https` disables fallback. Raw reads use generated cache
+busters, bounded bodies/timeouts and no redirects or GitHub token. Host upload
+credentials stay in the existing protected SYSTEM environment. App publication
+still requires actual app readiness; a working control transport does not make
+an unhealthy game/pack healthy.
+
+```powershell
+# Fresh independent readback and read-only resume after controller interruption.
+node ControlPlane/controller.mjs status --origin https://217.216.49.250:18866 --pin PIN --transport github
+node ControlPlane/controller.mjs diagnostics --origin https://217.216.49.250:18866 --pin PIN --transport github
+node ControlPlane/controller.mjs observe-control --origin https://217.216.49.250:18866 --pin PIN --version control-N --sha256 EXACT_ARCHIVE_SHA256
+
+# When live status offers publish-reviewed-newer-control, use a reviewed NEW
+# version plus the exact retained failure identity. Never replay/reset it.
+node ControlPlane/controller.mjs recover-control --origin https://217.216.49.250:18866 --pin PIN --archive C:/build/Aetherfront-Control-control-N.zip --version control-N --failed-version control-M --failed-transaction EXACT_FAILED_TRANSACTION_ID
+```
+
+Replace `N`, `M` and digest placeholders with the actual next unused version and
+live evidence. `publish-control --wait` and `recover-control` return machine-readable
+publication versus terminal activation results. `observe-control` is read-only;
+it can resume observation without another upload. A lost acknowledgement is
+reconciled through exact immutable readback. Absent uploads are retried at most
+three times; existing partial/conflicting assets are never overwritten or deleted.
+Concurrent channel changes abort publication instead of being forced.
+
+Status distinguishes active control, `attempted`, retained `lastFailure` and a
+bounded recovery action. A failed control-8 transaction remains in history after
+a successful newer control update. Source pushes or release uploads alone are
+not completion. Current source cannot reconstruct a legacy exception that an
+older supervisor overwrote; do not invent its precise cause.
+
+The repaired loader retains transaction-keyed private step records, capped child
+output, actual exit/timeout information and the first publication failure.
+Extraction retries only positively classified temporary sharing contention, at
+most three times into fresh staging directories; timeouts and invalid archives
+are not replayed. Original partials and journals remain. Broker IPC liveness is
+separate from HTTP ZIP publication. Reporter/fallback paths are serialized;
+short-lived evidence is sampled coherently after slow work. A failed versioned
+observer falls back to the protected seed. Shutdown retains ownership until its
+observer exits, preventing overlapping signers/publishers.
+
+Control-child recovery has bounded backoff and rechecks native publisher/lease
+evidence before and after stopping the limited worker. An applying helper is
+never terminated. Native ambiguity blocks application replay, not truthful
+diagnostics or publication of a compatible newer control repair. Genuine OS,
+trust-anchor, credential or unavailable-host failures remain operator boundaries.
 
 ## Large media and remaining boundaries
 

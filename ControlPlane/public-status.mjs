@@ -25,7 +25,7 @@ const diagnosticDate = value => diagnosticMatch(value,/^\d{4}-\d\d-\d\dT\d\d:\d\
 const diagnosticObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 
 export const RECOVERY_REASONS=[null,'recovery-not-authorized','recovery-result-changed','recovery-helper-active','recovery-activation-ambiguous','recovery-identity-mismatch','recovery-baseline-invalid','recovery-already-consumed','recovery-intent-invalid'];
-export function diagnosticsZip(report) {
+export function publicDiagnostics(report) {
   const bootstrap = report?.bootstrap, watcher = report?.watcher, native = report?.native, recovery = report?.recovery;
   if (!diagnosticObject(report) || ![1,2].includes(report.schemaVersion) || !diagnosticDate(report.observedAt) || !diagnosticDate(report.expiresAt) ||
       !diagnosticMatch(report.controlVersion,/^control-[1-9][0-9]{0,8}$/) || !diagnosticObject(bootstrap) || !diagnosticObject(watcher) ||
@@ -67,10 +67,13 @@ export function diagnosticsZip(report) {
       ![null,true,false].includes(host.leaseActive)||![null,'native-activation','github-completion','unknown'].includes(host.journalPhase)||
       !(host.exitCode===null||(Number.isInteger(host.exitCode)&&host.exitCode>=-2147483648&&host.exitCode<=2147483647)))throw new Error('Invalid host diagnostics');
   }
-  const data = Buffer.from(JSON.stringify({schemaVersion:report.schemaVersion,observedAt:report.observedAt,expiresAt:report.expiresAt,controlVersion:report.controlVersion,
+  return {schemaVersion:report.schemaVersion,observedAt:report.observedAt,expiresAt:report.expiresAt,controlVersion:report.controlVersion,
     bootstrap:{nativeAgentSha256:bootstrap.nativeAgentSha256,publisherWrapperSha256:bootstrap.publisherWrapperSha256,nativeRecoveryVersion:bootstrap.nativeRecoveryVersion},
     watcher:{stage:watcher.stage,reason:watcher.reason,version:watcher.version,sourceCommit:watcher.sourceCommit,manifestSha256:watcher.manifestSha256,archiveSha256:watcher.archiveSha256},
-    native:publication,recovery:recoveryObservation,...(host?{host}:{} )}));
+    native:publication,recovery:recoveryObservation,...(host?{host}:{} )};
+}
+export function diagnosticsZip(report) {
+  const data = Buffer.from(JSON.stringify(publicDiagnostics(report)));
   if (data.length > 32768) throw new Error('Host diagnostics exceeds limit');
   return singleEntryZip('host-diagnostics.json',data);
 }

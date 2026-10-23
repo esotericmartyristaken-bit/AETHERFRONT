@@ -102,12 +102,14 @@ async function publishStatus() {
   if(reporting)return;
   reporting=true;
   try {
+    const [feed,watcher]=await Promise.all([
+      readJson(path.join(settings.nativeRoot,'Updates','APFClientUpdate.json'),null).catch(()=>null),watcherDiagnostics()
+    ]);
     const now=Date.now(),observedAt=new Date(now).toISOString();
     // Match the bot's bounded observation lifetime. Worker evidence still
     // refreshes every ten seconds; the independent reporter separately requires
     // a fresh bridge and pinned native health before enabling app publication.
     const currentHealth=ready&&!closed&&Number.isFinite(healthObservedAt)&&now-healthObservedAt>=0&&now-healthObservedAt<=90000&&['healthy','offline'].includes(health)?health:'unknown';
-    const feed=await readJson(path.join(settings.nativeRoot,'Updates','APFClientUpdate.json'),null).catch(()=>null);
     const matching=inventoryStatus==='complete'&&version(feed?.version)&&componentVersion===feed.version;
     const identity={schemaVersion:1,observedAt,controlVersion:pointer.version,controlSha256:pointer.bundleSha256};
     // Evidence only. The privileged independent reporter owns every public file.
@@ -115,7 +117,7 @@ async function publishStatus() {
       capabilities:ready&&!closed&&matching&&currentHealth==='healthy'?[...CAPABILITIES]:[],
       applicationVersion:version(feed?.version)?feed.version:null,
       inventory:{status:inventoryStatus,version:componentVersion,observedAt:inventoryObservedAt},components});
-    await writeJson(path.join(settings.root,'worker-diagnostics.json'),{...identity,stage:workerStage,reason:workerReason||(inventoryStatus==='failed'?'inventory-failed':null),exitCode:workerExitCode,watcher:await watcherDiagnostics()});
+    await writeJson(path.join(settings.root,'worker-diagnostics.json'),{...identity,stage:workerStage,reason:workerReason||(inventoryStatus==='failed'?'inventory-failed':null),exitCode:workerExitCode,watcher});
     if(ready&&!closed&&!collecting&&version(feed?.version)&&(now>=nextInventory||(componentVersion!==feed.version&&inventoryStatus!=='failed')))void collectComponents();
   } finally {reporting=false;}
 }

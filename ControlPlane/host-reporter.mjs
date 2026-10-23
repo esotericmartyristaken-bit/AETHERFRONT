@@ -6,6 +6,7 @@ import { promisify } from 'node:util';
 import { validatePointer, validateTransaction } from './engine.mjs';
 import { CAPABILITIES, validateHostReport } from './contract.mjs';
 import { atomic, writeJson, readJson, noLinks, fileHash, digest, statusZip, diagnosticsZip, RECOVERY_REASONS } from './public-status.mjs';
+import {controlHistory} from './control-evidence.mjs';
 
 const execute=promisify(execFile);
 const labels=['watcher','nativeRunner','publisher','verifier','packService','serverRuntime','serverPlugins','clientBootstrap','clientUpdater','clientHelper','catalog','publicMedia','dependencies','updateTool','certificateTool','bootstrap'];
@@ -54,17 +55,35 @@ async function rawSnapshot(file,maximum) {
     const after=await handle.stat({bigint:true});
     await noLinks(file);
     const named=await fs.lstat(file,{bigint:true});
-    if(length>maximum||BigInt(length)!==before.size||!sameEvidenceStat(before,after)||!sameEvidenceStat(after,named))throw new Error('Report evidence changed');
+    if(length>maximum||BigInt(length)!==before.size||!sameEvidenceStat(before,after)||!sameEvidenceStat(after,named))throw Object.assign(new Error('Report evidence changed'),{code:'REPORT_EVIDENCE_CHANGED'});
     const content=bytes.subarray(0,length);
-    return {content,sha256:digest(content)};
+    return {content,sha256:digest(content),stat:after};
   } finally {await handle.close();}
 }
 // JSON evidence reuses the same bounded bytes and digest. Only native bridge
 // files may have a UTF-8 BOM; executable code is never parsed as JSON.
 async function snapshot(file,maximum=65536,bridgeBom=false) {
-  const {content,sha256}=await rawSnapshot(file,maximum);
+  const {content,sha256,stat}=await rawSnapshot(file,maximum);
   const offset=bridgeBom&&content[0]===0xef&&content[1]===0xbb&&content[2]===0xbf?3:0;
-  return {value:JSON.parse(content.subarray(offset).toString('utf8')),sha256};
+  return {value:JSON.parse(content.subarray(offset).toString('utf8')),sha256,stat};
+}
+// Mutable producers replace files independently. Require one overlapping set of
+// stable named files; retry only replacement races, never malformed/unsafe data.
+async function coherentSnapshots(files,bridgeBom=false,paired=false) {
+  for(let attempt=0;;attempt++) {
+    try {
+      const rows=await Promise.all(files.map(file=>snapshot(file,1024*1024,bridgeBom)));
+      for(let index=0;index<files.length;index++) {
+        await noLinks(files[index]);
+        if(!sameEvidenceStat(rows[index].stat,await fs.lstat(files[index],{bigint:true})))throw Object.assign(new Error('Report evidence changed'),{code:'REPORT_EVIDENCE_CHANGED'});
+      }
+      if(paired&&rows[0].value?.observedAt!==rows[1].value?.observedAt)throw Object.assign(new Error('Report evidence changed'),{code:'REPORT_EVIDENCE_CHANGED'});
+      return rows.map(row=>row.value);
+    } catch(error) {
+      if(attempt===2||!['REPORT_EVIDENCE_CHANGED','ENOENT','EBUSY','EACCES','EPERM'].includes(error.code))throw error;
+      await new Promise(resolve=>setTimeout(resolve,10));
+    }
+  }
 }
 const stamp=stat=>[stat.dev,stat.ino,stat.size,stat.mtimeMs,stat.ctimeMs].join(':');
 async function archiveVerified(settings,result) {
@@ -135,8 +154,7 @@ async function nativeEvidence(settings,current) {
     recoveryAction:active.phase==='blocked'&&nativeStages.slice(0,5).includes(active.stage)&&active.nativePid===null?'retry-preactivation':null
   }:null};
 }
-async function workerEvidence(settings,pointer,now) {
-  const [status,diagnostic]=await Promise.all(['worker-status.json','worker-diagnostics.json'].map(name=>readJson(path.join(settings.root,name),null)));
+function workerEvidence(pointer,[status,diagnostic],now) {
   if(!status)return {state:'missing',inventory:'unknown',status:null,diagnostic:null};
   if(!object(status)||!object(diagnostic)||status.schemaVersion!==1||diagnostic.schemaVersion!==1||typeof status.ready!=='boolean'||
     !['healthy','offline','unknown'].includes(status.health)||!date(status.observedAt)||!date(status.expiresAt)||!date(diagnostic.observedAt)||
@@ -152,9 +170,7 @@ function watcherEvidence(worker) {
   return {stage,reason:stage&&value.reason===stage+'-failed'?value.reason:null,version:version(value?.version)?value.version:null,
     sourceCommit:commit(value?.sourceCommit)?value.sourceCommit:null,manifestSha256:hash(value?.manifestSha256)?value.manifestSha256:null,archiveSha256:hash(value?.archiveSha256)?value.archiveSha256:null};
 }
-async function bridgeFresh(settings,now) {
-  const root=path.join(settings.nativeRoot,'Server','APFDiscordBridge');
-  const [ready,live]=await Promise.all(['ready.json','status.json'].map(async name=>(await snapshot(path.join(root,name),1024*1024,true)).value));
+function bridgeFresh([ready,live],now) {
   const updated=typeof live?.updatedAt==='string'&&live.updatedAt.length<=40?Date.parse(live.updatedAt):NaN;
   const started=typeof ready?.startedAt==='string'&&ready.startedAt.length<=40?Date.parse(ready.startedAt):NaN;
   return Number.isSafeInteger(ready?.pid)&&ready.pid>0&&live?.serverPid===ready.pid&&Number.isFinite(started)&&started<=updated&&
@@ -198,10 +214,10 @@ async function controlEvidence(settings,pointer) {
   const proof=await readJson(path.join(root,'verified-active.json'),null);
   const lastSuccess=proof?.schemaVersion===1&&controlVersion(proof.version)&&hash(proof.bundleSha256)&&date(proof.verifiedAt)&&
     (proof.version!==pointer.version||proof.bundleSha256===pointer.bundleSha256)?proof.version:null;
-  return {value,lastSuccess};
+  return {value,lastSuccess,...await controlHistory(root,value)};
 }
 async function reportOnce(settings,options) {
-  const pointer=Object.freeze({...validatePointer(options.pointer)}),now=Date.now();
+  const pointer=Object.freeze({...validatePointer(options.pointer)});
   const expected=path.resolve(settings.root,'managed','releases',pointer.directory);
   const directory=typeof options.brokerDirectory==='string'&&path.resolve(options.brokerDirectory)===expected?expected:null;
   const brokerReady=options.brokerReady===true&&directory!==null;
@@ -209,11 +225,9 @@ async function reportOnce(settings,options) {
     inventory:'unknown',leaseActive:null,journalPhase:null,exitCode:exitCode(options.exitCode??null)?options.exitCode??null:null};
   const problem=(stage,reason)=>{if(host.reason===null){host.stage=stage;host.reason=reason;}};
   if(!brokerReady)problem('broker',options.anchorReason==='broker-child-failed'?'broker-child-failed':'broker-not-ready');
-  const [worker,feed,pack,bridge,native,control,journal,recovery,bootstrap,provision]=await Promise.all([
-    workerEvidence(settings,pointer,now).catch(()=>({state:'invalid',inventory:'unknown',status:null,diagnostic:null})),
+  const [feed,pack,native,control,journal,recovery,bootstrap,provision]=await Promise.all([
     readJson(path.join(settings.nativeRoot,'Updates','APFClientUpdate.json'),null).catch(()=>null),
     readJson(path.join(settings.nativeRoot,'Server','Config','APFPack.json'),null).catch(()=>null),
-    bridgeFresh(settings,now).catch(()=>false),
     // Feed identity is read again inside this branch rather than borrowed from worker evidence.
     readJson(path.join(settings.nativeRoot,'Updates','APFClientUpdate.json'),null).then(value=>nativeEvidence(settings,version(value?.version)?value.version:null)).catch(()=>null),
     controlEvidence(settings,pointer).catch(()=>null),
@@ -222,6 +236,20 @@ async function reportOnce(settings,options) {
     bootstrapEvidence(directory,brokerReady),
     readJson(path.join(settings.root,'bootstrap','unattended-host.json'),null).catch(()=>null)
   ]);
+  // Directory/receipt work and the lease probe can be slow. Sample short-lived
+  // evidence afterwards; never extend its lifetime to hide a slow scan.
+  host.leaseActive=await leaseActive(settings,native?.active);
+  const workerFiles=['worker-status.json','worker-diagnostics.json'].map(name=>path.join(settings.root,name));
+  const bridgeRoot=path.join(settings.nativeRoot,'Server','APFDiscordBridge');
+  const [workerSample,bridgeSample]=await Promise.all([
+    coherentSnapshots(workerFiles,false,true).catch(error=>error.code==='ENOENT'&&error.path===workerFiles[0]?[null,null]:null),
+    coherentSnapshots(['ready.json','status.json'].map(name=>path.join(bridgeRoot,name)),true).catch(()=>null)
+  ]);
+  const now=Date.now();
+  let worker;
+  try {worker=workerEvidence(pointer,workerSample,now);}
+  catch {worker={state:'invalid',inventory:'unknown',status:null,diagnostic:null};}
+  const bridge=bridgeSample!==null&&bridgeFresh(bridgeSample,now);
   if(bootstrap.nativeRecoveryVersion!==1)problem('broker','broker-not-ready');
   host.worker=worker.state;host.inventory=worker.inventory;
   if(!['running','draining'].includes(worker.state))problem('worker',['missing','stale','mismatch','invalid'].includes(worker.state)?'worker-'+worker.state:worker.state==='failed'||worker.state==='stopped'?'worker-failed':'worker-not-ready');
@@ -235,7 +263,6 @@ async function reportOnce(settings,options) {
   const observedHealth=consistent&&bridge&&['healthy','offline','unknown'].includes(options.health)?options.health:'unknown';
   if(observedHealth!=='healthy')problem('application','health-unavailable');
   if(journal)host.journalPhase=['native-activation','github-completion'].includes(journal.phase)?journal.phase:'unknown';
-  host.leaseActive=await leaseActive(settings,native?.active);
   if(!native)problem('native','native-observation-failed');
   const inventoryMatches=worker.inventory==='complete'&&worker.status?.applicationVersion===clientVersion&&worker.status.inventory.version===clientVersion&&
     labels.every(label=>hash(worker.status.components[label]));
@@ -263,7 +290,8 @@ async function reportOnce(settings,options) {
     schemaVersion:1,contractVersion:1,bootstrapVersion:1,observedAt:new Date(now).toISOString(),expiresAt:new Date(now+30000).toISOString(),capabilities,
     control:{version:pointer.version,sequence:pointer.sequence,sha256:pointer.bundleSha256,status,phase:transaction?.phase??null,pendingVersion,
       lastSuccess:control?.lastSuccess??null,rollback:transaction?.phase==='rolled-back'?transaction.descriptor.version:null,
-      failure:transaction?.phase==='blocked'?'control-transaction-blocked':null},
+      failure:transaction?.phase==='blocked'?'control-transaction-blocked':null,
+      attempted:control?.attempted??null,lastFailure:control?.lastFailure??null,recoveryAction:control?.recoveryAction??null},
     application:{clientVersion,packVersion,status:consistent?applicationStatus:'blocked',phase:active?.stage??null,
       pendingVersion:active&&active.phase!=='healthy'?active.version:null,health:observedHealth,lastSuccess:native?.lastSuccess??null,failure:applicationFailure},
     components:worker.status?Object.fromEntries(labels.map(label=>[label,hash(worker.status.components[label])?worker.status.components[label]:null])):emptyComponents(),
@@ -273,13 +301,19 @@ async function reportOnce(settings,options) {
     bootstrap,watcher:worker.diagnostic?watcherEvidence(worker):emptyWatcher(),native:native?.publication??null,recovery,host};
   // Independent writes: a failed status path never suppresses diagnostics, or vice versa.
   const config=path.join(settings.nativeRoot,'Server','Config');
+  // A coherent protected pair is the independent transport's source. HTTP ZIP
+  // contention must not misreport a live broker as a failed child.
+  await writeJson(path.join(settings.root,'host-observation.json'),{schemaVersion:1,status:report,diagnostics});
+  await writeJson(path.join(settings.root,'host-status.json'),report);
   const writes=await Promise.allSettled([
-    writeJson(path.join(settings.root,'host-status.json'),report),
     Promise.resolve().then(()=>atomic(path.join(config,'kesas-host-status.zip'),statusZip(report))),
     Promise.resolve().then(()=>atomic(path.join(config,'kesas-host-diagnostics.zip'),diagnosticsZip(diagnostics)))
   ]);
-  if(writes.some(value=>value.status==='rejected'))throw new Error('Host report publication failed');
-  return {report,diagnostics};
+  const failed=writes.filter(value=>value.status==='rejected');
+  if(failed.length)await writeJson(path.join(settings.root,'native-cache','http-report-error.json'),{
+    at:new Date().toISOString(),reason:'http-publication-failed',errors:failed.map(value=>({code:typeof value.reason?.code==='string'?value.reason.code:'UNKNOWN'}))
+  }).catch(()=>{});
+  return {report,diagnostics,httpPublished:failed.length===0};
 }
 
 // The caller supplies actual pinned health, never NativeAgent.health() progress.

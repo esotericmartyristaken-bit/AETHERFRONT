@@ -12,6 +12,11 @@ export const REPOSITORY = 'esotericmartyristaken-bit/AETHERFRONT';
 export const CHANNEL = 'deployment/control-plane.json';
 export const MAX_STATUS_BYTES = 64 * 1024;
 export const MAX_CONTROL_BYTES = 128 * 1024 * 1024;
+export const SIGNED_READBACK_URL = 'https://raw.githubusercontent.com/esotericmartyristaken-bit/AETHERFRONT/refs/heads/host-observation/readback.json';
+const MAX_READBACK_BYTES = 128 * 1024;
+const PUBLICATION_ATTEMPTS = 3;
+const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
+const retryPause = (options, attempt) => (options.sleep || sleep)(250 * 2 ** attempt);
 const ERRORS = new Set(['INVALID_ARGUMENT', 'CONTRACT_UNAVAILABLE', 'INCOMPATIBLE_CONTRACT',
   'INVALID_DESCRIPTOR', 'INVALID_STATUS', 'INVALID_STATUS_ZIP', 'STATUS_UNREACHABLE',
   'TLS_PIN_MISMATCH', 'STALE_STATUS', 'UNSUPPORTED_REQUIREMENT', 'CONTROL_NOT_HEALTHY',
@@ -162,9 +167,70 @@ export function verifyPinnedCertificate(certificate, pin) {
   if (!crypto.timingSafeEqual(actual, expected)) fail('TLS_PIN_MISMATCH');
 }
 
-export async function requestPinnedStatus({ origin, pin, request = https.request, resource = 'status' }) {
-  const url = statusUrl(origin,resource); pin = normalizePin(pin);
+function statusTransport(options) {
+  const transport = options.transport ?? 'auto';
+  if (!['auto', 'https', 'github'].includes(transport)) fail('INVALID_ARGUMENT');
+  return transport;
+}
+
+// Anonymous, fixed HTTPS endpoint only. No credentials, redirects or gh subprocess.
+async function fetchGithubReadback() {
   return checked('STATUS_UNREACHABLE', () => new Promise((resolve, reject) => {
+    let req, timer, settled = false;
+    const finish = (error, bytes) => {
+      if (settled) return;
+      settled = true; clearTimeout(timer);
+      if (error) { req?.destroy(); reject(error); } else resolve(bytes);
+    };
+    timer = setTimeout(() => finish(new ControllerError('STATUS_UNREACHABLE')), 20_000);
+    req = https.request(`${SIGNED_READBACK_URL}?observation=${Date.now()}`, { method: 'GET', agent: false, rejectUnauthorized: true,
+      headers: { Accept: 'application/json', 'Accept-Encoding': 'identity', 'Cache-Control': 'no-cache' } }, response => {
+      const declared = response.headers['content-length'];
+      if (response.statusCode !== 200 ||
+          (response.headers['content-encoding'] && response.headers['content-encoding'] !== 'identity') ||
+          (declared !== undefined && (!/^[1-9][0-9]*$/.test(declared) || Number(declared) > MAX_READBACK_BYTES))) {
+        response.destroy(); finish(new ControllerError('INVALID_STATUS')); return;
+      }
+      const chunks = []; let size = 0;
+      response.on('data', chunk => {
+        size += chunk.length;
+        if (size > MAX_READBACK_BYTES) { response.destroy(); finish(new ControllerError('INVALID_STATUS')); }
+        else chunks.push(chunk);
+      });
+      response.on('error', () => finish(new ControllerError('STATUS_UNREACHABLE')));
+      response.on('aborted', () => finish(new ControllerError('STATUS_UNREACHABLE')));
+      response.on('end', () => {
+        if (declared !== undefined && Number(declared) !== size) finish(new ControllerError('INVALID_STATUS'));
+        else finish(null, Buffer.concat(chunks));
+      });
+    });
+    req.on('error', () => finish(new ControllerError('STATUS_UNREACHABLE')));
+    req.setTimeout(20_000, () => req.destroy(new ControllerError('STATUS_UNREACHABLE')));
+    req.end();
+  }));
+}
+
+async function signedStatus({ pin, resource, fetchSignedReadback }) {
+  const bytes = await checked('STATUS_UNREACHABLE', () => (fetchSignedReadback || fetchGithubReadback)());
+  if (!Buffer.isBuffer(bytes) || bytes.length > MAX_READBACK_BYTES) fail('INVALID_STATUS');
+  try {
+    const { verifyReadbackEnvelope } = await import('./signed-readback.mjs');
+    return await verifyReadbackEnvelope(bytes, { pin, resource });
+  } catch (error) {
+    // Verifier errors belong to its module; preserve only the fail-closed codes.
+    fail(['TLS_PIN_MISMATCH', 'STALE_STATUS', 'INVALID_STATUS_ZIP'].includes(error?.code) ? error.code : 'INVALID_STATUS');
+  }
+}
+
+export async function requestPinnedStatus(options = {}) {
+  let { origin, pin, request = https.request, resource = 'status', fetchSignedReadback } = options;
+  const url = statusUrl(origin,resource); pin = normalizePin(pin);
+  const transport = statusTransport(options);
+  if (transport === 'github') {
+    if (request !== https.request && !fetchSignedReadback) fail('STATUS_UNREACHABLE');
+    return signedStatus({ pin, resource, fetchSignedReadback });
+  }
+  try { return await checked('STATUS_UNREACHABLE', () => new Promise((resolve, reject) => {
     let verified = false, settled = false, timer, req;
     const finish = (error, bytes) => {
       if (settled) return;
@@ -208,10 +274,15 @@ export async function requestPinnedStatus({ origin, pin, request = https.request
     timer = setTimeout(() => finish(new ControllerError('STATUS_UNREACHABLE')), 15_000);
     req.setTimeout(15_000, () => req.destroy(new ControllerError('STATUS_UNREACHABLE')));
     req.end();
-  }));
+  })); } catch (error) {
+    if (transport !== 'auto' || error.code !== 'STATUS_UNREACHABLE' ||
+        (request !== https.request && !fetchSignedReadback)) throw error;
+    return signedStatus({ pin, resource, fetchSignedReadback });
+  }
 }
 
 export async function readStatus(options = {}) {
+  statusTransport(options);
   const contract = await contractFor(options);
   // Validate origin/pin even with injected transport.
   statusUrl(options.origin); normalizePin(options.pin);
@@ -227,6 +298,7 @@ export async function readStatus(options = {}) {
 }
 
 export async function readDiagnostics(options = {}) {
+  statusTransport(options);
   statusUrl(options.origin,'diagnostics');normalizePin(options.pin);
   const bytes=await checked('STATUS_UNREACHABLE',()=>(options.fetchDiagnostics||requestPinnedStatus)({...options,resource:'diagnostics'}));
   const value=await parseStrictJson(readStatusZip(bytes,'host-diagnostics.json'));
@@ -284,6 +356,7 @@ export async function publishRecovery(options = {}) {
 
 export async function preflight(options = {}) {
   const report = await readStatus(options);
+  if (options.controlRecovery) requireControlFailure(report, options.controlRecovery);
   const contract = await contractFor(options);
   const requested = options.requirements ?? [];
   if (!Array.isArray(requested) || requested.some(x => typeof x !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,79}$/.test(x))) fail('UNSUPPORTED_REQUIREMENT');
@@ -335,8 +408,16 @@ async function api(options, endpoint, method = 'GET', body, projection) {
   const args = ['api', '--hostname', 'github.com', '--method', method, `repos/${REPOSITORY}${endpoint ? `/${endpoint}` : ''}`];
   if (body !== undefined) args.push('--input', '-');
   if (projection) args.push('--jq', projection);
-  const output = await checked('GITHUB_FAILED', () => (options.gh || runGh)(args, body === undefined ? undefined : JSON.stringify(body)));
-  return parseStrictJson(Buffer.from(output), 'GITHUB_FAILED');
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const output = await checked('GITHUB_FAILED', () => (options.gh || runGh)(args, body === undefined ? undefined : JSON.stringify(body)));
+      return await parseStrictJson(Buffer.from(output), 'GITHUB_FAILED');
+    } catch (error) {
+      // Writes are never blindly replayed. Reads cannot turn auth failures into absence.
+      if (method !== 'GET' || error.code !== 'GITHUB_FAILED' || attempt + 1 >= PUBLICATION_ATTEMPTS) throw error;
+      await retryPause(options, attempt);
+    }
+  }
 }
 async function snapshot(options) {
   const reference = await api(options, 'git/ref/heads/deploy');
@@ -407,9 +488,9 @@ async function releaseFor(options, descriptor) {
   }
   fail('GITHUB_FAILED');
 }
-async function verifiedAsset(options, release, descriptor) {
+async function verifiedAsset(options, release, descriptor, knownAssets) {
   if (!integer(release.id) || release.tag_name !== descriptor.releaseTag || release.draft !== false || release.prerelease !== true) fail('IMMUTABLE_ASSET_CONFLICT');
-  const assets = await api(options, `releases/${release.id}/assets?per_page=100`);
+  const assets = knownAssets ?? await api(options, `releases/${release.id}/assets?per_page=100`);
   if (!Array.isArray(assets) || assets.length !== 1) fail('IMMUTABLE_ASSET_CONFLICT');
   const asset = assets[0];
   const url = `https://github.com/${REPOSITORY}/releases/download/${descriptor.releaseTag}/${descriptor.assetName}`;
@@ -420,9 +501,84 @@ async function verifiedAsset(options, release, descriptor) {
   if (actual !== descriptor.sha256) fail('IMMUTABLE_ASSET_CONFLICT');
 }
 
+function observationSettings(options) {
+  const timeout = options.timeoutMs ?? 20 * 60_000, interval = options.pollMs ?? 5_000;
+  if (!integer(timeout) || timeout > 60 * 60_000 || !integer(interval) || interval > 60_000) fail('INVALID_ARGUMENT');
+  return { timeout, interval };
+}
+
+function requireControlFailure(report, expected) {
+  const failed = report.control.lastFailure || report.control.attempted;
+  if (!object(failed) || failed.version !== expected.version || failed.transactionId !== expected.transactionId ||
+      !/^[a-f0-9]{64}$/.test(failed.sha256 || '') || (expected.sha256 && failed.sha256 !== expected.sha256) ||
+      !['blocked', 'rolled-back'].includes(failed.phase) ||
+      !failed.failure || report.control.pendingVersion) fail('CONTROL_NOT_HEALTHY');
+  return failed;
+}
+
+// Recovery publishes reviewed newer bytes through the existing immutable channel.
+// It never resets transaction history or asks the host to replay a failed bundle.
+export async function recoverControl(options = {}) {
+  const failedVersion = options.failedVersion ?? options['failed-version'];
+  const failedTransaction = options.failedTransaction ?? options['failed-transaction'];
+  if (!failedVersion || !failedTransaction) fail('INVALID_ARGUMENT');
+  controlNumber(failedVersion); controlNumber(options.version);
+  if (typeof failedTransaction !== 'string' || !/^[a-f0-9]{64}$/.test(failedTransaction)) fail('INVALID_ARGUMENT');
+  if (controlNumber(options.version) <= controlNumber(failedVersion)) fail('VERSION_NOT_NEWER');
+  const controlRecovery = { version: failedVersion, transactionId: failedTransaction };
+  const report = await readStatus(options);
+  controlRecovery.sha256 = requireControlFailure(report, controlRecovery).sha256;
+  const result = await publishControl({ ...options, controlRecovery, wait: true });
+  return { ...result, action: 'publish-reviewed-newer-control', failedVersion, failedTransaction };
+}
+
+// Read-only resume path: never infer the failed candidate from the active version.
+export async function observeControl(options = {}) {
+  controlNumber(options.version);
+  if (typeof options.sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(options.sha256)) fail('INVALID_ARGUMENT');
+  statusUrl(options.origin); normalizePin(options.pin);
+  const { timeout, interval } = observationSettings(options);
+  const deadline = performance.now() + timeout;
+  let report = null;
+  const result = (status, ok, attempted = null) => ({ ok, status, terminal: true, version: options.version, sha256: options.sha256,
+    observedVersion: report?.control.version ?? null, observedSha256: report?.control.sha256 ?? null,
+    phase: attempted?.phase ?? report?.control.phase ?? null, failure: attempted?.failure ?? report?.control.failure ?? null,
+    ...(attempted ? { attemptedVersion: attempted.version, attemptedSha256: attempted.sha256,
+      attemptedTransactionId: attempted.transactionId } : {}) });
+  for (;;) {
+    try { report = await readStatus(options); }
+    catch (error) { if (!['STATUS_UNREACHABLE', 'STALE_STATUS'].includes(error.code)) throw error; }
+    const control = report?.control;
+    const attempted = control?.attempted;
+    if (attempted?.version === options.version && ['blocked', 'rolled-back'].includes(attempted.phase)) {
+      if (attempted.sha256 !== options.sha256) return result('hash-conflict', false, attempted);
+      if (typeof attempted.transactionId !== 'string' || !/^[a-f0-9]{64}$/.test(attempted.transactionId)) fail('INVALID_STATUS');
+      return result(attempted.phase, false, attempted);
+    }
+    if (control?.version === options.version) {
+      if (control.sha256 !== options.sha256) return result('hash-conflict', false);
+      if (['healthy', 'idle'].includes(control.status) && control.lastSuccess === options.version && !control.pendingVersion && !control.failure)
+        return result('healthy', true);
+      if (['blocked', 'rolled-back'].includes(control.status)) return result(control.status, false);
+    } else if (control && controlNumber(control.version) > controlNumber(options.version)) return result('superseded', false);
+    if (performance.now() >= deadline) return result('timeout', false);
+    await (options.sleep || sleep)(Math.max(1, Math.min(interval, deadline - performance.now())));
+    report = null;
+  }
+}
+
+async function publicationResult(options, descriptor, commit, status) {
+  const publication = { ok: true, status, descriptor, commit };
+  if (!options.wait) return publication;
+  return { ...publication, publicationStatus: status,
+    ...await observeControl({ ...options, version: descriptor.version, sha256: descriptor.sha256 }) };
+}
+
 export async function publishControl(options = {}) {
   // This publication may stage while the application is busy. Activation guards
   // remain exclusively the worker's responsibility; no application writes here.
+  if (options.wait !== undefined && typeof options.wait !== 'boolean') fail('INVALID_ARGUMENT');
+  if (options.wait) observationSettings(options);
   await preflight({ ...options, purpose: 'control-publication', minimumBootstrap: options.minimumBootstrap ?? 1 });
   controlNumber(options.version);
   const archive = await checked('INVALID_ARCHIVE', async () => {
@@ -464,25 +620,34 @@ export async function publishControl(options = {}) {
   if (repo.full_name !== REPOSITORY || repo.private !== false || repo.archived !== false || repo.disabled !== false) fail('GITHUB_FAILED');
   const before = await snapshot(options); checkOrder(before.descriptor, descriptor);
   let release = await releaseFor(options, descriptor);
-  if (!release) {
+  for (let attempt = 0; !release && attempt < PUBLICATION_ATTEMPTS; attempt++) {
+    await preflight({ ...options, purpose: 'control-publication', minimumBootstrap: descriptor.minimumBootstrap });
     try {
       release = await api(options, 'releases', 'POST', { tag_name: descriptor.releaseTag, name: descriptor.releaseTag,
         prerelease: true, draft: false, make_latest: 'false', body: 'Control-plane worker release; not an application release.' });
+      if (!object(release)) fail('GITHUB_FAILED');
     } catch {
       release = await releaseFor(options, descriptor);
-      if (!release) fail('PUBLICATION_UNCONFIRMED');
+      if (!release && attempt + 1 < PUBLICATION_ATTEMPTS) await retryPause(options, attempt);
     }
   }
+  if (!release) fail('PUBLICATION_UNCONFIRMED');
   if (!integer(release.id) || release.tag_name !== descriptor.releaseTag || release.draft !== false || release.prerelease !== true) fail('IMMUTABLE_ASSET_CONFLICT');
-  const assets = await api(options, `releases/${release.id}/assets?per_page=100`);
-  if (!Array.isArray(assets) || assets.length > 1) fail('IMMUTABLE_ASSET_CONFLICT');
-  if (!assets.length) {
-    try { await (options.gh || runGh)(['release', 'upload', descriptor.releaseTag, archive.filename, '--repo', `github.com/${REPOSITORY}`]); }
-    catch { /* Lost response is reconciled by immutable readback below. */ }
+  for (let attempt = 0; ; attempt++) {
+    const assets = await api(options, `releases/${release.id}/assets?per_page=100`);
+    if (!Array.isArray(assets) || assets.length > 1) fail('IMMUTABLE_ASSET_CONFLICT');
+    if (assets.length) {
+      await checked('IMMUTABLE_ASSET_CONFLICT', () => verifiedAsset(options, release, descriptor, assets));
+      break;
+    }
+    if (attempt >= PUBLICATION_ATTEMPTS) fail('PUBLICATION_UNCONFIRMED');
+    if (attempt) await retryPause(options, attempt - 1);
+    await preflight({ ...options, purpose: 'control-publication', minimumBootstrap: descriptor.minimumBootstrap });
+    try { await checked('GITHUB_FAILED', () => (options.gh || runGh)(['release', 'upload', descriptor.releaseTag, archive.filename, '--repo', `github.com/${REPOSITORY}`])); }
+    catch { /* Inspect immutable readback before considering another absent-only upload. */ }
   }
-  await checked('IMMUTABLE_ASSET_CONFLICT', () => verifiedAsset(options, release, descriptor));
   const after = await snapshot(options); checkOrder(after.descriptor, descriptor);
-  if (same(after.descriptor, descriptor)) return { ok: true, status: 'already-published', descriptor, commit: after.commit };
+  if (same(after.descriptor, descriptor)) return publicationResult(options, descriptor, after.commit, 'already-published');
   if (before.commit !== after.commit || before.fileSha !== after.fileSha) fail('CHANNEL_CHANGED');
   await preflight({ ...options, purpose: 'control-publication', minimumBootstrap: descriptor.minimumBootstrap });
   const body = { branch: 'deploy', message: `Deploy ${descriptor.version}`, content: Buffer.from(`${JSON.stringify(descriptor)}\n`).toString('base64') };
@@ -491,29 +656,41 @@ export async function publishControl(options = {}) {
   catch { /* Read back uncertain writes; never force or automatically overwrite. */ }
   const confirmed = await snapshot(options);
   if (!same(confirmed.descriptor, descriptor)) fail('PUBLICATION_UNCONFIRMED');
-  return { ok: true, status: 'published', descriptor, commit: confirmed.commit };
+  return publicationResult(options, descriptor, confirmed.commit, 'published');
 }
 
 export async function runCli(argv, dependencies = {}) {
   try {
     const [command, ...arguments_] = argv;
-    if (!['read', 'status', 'diagnostics', 'recover', 'preflight', 'publish-control'].includes(command)) fail('INVALID_ARGUMENT');
-    const allowed = new Set(command === 'read' ? [] : command === 'publish-control'
-      ? ['origin', 'pin', 'requires', 'archive', 'version', 'minimum-bootstrap']
+    if (!['read', 'status', 'diagnostics', 'recover', 'recover-control', 'preflight', 'publish-control', 'observe-control'].includes(command)) fail('INVALID_ARGUMENT');
+    const allowed = new Set(command === 'read' ? [] : ['publish-control', 'recover-control'].includes(command)
+      ? ['origin', 'pin', 'requires', 'archive', 'version', 'minimum-bootstrap', 'wait', 'timeout-ms', 'poll-ms']
+      : command === 'observe-control' ? ['origin', 'pin', 'version', 'sha256', 'timeout-ms', 'poll-ms']
       : command === 'preflight' ? ['origin', 'pin', 'requires', 'version', 'minimum-bootstrap'] : ['origin', 'pin']);
+    if (command !== 'read') allowed.add('transport');
+    if (command === 'recover-control') { allowed.add('failed-version'); allowed.add('failed-transaction'); }
     const flags = {};
-    for (let index = 0; index < arguments_.length; index += 2) {
-      const flag = arguments_[index]; const value = arguments_[index + 1];
-      if (!flag?.startsWith('--') || !allowed.has(flag.slice(2)) || Object.hasOwn(flags, flag.slice(2)) || !value || value.startsWith('--')) fail('INVALID_ARGUMENT');
-      flags[flag.slice(2)] = value;
+    for (let index = 0; index < arguments_.length; index++) {
+      const flag = arguments_[index], key = flag?.slice(2);
+      if (!flag?.startsWith('--') || !allowed.has(key) || Object.hasOwn(flags, key)) fail('INVALID_ARGUMENT');
+      if (key === 'wait') { flags.wait = true; continue; }
+      const value = arguments_[++index];
+      if (!value || value.startsWith('--')) fail('INVALID_ARGUMENT');
+      flags[key] = value;
     }
-    if (flags['minimum-bootstrap'] && !/^[1-9][0-9]*$/.test(flags['minimum-bootstrap'])) fail('INVALID_ARGUMENT');
+    for (const key of ['minimum-bootstrap', 'timeout-ms', 'poll-ms'])
+      if (flags[key] && !/^[1-9][0-9]*$/.test(flags[key])) fail('INVALID_ARGUMENT');
     const options = { ...dependencies, ...flags, requirements: flags.requires ? flags.requires.split(',') : [],
+      transport: flags.transport ?? dependencies.transport ?? 'auto',
+      ...(flags['timeout-ms'] ? { timeoutMs: Number(flags['timeout-ms']) } : {}),
+      ...(flags['poll-ms'] ? { pollMs: Number(flags['poll-ms']) } : {}),
       minimumBootstrap: flags['minimum-bootstrap'] ? Number(flags['minimum-bootstrap']) : 1 };
+    statusTransport(options);
     const result = command === 'read' ? await readControl(options) : command === 'status' ? await readStatus(options)
       : command === 'diagnostics' ? await readDiagnostics(options) : command === 'recover' ? await publishRecovery(options)
-      : command === 'preflight' ? await preflight(options) : await publishControl(options);
-    return { exitCode: 0, output: JSON.stringify(result) };
+      : command === 'recover-control' ? await recoverControl(options)
+      : command === 'preflight' ? await preflight(options) : command === 'observe-control' ? await observeControl(options) : await publishControl(options);
+    return { exitCode: result.ok === false ? 1 : 0, output: JSON.stringify(result) };
   } catch (error) {
     return { exitCode: 1, output: JSON.stringify({ ok: false, error: error instanceof ControllerError ? error.code : 'INVALID_ARGUMENT', ...(error instanceof ControllerError&&error.missingCapabilities?.length?{missingCapabilities:error.missingCapabilities}:{}) }) };
   }

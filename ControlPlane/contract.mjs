@@ -2,7 +2,7 @@
 export const REPOSITORY = 'esotericmartyristaken-bit/AETHERFRONT';
 export const CONTRACT = 1;
 export const BOOTSTRAP = 1;
-export const CAPABILITIES = Object.freeze(['application-v1', 'media-payload-v1', 'control-plane-v1', 'host-report-v1', 'guard-15m-empty-v1', 'atomic-control-rollback-v1', 'native-tools-v1', 'versioned-broker-v1', 'independent-report-v1', 'unattended-host-v1', 'media-reference-v1']);
+export const CAPABILITIES = Object.freeze(['application-v1', 'media-payload-v1', 'control-plane-v1', 'host-report-v1', 'guard-15m-empty-v1', 'atomic-control-rollback-v1', 'native-tools-v1', 'versioned-broker-v1', 'independent-report-v1', 'unattended-host-v1', 'media-reference-v1', 'signed-readback-v1']);
 export const MAX_CONTROL_BYTES = 128 * 1024 * 1024;
 export const HASH = /^[a-f0-9]{64}$/;
 export function requireValue(condition, message) { if (!condition) throw new Error(message); }
@@ -64,11 +64,26 @@ const STATUSES = ['healthy','accepted','waiting-existing-guard','staging','apply
 function nullableVersion(value) { return value === null || (typeof value === 'string' && VERSION.test(value)); }
 function safeCode(value) { return value === null || (typeof value === 'string' && /^[a-z][a-z0-9-]{0,79}$/.test(value)); }
 function validDate(value) { return typeof value === 'string' && /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(value) && Number.isFinite(Date.parse(value)); }
+export function validateControlAttempt(value) {
+  if(value===null)return value;
+  exact(value,['version','sha256','transactionId','phase','stage','failure','updatedAt'],'control attempt');
+  sequence(value.version);
+  requireValue(HASH.test(value.sha256)&&HASH.test(value.transactionId)&&STATUSES.includes(value.phase)&&safeCode(value.stage)&&safeCode(value.failure)&&validDate(value.updatedAt),'Invalid control attempt');
+  return value;
+}
 export function validateHostReport(value) {
   exact(value, ['schemaVersion','contractVersion','bootstrapVersion','observedAt','expiresAt','capabilities','control','application','components','runtime'], 'host report');
   requireValue(value.schemaVersion === 1 && value.contractVersion === 1 && value.bootstrapVersion === 1 && validDate(value.observedAt) && validDate(value.expiresAt), 'Unsupported host report');
   requireValue(Array.isArray(value.capabilities) && value.capabilities.length<=64 && new Set(value.capabilities).size === value.capabilities.length && value.capabilities.every(item => typeof item==='string'&&/^[a-z][a-z0-9-]{0,79}$/.test(item)), 'Invalid host capabilities');
-  exact(value.control, ['version','sequence','sha256','status','phase','pendingVersion','lastSuccess','rollback','failure'], 'control status');
+  const optionalControl=['attempted','lastFailure','recoveryAction','process'];
+  exact(value.control, ['version','sequence','sha256','status','phase','pendingVersion','lastSuccess','rollback','failure',...optionalControl.filter(key=>Object.hasOwn(value.control,key))], 'control status');
+  for(const key of ['attempted','lastFailure'])if(Object.hasOwn(value.control,key))validateControlAttempt(value.control[key]);
+  if(Object.hasOwn(value.control,'recoveryAction'))requireValue([null,'publish-reviewed-newer-control'].includes(value.control.recoveryAction),'Invalid control recovery action');
+  if(Object.hasOwn(value.control,'process')){
+    const process=value.control.process;
+    exact(process,['brokerState','brokerExitCode','restarts','lastHeartbeatAt','retryAt'],'control process');
+    requireValue(['ready','starting','stale','exited','unknown'].includes(process.brokerState)&&(process.brokerExitCode===null||Number.isInteger(process.brokerExitCode))&&Number.isSafeInteger(process.restarts)&&process.restarts>=0&&process.restarts<=1000000&&(process.lastHeartbeatAt===null||validDate(process.lastHeartbeatAt))&&(process.retryAt===null||validDate(process.retryAt)),'Invalid control process');
+  }
   requireValue(HASH.test(value.control.sha256), 'Invalid installed control hash');
   requireValue(value.control.version === `control-${value.control.sequence}` && Number.isSafeInteger(value.control.sequence) && value.control.sequence > 0 && STATUSES.includes(value.control.status) && safeCode(value.control.phase) && nullableVersion(value.control.pendingVersion) && nullableVersion(value.control.lastSuccess) && nullableVersion(value.control.rollback) && safeCode(value.control.failure), 'Invalid control status');
   exact(value.application, ['clientVersion','packVersion','status','phase','pendingVersion','health','lastSuccess','failure'], 'application status');

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-22T02:11:16.233318+00:00",
+  "createdUtc": "2026-10-23T08:46:02.4161068Z",
   "publication": "Reviewed source update; ordinary source pushes do not deploy",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -27377,8 +27377,8 @@
       "path": "ControlPlane/Build-ControlBundle.ps1",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 3461,
-      "sha256": "e37c23f9aee9e9b96f4deecc9786787a41b3b3e0051ad91e9fabe62451cb02f4",
+      "bytes": 3557,
+      "sha256": "d8b614e2419a1f82b15f5001b6d3217539841af0c364fa291fec46b62a3f2f31",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -27388,8 +27388,8 @@
       "path": "ControlPlane/Expand-ControlBundle.ps1",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 19319,
-      "sha256": "4d80e005aa27bd370a4ff0a37c7a0fff13e4e0425b034dce352c3a3e8b68cab0",
+      "bytes": 19530,
+      "sha256": "6baea20cfac6f4509da0b2cc29d30449ddc82a228ad7094676365abdd64197b9",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -27432,8 +27432,8 @@
       "path": "ControlPlane/Manage-ControlWorker.ps1",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 1016,
-      "sha256": "996df03b358a48f5dc066dbd438a0e202f9d1e8904721e510d983142a597389e",
+      "bytes": 1647,
+      "sha256": "2bc80a777afca33cfb44220bb597e21d0e27d96cde38457f218f4cd13d6f29dd",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -27476,8 +27476,8 @@
       "path": "ControlPlane/README.md",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 9958,
-      "sha256": "e5bd001e32b6e556efe171ba2940814e5ca813dd3c4a54bca809fee816b1840c",
+      "bytes": 14829,
+      "sha256": "667d4fb3d432231560d5e4c8a30acb7756f750bfff612d5fe036700e2cfd4fd1",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -27564,8 +27564,8 @@
       "path": "ControlPlane/anchor.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 16670,
-      "sha256": "c31d2531637e379b25b1f6fe29950d7ffe09c0e65f9a9aa271480c01f8a4a937",
+      "bytes": 26445,
+      "sha256": "3df6b0c7d900c124ae95ac53a42177e010dc3d7f3ad5532104a2e1eb070e00a1",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -27586,8 +27586,8 @@
       "path": "ControlPlane/broker-host.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 2135,
-      "sha256": "3ceb86109a00e29c1880b0dc3b4eacbf7a76bcee3ca947910fcb52ae50f8d119",
+      "bytes": 2325,
+      "sha256": "c225c87e5fd752210c6babd3cebd5d6fda3cc007dce7e0e8fb5de15f8264847c",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -27597,8 +27597,8 @@
       "path": "ControlPlane/contract.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 9181,
-      "sha256": "86f845f67baff761ca1c2dc3262d6c750d256f42caf65431c0b64efc30f7f4cf",
+      "bytes": 10706,
+      "sha256": "3daca54c81a3c54d2def909e67ccbb36fbacb4e9f5335367c8ffdbe664bc1712",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -27608,8 +27608,8 @@
       "path": "ControlPlane/controller.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 35647,
-      "sha256": "9c0f2f1c6058569df9ad2df143b9ba275e1cb92528d30030a4694b9a3497d51b",
+      "bytes": 46330,
+      "sha256": "640fb0692e5c28d6c25a8f597832f370aebb9b9f1d6435ca438af34a7bfd330d",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -27619,8 +27619,8 @@
       "path": "ControlPlane/engine.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 16231,
-      "sha256": "22621d0315eaee8b84336c052fc98b5813015b6d8f1fc9a706da323fbe9cd326",
+      "bytes": 20806,
+      "sha256": "ea39c5184c72cdf43d51277c12dff7c1849b93e560de8314b4e06c3d08dbf17b",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -27641,8 +27641,8 @@
       "path": "ControlPlane/host-reporter.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 25076,
-      "sha256": "91ddb7017d88a070dcad8b77236dfc9cd1e00b4b1143fbd4ecf488e832c90ac2",
+      "bytes": 27288,
+      "sha256": "d366ab7b36e44c8165b06314f9c4606a357a68f67645dfb3ec81eac2f93c2f60",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -27685,8 +27685,8 @@
       "path": "ControlPlane/public-status.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 12421,
-      "sha256": "078cb702468ba31646a4f803f445f2e5677ed24566fc724bad41ce5707f1f43a",
+      "bytes": 12503,
+      "sha256": "b271a14cfc87d5bf5a660640ea34269ec1ba1090ffe04fc366da19dcde177cf5",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -27718,8 +27718,8 @@
       "path": "ControlPlane/test/engine.test.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 21214,
-      "sha256": "87a5c19169ac9d0dbe183cd91e16de57065c7f085dad720224d2bf97a7394837",
+      "bytes": 21366,
+      "sha256": "350b2e6cf96a2480d66c5c84b3e37f991aaedd39a956d5ff073ac97fc4de970f",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -27729,8 +27729,8 @@
       "path": "ControlPlane/test/extractor.test.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 13465,
-      "sha256": "9dcdafc5d19f08229b18cab37a54a2c8de400ffc434510b862b161d83287540c",
+      "bytes": 13518,
+      "sha256": "38f7700f8b418718623933ab6cb10ffc978791f23a5d0a2cf9b6e0d3a8082f64",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -27751,8 +27751,8 @@
       "path": "ControlPlane/test/native-agent.test.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 27450,
-      "sha256": "66a43d0676b07db434950cc036b4b66eb6d61da65154b2fa5710799a00e75061",
+      "bytes": 27474,
+      "sha256": "7b48d3ed496dabf1c015e948743b19ae3ab78d9046185b181176e0deb51a6218",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -27795,8 +27795,8 @@
       "path": "ControlPlane/worker.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 12320,
-      "sha256": "d62c3ca2d49a43bd5e1cc1593dea0af1f0abe9c1f929c2e761e5fd5bd7a65e3d",
+      "bytes": 12351,
+      "sha256": "23830dc40901fe5685476e2cb70e24be9d30eb9e705429ec73df9dd22ff126bf",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -28823,9 +28823,152 @@
       "sha256": "5e622f4365426d610b907d576461761377feab6b3c7fdb8c348922033bded532",
       "sourceSha256": null,
       "transformations": []
+    },
+    {
+      "path": "ControlPlane/control-evidence.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 1928,
+      "sha256": "14e735729b370197bf4c6f8fbe457dd74c04909563865d3747b7b1512679b470",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/observation-publisher.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 5618,
+      "sha256": "7960557bfadf1a3ecb63e30b9bfdb22f0e45bbd050d04cef3f506440f6ca2a49",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/Repair-HostControl.ps1",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 15190,
+      "sha256": "63da32a74f39f109d15714b62a53df6af4886a07eb6363e84607f0e2aca81f2d",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/Sign-HostObservation.ps1",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 3509,
+      "sha256": "46370775343cc6fb3a459d06c56d30aa62ed1ed66b776ee4e269833508f22eaa",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/signed-readback.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 6063,
+      "sha256": "264f6e369f34458151d0d111f7fbb6dd2d5842151b442720e2a973131b3409c6",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/supervision.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 1836,
+      "sha256": "9bc16b755ed3f5cfce8e58c0f2a6bee14e179220376c99cdc408ad64b48ed1cb",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/test/coherent-reporting.test.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 12046,
+      "sha256": "e4a19abc5ebb996e4c9d4d0b20ad416bba802d0de78ce6f54f180a391e67ab5f",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/test/controller-reliability.test.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 31122,
+      "sha256": "92811b6537055d9699310a8248a83090acdc23b5faa87d891df722b280b628bc",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/test/observation-publisher.test.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 18959,
+      "sha256": "25ee8f004664972a0496f3c3e7a593e61a4e151186823a7cee951aecadcbdfb2",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/test/repair-host-control.test.ps1",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 7003,
+      "sha256": "546e33d5a87e8ed3986574592b6133d5914e9ffff114a8f7fe7c0ec738357037",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/test/signed-readback.test.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 11281,
+      "sha256": "fc23f1079e7317c409a503bb8733b22dfcc04638ab29f0d4f0727b24287b6b4d",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/test/staging-recovery.test.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 12304,
+      "sha256": "a9c3bf5dbaa6ea99cab1245abd08fde0907d8510d56d9038e99496464e35fe5e",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
+    },
+    {
+      "path": "ControlPlane/test/supervision-recovery.test.mjs",
+      "source": null,
+      "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
+      "bytes": 15542,
+      "sha256": "34a127c221949db41ec1a4cd31ec39d41761619d6edc2ab6d3d5a2bcd87b2757",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+      ]
     }
   ],
-  "totalFileBytes": 16649233,
+  "totalFileBytes": 16423669,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",
@@ -28844,5 +28987,5 @@
     "report": "PRIVACY-SCAN.json",
     "limitation": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
   },
-  "fileCount": 2882
+  "fileCount": 2900
 }

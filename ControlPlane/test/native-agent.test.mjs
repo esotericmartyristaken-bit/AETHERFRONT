@@ -170,7 +170,7 @@ async function fixture(t, options = {}) {
     });
     return child;
   };
-  const agentOptions = {bootstrapDirectory:bootstrap,fetch:fetcher,spawn:spawner,isAlive:async pid => pid === process.pid,...options.agentOptions};
+  const agentOptions = {bootstrapDirectory:bootstrap,codeDirectory:bootstrap,fetch:fetcher,spawn:spawner,isAlive:async pid => pid === process.pid,...options.agentOptions};
   const agent = new NativeAgent(settings,agentOptions);
   const tick = async () => { const result = await agent.tick(); if (state.childError) throw state.childError; return result; };
   return {directory,settings,bootstrap,value,state,agent,agentOptions,next,active,enqueue,tick};
