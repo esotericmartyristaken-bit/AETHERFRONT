@@ -233,6 +233,10 @@ it does not publish competing status or kill either process. Task-parent loss
 and shutdown signals remain sticky even if the managed drain marker is cleared.
 This prevents orphan workers after a Windows task stop from overwriting the new
 worker's evidence. Native helpers still drain under the existing guards.
+An OS-held Windows named-pipe handle serializes the entire metadata reclaim and
+claim operation, not a non-atomic file check/unlink pair. The pipe accepts no
+commands or data and is released by the OS when its process exits. The PID/token
+file is diagnostic evidence; it is not the exclusivity authority.
 
 ## Large media and remaining boundaries
 

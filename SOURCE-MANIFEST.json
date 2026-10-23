@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "esotericmartyristaken-bit/AETHERFRONT",
-  "createdUtc": "2026-10-23T19:21:00.9969214Z",
+  "createdUtc": "2026-10-23T19:33:24.0148935Z",
   "publication": "Reviewed source update; ordinary source pushes do not deploy",
   "sourceBase": {
     "tree": "Aetherfront-Source",
@@ -27476,8 +27476,8 @@
       "path": "ControlPlane/README.md",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 16362,
-      "sha256": "f996b8b3ccd4953c2267ecd0fad566a7171d1cd61752b5400e07fb745a247143",
+      "bytes": 16667,
+      "sha256": "bacc40bdc4553c8ad4a6235110271ee764b29058f3cbaede1a9d745ffa7ed0e6",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -27795,8 +27795,8 @@
       "path": "ControlPlane/worker.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 15258,
-      "sha256": "e2e9604280af0d426d6c94749b6edc61d93501604630e3d14cab0cd7d7b0fad2",
+      "bytes": 16537,
+      "sha256": "09385cfd51ac74eb1495b0b12248614ac1cec4f6e764c1ec8da283938ac0b0b7",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -29004,8 +29004,8 @@
       "path": "ControlPlane/test/worker-lifecycle.test.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 11372,
-      "sha256": "e227ff5207b18fb7a07df7ff5c3abf61c6ee941dda24bfe6e200ba6bbed0be07",
+      "bytes": 15514,
+      "sha256": "e9104aa1cc2ded7ee137f799618885a2db6e71a3c8cd5ae0e9b741fccc818588",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."

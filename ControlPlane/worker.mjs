@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fork, execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import crypto from 'node:crypto';
+import net from 'node:net';
 import { ControlEngine, validatePointer, inventory } from './engine.mjs';
 import { CAPABILITIES } from './contract.mjs';
 import { writeJson, readJson, fileHash, digest, noLinks, publicMediaInventory } from './public-status.mjs';
@@ -24,16 +25,39 @@ function workerShutdownRequested(requested,drain,sha,parentAlive){
   return requested||drain?.bundleSha256===sha||!parentAlive;
 }
 function parentAlive(){try{process.kill(parent,0);return true;}catch(error){if(error.code==='ESRCH')return false;throw error;}}
+async function acquireWorkerKernelLease(){
+  const identity=crypto.createHash('sha256').update(path.resolve(settings.root).toLowerCase()).digest('hex');
+  const endpoint=process.platform==='win32'?`\\\\.\\pipe\\Aetherfront-Control-Worker-${identity}`:`\0aetherfront-worker-${identity}`;
+  const deadline=Date.now()+120000;
+  for(;;){
+    if(!parentAlive())throw new Error('Worker parent exited before kernel ownership');
+    const server=net.createServer(socket=>socket.destroy());
+    try{
+      await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(endpoint,resolve);});
+      server.unref();
+      // This endpoint accepts no commands or data. The kernel-held listening
+      // handle only serializes ownership and is released on process death.
+      return ()=>new Promise(resolve=>server.close(resolve));
+    }catch(error){
+      if(error.code!=='EADDRINUSE')throw error;
+      if(Date.now()>=deadline)throw new Error('Prior kernel worker owner remains alive');
+      await new Promise(resolve=>setTimeout(resolve,250));
+    }
+  }
+}
 async function acquireWorkerOwner(){
   const file=path.join(settings.root,'worker-owner.json'),owner={pid:process.pid,token:crypto.randomUUID()};
   const deadline=Date.now()+120000;
-  await noLinks(file);
-  for(;;){
+  const releaseKernel=await acquireWorkerKernelLease();let claimed=false;
+  try{
+   await noLinks(file);
+   for(;;){
     if(!parentAlive())throw new Error('Worker parent exited before ownership');
     try{
       const handle=await fs.open(file,'wx');
       try{await handle.writeFile(JSON.stringify(owner));await handle.sync();}finally{await handle.close();}
-      return async()=>{if((await readJson(file,null))?.token===owner.token)await fs.unlink(file);};
+      claimed=true;
+      return async()=>{try{if((await readJson(file,null))?.token===owner.token)await fs.unlink(file);}finally{await releaseKernel();}};
     }catch(error){
       if(error.code!=='EEXIST')throw error;
       const previous=await readJson(file);
@@ -44,7 +68,8 @@ async function acquireWorkerOwner(){
       if(Date.now()>=deadline)throw new Error('Prior worker remains alive; shared evidence untouched');
       await new Promise(resolve=>setTimeout(resolve,250));
     }
-  }
+   }
+  }finally{if(!claimed)await releaseKernel();}
 }
 async function waitForPriorBot(){
   const deadline=Date.now()+120000;

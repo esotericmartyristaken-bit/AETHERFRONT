@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import crypto from 'node:crypto';
+import net from 'node:net';
 import vm from 'node:vm';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
@@ -33,8 +34,8 @@ function helpers(settings, options = {}) {
   let elapsed = 0;
   const waits = [], probes = [];
   const context = {
-    fs, path, crypto, readJson, noLinks, settings, parent: process.pid,
-    process: { pid: process.pid, kill(pid, signal) {
+    fs, path, crypto, net, readJson: options.readJson ?? readJson, noLinks, settings, parent: process.pid,
+    process: { pid: process.pid, platform: options.platform ?? process.platform, kill(pid, signal) {
       assert.equal(signal, 0, 'Lifecycle helpers may only probe fixture processes');
       probes.push(pid);
       return options.kill ? options.kill(pid, signal) : process.kill(pid, signal);
@@ -46,14 +47,14 @@ function helpers(settings, options = {}) {
       return options.pause ? options.pause(callback, milliseconds) : setImmediate(callback);
     }
   };
-  const functions = vm.runInNewContext(`${helperSource}\n({acquireWorkerOwner,workerShutdownRequested,parentAlive,waitForPriorBot})`, context,
+  const functions = vm.runInNewContext(`${helperSource}\n({acquireWorkerKernelLease,acquireWorkerOwner,workerShutdownRequested,parentAlive,waitForPriorBot})`, context,
     { timeout: 1000, filename: 'worker-lifecycle-helpers.vm' });
   return { ...functions, waits, probes, elapsed: () => elapsed };
 }
 
-async function liveProcess(t) {
+async function liveProcess(t, setup = '') {
   const child = spawn(process.execPath, ['-e',
-    "process.on('message', message => { if (message === 'stop') process.exit(0); }); process.send('ready'); setInterval(() => {}, 1000);"],
+    `(async()=>{${setup}\nprocess.on('message', message => { if (message === 'stop') process.exit(0); }); process.send('ready'); setInterval(() => {}, 1000);})().catch(()=>process.exit(1));`],
   { windowsHide: true, stdio: ['ignore', 'ignore', 'ignore', 'ipc'] });
   const exited = once(child, 'exit');
   const stop = async () => {
@@ -61,7 +62,9 @@ async function liveProcess(t) {
     await exited;
   };
   t.after(stop);
-  const [message] = await once(child, 'message');
+  const [message] = await Promise.race([once(child, 'message'), exited.then(() => {
+    throw new Error('Fixture exited before readiness');
+  })]);
   assert.equal(message, 'ready');
   return { pid: child.pid, stop };
 }
@@ -119,6 +122,88 @@ test('a confirmed dead fixture owner is reclaimed without waiting', async t => {
   const h = helpers(f.settings), release = await h.acquireWorkerOwner();
   assert.equal((await readJson(f.ownerFile)).pid, process.pid);
   assert.equal(h.waits.length, 0);
+  await release();
+});
+
+test('kernel ownership serializes overlapping stale-owner reclamation until the first successor releases', async t => {
+  const f = await fixture(t), prior = await liveProcess(t);
+  await prior.stop();
+  await fs.writeFile(f.ownerFile, JSON.stringify({ pid: prior.pid, token: 'dead' }));
+  let resumeFirst, reachedFirst;
+  const firstReading = new Promise(resolve => { reachedFirst = resolve; });
+  let firstReads = 0;
+  const first = helpers(f.settings, { async readJson(...args) {
+    const value = await readJson(...args);
+    if (++firstReads === 1) {
+      reachedFirst();
+      await new Promise(resolve => { resumeFirst = resolve; });
+    }
+    return value;
+  } });
+  const pendingFirst = first.acquireWorkerOwner();
+  await firstReading;
+  let resumeSecond, reachedSecond, secondReads = 0, secondAcquired = false;
+  const secondWaiting = new Promise(resolve => { reachedSecond = resolve; });
+  const second = helpers(f.settings, {
+    readJson(...args) { secondReads++; return readJson(...args); },
+    pause(callback) { resumeSecond = callback; reachedSecond(); }
+  });
+  const pendingSecond = second.acquireWorkerOwner().then(release => { secondAcquired = true; return release; });
+  await secondWaiting;
+  assert.equal(secondAcquired, false);
+  assert.equal(secondReads, 0);
+  assert.equal((await readJson(f.ownerFile)).token, 'dead');
+  resumeFirst();
+  const releaseFirst = await pendingFirst;
+  t.after(releaseFirst);
+  const owned = await readJson(f.ownerFile);
+  assert.equal(secondAcquired, false);
+  assert.equal(secondReads, 0);
+  assert.notEqual(owned.token, 'dead');
+  await releaseFirst();
+  resumeSecond();
+  const releaseSecond = await pendingSecond;
+  t.after(releaseSecond);
+  assert.equal(secondAcquired, true);
+  assert.notEqual((await readJson(f.ownerFile)).token, owned.token);
+  await releaseSecond();
+});
+
+test('failed metadata acquisition releases the kernel lease without replacing uncertain evidence', async t => {
+  const f = await fixture(t);
+  const previous = JSON.stringify({ pid: 0, token: 'bad' });
+  await fs.writeFile(f.ownerFile, previous);
+  await assert.rejects(helpers(f.settings).acquireWorkerOwner(), /Uncertain worker owner/);
+  const successor = helpers(f.settings), release = await successor.acquireWorkerKernelLease();
+  t.after(release);
+  assert.equal(successor.waits.length, 0);
+  assert.equal(await fs.readFile(f.ownerFile, 'utf8'), previous);
+  await release();
+});
+
+test('fixture process death automatically releases kernel ownership without a metadata cleanup callback', async t => {
+  const f = await fixture(t);
+  const prior = await liveProcess(t, `
+    const {readJson,noLinks}=await import(${JSON.stringify(new URL('../public-status.mjs', import.meta.url).href)});
+    await require('node:vm').runInNewContext(${JSON.stringify(`${helperSource}\nacquireWorkerOwner()`)} , {
+      fs:require('node:fs/promises'),path:require('node:path'),crypto:require('node:crypto'),net:require('node:net'),
+      readJson,noLinks,settings:${JSON.stringify(f.settings)},process,parent:process.ppid,Date,setTimeout
+    });
+  `);
+  const owned = await readJson(f.ownerFile);
+  assert.equal(owned.pid, prior.pid);
+  const blocked = helpers(f.settings);
+  await assert.rejects(blocked.acquireWorkerKernelLease(), /Prior kernel worker owner remains alive/);
+  assert.equal(blocked.elapsed(), 120_000);
+  assert.equal(blocked.waits.length, 480);
+  assert.equal((await readJson(f.ownerFile)).token, owned.token);
+  await prior.stop();
+  assert.deepEqual(await readJson(f.ownerFile), owned);
+  const successor = helpers(f.settings), release = await successor.acquireWorkerOwner();
+  t.after(release);
+  assert.equal(successor.waits.length, 0);
+  assert.equal((await readJson(f.ownerFile)).pid, process.pid);
+  assert.notEqual((await readJson(f.ownerFile)).token, owned.token);
   await release();
 });
 
