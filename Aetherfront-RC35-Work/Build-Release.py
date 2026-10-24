@@ -7,7 +7,7 @@ import argparse, hashlib, json, pathlib, re, shutil, subprocess, zipfile
 
 p = argparse.ArgumentParser()
 p.add_argument('phase', choices=('prepare', 'finalize'))
-p.add_argument('--version', default='kesas-rc36')
+p.add_argument('--version', default='kesas-rc37')
 for name in ('controller', 'inputs', 'public-key', 'output'):
     p.add_argument('--' + name, required=True, type=pathlib.Path)
 a = p.parse_args()
@@ -44,6 +44,12 @@ if a.phase == 'finalize':
     assert refs['repository'] == 'esotericmartyristaken-bit/AETHERFRONT' and refs['tag'] == 'pack-media'
     assert {x['name'] for x in refs['assets']} == set(prepared['mediaAssets'])
     catalog = load(a.output / 'install-catalog.json')
+    validation = load(a.output / 'CATALOG-VALIDATION.json')
+    assert validation['version'] == VERSION and validation['valid'] is True
+    assert validation['catalogSha256'] == digest(a.output / 'install-catalog.json')
+    assert validation['serverManifestSha256'] == digest(native / 'APFPack-template.json')
+    with zipfile.ZipFile(native / 'ClientTemplate.zip') as template:
+        assert template.read('GameData/LunaMultiplayer/Launcher/install-catalog.json') == (a.output / 'install-catalog.json').read_bytes()
     declared = {x['archiveUrl'].rsplit('/', 1)[-1]: x for mode in ('full', 'potato') for x in catalog[mode]['managedPackages']}
     for x in refs['assets']:
         assert (x['sha256'], x['sizeBytes']) == (declared[x['name']]['sha256'], declared[x['name']]['sizeBytes'])
@@ -127,6 +133,7 @@ def update_profile(profile, regular):
     profile['sharedDeepFreeze'] = True
     if 'managedPackages' in profile and profile['managedPackages']:
         profile['managedPackages'] += [package for layer, package in packages if regular or layer == 'shared']
+    managed_roots = {package['stripPrefix'].casefold() for package in profile['managedPackages']}
     existing = {root: entry for entry in profile['clientOnly'] for root in entry['pathRoots']}
     for name, data in files.items():
         if not name.startswith('GameData/') or not name.endswith('.dll'): continue
@@ -140,6 +147,10 @@ def update_profile(profile, regular):
         if layer != 'shared' and not regular: continue
         path = 'GameData/' + root
         assert path not in existing, 'New mod root overlaps existing profile: ' + path
+        # Catalog profiles install these roots as managed packages. Only the
+        # server's allowlist-only manifest needs the corresponding exceptions.
+        # Declaring both ownership kinds makes the shipped validator reject it.
+        if root.casefold() in managed_roots: continue
         profile['clientOnly'].append({'id': 'rc35-' + re.sub('[^a-z0-9-]', '-', root.lower()), 'pathRoots': [path],
             'dlls': [{'path': 'GameData/' + name, 'sha256': sha(data)} for name, data in sorted(members.items()) if name.endswith('.dll')]})
 update_profile(catalog['full'], True); update_profile(catalog['potato'], False); update_profile(pack, True)
