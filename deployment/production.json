@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
-  "version": "kesas-rc36",
-  "releaseTag": "host-kesas-rc36",
-  "assetName": "Aetherfront-Release-kesas-rc36.zip",
-  "sha256": "de9b1ca8b97e811eba231f5a8c28cc90dd58999e80b3b6b12b6f66095a911acf",
-  "sizeBytes": 2746871,
-  "notes": "Personal timelines, survival compatibility, editor and tracking fixes, requested mods; native signing verified. Sandbox beta.",
+  "version": "kesas-rc37",
+  "releaseTag": "host-kesas-rc37",
+  "assetName": "Aetherfront-Release-kesas-rc37.zip",
+  "sha256": "39e75d7b1b20514d2990ea8cae9f125579bf39d920f0515160b02485debe4adc",
+  "sizeBytes": 2236747,
+  "notes": "Fix Regular and Potato catalog ownership collisions during in-game preparation. Existing mod media and gameplay code reused; both profiles validated with the shipped validator on CLR and KSP Mono.",
   "requirements": {
     "contractVersion": 1,
     "capabilities": [
