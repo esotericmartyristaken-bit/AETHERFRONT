@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
-  "version": "kesas-rc37",
-  "releaseTag": "host-kesas-rc37",
-  "assetName": "Aetherfront-Release-kesas-rc37.zip",
-  "sha256": "39e75d7b1b20514d2990ea8cae9f125579bf39d920f0515160b02485debe4adc",
-  "sizeBytes": 2236747,
-  "notes": "Fix Regular and Potato catalog ownership collisions during in-game preparation. Existing mod media and gameplay code reused; both profiles validated with the shipped validator on CLR and KSP Mono.",
+  "version": "kesas-rc38",
+  "releaseTag": "host-kesas-rc38",
+  "assetName": "Aetherfront-Release-kesas-rc38.zip",
+  "sha256": "457ab08e5442df3fe6cf505fb9cc28b8eaf73f5810cc37080cd7bd8c54b45af7",
+  "sizeBytes": 2322449,
+  "notes": "RC38: APF branding and borderless window; UI-safe WASD scrolling; ZTheme/HUDReplacer; Parallax collisions off; monotonic own-warp clock transitions; automatic signed DLC repair before loading with durable recovery and cached unchanged-launch checks. Existing settings, identities and shared mod downloads preserved.",
   "requirements": {
     "contractVersion": 1,
     "capabilities": [
