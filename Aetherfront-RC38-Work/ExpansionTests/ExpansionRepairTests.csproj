@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net472</TargetFramework><OutputType>Exe</OutputType><LangVersion>10</LangVersion></PropertyGroup>
+  <ItemGroup><Compile Include="../Expansion/ExpansionRepair.cs" Link="Production-ExpansionRepair.cs" /><Reference Include="System.IO.Compression"/><Reference Include="System.IO.Compression.FileSystem"/></ItemGroup>
+</Project>

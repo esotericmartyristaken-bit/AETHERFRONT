@@ -76,6 +76,7 @@ namespace Aetherfront.Continuity.Client
             }
             PackCompatibility.Install(harmony);
             EditorInputCompatibility.Install(harmony);
+            ClockTransitionCompatibility.Install(harmony);
             ResourceClockClient.Install(harmony);
             DeepFreezeCoordination.Install(harmony);
             SurvivalTopology.Install(harmony);

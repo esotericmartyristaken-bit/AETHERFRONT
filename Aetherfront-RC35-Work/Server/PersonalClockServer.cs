@@ -30,6 +30,56 @@ namespace Aetherfront.Continuity.Server
 
         public static double ServerSeconds => TimeUtil.TicksToSeconds(LunaNetworkTime.UtcNow.Ticks - TimeContext.StartTime.Ticks);
 
+        // LMP normally skews a running client's physics clock for errors up to
+        // 3.5 seconds. Its 1x offset can therefore trail the server's inferred
+        // personal UT when warp settles (including Escape/menu transitions).
+        // Normalize only a newly created OWN subspace, before broadcasting it.
+        // The durable clock guard and arbitrary existing-subspace changes remain strict.
+        public static string PrepareNewSubspace(ClientStructure client, WarpNewSubspaceMsgData message)
+        {
+            lock (AetherfrontFleetGuard.Gate)
+            {
+                Session session;
+                if (client == null || message == null || message.PlayerCreator != client.PlayerName ||
+                    !Sessions.TryGetValue(client, out session)) return null;
+                if (!global::Server.System.WarpSystem.IsRepresentableTimeDifference(message.ServerTimeDifference) || WarpContext.Subspaces.IsEmpty)
+                    return null; // Retain the native validation/drop behavior.
+                try
+                {
+                    if (!client.Authenticated || client.DisconnectClient || session.Account != AetherfrontServerSystem.GetBoundAccountId(client) ||
+                        !string.Equals(session.Universe, Path.GetFullPath(ServerContext.UniverseDirectory), StringComparison.OrdinalIgnoreCase))
+                        throw new InvalidOperationException("Clock identity or universe changed during transition");
+                    Subspace oldSpace;
+                    if (!WarpContext.Subspaces.TryGetValue(client.Subspace, out oldSpace))
+                        throw new InvalidOperationException("Missing stable personal subspace at warp boundary");
+                    Checkpoint(client);
+                    if (!Sessions.ContainsKey(client)) return "Your personal clock could not be checkpointed safely.";
+                    double now = ServerSeconds;
+                    double minimumOffset = Math.Max(oldSpace.Time, session.LastStableUT - now);
+                    double behind = minimumOffset - message.ServerTimeDifference;
+                    if (behind > 3.5d)
+                    {
+                        LunaLog.Error("Personal subspace rollback refused: subspace=" + client.Subspace + ", seconds=" + behind.ToString("R", System.Globalization.CultureInfo.InvariantCulture));
+                        return "Your proposed mission time is behind your saved clock. Reconnect to restore your saved time.";
+                    }
+                    double canonicalOffset = Math.Max(minimumOffset, message.ServerTimeDifference);
+                    ClockStore.ValidateTime(now + canonicalOffset);
+                    if (behind > 0)
+                    {
+                        message.ServerTimeDifference = canonicalOffset;
+                        LunaLog.Debug("Personal warp boundary advanced by " + behind.ToString("R", System.Globalization.CultureInfo.InvariantCulture) +
+                            " seconds to preserve saved time (subspace " + client.Subspace + ").");
+                    }
+                    return null;
+                }
+                catch (Exception error)
+                {
+                    LunaLog.Error("Personal subspace preparation refused: " + error.GetType().Name + ": " + error.Message);
+                    return "Your proposed mission time could not be validated safely. Reconnect to restore your saved time.";
+                }
+            }
+        }
+
         // The caller retains its existing vessel lock/permission/data validation.
         // Persistence is per authorized vessel, not reserved for the latest global time.
         public static bool MayPersistPosition(ClientStructure client)
@@ -122,6 +172,7 @@ namespace Aetherfront.Continuity.Server
             {
                 Session session;
                 if (client == null || !Sessions.TryGetValue(client, out session)) return;
+                double observed = double.NaN;
                 try
                 {
                     // During warp the protocol uses -1 without a stable server
@@ -129,19 +180,22 @@ namespace Aetherfront.Continuity.Server
                     // never advance it using somebody else's latest subspace.
                     if (client.Subspace == -1)
                     {
+                        observed = session.LastStableUT;
                         session.Store.Checkpoint(session.Account, session.LastStableUT);
                         return;
                     }
                     Subspace space;
                     if (!WarpContext.Subspaces.TryGetValue(client.Subspace, out space))
                         throw new InvalidOperationException("Missing active personal subspace");
-                    double current = ServerSeconds + space.Time;
+                    double current = observed = ServerSeconds + space.Time;
                     session.Store.Checkpoint(session.Account, current);
                     session.LastStableUT = current;
                 }
                 catch (Exception error)
                 {
-                    LunaLog.Error("Personal time checkpoint failed: " + error.GetType().Name + ": " + error.Message);
+                    LunaLog.Error("Personal time checkpoint failed: " + error.GetType().Name + ": " + error.Message +
+                        "; subspace=" + client.Subspace + "; previousUT=" + session.LastStableUT.ToString("R", System.Globalization.CultureInfo.InvariantCulture) +
+                        "; proposedUT=" + observed.ToString("R", System.Globalization.CultureInfo.InvariantCulture));
                     // Do not continue play with an unpersistable survival clock.
                     // Remove first: SendConnectionEnd invokes the patched disconnect hook.
                     Sessions.Remove(client);

@@ -1,0 +1,23 @@
+{
+  "ZTheme": {
+    "version": "1.2.2",
+    "archive": "ZTheme_v122.zip",
+    "url": "https://github.com/zapSNH/ZTheme/releases/download/v1.2.2/ZTheme_v122.zip",
+    "sourceUrl": "https://github.com/zapSNH/ZTheme/tree/v1.2.2",
+    "sha256": "f2cb64f61aff7fc4757aae0c73bb7073edee441ff92393797b654d1e1e82edb9",
+    "license": "GPL-3.0"
+  },
+  "HUDReplacer": {
+    "version": "1.4.2",
+    "archive": "HUDReplacer-1.4.2.zip",
+    "url": "https://github.com/KSPModStewards/HUDReplacer/releases/download/v1.4.2/HUDReplacer.zip",
+    "sourceUrl": "https://github.com/KSPModStewards/HUDReplacer/tree/v1.4.2",
+    "sha256": "5521fa75187bba3e8686710b4a65ccfbecca8b82318b2f8f179efb2e3d680ede",
+    "license": "GPL-3.0"
+  },
+  "profiles": ["regular", "potato"],
+  "existingDependencies": ["ModuleManager", "HarmonyKSP"],
+  "upstreamRecommendation": "ZTheme recommends HUDReplacer >=1.4.3, but the maintained upstream's newest published stable release and CKAN metadata are 1.4.2 as checked 2026-10-30. Pin the published release; live KAL/editor checks remain required.",
+  "optionalZUIIncluded": false,
+  "published": false
+}

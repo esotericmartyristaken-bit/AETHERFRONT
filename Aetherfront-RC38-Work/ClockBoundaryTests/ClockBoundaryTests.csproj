@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><LangVersion>10</LangVersion></PropertyGroup>
+ <ItemGroup>
+  <Reference Include="Server"><HintPath>$(Candidate)/Server.dll</HintPath></Reference>
+  <Reference Include="AetherfrontContinuityServer"><HintPath>$(Candidate)/AetherfrontContinuityServer.dll</HintPath></Reference>
+  <Reference Include="AetherfrontCore"><HintPath>$(Core)/AetherfrontCore.dll</HintPath></Reference>
+  <Reference Include="Lidgren.Core"><HintPath>$(Runtime)/Lidgren.Core.dll</HintPath></Reference>
+  <Reference Include="ApfCore"><HintPath>$(Runtime)/ApfCore.dll</HintPath></Reference>
+  <Reference Include="JsonFx"><HintPath>$(Runtime)/JsonFx.dll</HintPath></Reference>
+  <Reference Include="Newtonsoft.Json"><HintPath>$(Runtime)/Newtonsoft.Json.dll</HintPath></Reference>
+  <Reference Include="LunaConfigNode"><HintPath>$(Runtime)/LunaConfigNode.dll</HintPath></Reference>
+  <Reference Include="Microsoft.VisualStudio.Threading"><HintPath>$(Runtime)/Microsoft.VisualStudio.Threading.dll</HintPath></Reference>
+ </ItemGroup>
+</Project>
