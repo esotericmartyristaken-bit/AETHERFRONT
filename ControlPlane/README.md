@@ -75,6 +75,30 @@ process-owned lease; no replacement broker may launch after shutdown starts.
 
 ## Controller commands
 
+The versioned broker also supports a bounded Sandbox-to-Science configuration
+operation through `deployment/server-mode.json` on the authenticated `deploy`
+branch. It is separate from application bundles, which still cannot overwrite
+Config or Universe. The exact schema is `{schemaVersion:1,id,expectedVersion,
+from:"Sandbox",to:"Science",issuedAt,expiresAt}`; `id` is 32 lowercase hexadecimal
+characters and authorization lasts at most two hours. Unknown fields, commands,
+paths, force flags, unsupported baseline profiles and other mode transitions are
+rejected. The host authenticates the immutable repository commit independently.
+
+It requires the expected completed application, no native activation journal,
+the native publisher lease and fresh exact-process bridge evidence with both
+player and connected counts zero. It privately retains original configuration,
+changes GeneralSettings GameMode and APFCareer mode/profile namespace only, and
+uses the existing graceful stop/SYSTEM-task start. Universe, identities, account
+progression, keys, runtime, mod media and the separate vanilla server are not
+rewritten. The Science profile uses a separate client save namespace. This does
+not reset server-side balances, vessels, research or shared-science history.
+
+Sanitized `gameMode` completion is included in fresh diagnostics. Claimed,
+prepared, applying and blocked operations never auto-replay, including after a
+control restart. Occupied or stale pre-preparation states may wait and recheck.
+An interrupted/failed operation retains its protected receipts and configuration
+originals for review; there is no automatic second stop/start or guessed rollback.
+
 Use the certificate SHA256 from the trusted bootstrap, not an unauthenticated
 error page. `PIN` is a public fingerprint. These commands use controller-local
 GitHub authentication. They never require the host signing keys.

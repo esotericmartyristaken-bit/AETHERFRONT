@@ -25,6 +25,18 @@ const diagnosticDate = value => diagnosticMatch(value,/^\d{4}-\d\d-\d\dT\d\d:\d\
 const diagnosticObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 
 export const RECOVERY_REASONS=[null,'recovery-not-authorized','recovery-result-changed','recovery-helper-active','recovery-activation-ambiguous','recovery-identity-mismatch','recovery-baseline-invalid','recovery-already-consumed','recovery-intent-invalid'];
+export function publicModeStatus(value) {
+  if(value===null||value===undefined)return null;
+  if(!diagnosticObject(value)||value.schemaVersion!==1||!diagnosticMatch(value.id,/^[a-f0-9]{32}$/)||
+    !['claimed','waiting','prepared','applying','healthy','blocked'].includes(value.phase)||
+    ![null,'native-busy','native-journal-present','players-present-or-status-unavailable','mode-activation-needs-review','mode-start-needs-review','mode-preparation-needs-review'].includes(value.reason)||
+    ![0,1].includes(value.restartCount)||!diagnosticDate(value.updatedAt)||
+    ![null,'Science'].includes(value.mode)||
+    !(value.profileId===null||diagnosticMatch(value.profileId,/^[a-zA-Z0-9_.-]{1,120}-science$/))||
+    !(value.saveNamespace===null||diagnosticMatch(value.saveNamespace,/^APF\/[a-zA-Z0-9_.-]{1,120}\/Science$/))||
+    (value.phase==='healthy'&&(value.mode!=='Science'||value.profileId===null||value.saveNamespace===null||value.restartCount!==1)))throw new Error('Invalid mode observation');
+  return {schemaVersion:1,id:value.id,phase:value.phase,reason:value.reason,mode:value.mode,profileId:value.profileId,saveNamespace:value.saveNamespace,restartCount:value.restartCount,updatedAt:value.updatedAt};
+}
 export function publicDiagnostics(report) {
   const bootstrap = report?.bootstrap, watcher = report?.watcher, native = report?.native, recovery = report?.recovery;
   if (!diagnosticObject(report) || ![1,2].includes(report.schemaVersion) || !diagnosticDate(report.observedAt) || !diagnosticDate(report.expiresAt) ||
@@ -70,7 +82,7 @@ export function publicDiagnostics(report) {
   return {schemaVersion:report.schemaVersion,observedAt:report.observedAt,expiresAt:report.expiresAt,controlVersion:report.controlVersion,
     bootstrap:{nativeAgentSha256:bootstrap.nativeAgentSha256,publisherWrapperSha256:bootstrap.publisherWrapperSha256,nativeRecoveryVersion:bootstrap.nativeRecoveryVersion},
     watcher:{stage:watcher.stage,reason:watcher.reason,version:watcher.version,sourceCommit:watcher.sourceCommit,manifestSha256:watcher.manifestSha256,archiveSha256:watcher.archiveSha256},
-    native:publication,recovery:recoveryObservation,...(host?{host}:{} )};
+    native:publication,recovery:recoveryObservation,...(host?{host}:{} ),...(Object.hasOwn(report,'gameMode')?{gameMode:publicModeStatus(report.gameMode)}:{})};
 }
 export function diagnosticsZip(report) {
   const data = Buffer.from(JSON.stringify(publicDiagnostics(report)));

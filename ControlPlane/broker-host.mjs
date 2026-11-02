@@ -7,7 +7,7 @@ import {publishHostReport} from './host-reporter.mjs';
 const settings=await readJson(process.argv[process.argv.indexOf('--settings')+1]);
 const pointer=validatePointer(await readJson(path.join(settings.root,'managed','active.json')));
 const brokerDirectory=path.dirname(import.meta.dirname);
-const agent=new NativeAgent(settings,{codeDirectory:import.meta.dirname});
+const agent=new NativeAgent(settings,{codeDirectory:import.meta.dirname,enableModeOperations:true});
 let stopping=false,health='unknown',reporting=false,lastHealth=0,initialized=false,lastTick=0,localReport=0;
 process.on('message',message=>{if(message?.type==='drain'){stopping=true;agent.stop=true;}});
 process.on('disconnect',()=>{stopping=true;agent.stop=true;});

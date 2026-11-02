@@ -4,10 +4,12 @@ $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
 if($Version -cnotmatch '^control-[1-9][0-9]{0,8}$'){throw 'Invalid control version'}
 $source=[IO.Path]::GetFullPath($SourceRoot)
+if([int]$Version.Substring(8) -ge 14 -and -not (Test-Path -LiteralPath "$source/ControlPlane/server-mode.mjs" -PathType Leaf)){throw 'Mode-capable control release requires its server-mode module'}
 $outputPath=[IO.Path]::GetFullPath($Output)
 if([IO.Path]::GetFileName($outputPath) -cne "Aetherfront-Control-$Version.zip" -or [IO.File]::Exists($outputPath)){throw 'Use a new immutable control archive path'}
 $names=@(
     @('worker','engine','contract','github','public-status','native-agent','broker-host','host-reporter','control-evidence','signed-readback','observation-publisher','supervision') | ForEach-Object {"ControlPlane/$_.mjs"}
+    if(Test-Path -LiteralPath "$source/ControlPlane/server-mode.mjs"){'ControlPlane/server-mode.mjs'}
     'ControlPlane/Invoke-NativePublisher.ps1'
     'ControlPlane/Read-ClientInventory.ps1'
     Get-ChildItem -LiteralPath "$source/APFDiscordBot/src" -File | Where-Object Name -cmatch '^[a-z][a-z0-9-]*\.js$' | ForEach-Object {"APFDiscordBot/src/$($_.Name)"}

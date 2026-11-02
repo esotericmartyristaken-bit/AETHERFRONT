@@ -5,7 +5,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { validatePointer, validateTransaction } from './engine.mjs';
 import { CAPABILITIES, validateHostReport } from './contract.mjs';
-import { atomic, writeJson, readJson, noLinks, fileHash, digest, statusZip, diagnosticsZip, RECOVERY_REASONS, guardDeferralProof } from './public-status.mjs';
+import { atomic, writeJson, readJson, noLinks, fileHash, digest, statusZip, diagnosticsZip, RECOVERY_REASONS, guardDeferralProof, publicModeStatus } from './public-status.mjs';
 import {controlHistory} from './control-evidence.mjs';
 
 const execute=promisify(execFile);
@@ -297,8 +297,10 @@ async function reportOnce(settings,options) {
     components:worker.status?Object.fromEntries(labels.map(label=>[label,hash(worker.status.components[label])?worker.status.components[label]:null])):emptyComponents(),
     runtime:settings.runtime
   });
+  const modeFile=path.join(settings.root,'native-cache','server-mode','active.json');
+  const gameMode=await Promise.resolve().then(async()=>{await noLinks(modeFile);return publicModeStatus(await readJson(modeFile,null));}).catch(()=>null);
   const diagnostics={schemaVersion:2,observedAt:report.observedAt,expiresAt:report.expiresAt,controlVersion:pointer.version,
-    bootstrap,watcher:worker.diagnostic?watcherEvidence(worker):emptyWatcher(),native:native?.publication??null,recovery,host};
+    bootstrap,watcher:worker.diagnostic?watcherEvidence(worker):emptyWatcher(),native:native?.publication??null,recovery,host,...(gameMode?{gameMode}:{})};
   // Independent writes: a failed status path never suppresses diagnostics, or vice versa.
   const config=path.join(settings.nativeRoot,'Server','Config');
   // A coherent protected pair is the independent transport's source. HTTP ZIP

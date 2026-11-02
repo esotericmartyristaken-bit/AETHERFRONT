@@ -10,6 +10,7 @@ import { GitHubChannel, parseStrictJson } from './github.mjs';
 import { CAPABILITIES, REPOSITORY, HASH, exact, requireValue, validateControlDescriptor,
   validateControlManifest } from './contract.mjs';
 import { digest, noLinks, writeJson, fileHash, guardDeferralProof } from './public-status.mjs';
+import { ServerModeAgent } from './server-mode.mjs';
 
 export const MAX_APPLICATION_BYTES = 512 * 1024 * 1024;
 const COMMIT = /^[a-f0-9]{40}$/;
@@ -201,6 +202,7 @@ export class NativeAgent {
     this.stop = false;
     this.nextRecoveryPoll = 0;
     this.capabilitiesPublished = false;
+    this.modeAgent = options.enableModeOperations === true ? new ServerModeAgent(this) : null;
   }
   async initialize() {
     // Installer owns ACLs (Administrators High + SYSTEM). Do not create an
@@ -621,6 +623,7 @@ export class NativeAgent {
         if (!value) return await this.handle(id);
         completed = await this.mirror(value);
       }
+      await this.modeAgent?.tick();
       return completed || {status:'idle'};
     } finally { try { await release?.(); } finally { this.busy = false; } }
   }
