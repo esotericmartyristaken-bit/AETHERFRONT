@@ -11,6 +11,7 @@ import { CAPABILITIES, REPOSITORY, HASH, exact, requireValue, validateControlDes
   validateControlManifest } from './contract.mjs';
 import { digest, noLinks, writeJson, fileHash, guardDeferralProof } from './public-status.mjs';
 import { ServerModeAgent } from './server-mode.mjs';
+import { ScienceMaintenanceAgent } from './science-maintenance.mjs';
 
 export const MAX_APPLICATION_BYTES = 512 * 1024 * 1024;
 const COMMIT = /^[a-f0-9]{40}$/;
@@ -203,6 +204,7 @@ export class NativeAgent {
     this.nextRecoveryPoll = 0;
     this.capabilitiesPublished = false;
     this.modeAgent = options.enableModeOperations === true ? new ServerModeAgent(this) : null;
+    this.scienceMaintenance = options.enableModeOperations === true ? new ScienceMaintenanceAgent(this) : null;
   }
   async initialize() {
     // Installer owns ACLs (Administrators High + SYSTEM). Do not create an
@@ -624,6 +626,7 @@ export class NativeAgent {
         completed = await this.mirror(value);
       }
       await this.modeAgent?.tick();
+      await this.scienceMaintenance?.tick();
       return completed || {status:'idle'};
     } finally { try { await release?.(); } finally { this.busy = false; } }
   }

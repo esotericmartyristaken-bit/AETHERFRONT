@@ -75,6 +75,24 @@ process-owned lease; no replacement broker may launch after shutdown starts.
 
 ## Controller commands
 
+Science housekeeping uses a separate expiring `deployment/science-maintenance.json`
+intent, authenticated at an immutable repository commit. It permits only
+`Cheats=false` and a bounded list of exact Sandbox vessel GUIDs tied to the
+completed Science mode transaction. It accepts no shell commands, paths, force
+flags, progression edits or generic configuration keys. The helper waits for a
+fresh empty-server observation, holds the native publisher lease, stops cleanly,
+rechecks creation provenance after the final save, privately quarantines only
+selected vessel files, verifies all remaining vessel hashes and authoritative
+state bytes, then performs one guarded start. Claimed/applying/blocked operations
+never automatically replay. Private configuration and audit evidence stay on host.
+
+Read-only `scienceHousekeeping` exposes GUIDs and timestamps, never craft contents,
+player names or identities. Normal save times are not launch times. Birth times
+are compared with the protected transition preparation and post-Science creation
+log; possible mixed docking or transition ambiguity is preserved. A log which no
+longer covers the entire Science session cannot authorize automatic cleanup.
+`scienceMaintenance` is an explicit sanitized transaction receipt.
+
 Fresh diagnostics include a read-only aggregate `scienceAudit` of the authoritative
 Server/Aetherfront/state.json snapshot. It checks exact decimal award/source totals,
 global totals, 50% entitlement ceilings, outstanding lazy settlements and balance

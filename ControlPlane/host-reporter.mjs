@@ -10,6 +10,7 @@ import {controlHistory} from './control-evidence.mjs';
 import {modeFailureEvidence} from './server-mode.mjs';
 import {readScienceAudit} from './science-audit.mjs';
 import {readHousekeeping} from './science-housekeeping.mjs';
+import {projectMaintenance} from './science-maintenance.mjs';
 
 const execute=promisify(execFile);
 const labels=['watcher','nativeRunner','publisher','verifier','packService','serverRuntime','serverPlugins','clientBootstrap','clientUpdater','clientHelper','catalog','publicMedia','dependencies','updateTool','certificateTool','bootstrap'];
@@ -311,8 +312,10 @@ async function reportOnce(settings,options) {
   }).catch(()=>null);
   const scienceAudit=await readScienceAudit(settings,{now,noLinks});
   const scienceHousekeeping=await readHousekeeping(settings,{now,noLinks});
+  const maintenancePath=path.join(settings.root,'native-cache','science-maintenance','active.json');
+  const scienceMaintenance=await Promise.resolve().then(async()=>{await noLinks(maintenancePath);return projectMaintenance(await readJson(maintenancePath,null));}).catch(()=>null);
   const diagnostics={schemaVersion:2,observedAt:report.observedAt,expiresAt:report.expiresAt,controlVersion:pointer.version,
-    bootstrap,watcher:worker.diagnostic?watcherEvidence(worker):emptyWatcher(),native:native?.publication??null,recovery,host,...(gameMode?{gameMode}:{}),scienceAudit,scienceHousekeeping};
+    bootstrap,watcher:worker.diagnostic?watcherEvidence(worker):emptyWatcher(),native:native?.publication??null,recovery,host,...(gameMode?{gameMode}:{}),scienceAudit,scienceHousekeeping,scienceMaintenance};
   // Independent writes: a failed status path never suppresses diagnostics, or vice versa.
   const config=path.join(settings.nativeRoot,'Server','Config');
   // A coherent protected pair is the independent transport's source. HTTP ZIP

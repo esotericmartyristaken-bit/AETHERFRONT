@@ -13,7 +13,8 @@ export function classifyVessel(row,{preparedAt,completedAt,createdAfter,anyDocki
   if(row.birthtimeMs>0&&row.birthtimeMs<Date.parse(preparedAt)-1000&&(!anyDocking||row.mtimeMs<Date.parse(preparedAt)))return 'sandbox';
   return 'uncertain';
 }
-async function bounded(file,max,noLinks){await noLinks(file);const h=await fs.open(file,'r');try{const s=await h.stat();need(s.isFile()&&s.nlink===1&&s.size<=max);const b=await h.readFile();need(b.length<=max);return b;}finally{await h.close();}}
+async function bounded(file,max,noLinks,prefix=false){await noLinks(file);const h=await fs.open(file,'r');try{const s=await h.stat();need(s.isFile()&&s.nlink===1&&s.size<=max);if(prefix){const b=Buffer.alloc(Math.min(s.size,4096));const {bytesRead}=await h.read(b,0,b.length,0);return b.subarray(0,bytesRead);}
+const b=await h.readFile();need(b.length<=max);return b;}finally{await h.close();}}
 export async function collectHousekeeping(settings,{noLinks,now=Date.now()}={}){
   need(typeof noLinks==='function');
   const base=path.join(settings.root,'native-cache','server-mode');
@@ -29,7 +30,7 @@ export async function collectHousekeeping(settings,{noLinks,now=Date.now()}={}){
   const matches=[...general.matchAll(/<Cheats>\s*(true|false)\s*<\/Cheats>/g)];need(matches.length===1);
   const log=await bounded(path.join(settings.nativeRoot,'Server','logs','CraftCreationAndRemoval.txt'),8*1024*1024,noLinks);
   const logText=log.toString('utf8'),start=/# Server started at (\d{4}-\d\d-\d\d \d\d:\d\d:\d\d) UTC/.exec(logText);
-  need(start&&Date.parse(start[1].replace(' ','T')+'Z')>=preparation.birthtimeMs-2000);
+  need(start&&Date.parse(start[1].replace(' ','T')+'Z')>=preparation.birthtimeMs-2000&&Date.parse(start[1].replace(' ','T')+'Z')<=Date.parse(receipt.updatedAt));
   const createdAfter=new Set();let dockingEvents=0;
   for(const line of logText.split(/\r?\n/)){
     const m=/^\[(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)\] Vessel ([a-f0-9-]{36}) \(.*\) (created|removed) by player /.exec(line);
@@ -44,7 +45,10 @@ export async function collectHousekeeping(settings,{noLinks,now=Date.now()}={}){
   for(const name of names.sort()){
     need(/^[a-f0-9-]{36}\.txt$/.test(name)&&GUID.test(name.slice(0,-4)));
     const file=path.join(dir,name);await noLinks(file);const s=await fs.stat(file);need(s.isFile()&&s.nlink===1&&s.size<=16*1024*1024);
-    const row={id:name.slice(0,-4),birthtimeMs:s.birthtimeMs,mtimeMs:s.mtimeMs,sizeBytes:s.size};
+    const head=(await bounded(file,16*1024*1024,noLinks,true)).subarray(0,4096).toString('utf8');
+    const vesselType=/^type\s*=\s*([A-Za-z]+)\s*$/m.exec(head)?.[1]??'Unknown';
+    need(['Ship','Plane','Probe','Debris','SpaceObject','EVA','Flag','Base','Lander','Station','Relay','Rover','Unknown'].includes(vesselType));
+    const row={id:name.slice(0,-4),birthtimeMs:s.birthtimeMs,mtimeMs:s.mtimeMs,sizeBytes:s.size,vesselType};
     row.classification=classifyVessel(row,{preparedAt:preparation.birthtime.toISOString(),completedAt:receipt.updatedAt,createdAfter,anyDocking:dockingEvents>0});
     rows.push(row);
   }
@@ -56,7 +60,7 @@ export function projectHousekeeping(v){
   need(v?.schemaVersion===1&&['available','unavailable'].includes(v.status)&&Number.isFinite(Date.parse(v.observedAt)));
   if(v.status==='unavailable')return {schemaVersion:1,status:'unavailable',observedAt:v.observedAt};
   need(typeof v.cheatsEnabled==='boolean'&&/^[a-f0-9]{32}$/.test(v.modeTransactionId)&&HASH.test(v.evidenceSha256)&&HASH.test(v.logSha256)&&Number.isFinite(Date.parse(v.preparedAt))&&Number.isFinite(Date.parse(v.completedAt))&&Number.isSafeInteger(v.dockingEvents)&&v.dockingEvents>=0&&Array.isArray(v.rows)&&v.rows.length<=512);
-  const rows=v.rows.map(r=>{need(GUID.test(r.id)&&['sandbox','science','uncertain'].includes(r.classification)&&[r.birthtimeMs,r.mtimeMs,r.sizeBytes].every(n=>Number.isFinite(n)&&n>=0));return {id:r.id,birthtimeMs:r.birthtimeMs,mtimeMs:r.mtimeMs,sizeBytes:r.sizeBytes,classification:r.classification};});
+  const rows=v.rows.map(r=>{need(GUID.test(r.id)&&['sandbox','science','uncertain'].includes(r.classification)&&[r.birthtimeMs,r.mtimeMs,r.sizeBytes].every(n=>Number.isFinite(n)&&n>=0));return {id:r.id,birthtimeMs:r.birthtimeMs,mtimeMs:r.mtimeMs,sizeBytes:r.sizeBytes,classification:r.classification,...(Object.hasOwn(r,'vesselType')?{vesselType:['Ship','Plane','Probe','Debris','SpaceObject','EVA','Flag','Base','Lander','Station','Relay','Rover','Unknown'].includes(r.vesselType)?r.vesselType:'Unknown'}:{})};});
   return {schemaVersion:1,status:'available',observedAt:v.observedAt,cheatsEnabled:v.cheatsEnabled,modeTransactionId:v.modeTransactionId,preparedAt:v.preparedAt,completedAt:v.completedAt,logSha256:v.logSha256,dockingEvents:v.dockingEvents,rows,evidenceSha256:v.evidenceSha256};
 }
 export async function readHousekeeping(settings,{noLinks,now=Date.now()}={}){
