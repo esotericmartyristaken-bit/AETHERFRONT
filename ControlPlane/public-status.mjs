@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import { validateHostReport } from './contract.mjs';
 import {projectScienceAudit} from './science-audit.mjs';
+import {projectHousekeeping} from './science-housekeeping.mjs';
 
 export const digest = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 export function crc32(bytes) {
@@ -95,7 +96,7 @@ export function publicDiagnostics(report) {
   return {schemaVersion:report.schemaVersion,observedAt:report.observedAt,expiresAt:report.expiresAt,controlVersion:report.controlVersion,
     bootstrap:{nativeAgentSha256:bootstrap.nativeAgentSha256,publisherWrapperSha256:bootstrap.publisherWrapperSha256,nativeRecoveryVersion:bootstrap.nativeRecoveryVersion},
     watcher:{stage:watcher.stage,reason:watcher.reason,version:watcher.version,sourceCommit:watcher.sourceCommit,manifestSha256:watcher.manifestSha256,archiveSha256:watcher.archiveSha256},
-    native:publication,recovery:recoveryObservation,...(host?{host}:{} ),...(Object.hasOwn(report,'gameMode')?{gameMode:publicModeStatus(report.gameMode)}:{}),...(Object.hasOwn(report,'scienceAudit')?{scienceAudit:projectScienceAudit(report.scienceAudit)}:{})};
+    native:publication,recovery:recoveryObservation,...(host?{host}:{} ),...(Object.hasOwn(report,'gameMode')?{gameMode:publicModeStatus(report.gameMode)}:{}),...(Object.hasOwn(report,'scienceAudit')?{scienceAudit:projectScienceAudit(report.scienceAudit)}:{}),...(Object.hasOwn(report,'scienceHousekeeping')?{scienceHousekeeping:projectHousekeeping(report.scienceHousekeeping)}:{})};
 }
 export function diagnosticsZip(report) {
   const data = Buffer.from(JSON.stringify(publicDiagnostics(report)));

@@ -29,7 +29,7 @@ async function bundles() {
         await fs.cp(path.join(repo,relative),path.join(source,relative),{recursive:true});
       }
       await fs.mkdir(path.join(source,'ControlPlane'),{recursive:true});
-      for(const name of ['worker','engine','contract','github','public-status','native-agent','broker-host','host-reporter','control-evidence','signed-readback','observation-publisher','supervision','server-mode','science-audit'])await fs.copyFile(path.join(repo,'ControlPlane',`${name}.mjs`),path.join(source,'ControlPlane',`${name}.mjs`));
+      for(const name of ['worker','engine','contract','github','public-status','native-agent','broker-host','host-reporter','control-evidence','signed-readback','observation-publisher','supervision','server-mode','science-audit','science-housekeeping'])await fs.copyFile(path.join(repo,'ControlPlane',`${name}.mjs`),path.join(source,'ControlPlane',`${name}.mjs`));
       for(const name of ['Read-ClientInventory.ps1','Invoke-NativePublisher.ps1'])await fs.copyFile(path.join(repo,'ControlPlane',name),path.join(source,'ControlPlane',name));
       for(const name of ['package.json','package-lock.json'])await fs.copyFile(path.join(repo,'APFDiscordBot',name),path.join(source,'APFDiscordBot',name));
       if(version==='control-1') {

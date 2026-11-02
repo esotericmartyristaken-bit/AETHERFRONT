@@ -12,6 +12,7 @@ $names=@(
     @('worker','engine','contract','github','public-status','native-agent','broker-host','host-reporter','control-evidence','signed-readback','observation-publisher','supervision') | ForEach-Object {"ControlPlane/$_.mjs"}
     if(Test-Path -LiteralPath "$source/ControlPlane/server-mode.mjs"){'ControlPlane/server-mode.mjs'}
     if(Test-Path -LiteralPath "$source/ControlPlane/science-audit.mjs"){'ControlPlane/science-audit.mjs'}
+    if(Test-Path -LiteralPath "$source/ControlPlane/science-housekeeping.mjs"){'ControlPlane/science-housekeeping.mjs'}
     'ControlPlane/Invoke-NativePublisher.ps1'
     'ControlPlane/Read-ClientInventory.ps1'
     Get-ChildItem -LiteralPath "$source/APFDiscordBot/src" -File | Where-Object Name -cmatch '^[a-z][a-z0-9-]*\.js$' | ForEach-Object {"APFDiscordBot/src/$($_.Name)"}
