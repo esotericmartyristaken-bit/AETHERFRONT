@@ -43,7 +43,7 @@ export function publicDiagnostics(report) {
         ![null,'native-publication-blocked'].includes(native.reason) ||
         !(native.exitCode === null || (Number.isInteger(native.exitCode) && native.exitCode >= -2147483648 && native.exitCode <= 2147483647)) ||
         !Number.isInteger(native.attempt) || native.attempt < 1 || native.attempt > 1000000 ||
-        !(native.recoveryAction === null || (native.recoveryAction === 'retry-preactivation' && native.phase === 'blocked' && DIAGNOSTIC_NATIVE_STAGES.slice(0,5).includes(native.stage)))) throw new Error('Invalid host diagnostics');
+        !(native.recoveryAction === null || (native.recoveryAction === 'retry-preactivation' && native.phase === 'blocked' && [...DIAGNOSTIC_NATIVE_STAGES.slice(0,5),'guard-admission'].includes(native.stage)))) throw new Error('Invalid host diagnostics');
     publication = {requestId:native.requestId,version:native.version,archiveSha256:native.archiveSha256,sourceCommit:native.sourceCommit,
       resultSha256:native.resultSha256,phase:native.phase,stage:native.stage,reason:native.reason,exitCode:native.exitCode,attempt:native.attempt,recoveryAction:native.recoveryAction};
   }
@@ -118,6 +118,52 @@ export async function fileHash(file) {
   await noLinks(file);const hash=crypto.createHash('sha256');const handle=await fs.open(file,'r');
   try {for await(const chunk of handle.createReadStream())hash.update(chunk);return hash.digest('hex');}
   finally {await handle.close().catch(()=>{});}
+}
+
+// The publisher throws this exact static message before Wait-UpdateServerStopped
+// if a player joins during preparation. Unknown guard errors remain ambiguous.
+// Only protected SYSTEM artifacts can establish this proof; no request field,
+// worker mirror or public report authorizes its own recovery.
+export async function guardDeferralProof(settings,result,{verifyFiles=false,isAlive=async pid=>{try{process.kill(pid,0);return true;}catch(error){return error.code!=='ESRCH';}}}={}) {
+  try {
+    if(result?.phase!=='blocked'||result.stage!=='guard-admission'||!diagnosticHash(result.id)||!diagnosticVersion(result.version)||
+       !diagnosticHash(result.sha256)||!Number.isInteger(result.attempt)||result.attempt<1||result.attempt>1000000||
+       typeof result.notes!=='string'||result.notes.length>500||result.nativePid&&await isAlive(result.nativePid))return null;
+    const read=async(file,maximum)=>{
+      await noLinks(file);const handle=await fs.open(file,'r');
+      try {
+        const before=await handle.stat({bigint:true});
+        if(!before.isFile()||before.nlink!==1n||before.size<1n||before.size>BigInt(maximum))throw new Error('Invalid protected guard evidence');
+        const bytes=await handle.readFile(),after=await handle.stat({bigint:true});await noLinks(file);
+        const named=await fs.lstat(file,{bigint:true});
+        const stamp=s=>[s.dev,s.ino,s.size,s.mtimeNs,s.ctimeNs].join(':');
+        if(bytes.length>maximum||stamp(before)!==stamp(after)||stamp(after)!==stamp(named))throw new Error('Protected guard evidence changed');
+        return {value:JSON.parse(bytes.toString('utf8')),sha256:digest(bytes)};
+      }finally{await handle.close();}
+    };
+    const directory=path.join(settings.root,'native-cache','diagnostics',result.id,String(result.attempt));
+    const receipt=await read(path.join(directory,'receipt.json'),4096),error=await read(path.join(directory,'error.json'),32768);
+    if(receipt.value.schemaVersion!==1||receipt.value.requestId!==result.id||receipt.value.attempt!==result.attempt||
+       receipt.value.stage!=='guard-admission'||receipt.value.status!=='failed'||receipt.value.exitCode!==1||
+       !Number.isFinite(Date.parse(receipt.value.completedAt))||
+       error.value.Message!=='Player activity resumed or authoritative status is stale/invalid. Prepared release retained; no services stopped. Requeue when empty.'||
+       typeof error.value.ScriptStackTrace!=='string'||!/(?:^|\r?\n)at Assert-PublisherEmpty, [^\r\n]*Publish-Release\.ps1: line [0-9]+(?:\r?\n|$)/.test(error.value.ScriptStackTrace))return null;
+    for(const relative of ['.update-transaction.json',`Updates/${result.version}`]) {
+      const file=path.join(settings.nativeRoot,relative);await noLinks(file);
+      if(await fs.lstat(file).then(()=>true,e=>{if(e.code==='ENOENT')return false;throw e;}))return null;
+    }
+    const prepared=path.join(settings.nativeRoot,'.github-prepared',result.version);
+    const record=await read(path.join(prepared,'prepared.json'),65536),value=record.value;
+    if(value.schema!==1||value.version!==result.version||value.fingerprint?.releaseZipSha256!==result.sha256||value.fingerprint?.notes!==result.notes||!Array.isArray(value.files))return null;
+    const names=['Published/APFClientUpdate.json',`Published/APFClient-${result.version}.zip`,'KESAS-Client-Bootstrap.zip','KESAS-Client-Bootstrap.zip.sha256',`Aetherfront-Starter-${result.version}.zip`,'install-catalog.json'];
+    if(value.files.length!==names.length||new Set(value.files.map(row=>row.path)).size!==names.length)return null;
+    for(const row of value.files) {
+      if(!names.includes(row.path)||!diagnosticHash(row.sha256)||!Number.isSafeInteger(row.sizeBytes)||row.sizeBytes<1||row.sizeBytes>64*1024*1024)return null;
+      const file=path.join(prepared,...row.path.split('/'));await noLinks(file);const stat=await fs.lstat(file);
+      if(!stat.isFile()||stat.nlink!==1||stat.size!==row.sizeBytes||verifyFiles&&await fileHash(file)!==row.sha256)return null;
+    }
+    return {preparedRecordSha256:record.sha256,proofSha256:digest(Buffer.from([receipt.sha256,error.sha256,record.sha256].join(':')))};
+  }catch{return null;}
 }
 
 // Public ZIPs are deliberately hardlinked to the immutable pack cache. This

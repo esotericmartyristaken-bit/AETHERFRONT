@@ -9,7 +9,7 @@ import { PassThrough } from 'node:stream';
 import { NativeAgent, requestId, validateRequest, validateDeployment, runChild, acquireOwner, runCli,
   MAX_APPLICATION_BYTES } from '../native-agent.mjs';
 import { CAPABILITIES, REQUIRED_CONTROL_FILES, REPOSITORY } from '../contract.mjs';
-import { digest, writeJson } from '../public-status.mjs';
+import { digest, writeJson, guardDeferralProof } from '../public-status.mjs';
 
 const commit = '1'.repeat(40), controlCommit = '2'.repeat(40);
 const bytes = Buffer.from('disposable application archive');
@@ -379,4 +379,70 @@ test('only completed matching 15-minute countdown with fresh known bridge counts
   }
   await writeJson(bridgeFile,{...bridge,updatedAt:new Date().toISOString()});
   assert.equal((await f.tick()).status,'healthy'); assert.equal(f.state.publish,1);
+});
+
+async function guardFixture(t) {
+  const f=await fixture(t,{publishFailure:true});
+  await f.tick();
+  const resultFile=path.join(f.settings.root,'native-cache','results',f.value.id+'.json');
+  const result=JSON.parse(await fs.readFile(resultFile,'utf8'));result.stage='guard-admission';result.exitCode=1;
+  await writeJson(resultFile,result);
+  const directory=path.join(f.settings.root,'native-cache','diagnostics',f.value.id,'1');
+  const receipt={schemaVersion:1,requestId:f.value.id,attempt:1,stage:'guard-admission',status:'failed',exitCode:1,completedAt:new Date().toISOString()};
+  const error={Message:'Player activity resumed or authoritative status is stale/invalid. Prepared release retained; no services stopped. Requeue when empty.',
+    ScriptStackTrace:'at Assert-PublisherEmpty, C:\\protected\\Publish-Release.ps1: line 178\nat <ScriptBlock>, C:\\protected\\Publish-Release.ps1: line 350',privateToken:'never public'};
+  await writeJson(path.join(directory,'receipt.json'),receipt);await writeJson(path.join(directory,'error.json'),error);
+  const prepared=path.join(f.settings.nativeRoot,'.github-prepared',f.value.version);
+  const names=['Published/APFClientUpdate.json',`Published/APFClient-${f.value.version}.zip`,'KESAS-Client-Bootstrap.zip','KESAS-Client-Bootstrap.zip.sha256',`Aetherfront-Starter-${f.value.version}.zip`,'install-catalog.json'];
+  const files=[];for(const name of names){const content=Buffer.from('fixture '+name);await put(path.join(prepared,...name.split('/')),content);files.push({path:name,sizeBytes:content.length,sha256:digest(content)});}
+  const record={schema:1,version:f.value.version,fingerprint:{releaseZipSha256:f.value.sha256,notes:f.value.notes},files};
+  await writeJson(path.join(prepared,'prepared.json'),record);
+  return {...f,result,resultFile,directory,receipt,error,prepared,record};
+}
+test('exact protected empty-server deferral has bounded proof without exposing private exception text',async t=>{
+  const f=await guardFixture(t);const proof=await guardDeferralProof(f.settings,f.result,{verifyFiles:true,isAlive:f.agent.isAlive});
+  assert.match(proof.proofSha256,/^[a-f0-9]{64}$/);assert.match(proof.preparedRecordSha256,/^[a-f0-9]{64}$/);
+  assert.equal(JSON.stringify(proof).includes('never public'),false);
+  for(const change of [{phase:'applying'},{stage:'native-activation'},{attempt:2},{notes:'changed'},{sha256:'f'.repeat(64)},{id:'../escape'},{nativePid:process.pid}])
+    assert.equal(await guardDeferralProof(f.settings,{...f.result,...change},{verifyFiles:true,isAlive:f.agent.isAlive}),null);
+});
+test('unknown/running/wrong-attempt guard receipts cannot authorize a retry',async t=>{
+  const f=await guardFixture(t);
+  for(const change of [{requestId:'f'.repeat(64)},{attempt:2},{status:'running'},{exitCode:0},{stage:'preparation-signing'},{completedAt:'invalid'}]) {
+    await writeJson(path.join(f.directory,'receipt.json'),{...f.receipt,...change});
+    assert.equal(await guardDeferralProof(f.settings,f.result,{isAlive:f.agent.isAlive}),null);
+  }
+  await writeJson(path.join(f.directory,'receipt.json'),f.receipt);
+  for(const change of [{Message:'Unknown guard failure'},{Message:f.error.Message+' secret'},{ScriptStackTrace:'at Stop-Server, C:\\protected\\Stop-Server.ps1: line 1'}]) {
+    await writeJson(path.join(f.directory,'error.json'),{...f.error,...change});
+    assert.equal(await guardDeferralProof(f.settings,f.result,{isAlive:f.agent.isAlive}),null);
+  }
+});
+test('activation evidence and prepared-byte tampering keep guard recovery blocked',async t=>{
+  const f=await guardFixture(t);
+  await writeJson(path.join(f.settings.nativeRoot,'.update-transaction.json'),{phase:'native-activation'});
+  assert.equal(await guardDeferralProof(f.settings,f.result,{isAlive:f.agent.isAlive}),null);
+  await fs.unlink(path.join(f.settings.nativeRoot,'.update-transaction.json'));
+  await fs.mkdir(path.join(f.settings.nativeRoot,'Updates',f.value.version));
+  assert.equal(await guardDeferralProof(f.settings,f.result,{isAlive:f.agent.isAlive}),null);
+  await fs.rmdir(path.join(f.settings.nativeRoot,'Updates',f.value.version));
+  const target=path.join(f.prepared,'install-catalog.json');const data=await fs.readFile(target);data[0]^=1;await fs.writeFile(target,data);
+  assert.equal(await guardDeferralProof(f.settings,f.result,{verifyFiles:true,isAlive:f.agent.isAlive}),null);
+});
+test('reviewed guard recovery retains failed evidence and requires a fresh normal queue and empty bridge',async t=>{
+  const f=await guardFixture(t);const oldBytes=await fs.readFile(f.resultFile);const oldHash=digest(oldBytes);
+  const recovered=await f.agent.authorizeReviewedRetry(f.value.id,oldHash,{remote:{version:f.value.version,archiveSha256:f.value.sha256,sourceCommit:commit,recoveryId:'3'.repeat(64),recoveryCommit:'4'.repeat(40)}});
+  assert.equal(recovered.phase,'recovery-authorized');assert.equal(recovered.attempt,2);
+  assert.equal(f.state.publish,1,'authorization must not launch the publisher');
+  assert.deepEqual(await fs.readFile(path.join(f.settings.root,'native-cache','recoveries',f.value.id,oldHash+'.json')),oldBytes);
+  assert.equal(await f.agent.recoveryAdmitted(recovered),false,'old/missing queue cannot resume a failed attempt');
+  const started=new Date(),state={schemaVersion:1,status:'deploying',phase:'installing',version:f.value.version,notes:f.value.notes,force:false,
+    countdownStartedAt:started.toISOString(),deployAt:new Date(+started+900000).toISOString(),countdownMinutes:15,countdownAnnouncements:[]};
+  await writeJson(path.join(f.settings.botRoot,'state','kesas-update-state.json'),state);
+  const bridgeFile=path.join(f.settings.nativeRoot,'Server','APFDiscordBridge','status.json');
+  await writeJson(bridgeFile,{updatedAt:new Date().toISOString(),playerCount:1,connectedCount:1});
+  assert.equal(await f.agent.recoveryAdmitted(recovered),false,'an occupied server cannot bypass the countdown');
+  await writeJson(bridgeFile,{updatedAt:new Date().toISOString(),playerCount:0,connectedCount:0});
+  assert.equal(await f.agent.recoveryAdmitted(recovered),true,'freshly re-queued empty guard remains available');
+  assert.equal(await fs.stat(path.join(f.prepared,'prepared.json')).then(s=>s.isFile()),true);
 });

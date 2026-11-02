@@ -9,7 +9,7 @@ import { validatePointer } from './engine.mjs';
 import { GitHubChannel, parseStrictJson } from './github.mjs';
 import { CAPABILITIES, REPOSITORY, HASH, exact, requireValue, validateControlDescriptor,
   validateControlManifest } from './contract.mjs';
-import { digest, noLinks, writeJson, fileHash } from './public-status.mjs';
+import { digest, noLinks, writeJson, fileHash, guardDeferralProof } from './public-status.mjs';
 
 export const MAX_APPLICATION_BYTES = 512 * 1024 * 1024;
 const COMMIT = /^[a-f0-9]{40}$/;
@@ -382,6 +382,7 @@ export class NativeAgent {
       const previous=await this.result(id);
       requireValue(previous?.phase==='blocked' && (!previous.nativePid || !await this.isAlive(previous.nativePid)) && await this.idle() && !await this.journalPresent(),'Recovery requires a blocked, exited, lease-idle preactivation attempt');
       let rollback=null;
+      const guard=previous.stage==='guard-admission'?await guardDeferralProof(this.settings,previous,{verifyFiles:true,isAlive:this.isAlive}):null;
       if(options.rollbackEvidenceSha256) {
         requireValue(HASH.test(options.rollbackEvidenceSha256)&&!options.remote,'Rollback review is host-operator only');
         const evidence=path.join(this.cache,'recoveries',id,`rollback-review-${expectedHash}.json`);
@@ -396,7 +397,7 @@ export class NativeAgent {
         }
       }
       if(options.remote) {
-        requireValue(PREACTIVATION_STAGES.has(previous.stage)&&previous.nativePid===null,'Remote recovery cannot replay a publisher that may have started');
+        requireValue(PREACTIVATION_STAGES.has(previous.stage)&&previous.nativePid===null||guard,'Remote recovery cannot replay a publisher that may have started');
         requireValue(previous.version===options.remote.version&&previous.sha256===options.remote.archiveSha256&&previous.sourceCommit===options.remote.sourceCommit,'Remote recovery immutable identity mismatch');
       }
       const request=validateRequest(Object.fromEntries(REQUEST_FIELDS.map(key=>[key,previous[key]])),id);
@@ -404,7 +405,7 @@ export class NativeAgent {
       const archive=path.join(this.cache,'applications',`${id}.zip`);
       if(options.remote)await this.copyApplication(request);
       requireValue(await fileHash(archive)===request.sha256,'Protected archive changed');
-      for(const relative of [`Updates/${request.version}`,...(rollback?[]:[`.github-prepared/${request.version}`])]) {
+      for(const relative of [`Updates/${request.version}`,...(rollback||guard?[]:[`.github-prepared/${request.version}`])]) {
         const target=path.join(this.settings.nativeRoot,relative);await noLinks(target);
         requireValue(!await fs.stat(target).then(()=>true,error=>{if(error.code==='ENOENT')return false;throw error;}),'Prepared or activated version requires separate recovery review');
       }
@@ -414,12 +415,13 @@ export class NativeAgent {
       if(rollback)requireValue(rollback.activeVersion===feed.version&&await fileHash(path.join(this.settings.nativeRoot,'.github-prepared',request.version,'prepared.json'))===rollback.preparedRecordSha256,'Reviewed rollback baseline or prepared release changed');
       await this.health();
       requireValue(await this.idle() && !await this.journalPresent(),'Native state changed during recovery review');
+      if(guard)requireValue((await guardDeferralProof(this.settings,previous,{verifyFiles:true,isAlive:this.isAlive}))?.proofSha256===guard.proofSha256,'Protected guard proof changed during recovery review');
       const directory=path.join(this.cache,'recoveries',id);await noLinks(directory);await fs.mkdir(directory,{recursive:true});
       const history=path.join(directory,`${expectedHash}.json`);
       try {const handle=await fs.open(history,'wx');try{await handle.writeFile(JSON.stringify(previous));await handle.sync();}finally{await handle.close();}}
       catch(error){if(error.code!=='EEXIST')throw error;throw new Error('Recovery authorization already consumed; preserve history');}
       const authorization={schemaVersion:1,action:rollback?'host-reviewed-rollback':options.remote?'github-reviewed-preactivation':'host-reviewed-preactivation',priorResultSha256:expectedHash,authorizedAt:new Date().toISOString(),activeVersion:feed.version,
-        ...(options.remote?{recoveryId:options.remote.recoveryId,recoveryCommit:options.remote.recoveryCommit}:{}),...(rollback?{rollbackEvidenceSha256:options.rollbackEvidenceSha256,
+        ...(options.remote?{recoveryId:options.remote.recoveryId,recoveryCommit:options.remote.recoveryCommit}:{}),...(guard?{guardProofSha256:guard.proofSha256,preparedRecordSha256:guard.preparedRecordSha256}:{}),...(rollback?{rollbackEvidenceSha256:options.rollbackEvidenceSha256,
           ...(rollback.publisherRepairSha256?{publisherRepairSha256:rollback.publisherRepairSha256}:{minimumControlVersion:rollback.requiredControlVersion})}:{} )};
       await writeJson(path.join(directory,`${expectedHash}.authorization.json`),authorization);
       if(rollback) {

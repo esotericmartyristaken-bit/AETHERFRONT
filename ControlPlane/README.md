@@ -1,5 +1,21 @@
 # Host control contract 1: managed broker
 
+## Empty-server guard deferral
+
+A player can join while an early-empty deployment is preparing signed artifacts.
+The final guard correctly refuses to stop services in that case. Starting with
+control-13, independent reporting can offer the existing reviewed preactivation
+recovery for this specific case. It requires the protected matching failed
+receipt, the exact static Assert-PublisherEmpty exception/stack, an exited helper,
+no activation journal or published target version, and the matching prepared
+inventory/fingerprint. Unknown guard errors stay blocked.
+
+Recovery reauthenticates the immutable repository intent, verifies every prepared
+file, rechecks native idleness and health, preserves the failed result and all
+journals, and consumes a fresh recovery intent. It never runs the publisher
+directly: a new normal 15-minute/early-empty queue is still required. This adds no
+force flag, automatic blind retry, host credential exposure or journal clearing.
+
 Source pushes are not deployments. The fixed public repository
 `esotericmartyristaken-bit/AETHERFRONT` has two separate monotonic intents on
 `deploy`: `deployment/control-plane.json` and `deployment/production.json`.

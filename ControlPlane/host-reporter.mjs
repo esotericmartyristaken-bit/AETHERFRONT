@@ -5,7 +5,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { validatePointer, validateTransaction } from './engine.mjs';
 import { CAPABILITIES, validateHostReport } from './contract.mjs';
-import { atomic, writeJson, readJson, noLinks, fileHash, digest, statusZip, diagnosticsZip, RECOVERY_REASONS } from './public-status.mjs';
+import { atomic, writeJson, readJson, noLinks, fileHash, digest, statusZip, diagnosticsZip, RECOVERY_REASONS, guardDeferralProof } from './public-status.mjs';
 import {controlHistory} from './control-evidence.mjs';
 
 const execute=promisify(execFile);
@@ -151,7 +151,7 @@ async function nativeEvidence(settings,current) {
   return {active,currentResult,currentVersion:current,currentCompleted,lastSuccess,publication:active?{
     requestId:active.id,version:active.version,archiveSha256:active.sha256,sourceCommit:active.sourceCommit,resultSha256:active.resultSha256,
     phase:active.phase,stage:active.stage,reason:active.failure??null,exitCode:active.exitCode??null,attempt:active.attempt,
-    recoveryAction:active.phase==='blocked'&&nativeStages.slice(0,5).includes(active.stage)&&active.nativePid===null?'retry-preactivation':null
+    recoveryAction:active.phase==='blocked'&&(nativeStages.slice(0,5).includes(active.stage)&&active.nativePid===null||await guardDeferralProof(settings,active))?'retry-preactivation':null
   }:null};
 }
 function workerEvidence(pointer,[status,diagnostic],now) {
