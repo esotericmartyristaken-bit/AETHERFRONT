@@ -8,6 +8,7 @@ import { CAPABILITIES, validateHostReport } from './contract.mjs';
 import { atomic, writeJson, readJson, noLinks, fileHash, digest, statusZip, diagnosticsZip, RECOVERY_REASONS, guardDeferralProof, publicModeStatus } from './public-status.mjs';
 import {controlHistory} from './control-evidence.mjs';
 import {modeFailureEvidence} from './server-mode.mjs';
+import {readScienceAudit} from './science-audit.mjs';
 
 const execute=promisify(execFile);
 const labels=['watcher','nativeRunner','publisher','verifier','packService','serverRuntime','serverPlugins','clientBootstrap','clientUpdater','clientHelper','catalog','publicMedia','dependencies','updateTool','certificateTool','bootstrap'];
@@ -307,8 +308,9 @@ async function reportOnce(settings,options) {
     });
     return publicModeStatus(value?{...value,...(evidence?{failureEvidence:evidence}:{}),...(evidenceProblem?{evidenceProblem}:{})}:null);
   }).catch(()=>null);
+  const scienceAudit=await readScienceAudit(settings,{now,noLinks});
   const diagnostics={schemaVersion:2,observedAt:report.observedAt,expiresAt:report.expiresAt,controlVersion:pointer.version,
-    bootstrap,watcher:worker.diagnostic?watcherEvidence(worker):emptyWatcher(),native:native?.publication??null,recovery,host,...(gameMode?{gameMode}:{})};
+    bootstrap,watcher:worker.diagnostic?watcherEvidence(worker):emptyWatcher(),native:native?.publication??null,recovery,host,...(gameMode?{gameMode}:{}),scienceAudit};
   // Independent writes: a failed status path never suppresses diagnostics, or vice versa.
   const config=path.join(settings.nativeRoot,'Server','Config');
   // A coherent protected pair is the independent transport's source. HTTP ZIP

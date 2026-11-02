@@ -75,6 +75,16 @@ process-owned lease; no replacement broker may launch after shutdown starts.
 
 ## Controller commands
 
+Fresh diagnostics include a read-only aggregate `scienceAudit` of the authoritative
+Server/Aetherfront/state.json snapshot. It checks exact decimal award/source totals,
+global totals, 50% entitlement ceilings, outstanding lazy settlements and balance
+sanity. The small result is cached for 60 seconds; a failed read is explicitly
+unavailable. It never settles an account, grants science, rewrites state, restarts
+the game, or exports player names/IDs, individual wallets, subjects or raw saves.
+Outstanding credit is valid for lazy settlement and is not reported as lost credit.
+Ledger consistency cannot prove every client displayed the credit or that physical
+experiments were legitimate. Empty award history is labeled, never a gameplay pass.
+
 The versioned broker also supports a bounded Sandbox-to-Science configuration
 operation through `deployment/server-mode.json` on the authenticated `deploy`
 branch. It is separate from application bundles, which still cannot overwrite
