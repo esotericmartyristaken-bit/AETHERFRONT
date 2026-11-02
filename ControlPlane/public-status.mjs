@@ -35,7 +35,17 @@ export function publicModeStatus(value) {
     !(value.profileId===null||diagnosticMatch(value.profileId,/^[a-zA-Z0-9_.-]{1,120}-science$/))||
     !(value.saveNamespace===null||diagnosticMatch(value.saveNamespace,/^APF\/[a-zA-Z0-9_.-]{1,120}\/Science$/))||
     (value.phase==='healthy'&&(value.mode!=='Science'||value.profileId===null||value.saveNamespace===null||value.restartCount!==1)))throw new Error('Invalid mode observation');
-  return {schemaVersion:1,id:value.id,phase:value.phase,reason:value.reason,mode:value.mode,profileId:value.profileId,saveNamespace:value.saveNamespace,restartCount:value.restartCount,updatedAt:value.updatedAt};
+  let evidence;
+  if(Object.hasOwn(value,'failureEvidence')){
+    const e=value.failureEvidence;
+    if(!diagnosticObject(e)||!diagnosticHash(e.receiptSha256)||![0,1,2].includes(e.backupCount)||
+      !['profile-baseline-invalid','profile-policy-field-invalid','bridge-file-busy','application-version-changed','players-resumed','runtime-property-missing','unclassified-preparation-error'].includes(e.errorCode)||
+      !['Sandbox','Science','Career','unknown'].includes(e.currentMode)||!['Sandbox','Science','Career','unknown'].includes(e.profileMode)||
+      !(e.progressionSchemaVersion===null||(Number.isSafeInteger(e.progressionSchemaVersion)&&e.progressionSchemaVersion>=0))||
+      ![null,true,false].includes(e.resetOnPackChange))throw new Error('Invalid mode failure evidence');
+    evidence={receiptSha256:e.receiptSha256,backupCount:e.backupCount,errorCode:e.errorCode,currentMode:e.currentMode,profileMode:e.profileMode,progressionSchemaVersion:e.progressionSchemaVersion,resetOnPackChange:e.resetOnPackChange};
+  }
+  return {schemaVersion:1,id:value.id,phase:value.phase,reason:value.reason,mode:value.mode,profileId:value.profileId,saveNamespace:value.saveNamespace,restartCount:value.restartCount,updatedAt:value.updatedAt,...(evidence?{failureEvidence:evidence}:{})};
 }
 export function publicDiagnostics(report) {
   const bootstrap = report?.bootstrap, watcher = report?.watcher, native = report?.native, recovery = report?.recovery;

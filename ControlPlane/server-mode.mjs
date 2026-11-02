@@ -4,22 +4,24 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {REPOSITORY,exact,requireValue} from './contract.mjs';
 import {parseStrictJson} from './github.mjs';
-import {noLinks,readJson,writeJson,digest} from './public-status.mjs';
+import {noLinks,readJson,writeJson,digest,fileHash} from './public-status.mjs';
 
 const CHANNEL='deployment/server-mode.json';
 export function validateModeIntent(value,now=Date.now()) {
-  exact(value,['schemaVersion','id','expectedVersion','from','to','issuedAt','expiresAt'],'server mode intent');
+  exact(value,['schemaVersion','id','expectedVersion','from','to','issuedAt','expiresAt',...(Object.hasOwn(value,'retryOf')?['retryOf']:[])],'server mode intent');
   const start=Date.parse(value.issuedAt),end=Date.parse(value.expiresAt);
   requireValue(value.schemaVersion===1&&/^[a-f0-9]{32}$/.test(value.id)&&/^kesas-rc[1-9][0-9]{0,14}$/.test(value.expectedVersion)&&
     value.from==='Sandbox'&&value.to==='Science'&&Number.isFinite(start)&&Number.isFinite(end)&&
     new Date(start).toISOString()===value.issuedAt&&new Date(end).toISOString()===value.expiresAt&&
     start<=now+5000&&end>now&&end-start>0&&end-start<=2*60*60*1000,'Invalid or expired server mode intent');
+  if(Object.hasOwn(value,'retryOf')){exact(value.retryOf,['id','receiptSha256'],'mode retry proof');requireValue(/^[a-f0-9]{32}$/.test(value.retryOf.id)&&value.retryOf.id!==value.id&&/^[a-f0-9]{64}$/.test(value.retryOf.receiptSha256),'Invalid mode retry identity');}
   return value;
 }
 export function modeProfile(profile) {
   requireValue(profile&&profile.mode==='Sandbox'&&/^[a-zA-Z0-9_.-]{1,120}-sandbox$/.test(profile.profileId)&&
     /^APF\/[a-zA-Z0-9_.-]{1,120}\/Sandbox$/.test(profile.saveNamespace)&&
-    profile.progressionSchemaVersion===1&&profile.resetOnPackChange===false,'Unreviewed Sandbox profile');
+    (!Object.hasOwn(profile,'progressionSchemaVersion')||(Number.isSafeInteger(profile.progressionSchemaVersion)&&profile.progressionSchemaVersion>0))&&
+    (!Object.hasOwn(profile,'resetOnPackChange')||typeof profile.resetOnPackChange==='boolean'),'Unreviewed Sandbox profile');
   return {...profile,mode:'Science',profileId:profile.profileId.slice(0,-8)+'-science',saveNamespace:profile.saveNamespace.slice(0,-7)+'Science'};
 }
 
@@ -40,7 +42,7 @@ $request=(Read-UpdateText (Join-Path $job 'request.json') 16384)|ConvertFrom-Jso
 $receipt=Join-Path $job 'receipt.json'
 $state=Join-Path $env:APF_MODE_CONTROL_ROOT 'native-cache/server-mode/active.json'
 $lock=$null;$changed=$false;$stopped=$false;$restartCount=0
-function Record([string]$Phase,[string]$Reason,$Profile=$null) {
+function Record([string]$Phase,$Reason,$Profile=$null) {
   $value=[ordered]@{schemaVersion=1;id=$request.id;phase=$Phase;reason=$Reason;mode=$null;profileId=$null;saveNamespace=$null;restartCount=$restartCount;updatedAt=[DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ss.fffZ')}
   if($Profile){$value.mode=$Profile.mode;$value.profileId=$Profile.profileId;$value.saveNamespace=$Profile.saveNamespace}
   Write-UpdateAtomic $receipt ($value|ConvertTo-Json -Compress)
@@ -50,10 +52,24 @@ function Record([string]$Phase,[string]$Reason,$Profile=$null) {
 function Empty($cfg) {
   $bridgePath=Join-Path $root 'Server/APFDiscordBridge/status.json'
   Assert-UpdatePath $bridgePath|Out-Null
-  $bridge=(Read-UpdateText $bridgePath 4194304)|ConvertFrom-Json
+  $bridge=Read-ModeBridge $bridgePath
+  if($null -eq $bridge){return $false}
   $age=([DateTimeOffset]::UtcNow-([DateTimeOffset]$bridge.updatedAt).ToUniversalTime()).TotalSeconds
   $ids=@(Get-UpdateServiceProcesses $root $cfg|Where-Object Path -ieq ([IO.Path]::GetFullPath("$root/Server/Server.exe"))|ForEach-Object Id)
   return ($age -ge -2 -and $age -le 10 -and $ids -contains $bridge.serverPid -and [string]$bridge.playerCount -ceq '0' -and [string]$bridge.connectedCount -ceq '0')
+}
+function Read-ModeBridge([string]$Path) {
+  for($i=0;$i -lt 20;$i++){
+    $stream=$null;$reader=$null
+    try{
+      $stream=[IO.FileStream]::new($Path,[IO.FileMode]::Open,[IO.FileAccess]::Read,([IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete))
+      if($stream.Length -gt 4194304){return $null}
+      $reader=[IO.StreamReader]::new($stream)
+      return ($reader.ReadToEnd()|ConvertFrom-Json)
+    }catch{if($i -lt 19){Start-Sleep -Milliseconds 100}}
+    finally{if($reader){$reader.Dispose()}elseif($stream){$stream.Dispose()}}
+  }
+  return $null
 }
 try {
   try{$lock=[IO.FileStream]::new((Join-Path $root '.publish.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)}
@@ -72,7 +88,8 @@ try {
   $modeNode=$general.SelectNodes('//GameMode')
   if($modeNode.Count -ne 1 -or $modeNode[0].InnerText -cne 'Sandbox' -or $profile.mode -cne 'Sandbox' -or
     $profile.profileId -cnotmatch '^[a-zA-Z0-9_.-]{1,120}-sandbox$' -or $profile.saveNamespace -cnotmatch '^APF/[a-zA-Z0-9_.-]{1,120}/Sandbox$' -or
-    $profile.progressionSchemaVersion -ne 1 -or $profile.resetOnPackChange -ne $false){throw 'Unreviewed mode/profile baseline'}
+    ($profile.PSObject.Properties['progressionSchemaVersion'] -and [int]$profile.progressionSchemaVersion -le 0) -or
+    ($profile.PSObject.Properties['resetOnPackChange'] -and $profile.resetOnPackChange -isnot [bool])){throw 'Unreviewed mode/profile baseline'}
   if(-not (Empty $cfg)){Record 'waiting' 'players-present-or-status-unavailable'|ConvertTo-Json -Compress;exit 0}
   $profile.mode='Science'
   $profile.profileId=$profile.profileId.Substring(0,$profile.profileId.Length-8)+'-science'
@@ -101,7 +118,8 @@ try {
   $restartCount=1
   $until=[DateTime]::UtcNow.AddSeconds(60)
   do {
-    $bridge=(Read-UpdateText (Join-Path $root 'Server/APFDiscordBridge/status.json') 4194304)|ConvertFrom-Json
+    $bridge=Read-ModeBridge (Join-Path $root 'Server/APFDiscordBridge/status.json')
+    if($null -eq $bridge){if([DateTime]::UtcNow -gt $until){throw 'Fresh game bridge did not return'};Start-Sleep -Milliseconds 500;continue}
     $age=([DateTimeOffset]::UtcNow-([DateTimeOffset]$bridge.updatedAt).ToUniversalTime()).TotalSeconds
     $ids=@(Get-UpdateServiceProcesses $root $cfg|Where-Object Path -ieq ([IO.Path]::GetFullPath("$root/Server/Server.exe"))|ForEach-Object Id)
     if($age -ge -2 -and $age -le 10 -and $ids -contains $bridge.serverPid){break}
@@ -137,7 +155,11 @@ export class ServerModeAgent {
     // call, even after the original one-hour authorization expires.
     if(active&&active.id===candidate.id&&active.phase!=='waiting')return;
     const intent=validateModeIntent(candidate,now);
-    requireValue(!active||active.id===intent.id||active.phase==='healthy','Unfinished mode transaction requires review');
+    if(active&&active.id!==intent.id&&active.phase!=='healthy'){
+      const proof=await modeFailureEvidence(agent.settings,active);
+      requireValue(active.phase==='blocked'&&intent.retryOf?.id===active.id&&proof?.backupCount===0&&
+        intent.retryOf.receiptSha256===proof.receiptSha256,'Unfinished mode transaction requires reviewed pre-preparation proof');
+    }else requireValue(!intent.retryOf,'Mode retry requires a matching blocked operation');
     const ref=parseStrictJson((await agent.channel.bytes(`https://api.github.com/repos/${REPOSITORY}/git/ref/heads/deploy`,16384)).toString('utf8'));
     const commit=ref.object?.sha;
     requireValue(ref.ref==='refs/heads/deploy'&&ref.object?.type==='commit'&&/^[a-f0-9]{40}$/.test(commit),'Invalid mode intent reference');
@@ -157,4 +179,31 @@ export class ServerModeAgent {
     await agent.run(agent.settings.powershell,['-NoProfile','-NonInteractive','-EncodedCommand',Buffer.from(MODE_SCRIPT,'utf16le').toString('base64')],
       {env:{...process.env,APF_MODE_NATIVE_ROOT:agent.settings.nativeRoot,APF_MODE_CODE_ROOT:path.dirname(agent.code),APF_MODE_CONTROL_ROOT:agent.root,APF_MODE_JOB:job},captureOutput:false});
   }
+}
+
+// Read-only bounded projection. Never expose raw errors, settings or paths.
+export async function modeFailureEvidence(settings,active){
+  if(!active||active.phase!=='blocked'||!/^[a-f0-9]{32}$/.test(active.id))return null;
+  const job=path.join(settings.root,'native-cache','server-mode',active.id);
+  const receipt=path.join(job,'receipt.json');await noLinks(receipt);
+  const row=await readJson(receipt,null);
+  requireValue(row?.id===active.id&&row.phase==='blocked','Mode receipt mismatch');
+  let backupCount=0;
+  for(const name of ['GeneralSettings.before.xml','APFCareer.before.json']){
+    const file=path.join(job,name);await noLinks(file);if(await fs.stat(file).catch(e=>{if(e.code==='ENOENT')return null;throw e;}))backupCount++;
+  }
+  const error=path.join(job,'private-error.txt');await noLinks(error);
+  const stat=await fs.stat(error);requireValue(stat.size<=32768,'Mode error exceeds bound');
+  const text=await fs.readFile(error,'utf8');
+  const errorCode=/Unreviewed mode\/profile baseline/.test(text)?'profile-baseline-invalid':/progressionSchemaVersion|resetOnPackChange/.test(text)?'profile-policy-field-invalid':/being used by another process|sharing violation/i.test(text)?'bridge-file-busy':/Application version changed/.test(text)?'application-version-changed':/Player activity resumed/.test(text)?'players-resumed':/property.*cannot be found/i.test(text)?'runtime-property-missing':'unclassified-preparation-error';
+  const config=path.join(settings.nativeRoot,'Server','Config');
+  const careerPath=path.join(config,'APFCareer.json'),generalPath=path.join(config,'GeneralSettings.xml');
+  await noLinks(careerPath);await noLinks(generalPath);
+  requireValue((await fs.stat(careerPath)).size<=1048576&&(await fs.stat(generalPath)).size<=1048576,'Mode configuration exceeds bound');
+  const profile=await readJson(careerPath),general=await fs.readFile(generalPath,'utf8');
+  const result={receiptSha256:await fileHash(receipt),backupCount,errorCode,currentMode:/<GameMode>\s*(Sandbox|Science|Career)\s*<\/GameMode>/.exec(general)?.[1]??'unknown',
+    profileMode:['Sandbox','Science','Career'].includes(profile.mode)?profile.mode:'unknown',
+    progressionSchemaVersion:Number.isSafeInteger(profile.progressionSchemaVersion)?profile.progressionSchemaVersion:null,
+    resetOnPackChange:typeof profile.resetOnPackChange==='boolean'?profile.resetOnPackChange:null};
+  return result;
 }

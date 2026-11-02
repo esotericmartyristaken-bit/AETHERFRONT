@@ -7,6 +7,7 @@ import { validatePointer, validateTransaction } from './engine.mjs';
 import { CAPABILITIES, validateHostReport } from './contract.mjs';
 import { atomic, writeJson, readJson, noLinks, fileHash, digest, statusZip, diagnosticsZip, RECOVERY_REASONS, guardDeferralProof, publicModeStatus } from './public-status.mjs';
 import {controlHistory} from './control-evidence.mjs';
+import {modeFailureEvidence} from './server-mode.mjs';
 
 const execute=promisify(execFile);
 const labels=['watcher','nativeRunner','publisher','verifier','packService','serverRuntime','serverPlugins','clientBootstrap','clientUpdater','clientHelper','catalog','publicMedia','dependencies','updateTool','certificateTool','bootstrap'];
@@ -298,7 +299,11 @@ async function reportOnce(settings,options) {
     runtime:settings.runtime
   });
   const modeFile=path.join(settings.root,'native-cache','server-mode','active.json');
-  const gameMode=await Promise.resolve().then(async()=>{await noLinks(modeFile);return publicModeStatus(await readJson(modeFile,null));}).catch(()=>null);
+  const gameMode=await Promise.resolve().then(async()=>{
+    await noLinks(modeFile);const value=await readJson(modeFile,null);
+    const evidence=await modeFailureEvidence(settings,value).catch(()=>null);
+    return publicModeStatus(value?{...value,...(evidence?{failureEvidence:evidence}:{})}:null);
+  }).catch(()=>null);
   const diagnostics={schemaVersion:2,observedAt:report.observedAt,expiresAt:report.expiresAt,controlVersion:pointer.version,
     bootstrap,watcher:worker.diagnostic?watcherEvidence(worker):emptyWatcher(),native:native?.publication??null,recovery,host,...(gameMode?{gameMode}:{})};
   // Independent writes: a failed status path never suppresses diagnostics, or vice versa.

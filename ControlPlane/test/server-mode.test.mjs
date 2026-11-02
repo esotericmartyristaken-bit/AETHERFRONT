@@ -5,7 +5,7 @@ import path from 'node:path';
 import os from 'node:os';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
-import {validateModeIntent,modeProfile,ServerModeAgent,MODE_SCRIPT} from '../server-mode.mjs';
+import {validateModeIntent,modeProfile,ServerModeAgent,MODE_SCRIPT,modeFailureEvidence} from '../server-mode.mjs';
 import {publicModeStatus,writeJson,readJson} from '../public-status.mjs';
 const execute=promisify(execFile);
 const intent=()=>({schemaVersion:1,id:'a'.repeat(32),expectedVersion:'kesas-rc39',from:'Sandbox',to:'Science',issuedAt:new Date(Date.now()-1000).toISOString(),expiresAt:new Date(Date.now()+3600000).toISOString()});
@@ -19,7 +19,8 @@ test('mode-specific save namespace changes while all other profile policy surviv
   const before=profile(),after=modeProfile(before);
   assert.equal(after.profileId,'kesas-fixture-science');assert.equal(after.saveNamespace,'APF/kesas-fixture/Science');
   assert.deepEqual({...after,mode:before.mode,profileId:before.profileId,saveNamespace:before.saveNamespace},before);
-  for(const patch of [{mode:'Career'},{profileId:'other'},{saveNamespace:'../Universe'},{resetOnPackChange:true},{progressionSchemaVersion:2}])assert.throws(()=>modeProfile({...before,...patch}));
+  for(const patch of [{mode:'Career'},{profileId:'other'},{saveNamespace:'../Universe'},{resetOnPackChange:'false'},{progressionSchemaVersion:0}])assert.throws(()=>modeProfile({...before,...patch}));
+  assert.equal(modeProfile({...before,progressionSchemaVersion:4}).progressionSchemaVersion,4);
 });
 test('public mode observation projects no private data and cannot assert incomplete success',()=>{
   const row={schemaVersion:1,id:'a'.repeat(32),phase:'healthy',reason:null,mode:'Science',profileId:'kesas-fixture-science',saveNamespace:'APF/kesas-fixture/Science',restartCount:1,updatedAt:new Date().toISOString()};
@@ -89,6 +90,7 @@ async function psFixture(overrides={}){
 }
 test('real PowerShell configuration transaction preserves unrelated settings and universe; one stop/start',async()=>{
   const f=await psFixture();assert.equal(f.exit,0);assert.equal(f.result?.phase,'healthy');assert.equal(f.result?.restartCount,1);
+  assert.equal(publicModeStatus(f.result).phase,'healthy');assert.equal(f.result.reason,null);
   assert.equal(await f.read('Server/Config/GeneralSettings.xml'),f.general.replace('<GameMode>Sandbox</GameMode>','<GameMode>Science</GameMode>'));
   assert.deepEqual(JSON.parse(await f.read('Server/Config/APFCareer.json')),modeProfile(profile()));
   assert.equal(await f.read('Server/Universe/sentinel'),'existing universe');
@@ -105,4 +107,30 @@ test('failed stop never edits config; failed start retains blocked recovery and 
   let f=await psFixture({fault:'stop'});assert.equal(f.result?.phase,'blocked');assert.equal(await f.read('Server/Config/GeneralSettings.xml'),f.general);assert.equal(await f.exists('started.txt'),false);
   f=await psFixture({fault:'start'});assert.equal(f.result?.phase,'blocked');assert.equal(f.result?.reason,'mode-activation-needs-review');assert.equal(await f.exists('started.txt'),true);
   assert.equal(await fs.readFile(path.join(f.job,'GeneralSettings.before.xml'),'utf8'),f.general);
+});
+test('mode operation preserves a newer authoritative progression schema and exposes only safe failure proof',async()=>{
+  let f=await psFixture({profile:{progressionSchemaVersion:4}});assert.equal(f.result.phase,'healthy');assert.equal(JSON.parse(await f.read('Server/Config/APFCareer.json')).progressionSchemaVersion,4);
+  f=await psFixture({profile:{profileId:'unexpected'}});
+  const evidence=await modeFailureEvidence({root:f.root,nativeRoot:f.native},f.result);
+  assert.equal(evidence.backupCount,0);assert.equal(evidence.currentMode,'Sandbox');assert.equal(evidence.errorCode,'profile-baseline-invalid');
+  const projected=publicModeStatus({...f.result,failureEvidence:{...evidence,password:'private'}});
+  assert.equal(JSON.stringify(projected).includes('private'),false);
+  f=await psFixture({fault:'stop'});
+  assert.equal((await modeFailureEvidence({root:f.root,nativeRoot:f.native},f.result)).backupCount,2);
+});
+test('a fresh reviewed authorization can retry only an exact failed receipt before any preparation/stop',async t=>{
+  async function setup(f,hashOverride){
+    const helper=await fixture(t),old=f.result,evidence=await modeFailureEvidence({root:f.root,nativeRoot:f.native},old);
+    const next={...intent(),id:'c'.repeat(32),retryOf:{id:old.id,receiptSha256:hashOverride??evidence.receiptSha256}};
+    const raw=Buffer.from(JSON.stringify(next));
+    helper.agent.root=f.root;helper.agent.cache=path.join(f.root,'native-cache');helper.agent.settings={root:f.root,nativeRoot:f.native,powershell:'pwsh'};
+    helper.agent.channel.bytes=async url=>url.includes('/git/ref/')?Buffer.from(JSON.stringify({ref:'refs/heads/deploy',object:{type:'commit',sha:'b'.repeat(40)}})):raw;
+    return helper;
+  }
+  const f=await psFixture({profile:{profileId:'unexpected'}});
+  let helper=await setup(f,'0'.repeat(64));await assert.rejects(helper.runner.tick());assert.equal(helper.runs(),0);
+  const original=await fs.readFile(path.join(f.job,'receipt.json'),'utf8');
+  helper=await setup(f);await helper.runner.tick();assert.equal(helper.runs(),1);
+  assert.equal(await fs.readFile(path.join(f.job,'receipt.json'),'utf8'),original);
+  const stopped=await psFixture({fault:'stop'});helper=await setup(stopped);await assert.rejects(helper.runner.tick());assert.equal(helper.runs(),0);
 });

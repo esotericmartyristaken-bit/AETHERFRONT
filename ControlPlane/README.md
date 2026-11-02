@@ -98,6 +98,15 @@ prepared, applying and blocked operations never auto-replay, including after a
 control restart. Occupied or stale pre-preparation states may wait and recheck.
 An interrupted/failed operation retains its protected receipts and configuration
 originals for review; there is no automatic second stop/start or guessed rollback.
+A fresh explicit authorization may include `retryOf:{id,receiptSha256}` only when
+the protected failed receipt matches exactly and neither preparation backup file
+exists. That proves the failed helper did not reach the preparation/stop sequence.
+The original receipt/error remain intact; native lease and application checks run
+again. Any attempt that created preparation backups, requested shutdown or may
+have applied configuration remains blocked for review. Diagnostics expose only
+fixed error categories, receipt hashes, backup count and public mode/schema facts.
+Progression-schema numbers and reset policy are preserved, not rewritten to a
+controller-assumed schema revision.
 
 Use the certificate SHA256 from the trusted bootstrap, not an unauthenticated
 error page. `PIN` is a public fingerprint. These commands use controller-local
