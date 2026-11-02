@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
-  "version": "kesas-rc38",
-  "releaseTag": "host-kesas-rc38",
-  "assetName": "Aetherfront-Release-kesas-rc38.zip",
-  "sha256": "457ab08e5442df3fe6cf505fb9cc28b8eaf73f5810cc37080cd7bd8c54b45af7",
-  "sizeBytes": 2322449,
-  "notes": "RC38: APF branding and borderless window; UI-safe WASD scrolling; ZTheme/HUDReplacer; Parallax collisions off; monotonic own-warp clock transitions; automatic signed DLC repair before loading with durable recovery and cached unchanged-launch checks. Existing settings, identities and shared mod downloads preserved.",
+  "version": "kesas-rc39",
+  "releaseTag": "host-kesas-rc39",
+  "assetName": "Aetherfront-Release-kesas-rc39.zip",
+  "sha256": "4453b000e1400ef4625e3fae0adfa6e04b952655907d20ce72d6cc410d0df08d",
+  "sizeBytes": 5753493,
+  "notes": "RC39: enforce Parallax collisions off on every join; signed game-assembly repair. Existing mod downloads reused; arenas remain disabled.",
   "requirements": {
     "contractVersion": 1,
     "capabilities": [
