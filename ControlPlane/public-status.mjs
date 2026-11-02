@@ -39,11 +39,12 @@ export function publicModeStatus(value) {
   if(Object.hasOwn(value,'failureEvidence')){
     const e=value.failureEvidence;
     if(!diagnosticObject(e)||!diagnosticHash(e.receiptSha256)||![0,1,2].includes(e.backupCount)||
-      !['profile-baseline-invalid','profile-policy-field-invalid','bridge-file-busy','application-version-changed','players-resumed','runtime-property-missing','unclassified-preparation-error'].includes(e.errorCode)||
+      !['profile-baseline-invalid','profile-policy-field-invalid','bridge-file-busy','application-version-changed','players-resumed','runtime-property-missing','unclassified-preparation-error','optional-profile-file-absent'].includes(e.errorCode)||
       !['Sandbox','Science','Career','unknown'].includes(e.currentMode)||!['Sandbox','Science','Career','unknown'].includes(e.profileMode)||
       !(e.progressionSchemaVersion===null||(Number.isSafeInteger(e.progressionSchemaVersion)&&e.progressionSchemaVersion>=0))||
       ![null,true,false].includes(e.resetOnPackChange))throw new Error('Invalid mode failure evidence');
-    evidence={receiptSha256:e.receiptSha256,backupCount:e.backupCount,errorCode:e.errorCode,currentMode:e.currentMode,profileMode:e.profileMode,progressionSchemaVersion:e.progressionSchemaVersion,resetOnPackChange:e.resetOnPackChange};
+    if(Object.hasOwn(e,'profileSource')&&!['file','automatic'].includes(e.profileSource))throw new Error('Invalid mode profile source');
+    evidence={receiptSha256:e.receiptSha256,backupCount:e.backupCount,errorCode:e.errorCode,currentMode:e.currentMode,profileMode:e.profileMode,progressionSchemaVersion:e.progressionSchemaVersion,resetOnPackChange:e.resetOnPackChange,...(Object.hasOwn(e,'profileSource')?{profileSource:e.profileSource}:{})};
   }
   if(Object.hasOwn(value,'evidenceProblem')&&!['evidence-json-invalid','evidence-file-missing','evidence-access-denied','evidence-invalid'].includes(value.evidenceProblem))throw new Error('Invalid mode evidence problem');
   return {schemaVersion:1,id:value.id,phase:value.phase,reason:value.reason,mode:value.mode,profileId:value.profileId,saveNamespace:value.saveNamespace,restartCount:value.restartCount,updatedAt:value.updatedAt,...(evidence?{failureEvidence:evidence}:{}),...(Object.hasOwn(value,'evidenceProblem')?{evidenceProblem:value.evidenceProblem}:{})};

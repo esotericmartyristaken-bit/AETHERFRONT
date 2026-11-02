@@ -107,6 +107,10 @@ have applied configuration remains blocked for review. Diagnostics expose only
 fixed error categories, receipt hashes, backup count and public mode/schema facts.
 Progression-schema numbers and reset policy are preserved, not rewritten to a
 controller-assumed schema revision.
+APFCareer.json is optional in the shipping server. When absent, the operation
+leaves it absent and changes only GeneralSettings GameMode; the native default
+profile generator selects the Science profile/namespace from the server ID.
+Private originals retain their exact bytes, including their original encoding.
 
 Use the certificate SHA256 from the trusted bootstrap, not an unauthenticated
 error page. `PIN` is a public fingerprint. These commands use controller-local

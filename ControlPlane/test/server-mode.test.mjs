@@ -76,8 +76,8 @@ async function psFixture(overrides={}){
   await put(path.join(code,'KESAS-VPS-Server','Update.Common.ps1'),MOCK_COMMON);
   const general='<GeneralSettings><GameMode>Sandbox</GameMode><Password>private password</Password><MaxPlayers>8</MaxPlayers></GeneralSettings>';
   await put(path.join(native,'Server','Config','GeneralSettings.xml'),general);
-  await put(path.join(native,'Server','Config','APFCareer.json'),JSON.stringify({...profile(),...overrides.profile}));
-  await put(path.join(native,'Server','Config','APFPack.json'),JSON.stringify({packVersion:overrides.version??'kesas-rc39',requiredClientVersion:'kesas-rc39'}));
+  if(!overrides.automatic)await put(path.join(native,'Server','Config','APFCareer.json'),JSON.stringify({...profile(),...overrides.profile}));
+  await put(path.join(native,'Server','Config','APFPack.json'),JSON.stringify({serverId:'kesas-fixture',packVersion:overrides.version??'kesas-rc39',requiredClientVersion:'kesas-rc39'}));
   await put(path.join(native,'Server','APFDiscordBridge','status.json'),JSON.stringify({updatedAt:new Date(Date.now()-(overrides.stale?30000:0)).toISOString(),serverPid:100,playerCount:overrides.players??0,connectedCount:overrides.connected??overrides.players??0}));
   await put(path.join(native,'Server','Universe','sentinel'),'existing universe');
   await put(path.join(job,'request.json'),JSON.stringify(intent()));
@@ -141,4 +141,13 @@ test('Windows UTF-8 BOM profile does not hide protected pre-preparation evidence
   const evidence=await modeFailureEvidence({root:f.root,nativeRoot:f.native},f.result);
   assert.equal(evidence.profileMode,'Sandbox');assert.equal(evidence.backupCount,0);
   assert.throws(()=>publicModeStatus({...f.result,evidenceProblem:'C:/private'}));
+});
+test('native automatic profile stays automatic; no override file is created and failed absent-profile evidence is readable',async()=>{
+  let f=await psFixture({automatic:true});assert.equal(f.exit,0);assert.equal(f.result?.phase,'healthy');assert.equal(publicModeStatus(f.result).profileId,'kesas-fixture-science');
+  assert.equal(f.result.saveNamespace,'APF/kesas-fixture/Science');assert.equal(await f.exists('Server/Config/APFCareer.json'),false);
+  assert.equal(await f.exists('stopped.txt'),true);assert.equal(await f.exists('started.txt'),true);
+  assert.equal(await fs.readFile(path.join(f.job,'APFCareer.absent.json'),'utf8'),'{"profileSource":"automatic","fileWasAbsent":true}');
+  f=await psFixture({automatic:true,version:'kesas-rc38'});
+  const evidence=await modeFailureEvidence({root:f.root,nativeRoot:f.native},f.result);
+  assert.equal(evidence.backupCount,0);assert.equal(evidence.profileSource,'automatic');assert.equal(evidence.profileMode,'Sandbox');assert.equal(evidence.errorCode,'optional-profile-file-absent');
 });

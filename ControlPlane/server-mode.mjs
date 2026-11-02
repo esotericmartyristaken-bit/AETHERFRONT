@@ -82,9 +82,15 @@ try {
   $generalPath=Join-Path $root 'Server/Config/GeneralSettings.xml'
   $careerPath=Join-Path $root 'Server/Config/APFCareer.json'
   $generalRaw=Read-UpdateText $generalPath 1048576
-  $careerRaw=Read-UpdateText $careerPath 1048576
+  $careerPresent=[IO.File]::Exists($careerPath)
+  $careerRaw=if($careerPresent){Read-UpdateText $careerPath 1048576}else{$null}
   [xml]$general=$generalRaw
-  $profile=$careerRaw|ConvertFrom-Json
+  $profile=if($careerPresent){$careerRaw|ConvertFrom-Json}else{
+    # Verified against the shipping Server.dll ApfServerSettings.Reload default
+    # generator. Leave the optional file absent so native defaults stay native.
+    if([string]$pack.serverId -cnotmatch '^[a-zA-Z0-9_-]{1,120}$'){throw 'Unreviewed automatic profile server ID'}
+    [pscustomobject]@{mode='Sandbox';profileId=([string]$pack.serverId+'-sandbox');saveNamespace=('APF/'+[string]$pack.serverId+'/Sandbox');progressionSchemaVersion=1;resetOnPackChange=$true}
+  }
   $modeNode=$general.SelectNodes('//GameMode')
   if($modeNode.Count -ne 1 -or $modeNode[0].InnerText -cne 'Sandbox' -or $profile.mode -cne 'Sandbox' -or
     $profile.profileId -cnotmatch '^[a-zA-Z0-9_.-]{1,120}-sandbox$' -or $profile.saveNamespace -cnotmatch '^APF/[a-zA-Z0-9_.-]{1,120}/Sandbox$' -or
@@ -96,14 +102,17 @@ try {
   $profile.saveNamespace=$profile.saveNamespace.Substring(0,$profile.saveNamespace.Length-7)+'Science'
   $modeNode[0].InnerText='Science'
   # Preserve private original configuration, never copy Universe, identity or keys.
-  foreach($row in @(@('GeneralSettings.before.xml',$generalRaw),@('APFCareer.before.json',$careerRaw))){
+  $originals=,@('GeneralSettings.before.xml',$generalPath)
+  if($careerPresent){$originals+=,@('APFCareer.before.json',$careerPath)}
+  foreach($row in $originals){
     $backup=Join-Path $job $row[0]
     if(Test-Path -LiteralPath $backup){throw 'Prior mode preparation requires review'}
     $stream=[IO.FileStream]::new($backup,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
-    try{$bytes=$UpdateUtf8.GetBytes($row[1]);$stream.Write($bytes,0,$bytes.Length);$stream.Flush($true)}finally{$stream.Dispose()}
+    try{$bytes=[IO.File]::ReadAllBytes($row[1]);$stream.Write($bytes,0,$bytes.Length);$stream.Flush($true)}finally{$stream.Dispose()}
   }
+  if(-not $careerPresent){Write-UpdateAtomic (Join-Path $job 'APFCareer.absent.json') '{"profileSource":"automatic","fileWasAbsent":true}'}
   $null=Record 'prepared' $null
-  if((Read-UpdateText $generalPath 1048576) -cne $generalRaw -or (Read-UpdateText $careerPath 1048576) -cne $careerRaw){throw 'Configuration changed during preparation'}
+  if((Read-UpdateText $generalPath 1048576) -cne $generalRaw -or [IO.File]::Exists($careerPath) -ne $careerPresent -or ($careerPresent -and (Read-UpdateText $careerPath 1048576) -cne $careerRaw)){throw 'Configuration changed during preparation'}
   if(-not (Empty $cfg)){throw 'Player activity resumed before stop'}
   $null=Record 'applying' $null
   Wait-UpdateServerStopped $root $cfg
@@ -111,7 +120,7 @@ try {
   # Stop is proven before either config write. No state/DLL/media changes.
   $changed=$true
   Write-UpdateAtomic $generalPath $general.OuterXml
-  Write-UpdateAtomic $careerPath ($profile|ConvertTo-Json -Depth 12)
+  if($careerPresent){Write-UpdateAtomic $careerPath ($profile|ConvertTo-Json -Depth 12)}
   $env:APF_SERVER_TASK='KESAS Server'
   $env:APF_CONTROL_ROOT=$env:APF_MODE_CONTROL_ROOT
   Start-UpdatedServer $root $cfg
@@ -127,7 +136,10 @@ try {
     Start-Sleep -Milliseconds 500
   }while($true)
   [xml]$actual=Read-UpdateText $generalPath 1048576
-  $actualProfile=(Read-UpdateText $careerPath 1048576)|ConvertFrom-Json
+  $actualProfile=if($careerPresent){(Read-UpdateText $careerPath 1048576)|ConvertFrom-Json}else{
+    if([IO.File]::Exists($careerPath)){throw 'Automatic profile override appeared'}
+    $profile
+  }
   if($actual.SelectSingleNode('//GameMode').InnerText -cne 'Science' -or $actualProfile.mode -cne 'Science' -or $actualProfile.profileId -cne $profile.profileId -or $actualProfile.saveNamespace -cne $profile.saveNamespace){throw 'Mode readback mismatch'}
   Record 'healthy' $null $actualProfile|ConvertTo-Json -Compress
 }catch {
@@ -193,17 +205,22 @@ export async function modeFailureEvidence(settings,active){
     const file=path.join(job,name);await noLinks(file);if(await fs.stat(file).catch(e=>{if(e.code==='ENOENT')return null;throw e;}))backupCount++;
   }
   const error=path.join(job,'private-error.txt');await noLinks(error);
-  const stat=await fs.stat(error);requireValue(stat.size<=32768,'Mode error exceeds bound');
-  const text=await fs.readFile(error,'utf8');
-  const errorCode=/Unreviewed mode\/profile baseline/.test(text)?'profile-baseline-invalid':/progressionSchemaVersion|resetOnPackChange/.test(text)?'profile-policy-field-invalid':/being used by another process|sharing violation/i.test(text)?'bridge-file-busy':/Application version changed/.test(text)?'application-version-changed':/Player activity resumed/.test(text)?'players-resumed':/property.*cannot be found/i.test(text)?'runtime-property-missing':'unclassified-preparation-error';
+  const stat=await fs.stat(error).catch(e=>{if(e.code==='ENOENT')return null;throw e;});requireValue(!stat||stat.size<=32768,'Mode error exceeds bound');
+  const text=stat?await fs.readFile(error,'utf8'):'';
+  let errorCode=/Unreviewed mode\/profile baseline/.test(text)?'profile-baseline-invalid':/progressionSchemaVersion|resetOnPackChange/.test(text)?'profile-policy-field-invalid':/being used by another process|sharing violation/i.test(text)?'bridge-file-busy':/Application version changed/.test(text)?'application-version-changed':/Player activity resumed/.test(text)?'players-resumed':/property.*cannot be found/i.test(text)?'runtime-property-missing':'unclassified-preparation-error';
   const config=path.join(settings.nativeRoot,'Server','Config');
   const careerPath=path.join(config,'APFCareer.json'),generalPath=path.join(config,'GeneralSettings.xml');
   await noLinks(careerPath);await noLinks(generalPath);
-  requireValue((await fs.stat(careerPath)).size<=1048576&&(await fs.stat(generalPath)).size<=1048576,'Mode configuration exceeds bound');
+  const careerStat=await fs.stat(careerPath).catch(e=>{if(e.code==='ENOENT')return null;throw e;});
+  requireValue((!careerStat||careerStat.size<=1048576)&&(await fs.stat(generalPath)).size<=1048576,'Mode configuration exceeds bound');
   // Operator-authored Windows PowerShell JSON may carry a UTF-8 BOM. It is
   // accepted by the native JSON reader and must not suppress read-only evidence.
-  const profile=JSON.parse((await fs.readFile(careerPath,'utf8')).replace(/^\uFEFF/,'')),general=await fs.readFile(generalPath,'utf8');
-  const result={receiptSha256:await fileHash(receipt),backupCount,errorCode,currentMode:/<GameMode>\s*(Sandbox|Science|Career)\s*<\/GameMode>/.exec(general)?.[1]??'unknown',
+  const decode=bytes=>bytes[0]===0xff&&bytes[1]===0xfe?bytes.subarray(2).toString('utf16le'):bytes.toString('utf8').replace(/^\uFEFF/,'');
+  const general=decode(await fs.readFile(generalPath));
+  const currentMode=/<GameMode>\s*(Sandbox|Science|Career)\s*<\/GameMode>/.exec(general)?.[1]??'unknown';
+  const profile=careerStat?JSON.parse(decode(await fs.readFile(careerPath))):{mode:currentMode};
+  if(!careerStat)errorCode='optional-profile-file-absent';
+  const result={receiptSha256:await fileHash(receipt),backupCount,errorCode,currentMode,profileSource:careerStat?'file':'automatic',
     profileMode:['Sandbox','Science','Career'].includes(profile.mode)?profile.mode:'unknown',
     progressionSchemaVersion:Number.isSafeInteger(profile.progressionSchemaVersion)?profile.progressionSchemaVersion:null,
     resetOnPackChange:typeof profile.resetOnPackChange==='boolean'?profile.resetOnPackChange:null};
