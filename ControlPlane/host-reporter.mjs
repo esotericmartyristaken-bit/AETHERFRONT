@@ -301,8 +301,11 @@ async function reportOnce(settings,options) {
   const modeFile=path.join(settings.root,'native-cache','server-mode','active.json');
   const gameMode=await Promise.resolve().then(async()=>{
     await noLinks(modeFile);const value=await readJson(modeFile,null);
-    const evidence=await modeFailureEvidence(settings,value).catch(()=>null);
-    return publicModeStatus(value?{...value,...(evidence?{failureEvidence:evidence}:{})}:null);
+    let evidenceProblem=null;
+    const evidence=await modeFailureEvidence(settings,value).catch(error=>{
+      evidenceProblem=error instanceof SyntaxError?'evidence-json-invalid':error?.code==='ENOENT'?'evidence-file-missing':['EACCES','EPERM'].includes(error?.code)?'evidence-access-denied':'evidence-invalid';return null;
+    });
+    return publicModeStatus(value?{...value,...(evidence?{failureEvidence:evidence}:{}),...(evidenceProblem?{evidenceProblem}:{})}:null);
   }).catch(()=>null);
   const diagnostics={schemaVersion:2,observedAt:report.observedAt,expiresAt:report.expiresAt,controlVersion:pointer.version,
     bootstrap,watcher:worker.diagnostic?watcherEvidence(worker):emptyWatcher(),native:native?.publication??null,recovery,host,...(gameMode?{gameMode}:{})};

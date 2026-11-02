@@ -200,7 +200,9 @@ export async function modeFailureEvidence(settings,active){
   const careerPath=path.join(config,'APFCareer.json'),generalPath=path.join(config,'GeneralSettings.xml');
   await noLinks(careerPath);await noLinks(generalPath);
   requireValue((await fs.stat(careerPath)).size<=1048576&&(await fs.stat(generalPath)).size<=1048576,'Mode configuration exceeds bound');
-  const profile=await readJson(careerPath),general=await fs.readFile(generalPath,'utf8');
+  // Operator-authored Windows PowerShell JSON may carry a UTF-8 BOM. It is
+  // accepted by the native JSON reader and must not suppress read-only evidence.
+  const profile=JSON.parse((await fs.readFile(careerPath,'utf8')).replace(/^\uFEFF/,'')),general=await fs.readFile(generalPath,'utf8');
   const result={receiptSha256:await fileHash(receipt),backupCount,errorCode,currentMode:/<GameMode>\s*(Sandbox|Science|Career)\s*<\/GameMode>/.exec(general)?.[1]??'unknown',
     profileMode:['Sandbox','Science','Career'].includes(profile.mode)?profile.mode:'unknown',
     progressionSchemaVersion:Number.isSafeInteger(profile.progressionSchemaVersion)?profile.progressionSchemaVersion:null,

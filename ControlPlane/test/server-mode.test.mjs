@@ -134,3 +134,11 @@ test('a fresh reviewed authorization can retry only an exact failed receipt befo
   assert.equal(await fs.readFile(path.join(f.job,'receipt.json'),'utf8'),original);
   const stopped=await psFixture({fault:'stop'});helper=await setup(stopped);await assert.rejects(helper.runner.tick());assert.equal(helper.runs(),0);
 });
+test('Windows UTF-8 BOM profile does not hide protected pre-preparation evidence',async()=>{
+  const f=await psFixture({profile:{profileId:'unexpected'}});
+  const file=path.join(f.native,'Server','Config','APFCareer.json');
+  await fs.writeFile(file,'\uFEFF'+await fs.readFile(file,'utf8'));
+  const evidence=await modeFailureEvidence({root:f.root,nativeRoot:f.native},f.result);
+  assert.equal(evidence.profileMode,'Sandbox');assert.equal(evidence.backupCount,0);
+  assert.throws(()=>publicModeStatus({...f.result,evidenceProblem:'C:/private'}));
+});

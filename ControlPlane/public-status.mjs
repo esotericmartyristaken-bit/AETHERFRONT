@@ -45,7 +45,8 @@ export function publicModeStatus(value) {
       ![null,true,false].includes(e.resetOnPackChange))throw new Error('Invalid mode failure evidence');
     evidence={receiptSha256:e.receiptSha256,backupCount:e.backupCount,errorCode:e.errorCode,currentMode:e.currentMode,profileMode:e.profileMode,progressionSchemaVersion:e.progressionSchemaVersion,resetOnPackChange:e.resetOnPackChange};
   }
-  return {schemaVersion:1,id:value.id,phase:value.phase,reason:value.reason,mode:value.mode,profileId:value.profileId,saveNamespace:value.saveNamespace,restartCount:value.restartCount,updatedAt:value.updatedAt,...(evidence?{failureEvidence:evidence}:{})};
+  if(Object.hasOwn(value,'evidenceProblem')&&!['evidence-json-invalid','evidence-file-missing','evidence-access-denied','evidence-invalid'].includes(value.evidenceProblem))throw new Error('Invalid mode evidence problem');
+  return {schemaVersion:1,id:value.id,phase:value.phase,reason:value.reason,mode:value.mode,profileId:value.profileId,saveNamespace:value.saveNamespace,restartCount:value.restartCount,updatedAt:value.updatedAt,...(evidence?{failureEvidence:evidence}:{}),...(Object.hasOwn(value,'evidenceProblem')?{evidenceProblem:value.evidenceProblem}:{})};
 }
 export function publicDiagnostics(report) {
   const bootstrap = report?.bootstrap, watcher = report?.watcher, native = report?.native, recovery = report?.recovery;
