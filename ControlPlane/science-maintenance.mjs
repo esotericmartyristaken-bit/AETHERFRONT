@@ -4,16 +4,17 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {REPOSITORY,exact,requireValue} from './contract.mjs';
 import {parseStrictJson} from './github.mjs';
-import {noLinks,readJson,writeJson,digest} from './public-status.mjs';
+import {noLinks,readJson,writeJson,digest,fileHash} from './public-status.mjs';
 import {collectHousekeeping} from './science-housekeeping.mjs';
 const GUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
 const CHANNEL='deployment/science-maintenance.json';
 export function validateMaintenance(value,now=Date.now()){
-  exact(value,['schemaVersion','id','expectedVersion','modeTransactionId','disableCheats','sandboxVesselIds','issuedAt','expiresAt'],'science maintenance');
+  exact(value,['schemaVersion','id','expectedVersion','modeTransactionId','disableCheats','sandboxVesselIds','issuedAt','expiresAt',...(Object.hasOwn(value,'retryOf')?['retryOf']:[])],'science maintenance');
   const start=Date.parse(value.issuedAt),end=Date.parse(value.expiresAt);
   requireValue(value.schemaVersion===1&&/^[a-f0-9]{32}$/.test(value.id)&&/^kesas-rc[1-9][0-9]{0,14}$/.test(value.expectedVersion)&&/^[a-f0-9]{32}$/.test(value.modeTransactionId)&&value.disableCheats===true&&
     Array.isArray(value.sandboxVesselIds)&&value.sandboxVesselIds.length<=512&&value.sandboxVesselIds.every(id=>GUID.test(id))&&new Set(value.sandboxVesselIds).size===value.sandboxVesselIds.length&&
     Number.isFinite(start)&&Number.isFinite(end)&&new Date(start).toISOString()===value.issuedAt&&new Date(end).toISOString()===value.expiresAt&&start<=now+5000&&end>now&&end-start>0&&end-start<=7200000,'Invalid science maintenance authorization');
+  if(Object.hasOwn(value,'retryOf')){exact(value.retryOf,['id','receiptSha256'],'maintenance retry');requireValue(/^[a-f0-9]{32}$/.test(value.retryOf.id)&&value.retryOf.id!==value.id&&/^[a-f0-9]{64}$/.test(value.retryOf.receiptSha256),'Invalid maintenance retry');}
   return value;
 }
 export const MAINTENANCE_SCRIPT=String.raw`
@@ -52,6 +53,13 @@ function IsEmpty($cfg) {
   return ($age -ge -2 -and $age -le 10 -and $ids -contains $b.serverPid -and [string]$b.playerCount -ceq '0' -and [string]$b.connectedCount -ceq '0')
 }
 function Hash([string]$p){Assert-UpdatePath $p|Out-Null;return (Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash.ToLowerInvariant()}
+function ReadAudit([string]$p){
+  Assert-UpdatePath $p|Out-Null
+  # The running server holds a writer open with FileShare.Read. Readers must
+  # share Write in return; the general update reader intentionally does not.
+  $stream=[IO.FileStream]::new($p,[IO.FileMode]::Open,[IO.FileAccess]::Read,([IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete))
+  try{if($stream.Length -gt 8388608){throw 'Audit log exceeds bound'};$reader=[IO.StreamReader]::new($stream);try{$text=$reader.ReadToEnd();if([Text.Encoding]::UTF8.GetByteCount($text) -gt 8388608){throw 'Audit log exceeds bound'};return $text}finally{$reader.Dispose()}}finally{$stream.Dispose()}
+}
 function Inventory {
   $dir=Join-Path $root 'Server/Universe/Vessels';Assert-UpdateTree $dir
   $files=@(Get-ChildItem -LiteralPath $dir -File)
@@ -91,7 +99,7 @@ try {
   [xml]$general=$generalRaw
   if($general.SelectNodes('//Cheats').Count -ne 1 -or $general.SelectNodes('//GameMode').Count -ne 1 -or $general.SelectSingleNode('//GameMode').InnerText -cne 'Science'){throw 'Unexpected settings'}
   $logPath=Join-Path $root 'Server/logs/CraftCreationAndRemoval.txt'
-  $log=Read-UpdateText $logPath 8388608
+  $log=ReadAudit $logPath
   $before=Inventory;ValidateTargets $before $log
   if(-not (IsEmpty $cfg)){Record 'waiting' 'players-present-or-status-unavailable';exit 0}
   $backup=Join-Path $job 'GeneralSettings.before.xml'
@@ -103,7 +111,7 @@ try {
   Record 'applying' ''; $applying=$true
   Wait-UpdateServerStopped $root $cfg
   # Final save is complete. Recheck exact targets and protect every other file.
-  $log=Read-UpdateText $logPath 8388608
+  $log=ReadAudit $logPath
   Write-UpdateAtomic (Join-Path $job 'CraftCreation.final.txt') $log
   $before=Inventory;ValidateTargets $before $log
   $statePath=Join-Path $root 'Server/Aetherfront/state.json';$stateHash=Hash $statePath
@@ -138,7 +146,11 @@ export class ScienceMaintenanceAgent{
     const candidate=parseStrictJson(raw.toString('utf8')),active=await readJson(path.join(base,'active.json'),null);
     if(active&&active.id===candidate.id&&active.phase!=='waiting')return;
     const intent=validateMaintenance(candidate,now);
-    requireValue(!active||active.id===intent.id||active.phase==='healthy','Unfinished maintenance needs review');
+    if(active&&active.id!==intent.id&&active.phase!=='healthy'){
+      const proof=await maintenanceFailureEvidence(a.settings,active);
+      const old=await readJson(path.join(base,active.id,'request.json'),null);
+      requireValue(active.phase==='blocked'&&active.removedCount===0&&active.restartCount===0&&intent.retryOf?.id===active.id&&proof?.preparationBackupCount===0&&proof.removedArchiveCount===0&&proof.errorCode==='audit-log-busy'&&intent.retryOf.receiptSha256===proof.receiptSha256&&old?.expectedVersion===intent.expectedVersion&&old?.modeTransactionId===intent.modeTransactionId&&JSON.stringify(old?.sandboxVesselIds)===JSON.stringify(intent.sandboxVesselIds),'Unfinished maintenance needs reviewed pre-preparation proof');
+    }else requireValue(!intent.retryOf,'Maintenance retry requires a matching blocked operation');
     const ref=parseStrictJson((await a.channel.bytes(`https://api.github.com/repos/${REPOSITORY}/git/ref/heads/deploy`,16384)).toString('utf8'));
     const commit=ref.object?.sha;requireValue(ref.ref==='refs/heads/deploy'&&ref.object?.type==='commit'&&/^[a-f0-9]{40}$/.test(commit),'Invalid maintenance reference');
     const pinned=await a.channel.bytes(`https://raw.githubusercontent.com/${REPOSITORY}/${commit}/${CHANNEL}`,65536);
@@ -159,5 +171,16 @@ export function projectMaintenance(v){
   if(v===null)return null;
   requireValue(v?.schemaVersion===1&&/^[a-f0-9]{32}$/.test(v.id)&&['claimed','waiting','prepared','applying','blocked','healthy'].includes(v.phase)&&['','native-busy','native-journal-present','players-present-or-status-unavailable','maintenance-preparation-needs-review','maintenance-activation-needs-review'].includes(v.reason)&&Number.isFinite(Date.parse(v.updatedAt))&&[v.removedCount,v.preservedCount,v.restartCount].every(n=>Number.isSafeInteger(n)&&n>=0&&n<=512)&&[null,false].includes(v.cheatsEnabled)&&v.restartCount<=1,'Invalid maintenance status');
   requireValue(v.phase!=='healthy'||(v.cheatsEnabled===false&&v.restartCount===1),'Incomplete maintenance');
-  return {schemaVersion:1,id:v.id,phase:v.phase,reason:v.reason,removedCount:v.removedCount,preservedCount:v.preservedCount,restartCount:v.restartCount,cheatsEnabled:v.cheatsEnabled,updatedAt:v.updatedAt};
+  let failureEvidence;
+  if(v.failureEvidence){const e=v.failureEvidence;requireValue(/^[a-f0-9]{64}$/.test(e.receiptSha256)&&Number.isSafeInteger(e.preparationBackupCount)&&e.preparationBackupCount>=0&&e.preparationBackupCount<=1&&Number.isSafeInteger(e.removedArchiveCount)&&e.removedArchiveCount>=0&&e.removedArchiveCount<=512&&['audit-log-busy','unclassified-maintenance-error'].includes(e.errorCode),'Invalid maintenance failure evidence');failureEvidence={receiptSha256:e.receiptSha256,preparationBackupCount:e.preparationBackupCount,removedArchiveCount:e.removedArchiveCount,errorCode:e.errorCode};}
+  return {schemaVersion:1,id:v.id,phase:v.phase,reason:v.reason,removedCount:v.removedCount,preservedCount:v.preservedCount,restartCount:v.restartCount,cheatsEnabled:v.cheatsEnabled,updatedAt:v.updatedAt,...(failureEvidence?{failureEvidence}:{})};
+}
+export async function maintenanceFailureEvidence(settings,active){
+  if(active?.phase!=='blocked'||!/^[a-f0-9]{32}$/.test(active.id))return null;
+  const job=path.join(settings.root,'native-cache','science-maintenance',active.id),receipt=path.join(job,'receipt.json');await noLinks(receipt);
+  const row=await readJson(receipt,null);requireValue(row?.id===active.id&&row.phase==='blocked','Maintenance receipt mismatch');
+  const backup=path.join(job,'GeneralSettings.before.xml');await noLinks(backup);const backupStat=await fs.stat(backup).catch(e=>{if(e.code==='ENOENT')return null;throw e;});
+  const removed=path.join(job,'removed-vessels');await noLinks(removed);const files=await fs.readdir(removed).catch(e=>{if(e.code==='ENOENT')return [];throw e;});requireValue(files.length<=512,'Maintenance archive exceeds bound');
+  const error=path.join(job,'private-error.txt');await noLinks(error);const stat=await fs.stat(error);requireValue(stat.isFile()&&stat.size<=32768,'Maintenance error exceeds bound');const text=await fs.readFile(error,'utf8');const flat=text.replace(/\s+/g,'');
+  return {receiptSha256:await fileHash(receipt),preparationBackupCount:backupStat?1:0,removedArchiveCount:files.length,errorCode:/CraftCreationAndRemoval\.txt|Read-UpdateText\$logPath/.test(flat)&&/beingusedbyanotherprocess|sharingviolation/i.test(flat)?'audit-log-busy':'unclassified-maintenance-error'};
 }

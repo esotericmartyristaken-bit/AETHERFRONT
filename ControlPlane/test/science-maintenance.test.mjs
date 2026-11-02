@@ -5,7 +5,7 @@ import path from 'node:path';
 import os from 'node:os';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
-import {validateMaintenance,projectMaintenance,MAINTENANCE_SCRIPT} from '../science-maintenance.mjs';
+import {validateMaintenance,projectMaintenance,MAINTENANCE_SCRIPT,maintenanceFailureEvidence,ScienceMaintenanceAgent} from '../science-maintenance.mjs';
 const execute=promisify(execFile);
 const old='12345678-1234-1234-1234-123456789012',recent='22345678-1234-1234-1234-123456789012';
 const intent=()=>({schemaVersion:1,id:'a'.repeat(32),expectedVersion:'kesas-rc39',modeTransactionId:'b'.repeat(32),disableCheats:true,sandboxVesselIds:[old],issuedAt:new Date(Date.now()-1000).toISOString(),expiresAt:new Date(Date.now()+3600000).toISOString()});
@@ -20,6 +20,7 @@ test('maintenance readback excludes private payloads and cannot claim incomplete
 });
 const COMMON=String.raw`
 $ErrorActionPreference='Stop'
+$global:heldWriter=$null
 function Assert-UpdatePath($p){return [IO.Path]::GetFullPath($p)}
 function Assert-UpdateTree($p){}
 function Read-UpdateText($p,$max=1048576){return [IO.File]::ReadAllText($p)}
@@ -27,10 +28,10 @@ function Write-UpdateAtomic($p,$s){[IO.Directory]::CreateDirectory([IO.Path]::Ge
 function New-UpdateDirectory($p){[IO.Directory]::CreateDirectory($p)|Out-Null}
 function Get-UpdateDeployment($r){return @{}}
 function Get-UpdateServiceProcesses($r,$c){return [pscustomobject]@{Path=[IO.Path]::GetFullPath("$r/Server/Server.exe");Id=100}}
-function Wait-UpdateServerStopped($r,$c){[IO.File]::WriteAllText("$r/stopped",'stop');if($env:APF_TEST_FAULT -eq 'stop'){throw 'stop fault'}}
+function Wait-UpdateServerStopped($r,$c){if($global:heldWriter){$global:heldWriter.Dispose()};[IO.File]::WriteAllText("$r/stopped",'stop');if($env:APF_TEST_FAULT -eq 'stop'){throw 'stop fault'}}
 function Start-UpdatedServer($r,$c){[IO.File]::WriteAllText("$r/started",'start');$b=@{serverPid=100;updatedAt=[DateTime]::UtcNow.ToString('o');playerCount=0;connectedCount=0}|ConvertTo-Json;[IO.File]::WriteAllText("$r/Server/APFDiscordBridge/status.json",$b)}
 `;
-async function runFixture({players=0,postCreation=false,docking=false,natural=false,fault=''}={}){
+async function runFixture({players=0,postCreation=false,docking=false,natural=false,heldAudit=false,fault=''}={}){
   const root=await fs.mkdtemp(path.join(os.tmpdir(),'apf-maint-')),native=path.join(root,'native'),code=path.join(root,'code'),job=path.join(root,'native-cache','science-maintenance','a'.repeat(32));
   const put=async(p,s)=>{await fs.mkdir(path.dirname(p),{recursive:true});await fs.writeFile(p,s);};
   const general='<GeneralSettings><GameMode>Science</GameMode><Cheats>true</Cheats><Password>private</Password></GeneralSettings>';
@@ -52,7 +53,9 @@ $ErrorActionPreference='Stop'
 $r=$env:APF_MAINT_NATIVE_ROOT;$c=$env:APF_MAINT_CONTROL_ROOT
 (Get-Item -LiteralPath "$c/native-cache/server-mode/${'b'.repeat(32)}/GeneralSettings.before.xml").CreationTimeUtc=[DateTime]::UtcNow.AddMinutes(-10)
 (Get-Item -LiteralPath "$r/Server/Universe/Vessels/${old}.txt").CreationTimeUtc=[DateTime]::UtcNow.AddHours(-1)
-`+MAINTENANCE_SCRIPT;
+`+(heldAudit?String.raw`
+$global:heldWriter=[IO.FileStream]::new("$env:APF_MAINT_NATIVE_ROOT/Server/logs/CraftCreationAndRemoval.txt",[IO.FileMode]::Open,[IO.FileAccess]::Write,[IO.FileShare]::Read)
+`:'')+MAINTENANCE_SCRIPT;
   const file=path.join(root,'run.ps1');await put(file,script);
   let exit=0;try{await execute('pwsh',['-NoProfile','-NonInteractive','-File',file],{windowsHide:true,env:{...process.env,APF_MAINT_NATIVE_ROOT:native,APF_MAINT_CODE_ROOT:code,APF_MAINT_CONTROL_ROOT:root,APF_MAINT_JOB:job,APF_TEST_FAULT:fault},timeout:20000,maxBuffer:65536});}catch(e){exit=e.code;}
   const result=JSON.parse(await fs.readFile(path.join(job,'receipt.json'),'utf8'));
@@ -73,3 +76,20 @@ test('occupied server, new creation, docking ambiguity and failed stop never rem
 });
 
 test('natural asteroids and comets cannot be selected as player craft',async()=>{const f=await runFixture({natural:true});assert.equal(f.result.phase,'blocked');assert.equal(await f.exists(`Server/Universe/Vessels/${old}.txt`),true);assert.equal(await f.exists('stopped'),false);});
+
+test('real server-style continuously open audit writer permits preparation and one successful restart',async()=>{const f=await runFixture({heldAudit:true});assert.equal(f.result.phase,'healthy');assert.equal(f.result.removedCount,1);assert.equal(f.result.restartCount,1);});
+
+test('preparation failure evidence is bounded, sanitized and detects a wrapped audit sharing error',async()=>{
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'apf-maint-proof-')),job=path.join(root,'native-cache','science-maintenance','a'.repeat(32));await fs.mkdir(job,{recursive:true});
+ const active={id:'a'.repeat(32),phase:'blocked',removedCount:0,restartCount:0};await fs.writeFile(path.join(job,'receipt.json'),JSON.stringify(active));
+ await fs.writeFile(path.join(job,'private-error.txt'),'secret private path CraftCreationAndRe\n moval.txt is being used by another process');
+ let evidence=await maintenanceFailureEvidence({root},active);assert.equal(evidence.errorCode,'audit-log-busy');assert.equal(evidence.preparationBackupCount,0);assert.equal(evidence.removedArchiveCount,0);assert.equal(JSON.stringify(evidence).includes('secret'),false);
+ await fs.writeFile(path.join(job,'GeneralSettings.before.xml'),'original');evidence=await maintenanceFailureEvidence({root},active);assert.equal(evidence.preparationBackupCount,1);
+});
+test('consumed/claimed authorization does not replay; changed immutable intent cannot execute',async()=>{
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'apf-maint-agent-')),base=path.join(root,'native-cache','science-maintenance');await fs.mkdir(base,{recursive:true});
+ const value=intent(),raw=Buffer.from(JSON.stringify(value));let runs=0;
+ const a={root,cache:path.join(root,'native-cache'),settings:{root},channel:{bytes:async url=>url.includes('/git/ref/')?Buffer.from(JSON.stringify({ref:'refs/heads/deploy',object:{type:'commit',sha:'c'.repeat(40)}})):url.includes('/'+('c'.repeat(40))+'/')?Buffer.from(JSON.stringify({...value,id:'d'.repeat(32)})):raw},run:async()=>{runs++;},idle:async()=>true,journalPresent:async()=>false,activeMatches:async()=>true};
+ await fs.writeFile(path.join(base,'active.json'),JSON.stringify({id:value.id,phase:'claimed'}));await new ScienceMaintenanceAgent(a).tick();assert.equal(runs,0);
+ await fs.unlink(path.join(base,'active.json'));await assert.rejects(new ScienceMaintenanceAgent(a).tick(),/intent changed/);assert.equal(runs,0);
+});

@@ -85,6 +85,12 @@ rechecks creation provenance after the final save, privately quarantines only
 selected vessel files, verifies all remaining vessel hashes and authoritative
 state bytes, then performs one guarded start. Claimed/applying/blocked operations
 never automatically replay. Private configuration and audit evidence stay on host.
+A reviewed retry must bind the exact failed receipt hash, identical target list,
+application and Science transition, zero preparation backups, zero quarantined
+vessels and zero restarts. Only the identified audit-reader sharing failure is
+eligible; another nonce is never accepted after preparation or application.
+The live audit reader shares the existing server writer without requesting write
+access. Its bytes stay bounded and private.
 
 Read-only `scienceHousekeeping` exposes GUIDs and timestamps, never craft contents,
 player names or identities. Normal save times are not launch times. Birth times
