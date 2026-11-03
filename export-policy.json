@@ -824,6 +824,16 @@
       "source": "KESAS-VPS-Server/Update.Common.ps1",
       "role": "deployment helper source, no configuration or keys"
     },
+    {"source": "Aetherfront-RC42-Work/README.md", "role": "RC42 bounded allocator design and publication requirements"},
+    {"source": "Aetherfront-RC42-Work/Build-Release.py", "role": "RC42 hash-pinned native release recipe without production state"},
+    {"source": "Aetherfront-RC42-Work/Patch/Patch.csproj", "role": "RC42 isolated Cecil patch project"},
+    {"source": "Aetherfront-RC42-Work/Patch/Program.cs", "role": "RC42 bounded allocator patch and binary equivalence audits"},
+    {"source": "Aetherfront-RC42-Work/Tests/TransportTests.csproj", "role": "RC42 isolated CLR regression project"},
+    {"source": "Aetherfront-RC42-Work/Tests/Program.cs", "role": "RC42 hash-pinned client and server transport test entry point"},
+    {"source": "Aetherfront-RC42-Work/Tests/ReflectionSuite.cs", "role": "RC42 socket-free allocator, reliable reservation and cleanup regressions"},
+    {"source": "Aetherfront-RC42-Work/Tests/README.md", "role": "RC42 regression coverage and limitations"},
+    {"source": "Aetherfront-RC42-Work/Mono/Program.cs", "role": "RC42 embedded Mono runtime gate entry point"},
+    {"source": "Aetherfront-RC42-Work/Mono/Run.ps1", "role": "RC42 embedded Mono runtime gate recipe"},
     {
       "source": "KESAS-VPS-Server/Publish-Release.ps1",
       "role": "current deployment implementation, not executed"

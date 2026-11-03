@@ -18,6 +18,116 @@
   ],
   "files": [
     {
+      "path": "Aetherfront-RC42-Work/Build-Release.py",
+      "source": null,
+      "role": "RC42 hash-pinned native release recipe without production state",
+      "bytes": 6395,
+      "sha256": "8c44294e4bbd9aec56d770fe91aff655e5987021417b56fd3e04be26ca79493d",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC42 source addition only."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC42-Work/Mono/Program.cs",
+      "source": null,
+      "role": "RC42 embedded Mono runtime gate entry point",
+      "bytes": 1198,
+      "sha256": "7ff10aa4a97b2fb45ba06bef7685bcb057bd31d5dc0e527fe2e3cda9d14fcf3f",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC42 source addition only."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC42-Work/Mono/Run.ps1",
+      "source": null,
+      "role": "RC42 embedded Mono runtime gate recipe",
+      "bytes": 1963,
+      "sha256": "aa29100624067d2f3d57afad21a7fe12ea309a2b4cab884f93adaef5cd2a4b7f",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC42 source addition only."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC42-Work/Patch/Patch.csproj",
+      "source": null,
+      "role": "RC42 isolated Cecil patch project",
+      "bytes": 375,
+      "sha256": "f8430e3c7301d701e481a52e77f51b542d4eb913717b087020f76838df769729",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC42 source addition only."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC42-Work/Patch/Program.cs",
+      "source": null,
+      "role": "RC42 bounded allocator patch and binary equivalence audits",
+      "bytes": 11034,
+      "sha256": "43ee1caec6f1952dd0ebf2328a42d920b1e129cde9288ab5ac45f18262e1752e",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC42 source addition only."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC42-Work/README.md",
+      "source": null,
+      "role": "RC42 bounded allocator design and publication requirements",
+      "bytes": 3443,
+      "sha256": "2ab5709161c08550f077132ed955113ae636b209277928d7c63c5ea9df4550d5",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC42 source addition only."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC42-Work/Tests/Program.cs",
+      "source": null,
+      "role": "RC42 hash-pinned client and server transport test entry point",
+      "bytes": 2578,
+      "sha256": "5325ca89de097c906edc7b827de3ee68659d1f6aca4af85850c03fd764fd5198",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC42 source addition only."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC42-Work/Tests/README.md",
+      "source": null,
+      "role": "RC42 regression coverage and limitations",
+      "bytes": 2020,
+      "sha256": "c704e46ab173c63a71e8c6622deb5eccd508230fe1e1d794818f0308a9480281",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC42 source addition only."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC42-Work/Tests/ReflectionSuite.cs",
+      "source": null,
+      "role": "RC42 socket-free allocator, reliable reservation and cleanup regressions",
+      "bytes": 21863,
+      "sha256": "fc17bdd13277e983010e0fa6eb7ca5d6103bd1fc2a1de6a2a59d16c822020e03",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC42 source addition only."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC42-Work/Tests/TransportTests.csproj",
+      "source": null,
+      "role": "RC42 isolated CLR regression project",
+      "bytes": 371,
+      "sha256": "80cf25583d2161226a69393603c75a5732813a713e2d54f1d759bc521442f689",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC42 source addition only."
+      ]
+    },
+    {
       "path": "APFDiscordBot/scripts/Test-AccountReset.ps1",
       "source": null,
       "role": "Reviewed RC41 status, identity and isolated reset regression source",
@@ -28982,12 +29092,13 @@
       "path": "export-policy.json",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 31168,
-      "sha256": "2a56134474f89563ea4cc13ff999801a65d524b18ee4e1d112d4269059c94184",
+      "bytes": 32378,
+      "sha256": "2ed995fa3bd3bea23bffc45100002cd3d734f63aa2424776ee6a8023fcb4441a",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately.",
-        "Reviewed RC41 source update; production state and credentials excluded."
+        "Reviewed RC41 source update; production state and credentials excluded.",
+        "Reviewed RC42 source update; production state and credentials excluded."
       ]
     },
     {
@@ -29205,7 +29316,7 @@
       ]
     }
   ],
-  "totalFileBytes": 17029139,
+  "totalFileBytes": 17081589,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",
@@ -29224,5 +29335,5 @@
     "report": "PRIVACY-SCAN.json",
     "limitation": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
   },
-  "fileCount": 2920
+  "fileCount": 2930
 }
