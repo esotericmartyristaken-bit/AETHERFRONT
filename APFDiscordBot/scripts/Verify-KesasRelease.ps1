@@ -33,6 +33,27 @@ function Require-ReleasePath([string]$Name) {
     }
 }
 
+function Require-ReleaseAccountReset($Entry,[string]$Version) {
+    if($null -eq $Entry -or $Entry.Length -le 0 -or $Entry.Length -gt 4096){throw 'Missing or oversized account reset manifest'}
+    $reader=[IO.StreamReader]::new($Entry.Open(),[Text.UTF8Encoding]::new($false,$true))
+    try{$text=$reader.ReadToEnd()}finally{$reader.Dispose()}
+    Assert-ReleaseJsonUnique $text
+    $document=[Text.Json.JsonDocument]::Parse($text)
+    try{
+        $value=$document.RootElement
+        $fields=@('schemaVersion','applicationVersion','playerName','expectedAccountId','preserveAccountData')
+        if($value.ValueKind -ne 'Object'){throw 'Invalid account reset schema'}
+        $names=@($value.EnumerateObject()|ForEach-Object Name)
+        if($names.Count -ne 5 -or @($names|Where-Object {$_ -cnotin $fields}).Count){throw 'Invalid account reset schema'}
+        if($value.GetProperty('schemaVersion').GetRawText() -cne '1' -or
+            $value.GetProperty('applicationVersion').ValueKind -ne 'String' -or
+            $value.GetProperty('applicationVersion').GetString() -cne $Version -or $Version -cnotmatch '^kesas-rc[1-9][0-9]{0,14}$' -or
+            $value.GetProperty('playerName').ValueKind -ne 'String' -or $value.GetProperty('playerName').GetString() -cnotmatch '^[A-Za-z0-9_-]{1,64}$' -or
+            $value.GetProperty('expectedAccountId').ValueKind -ne 'String' -or $value.GetProperty('expectedAccountId').GetString() -cnotmatch '^key-[a-f0-9]{64}$' -or
+            $value.GetProperty('preserveAccountData').ValueKind -ne 'True'){throw 'Invalid account reset intent'}
+    }finally{$document.Dispose()}
+}
+
 function Require-ReferenceFields($Value,[string[]]$Fields) {
     if($null -eq $Value -or $Value -isnot [pscustomobject] -or @($Value.PSObject.Properties).Count -ne $Fields.Count -or
         @($Value.PSObject.Properties | Where-Object Name -cnotin $Fields).Count){throw 'Unsupported media reference schema'}
@@ -174,7 +195,7 @@ try {
         if(@($file.PSObject.Properties).Count -ne 2 -or @($file.PSObject.Properties | Where-Object Name -cnotin @('path','sha256')).Count -or $file.path -isnot [string] -or $file.sha256 -isnot [string]){throw 'Unsupported release file schema'}
         Require-ReleasePath $file.path
         if(!$seen.Add($file.path) -or
-            ($file.path -cnotin @('ClientTemplate.zip','APFPack-template.json','AetherfrontTechnology.json','MediaReferences.json') -and
+            ($file.path -cnotin @('ClientTemplate.zip','APFPack-template.json','AetherfrontTechnology.json','MediaReferences.json','AccountReset.json') -and
              $file.path -cnotmatch '^(ServerPayload|PackHostPayload|CertificateToolPayload|UpdateToolPayload)/' -and
              $file.path -cnotmatch '^MediaPayload/kesas-[a-z0-9-]+-[a-f0-9]{64}\.zip$')){throw 'Unsupported or duplicate release path'}
         if($file.path -match '^(ServerPayload|PackHostPayload|CertificateToolPayload|UpdateToolPayload)/(Config|Universe|Aetherfront|Logs|secrets)(/|$)'){throw 'Protected server state in release'}
@@ -199,6 +220,7 @@ try {
     foreach($name in @('ClientTemplate.zip','APFPack-template.json','AetherfrontTechnology.json')) {
         if(!$seen.Contains($name)){throw "Missing required release file: $name"}
     }
+    if($seen.Contains('AccountReset.json')){Require-ReleaseAccountReset ($zip.GetEntry('AccountReset.json')) $ExpectedVersion}
     if($seen.Contains('MediaReferences.json')){
         $document=Read-ReleaseJsonEntry ($zip.GetEntry('MediaReferences.json'))
         $catalog=Read-ReleaseMediaCatalog ($zip.GetEntry('ClientTemplate.zip'))

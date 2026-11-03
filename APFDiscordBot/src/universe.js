@@ -95,6 +95,33 @@ export class UniverseManager {
       readNumber('Funding.txt', 'funds'),
       readNumber('ResearchAndDevelopment.txt', 'sci')
     ]);
+    const nativeRoot = this.config.lmp?.deploymentRoot;
+    if (nativeRoot) {
+      let baseline = null;
+      try {
+        const serverRoot = path.resolve(nativeRoot, 'Server');
+        if (!this.config.lmp.serverRoot || comparePath(serverRoot) !== comparePath(path.resolve(this.config.lmp.serverRoot))) {
+          throw new Error('KESAS deployment does not own this server directory');
+        }
+        const [{ auditState, parseState }, { noLinks }] = await Promise.all([
+          import('../../ControlPlane/science-audit.mjs'),
+          import('../../ControlPlane/public-status.mjs')
+        ]);
+        const file = path.join(serverRoot, 'Aetherfront', 'state.json');
+        await noLinks(file);
+        const handle = await fs.open(file, 'r');
+        let raw;
+        try {
+          const stat = await handle.stat();
+          if (!stat.isFile() || stat.size > 32 * 1024 * 1024) throw new Error('Science state exceeds inspection limit');
+          raw = await handle.readFile();
+          if (raw.length !== stat.size) throw new Error('Science state changed during inspection');
+        } finally { await handle.close(); }
+        const audit = auditState(parseState(raw.toString('utf8')));
+        if (audit.status === 'consistent') baseline = audit.newPlayerTotalBaseline;
+      } catch { /* Unavailable or inconsistent personal progression must not fall back to legacy zero. */ }
+      return { funds, science: baseline, scienceBasis: 'new-player-baseline' };
+    }
     return { funds, science };
   }
 

@@ -18,6 +18,114 @@
   ],
   "files": [
     {
+      "path": "APFDiscordBot/scripts/Test-AccountReset.ps1",
+      "source": null,
+      "role": "Reviewed RC41 status, identity and isolated reset regression source",
+      "bytes": 13010,
+      "sha256": "fdd2492c7830a9752a65ae808c998c74df941b392054f034076849556b7a4f9c",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC41 source addition only.",
+        "Reviewed RC41 source update; production state and credentials excluded."
+      ]
+    },
+    {
+      "path": "APFDiscordBot/test/identity-messages.test.js",
+      "source": null,
+      "role": "Reviewed RC41 status, identity and isolated reset regression source",
+      "bytes": 856,
+      "sha256": "bf180f7644b2794617c0a3207edac55ae41cdf63af6a3a2a1622f677785ace16",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC41 source addition only.",
+        "Reviewed RC41 source update; production state and credentials excluded."
+      ]
+    },
+    {
+      "path": "APFDiscordBot/test/science-status.test.js",
+      "source": null,
+      "role": "Reviewed RC41 status, identity and isolated reset regression source",
+      "bytes": 6204,
+      "sha256": "67686771ace437e7ed84b8cba158c1fd16c48e176f89b0a634e456f010651101",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC41 source addition only.",
+        "Reviewed RC41 source update; production state and credentials excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC41-Work/Build-Release.py",
+      "source": null,
+      "role": "Reviewed RC41 immutable release assembly source",
+      "bytes": 5772,
+      "sha256": "90408f37940db08d0b1d5a41387b7fbaaa258707184b5efbbce3e0c54e38a854",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC41 source addition only.",
+        "Reviewed RC41 source update; production state and credentials excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC41-Work/IdentityTests/IdentityTests.csproj",
+      "source": null,
+      "role": "Reviewed RC41 isolated identity test project source",
+      "bytes": 210,
+      "sha256": "a948c2c46fea88e9774fae00034bd3072ff65598f958ec1dbe33a9ac724ea4c9",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC41 source addition only.",
+        "Reviewed RC41 source update; production state and credentials excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC41-Work/IdentityTests/Program.cs",
+      "source": null,
+      "role": "Reviewed RC41 isolated identity regression source",
+      "bytes": 4364,
+      "sha256": "1f9f24f9b32768d757b178df5b06eb85bf0498b9c3994c325c068e020fc9ca73",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC41 source addition only.",
+        "Reviewed RC41 source update; production state and credentials excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC41-Work/Patch/Patch.csproj",
+      "source": null,
+      "role": "Reviewed RC41 graft project source",
+      "bytes": 375,
+      "sha256": "f8430e3c7301d701e481a52e77f51b542d4eb913717b087020f76838df769729",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC41 source addition only.",
+        "Reviewed RC41 source update; production state and credentials excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC41-Work/Patch/Program.cs",
+      "source": null,
+      "role": "Reviewed RC41 identity reason and release version graft source",
+      "bytes": 8882,
+      "sha256": "f4c23572e4cc227adf347477b51f51280a9c3771527cdac72c5e142139e5d5ee",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC41 source addition only.",
+        "Reviewed RC41 source update; production state and credentials excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC41-Work/README.md",
+      "source": null,
+      "role": "Reviewed RC41 identity messages and account release documentation",
+      "bytes": 3185,
+      "sha256": "c1cc00f570403f5168ea98186bde7f587ad6cfd6baa101c82e157188a23fa20a",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC41 source addition only.",
+        "Reviewed RC41 source update; production state and credentials excluded."
+      ]
+    },
+    {
       "path": ".gitattributes",
       "source": null,
       "role": "publication metadata, license or export tooling",
@@ -329,11 +437,12 @@
       "path": "APFDiscordBot/scripts/Verify-KesasRelease.ps1",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 14605,
-      "sha256": "37dbbeb3254808c7d344cd729f1601d36c0484fec96f464fc3170e9ed0b6e0fe",
+      "bytes": 16369,
+      "sha256": "deacda8528321ca4c8fb66c98230b62068c65fbaec65ddd318ee768348a8749d",
       "sourceSha256": null,
       "transformations": [
-        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+        "Maintained directly in the repository; running host copies are selected and inventoried separately.",
+        "Reviewed RC41 source update; production state and credentials excluded."
       ]
     },
     {
@@ -358,13 +467,15 @@
     },
     {
       "path": "APFDiscordBot/src/bot.js",
-      "source": "APFDiscordBot/src/bot.js",
+      "source": null,
       "role": "Discord integration source/tests/operator scripts",
-      "bytes": 111492,
-      "sha256": "34d8bb1a847bc2370fe1dcedd3541860b82b214c1cb0cfe644da6f78dc995317",
-      "sourceSha256": "34d8bb1a847bc2370fe1dcedd3541860b82b214c1cb0cfe644da6f78dc995317",
+      "bytes": 111679,
+      "sha256": "2a1046675cca7750f538a070ce2758794d0d538dc7c0a1ec1b13fe12784ca60c",
+      "sourceSha256": null,
       "sourceModifiedUtc": "2026-10-20T00:59:50.698Z",
-      "transformations": []
+      "transformations": [
+        "Reviewed RC41 source update; production state and credentials excluded."
+      ]
     },
     {
       "path": "APFDiscordBot/src/config.js",
@@ -433,11 +544,12 @@
       "path": "APFDiscordBot/src/lmp.js",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 55947,
-      "sha256": "5398499737358291f620749e187f940241cdeb90927b24d88d42db1c1e4548f1",
+      "bytes": 56142,
+      "sha256": "41ab62116821a21a398d2910257acc19ddf5f72cf69c1065fa9427fa855135d7",
       "sourceSha256": null,
       "transformations": [
-        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+        "Maintained directly in the repository; running host copies are selected and inventoried separately.",
+        "Reviewed RC41 source update; production state and credentials excluded."
       ]
     },
     {
@@ -503,13 +615,15 @@
     },
     {
       "path": "APFDiscordBot/src/universe.js",
-      "source": "APFDiscordBot/src/universe.js",
+      "source": null,
       "role": "Discord integration source/tests/operator scripts",
-      "bytes": 29208,
-      "sha256": "5009f2bed17153cc265da08ca585e907c5e0ba003af0f5a55cb2d6231b35521d",
-      "sourceSha256": "5009f2bed17153cc265da08ca585e907c5e0ba003af0f5a55cb2d6231b35521d",
+      "bytes": 30691,
+      "sha256": "2165772a5a5c2db520b500020fbaa518134c01496b45756c9e37b264c36d6d05",
+      "sourceSha256": null,
       "sourceModifiedUtc": "2026-08-27T22:41:45.2429018Z",
-      "transformations": []
+      "transformations": [
+        "Reviewed RC41 source update; production state and credentials excluded."
+      ]
     },
     {
       "path": "APFDiscordBot/src/update-manager.js",
@@ -28772,11 +28886,12 @@
       "path": "KESAS-VPS-Server/Publish-Release.ps1",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 32659,
-      "sha256": "6da0b5993e23f28cddc225b48371906c529607e106f955b2b5501a9b5f631202",
+      "bytes": 46031,
+      "sha256": "8eda4cc98aed6f763bb1de13a244554231f3a82b77b823ad11c108b28b92b9f8",
       "sourceSha256": null,
       "transformations": [
-        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+        "Maintained directly in the repository; running host copies are selected and inventoried separately.",
+        "Reviewed RC41 source update; production state and credentials excluded."
       ]
     },
     {
@@ -28867,11 +28982,12 @@
       "path": "export-policy.json",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 30311,
-      "sha256": "a5be1be4bafc92d3937ecf895035cc19678e81fa14cec1d15be1714f9a63ef34",
+      "bytes": 31168,
+      "sha256": "2a56134474f89563ea4cc13ff999801a65d524b18ee4e1d112d4269059c94184",
       "sourceSha256": null,
       "transformations": [
-        "Maintained directly in the repository; running host copies are selected and inventoried separately."
+        "Maintained directly in the repository; running host copies are selected and inventoried separately.",
+        "Reviewed RC41 source update; production state and credentials excluded."
       ]
     },
     {
@@ -29089,7 +29205,7 @@
       ]
     }
   ],
-  "totalFileBytes": 16919705,
+  "totalFileBytes": 17029139,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",
@@ -29108,5 +29224,5 @@
     "report": "PRIVACY-SCAN.json",
     "limitation": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
   },
-  "fileCount": 2911
+  "fileCount": 2920
 }

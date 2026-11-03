@@ -6,6 +6,192 @@ function Write-PublisherStage([string]$Stage) {
     Write-Information -MessageData $Stage -Tags 'Aetherfront-PublisherStage' -InformationAction Continue
 }
 
+function Get-PublisherAccountResetIntent([string]$Text,[string]$Version) {
+    if([Text.Encoding]::UTF8.GetByteCount($Text) -gt 4096){throw 'Account reset manifest exceeds its limit'}
+    Assert-ReleaseJsonUnique $Text
+    $document=[Text.Json.JsonDocument]::Parse($Text)
+    try{
+        $value=$document.RootElement
+        $fields=@('schemaVersion','applicationVersion','playerName','expectedAccountId','preserveAccountData')
+        if($value.ValueKind -ne 'Object'){throw 'Invalid account reset schema'}
+        $names=@($value.EnumerateObject()|ForEach-Object Name)
+        if($names.Count -ne 5 -or @($names|Where-Object {$_ -cnotin $fields}).Count){throw 'Invalid account reset schema'}
+        if($value.GetProperty('schemaVersion').GetRawText() -cne '1' -or
+            $value.GetProperty('applicationVersion').ValueKind -ne 'String' -or
+            $value.GetProperty('applicationVersion').GetString() -cne $Version -or $Version -cnotmatch '^kesas-rc[1-9][0-9]{0,14}$' -or
+            $value.GetProperty('playerName').ValueKind -ne 'String' -or $value.GetProperty('playerName').GetString() -cnotmatch '^[A-Za-z0-9_-]{1,64}$' -or
+            $value.GetProperty('expectedAccountId').ValueKind -ne 'String' -or $value.GetProperty('expectedAccountId').GetString() -cnotmatch '^key-[a-f0-9]{64}$' -or
+            $value.GetProperty('preserveAccountData').ValueKind -ne 'True'){throw 'Invalid account reset intent'}
+        return [pscustomobject]@{playerName=$value.GetProperty('playerName').GetString();expectedAccountId=$value.GetProperty('expectedAccountId').GetString()}
+    }finally{$document.Dispose()}
+}
+
+function Initialize-PublisherAccountReset {
+    if('ApfAccountResetPlan' -as [type]){return}
+    Add-Type -TypeDefinition @'
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
+
+public static class ApfAccountResetPlan
+{
+    static void Need(bool condition) { if (!condition) throw new InvalidDataException("Account reset precondition failed; no reset written"); }
+    static JsonObject Object(JsonNode node) { Need(node is JsonObject); return (JsonObject)node; }
+    static JsonNode Field(JsonObject node, string name) { Need(node.ContainsKey(name) && node[name] != null); return node[name]; }
+    static JsonArray Array(JsonObject node, string name) { var value = Field(node, name); Need(value is JsonArray); return (JsonArray)value; }
+    static string Text(JsonNode node) { Need(node != null && node.GetValueKind() == JsonValueKind.String); return node.GetValue<string>(); }
+    static bool Equal(string a, string b) { return String.Equals(a, b, StringComparison.OrdinalIgnoreCase); }
+    static long Integer(JsonNode node) { Need(node != null && node.GetValueKind() == JsonValueKind.Number); long value; Need(Int64.TryParse(node.ToJsonString(), out value)); return value; }
+    static void Unique(JsonElement value)
+    {
+        if (value.ValueKind == JsonValueKind.Object) {
+            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var property in value.EnumerateObject()) { Need(names.Add(property.Name)); Unique(property.Value); }
+        } else if (value.ValueKind == JsonValueKind.Array) foreach (var item in value.EnumerateArray()) Unique(item);
+    }
+    static JsonObject Read(string text)
+    {
+        using (var document = JsonDocument.Parse(text)) Unique(document.RootElement);
+        return Object(JsonNode.Parse(text));
+    }
+    static void Fields(JsonObject value, params string[] fields) { Need(value.Count == fields.Length && fields.All(value.ContainsKey)); }
+    static JsonArray Bindings(JsonObject root)
+    {
+        Fields(root, "version", "accounts"); Need(Integer(Field(root, "version")) == 1);
+        var accounts = Array(root, "accounts"); Need(accounts.Count <= 10000);
+        var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var names = new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in accounts) {
+            var account = Object(item); Fields(account, "accountId", "publicKey", "playerNames");
+            string id = Text(Field(account, "accountId")), key = Text(Field(account, "publicKey"));
+            Need(!String.IsNullOrWhiteSpace(id) && id.Length <= 256 && ids.Add(id) && !String.IsNullOrWhiteSpace(key));
+            foreach (var value in Array(account, "playerNames")) {
+                string name = Text(value); Need(!String.IsNullOrWhiteSpace(name));
+                string owner; Need(!names.TryGetValue(name, out owner) || Equal(owner, id)); names[name] = id;
+            }
+        }
+        return accounts;
+    }
+    static void Key(string key, string expected)
+    {
+        Need(key.Length <= 800); var parts = key.Split('.'); Need(parts.Length == 2);
+        var modulus = Convert.FromBase64String(parts[0]); var exponent = Convert.FromBase64String(parts[1]);
+        Need((modulus.Length == 256 || modulus.Length == 384 || modulus.Length == 512) && modulus[0] >= 128 && exponent.SequenceEqual(new byte[]{1,0,1}));
+        using (var rsa = RSA.Create()) {
+            rsa.ImportParameters(new RSAParameters { Modulus = modulus, Exponent = exponent });
+            var parameters = rsa.ExportParameters(false);
+            Need(key == Convert.ToBase64String(parameters.Modulus) + "." + Convert.ToBase64String(parameters.Exponent));
+        }
+        using (var hash = SHA256.Create()) Need(expected == "key-" + BitConverter.ToString(hash.ComputeHash(Encoding.UTF8.GetBytes(key))).Replace("-", "").ToLowerInvariant());
+    }
+    public static bool Reference(string value, string name, string id)
+    {
+        return value.IndexOf(id, StringComparison.OrdinalIgnoreCase) >= 0 ||
+            Regex.IsMatch(value, @"(?<![A-Za-z0-9_-])" + Regex.Escape(name) + @"(?![A-Za-z0-9_-])", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    }
+    static void NoReferences(JsonNode node, string name, string id)
+    {
+        if (node == null) return;
+        if (node is JsonObject) foreach (var property in (JsonObject)node) { Need(!Reference(property.Key, name, id)); NoReferences(property.Value, name, id); }
+        else if (node is JsonArray) foreach (var item in (JsonArray)node) NoReferences(item, name, id);
+        else if (node.GetValueKind() == JsonValueKind.String) Need(!Reference(Text(node), name, id));
+    }
+    static void NoDisplayName(JsonNode node, string name)
+    {
+        if (node == null) return;
+        if (node is JsonObject) foreach (var property in (JsonObject)node) {
+            if (Equal(property.Key, "DisplayName")) Need(!Equal(Text(property.Value), name));
+            NoDisplayName(property.Value, name);
+        }
+        else if (node is JsonArray) foreach (var item in (JsonArray)node) NoDisplayName(item, name);
+    }
+    public static string[] Build(string bindingText, string worldText, string enrollmentText, string name, string id)
+    {
+        Need(Regex.IsMatch(name, @"^[A-Za-z0-9_-]{1,64}$") && Regex.IsMatch(id, @"^key-[a-f0-9]{64}$"));
+        string retired = "Retired-" + id.Substring(4, 16); Need(!Equal(name, retired));
+        var bindingRoot = Read(bindingText); var bindings = Bindings(bindingRoot);
+        var targets = bindings.Where(item => Equal(Text(Field(Object(item), "accountId")), id)).ToArray(); Need(targets.Length == 1);
+        var target = Object(targets[0]); Need(Text(Field(target, "accountId")) == id);
+        var aliases = Array(target, "playerNames"); Need(aliases.Count == 1 && Text(aliases[0]) == name);
+        Key(Text(Field(target, "publicKey")), id);
+        foreach (var item in bindings) foreach (var alias in Array(Object(item), "playerNames")) {
+            Need(!Equal(Text(alias), retired));
+            if (!System.Object.ReferenceEquals(item, target)) Need(!Equal(Text(alias), name));
+        }
+        if (enrollmentText != null) {
+            var enrollment = Read(enrollmentText); Bindings(enrollment);
+            NoReferences(enrollment, name, id); NoReferences(enrollment, retired, id);
+        }
+        var world = Read(worldText); var accounts = Array(world, "Accounts");
+        var worldTargets = accounts.Where(item => Equal(Text(Field(Object(item), "AccountId")), id)).ToArray(); Need(worldTargets.Length == 1);
+        var account = Object(worldTargets[0]); Need(Text(Field(account, "AccountId")) == id && Text(Field(account, "DisplayName")) == name);
+        foreach (var item in accounts) {
+            string displayName = Text(Field(Object(item), "DisplayName")); Need(!Equal(displayName, retired));
+            if (!System.Object.ReferenceEquals(item, account)) Need(!Equal(displayName, name));
+        }
+        var factions = Array(world, "Factions"); NoDisplayName(factions, retired);
+        foreach (var faction in factions) NoDisplayName(Array(Object(faction), "Members"), name);
+        var personal = Object(Field(world, "PersonalProgression")); Need(Integer(Field(personal, "Version")) == 1);
+        var players = Array(personal, "Players");
+        var ledgerTargets = players.Where(item => Equal(Text(Field(Object(item), "AccountId")), id)).ToArray(); Need(ledgerTargets.Length == 1);
+        var ledger = Object(ledgerTargets[0]); Need(Text(Field(ledger, "AccountId")) == id);
+        long revision = Integer(Field(world, "Revision")); Need(revision >= 0 && revision < Int64.MaxValue);
+        bindings.Remove(target); NoReferences(bindingRoot, name, id);
+        // Release the name, not its assets: historical names, account IDs and ledger stay intact.
+        account["DisplayName"] = JsonValue.Create(retired);
+        world["Revision"] = JsonValue.Create(revision + 1);
+        // Parsed JsonNode numeric tokens are retained without a double/PowerShell JSON round trip.
+        return new[]{bindingRoot.ToJsonString(), world.ToJsonString()};
+    }
+}
+'@
+}
+
+function Invoke-PublisherAccountReset([string]$Root,[string]$Text,[string]$Version,[switch]$ValidateOnly) {
+    $intent=Get-PublisherAccountResetIntent $Text $Version
+    $retiredName='Retired-'+$intent.expectedAccountId.Substring(4,16)
+    Initialize-PublisherAccountReset
+    $bindingPath=Get-UpdateChildPath $Root 'Server/Universe/IdentityBindings.json'
+    $worldPath=Get-UpdateChildPath $Root 'Server/Aetherfront/state.json'
+    $enrollmentPath=Get-UpdateChildPath $Root 'Server/Config/IdentityEnrollments.json'
+    $bindingText=Read-UpdateText $bindingPath 16MB
+    $worldText=Read-UpdateText $worldPath 32MB
+    $enrollmentText=$null
+    if([IO.File]::Exists($enrollmentPath)){$enrollmentText=Read-UpdateText $enrollmentPath 16MB}
+    $enrollmentArgument=if($null -eq $enrollmentText){[System.Management.Automation.Language.NullString]::Value}else{$enrollmentText}
+    $next=[ApfAccountResetPlan]::Build($bindingText,$worldText,$enrollmentArgument,$intent.playerName,$intent.expectedAccountId)
+    [long]$inspectedBytes=0;[int]$inspectedFiles=0
+    foreach($family in @('Scenarios','Crafts')){
+        $assetRoot=Get-UpdateChildPath $Root ('Server/Universe/'+$family)
+        Assert-UpdateTree $assetRoot
+        if(-not [IO.Directory]::Exists($assetRoot)){continue}
+        foreach($item in Get-ChildItem -LiteralPath $assetRoot -Recurse -Force){
+            if([ApfAccountResetPlan]::Reference($item.Name,$intent.playerName,$intent.expectedAccountId) -or
+                [ApfAccountResetPlan]::Reference($item.Name,$retiredName,$intent.expectedAccountId)){throw 'Account reset has scenario or craft references'}
+            if($item.PSIsContainer){continue}
+            $inspectedFiles++;$inspectedBytes+=$item.Length
+            if($inspectedFiles -gt 20000 -or $inspectedBytes -gt 128MB){throw 'Account reset reference inspection limit exceeded'}
+            $assetText=Read-UpdateText $item.FullName 16MB
+            if([ApfAccountResetPlan]::Reference($assetText,$intent.playerName,$intent.expectedAccountId)){throw 'Account reset has scenario or craft references'}
+        }
+    }
+    # Online inspection is advisory; unrelated live ticks may legitimately change Revision.
+    if($ValidateOnly){return}
+    # Recheck the exact snapshots before either atomic write. Caller owns the native
+    # server lock, durable activation journal and full Universe/Aetherfront backups.
+    if((Read-UpdateText $bindingPath 16MB) -cne $bindingText -or (Read-UpdateText $worldPath 32MB) -cne $worldText -or
+        ([IO.File]::Exists($enrollmentPath) -ne ($null -ne $enrollmentText)) -or
+        ($null -ne $enrollmentText -and (Read-UpdateText $enrollmentPath 16MB) -cne $enrollmentText)){throw 'Account reset snapshot changed'}
+    Write-UpdateAtomic $worldPath $next[1]
+    Write-UpdateAtomic $bindingPath $next[0]
+}
+
 function Add-ReleaseMedia([string]$ReleaseRoot,[string]$ConfigRoot,$Release,$Catalog,[string]$PrivateStage) {
     # Only additive, content-addressed public archives. Operator configuration,
     # existing media, state and keys are never replacement targets here.
@@ -260,7 +446,7 @@ try{
         if(@($file.PSObject.Properties).Count -ne 2 -or @($file.PSObject.Properties | Where-Object Name -cnotin @('path','sha256')).Count -or $file.path -isnot [string] -or $file.sha256 -isnot [string]){throw 'Unsupported release file schema'}
         $relative=Get-UpdateRelativePath $file.path
         if(!$declared.Add($relative)){throw 'Duplicate release manifest entry'}
-        if(@('ClientTemplate.zip','APFPack-template.json','AetherfrontTechnology.json','MediaReferences.json') -cnotcontains $relative -and $relative -cnotmatch '^(ServerPayload|PackHostPayload|CertificateToolPayload|UpdateToolPayload)/' -and $relative -cnotmatch '^MediaPayload/kesas-[a-z0-9-]+-[a-f0-9]{64}\.zip$'){throw "Unsupported release file: $relative"}
+        if(@('ClientTemplate.zip','APFPack-template.json','AetherfrontTechnology.json','MediaReferences.json','AccountReset.json') -cnotcontains $relative -and $relative -cnotmatch '^(ServerPayload|PackHostPayload|CertificateToolPayload|UpdateToolPayload)/' -and $relative -cnotmatch '^MediaPayload/kesas-[a-z0-9-]+-[a-f0-9]{64}\.zip$'){throw "Unsupported release file: $relative"}
         if($relative -match '^(ServerPayload|PackHostPayload|CertificateToolPayload|UpdateToolPayload)/(Config|Universe|Aetherfront|Logs|secrets)(/|$)'){throw 'Release contains protected server state'}
         if($file.sha256 -notmatch '^[a-fA-F0-9]{64}$'){throw "Invalid release SHA256: $relative"}
         $path=Get-UpdateChildPath "$stage/Release" $relative
@@ -268,6 +454,11 @@ try{
     }
     foreach($required in @('ClientTemplate.zip','APFPack-template.json','AetherfrontTechnology.json')){if(!$declared.Contains($required)){throw "Missing required release file: $required"}}
     if(@(Get-ChildItem -LiteralPath "$stage/Release" -Recurse -Force -File).Count -ne $declared.Count+1){throw 'Release contains undeclared files'}
+    $accountResetText=$null
+    if($declared.Contains('AccountReset.json')){
+        $accountResetText=Read-UpdateText "$stage/Release/AccountReset.json" 4096
+        $null=Get-PublisherAccountResetIntent $accountResetText $version
+    }
     Expand-UpdateArchive "$stage/Release/ClientTemplate.zip" "$stage/Client"
     $hasMediaReferences=$declared.Contains('MediaReferences.json')
     $clientCatalogText=Read-UpdateText "$stage/Client/GameData/LunaMultiplayer/Launcher/install-catalog.json" $(if($hasMediaReferences){1MB}else{16MB})
@@ -277,6 +468,7 @@ try{
     $githubEnabled=$githubSettings -and $githubSettings.Value.enabled
     $fingerprint=$null;$prepared=$null;$reuse=$false
     $bootstrapSource="$stage/KESAS-Client-Bootstrap.zip"
+    if($null -ne $accountResetText){Invoke-PublisherAccountReset $root $accountResetText $version -ValidateOnly}
     if($githubEnabled){
         if(-not [IO.File]::Exists("$PSScriptRoot/GitHub.Publish.ps1")){throw 'GitHub publisher is not installed; no services have been stopped.'}
         . "$PSScriptRoot/GitHub.Publish.ps1"
@@ -374,6 +566,10 @@ try{
     [IO.Directory]::Move("$stage/Published",$published)
     $changed=$true
     foreach($item in $targets | Where-Object {$_.relative -ne 'Updates/APFClientUpdate.json'}){Copy-UpdateAtomic $item.source (Get-UpdateChildPath $root $item.relative)}
+    if($null -ne $accountResetText){
+        if(@(Get-UpdateServiceProcesses $root $cfg).Count){throw 'Account reset requires stopped native services'}
+        Invoke-PublisherAccountReset $root $accountResetText $version
+    }
     if($wasRunning){$activationLock.Dispose();$activationLock=$null;$started=$true;Start-UpdatedServer $root $cfg}
     # The stable feed becomes visible only after every file and service is ready.
     Copy-UpdateAtomic "$published/APFClientUpdate.json" $currentFeed

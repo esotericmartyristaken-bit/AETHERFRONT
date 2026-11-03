@@ -123,7 +123,9 @@ export function publicStatusEmbed(status, latestBackup = null, now = Date.now(),
     ? 'Unknown'
     : Number(value).toLocaleString('en-US', { maximumFractionDigits });
   const funds = publicNumber(careerStats?.funds, 0);
-  const science = publicNumber(careerStats?.science, 1);
+  const newPlayerScience = careerStats?.scienceBasis === 'new-player-baseline';
+  const science = publicNumber(careerStats?.science, newPlayerScience ? 6 : 1);
+  const scienceLabel = newPlayerScience ? 'New-player science' : 'Science';
   const stateText = deployment === 'updating'
     ? 'The server is temporarily offline while an update installs.'
     : deployment === 'starting'
@@ -137,7 +139,7 @@ export function publicStatusEmbed(status, latestBackup = null, now = Date.now(),
   const description = [password ? `Server Password: **${password}**` : '', stateText].filter(Boolean).join('\n\n');
   return new EmbedBuilder().setColor(color).setTitle(title).setDescription(description).addFields(
     { name: 'Players', value: `${playerCountText(status?.playerCount)}\n\n**Uptime**\n${uptime}`, inline: true },
-    { name: 'Last backup', value: `${backup}\n\n**Funds · Science**\n${funds} · ${science}`, inline: true }
+    { name: 'Last backup', value: `${backup}\n\n**Funds · ${scienceLabel}**\n${funds} · ${science}`, inline: true }
   ).setFooter({ text: PUBLIC_STATUS_FOOTER }).setTimestamp(new Date(now));
 }
 export function redactCommandText(text) {

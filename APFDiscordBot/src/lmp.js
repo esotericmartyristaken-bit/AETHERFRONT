@@ -37,6 +37,7 @@ function dateFromValue(value) {
 export function shortLeaveReason(reason) {
   const value = String(reason || '').trim();
   if (!value) return 'disconnected';
+  if (value === 'Identity account or player name belongs to another key; ask the server owner about account enrollment') return 'Please choose another player name, or contact the server owner.';
   if (/^connection timed out$/i.test(value)) return 'connection timed out';
   if (/^quit$/i.test(value)) return 'quit';
   if (/\bkick(?:ed)?\b/i.test(value)) return 'kicked';

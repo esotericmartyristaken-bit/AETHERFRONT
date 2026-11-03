@@ -405,6 +405,30 @@
   ],
   "explicitFiles": [
     {
+      "source": "Aetherfront-RC41-Work/Build-Release.py",
+      "role": "Reviewed RC41 immutable release assembly source"
+    },
+    {
+      "source": "Aetherfront-RC41-Work/README.md",
+      "role": "Reviewed RC41 identity messages and account release documentation"
+    },
+    {
+      "source": "Aetherfront-RC41-Work/Patch/Program.cs",
+      "role": "Reviewed RC41 identity reason and release version graft source"
+    },
+    {
+      "source": "Aetherfront-RC41-Work/Patch/Patch.csproj",
+      "role": "Reviewed RC41 graft project source"
+    },
+    {
+      "source": "Aetherfront-RC41-Work/IdentityTests/Program.cs",
+      "role": "Reviewed RC41 isolated identity regression source"
+    },
+    {
+      "source": "Aetherfront-RC41-Work/IdentityTests/IdentityTests.csproj",
+      "role": "Reviewed RC41 isolated identity test project source"
+    },
+    {
       "source": "Aetherfront-RC40-Work/Build-Release.py",
       "role": "Reviewed RC40 immutable release assembly source"
     },
