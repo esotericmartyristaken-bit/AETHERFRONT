@@ -405,6 +405,34 @@
   ],
   "explicitFiles": [
     {
+      "source": "Aetherfront-RC40-Work/Build-Release.py",
+      "role": "Reviewed RC40 immutable release assembly source"
+    },
+    {
+      "source": "Aetherfront-RC40-Work/README.md",
+      "role": "Reviewed RC40 transport retention documentation"
+    },
+    {
+      "source": "Aetherfront-RC40-Work/Patch/Program.cs",
+      "role": "Reviewed RC40 targeted transport and release-version graft source"
+    },
+    {
+      "source": "Aetherfront-RC40-Work/Patch/TransportPatch.csproj",
+      "role": "Reviewed RC40 transport patch build definition"
+    },
+    {
+      "source": "Aetherfront-RC40-Work/Tests/Program.cs",
+      "role": "Reviewed RC40 isolated transport regression source"
+    },
+    {
+      "source": "Aetherfront-RC40-Work/Tests/TransportTests.csproj",
+      "role": "Reviewed RC40 isolated regression build definition"
+    },
+    {
+      "source": "Aetherfront-RC40-Work/Mono/Program.cs",
+      "role": "Reviewed RC40 Unity Mono transport regression source"
+    },
+    {
       "source": "Aetherfront-RC28-Work/Build-Engine.ps1",
       "role": "RC28 isolated Engine build from the immutable authenticated RC27 baseline"
     },

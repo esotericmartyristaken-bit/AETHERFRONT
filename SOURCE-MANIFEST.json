@@ -4098,6 +4098,83 @@
       "sha256": "cf3bcb07477899076a9695cf9339e73416f479427e0423977eb639d493598087"
     },
     {
+      "path": "Aetherfront-RC40-Work/Build-Release.py",
+      "source": null,
+      "role": "Reviewed RC40 immutable release assembly source",
+      "bytes": 6593,
+      "sha256": "6d712077c43676e4288eab2d6fec3f19e4bd46900f35e2eaadf78d3b7f749da4",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC40 source addition only."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC40-Work/Mono/Program.cs",
+      "source": null,
+      "role": "Reviewed RC40 Unity Mono transport regression source",
+      "bytes": 14918,
+      "sha256": "12acce50cc84e51f99b202bbeba156094d859c7fcf85e75b7a05bf0ddd97fd11",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC40 source addition only."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC40-Work/Patch/Program.cs",
+      "source": null,
+      "role": "Reviewed RC40 targeted transport and release-version graft source",
+      "bytes": 12141,
+      "sha256": "c1a54966b9efedf75e6a1555ed5d913eed4f9fd187799d0de9ace12542cd6c35",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC40 source addition only."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC40-Work/Patch/TransportPatch.csproj",
+      "source": null,
+      "role": "Reviewed RC40 transport patch build definition",
+      "bytes": 375,
+      "sha256": "f8430e3c7301d701e481a52e77f51b542d4eb913717b087020f76838df769729",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC40 source addition only."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC40-Work/README.md",
+      "source": null,
+      "role": "Reviewed RC40 transport retention documentation",
+      "bytes": 3363,
+      "sha256": "e462861d9ce3d16de52a3eda4fee72c401ab94c817340bf76540b991f8353f64",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC40 source addition only."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC40-Work/Tests/Program.cs",
+      "source": null,
+      "role": "Reviewed RC40 isolated transport regression source",
+      "bytes": 35684,
+      "sha256": "86c5eeefe14cab8614f7c953b158515ea79c1d2dbd1788908dee3522162927d0",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC40 source addition only."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC40-Work/Tests/TransportTests.csproj",
+      "source": null,
+      "role": "Reviewed RC40 isolated regression build definition",
+      "bytes": 385,
+      "sha256": "16952dcca32676f1c49b1f81b8f23ee989d83407745ff87b6199e8cf7a3449da",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC40 source addition only."
+      ]
+    },
+    {
       "path": "Aetherfront-Source/.nuget/nuget.config",
       "source": "Aetherfront-Source/.nuget/nuget.config",
       "role": "fork client/server/shared libraries/tests/tools",
@@ -28790,8 +28867,8 @@
       "path": "export-policy.json",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 29324,
-      "sha256": "5998ce5b8f05831676badd11639d18c82019785564a296d80ae2f33776c9ba50",
+      "bytes": 30311,
+      "sha256": "a5be1be4bafc92d3937ecf895035cc19678e81fa14cec1d15be1714f9a63ef34",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -29012,7 +29089,7 @@
       ]
     }
   ],
-  "totalFileBytes": 16831815,
+  "totalFileBytes": 16906261,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",
@@ -29031,5 +29108,5 @@
     "report": "PRIVACY-SCAN.json",
     "limitation": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
   },
-  "fileCount": 2904
+  "fileCount": 2911
 }
