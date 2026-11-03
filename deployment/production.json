@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
-  "version": "kesas-rc41",
-  "releaseTag": "host-kesas-rc41",
-  "assetName": "Aetherfront-Release-kesas-rc41.zip",
-  "sha256": "78e932abcdc03951168f22c78b0d8f05eaa494ca614a84b4c73c4b8fd115ff3c",
-  "sizeBytes": 5895780,
-  "notes": "Clearer sign-in messages and new-player science status.",
+  "version": "kesas-rc42",
+  "releaseTag": "host-kesas-rc42",
+  "assetName": "Aetherfront-Release-kesas-rc42.zip",
+  "sha256": "7bceff2674ce133750ad7ea5400bce3ef90e7e704399c207c2031c1408b7958f",
+  "sizeBytes": 5895672,
+  "notes": "Fix excessive pooled-buffer allocation during reliable synchronization.",
   "requirements": {
     "contractVersion": 1,
     "capabilities": [
