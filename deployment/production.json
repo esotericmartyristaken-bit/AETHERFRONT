@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
-  "version": "kesas-rc39",
-  "releaseTag": "host-kesas-rc39",
-  "assetName": "Aetherfront-Release-kesas-rc39.zip",
-  "sha256": "4453b000e1400ef4625e3fae0adfa6e04b952655907d20ce72d6cc410d0df08d",
-  "sizeBytes": 5753493,
-  "notes": "RC39: enforce Parallax collisions off on every join; signed game-assembly repair. Existing mod downloads reused; arenas remain disabled.",
+  "version": "kesas-rc40",
+  "releaseTag": "host-kesas-rc40",
+  "assetName": "Aetherfront-Release-kesas-rc40.zip",
+  "sha256": "84fc1d34a3e5c81debd36f55de90d32818294e698dcb1a3e0964cc6fa04b4df4",
+  "sizeBytes": 5895349,
+  "notes": "Fix disconnects caused by oversized recycled reliable packet buffers.",
   "requirements": {
     "contractVersion": 1,
     "capabilities": [
