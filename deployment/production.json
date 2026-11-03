@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
-  "version": "kesas-rc40",
-  "releaseTag": "host-kesas-rc40",
-  "assetName": "Aetherfront-Release-kesas-rc40.zip",
-  "sha256": "84fc1d34a3e5c81debd36f55de90d32818294e698dcb1a3e0964cc6fa04b4df4",
-  "sizeBytes": 5895349,
-  "notes": "Fix disconnects caused by oversized recycled reliable packet buffers.",
+  "version": "kesas-rc41",
+  "releaseTag": "host-kesas-rc41",
+  "assetName": "Aetherfront-Release-kesas-rc41.zip",
+  "sha256": "78e932abcdc03951168f22c78b0d8f05eaa494ca614a84b4c73c4b8fd115ff3c",
+  "sizeBytes": 5895780,
+  "notes": "Clearer sign-in messages and new-player science status.",
   "requirements": {
     "contractVersion": 1,
     "capabilities": [
