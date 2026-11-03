@@ -381,6 +381,102 @@ test('only completed matching 15-minute countdown with fresh known bridge counts
   assert.equal((await f.tick()).status,'healthy'); assert.equal(f.state.publish,1);
 });
 
+async function bridgeTimestampFixture(t) {
+  const f = await fixture(t,{guarded:true});
+  const now = Date.parse('2026-11-03T02:22:00.000Z');
+  const countdown = {schemaVersion:1,status:'deploying',version:f.value.version,force:true,countdownMinutes:15,
+    countdownStartedAt:new Date(now-901000).toISOString(),deployAt:new Date(now-1000).toISOString(),countdownAnnouncements:[900000]};
+  const bridge = {updatedAt:'2026-11-03T02:21:57.4256181Z',playerCount:2,connectedCount:3};
+  const stateFile = path.join(f.settings.botRoot,'state','kesas-update-state.json');
+  const bridgeFile = path.join(f.settings.nativeRoot,'Server','APFDiscordBridge','status.json');
+  t.after(() => {
+    assert.deepEqual(f.state.calls,[],'guardArgs must not invoke host processes');
+    assert.deepEqual(f.state.urls,[],'guardArgs must not access the network');
+  });
+  const guard = async (stateChange = {}, bridgeChange = {}, at = now) => {
+    await writeJson(stateFile,{...countdown,...stateChange});
+    await writeJson(bridgeFile,{...bridge,...bridgeChange});
+    return f.agent.guardArgs(f.value,at);
+  };
+  return {now,countdown,bridge,guard};
+}
+test('guardArgs bridge UTC accepts actual seven-digit .NET timestamp', async t => {
+  const f = await bridgeTimestampFixture(t);
+  assert.deepEqual(await f.guard(),['-AllowActivePlayers']);
+});
+test('guardArgs bridge UTC accepts each precision from one through seven digits', async t => {
+  const f = await bridgeTimestampFixture(t);
+  for (let digits = 1; digits <= 7; digits++) {
+    const updatedAt = `2026-11-03T02:21:57.${'4256181'.slice(0,digits)}Z`;
+    assert.deepEqual(await f.guard({},{updatedAt}),['-AllowActivePlayers'],updatedAt);
+  }
+  for (const age of [0,9999,10000]) {
+    const updatedAt = new Date(f.now-age).toISOString().replace(/Z$/,'0000Z');
+    assert.deepEqual(await f.guard({},{updatedAt}),['-AllowActivePlayers'],`freshness boundary ${age} ms`);
+  }
+});
+test('guardArgs bridge UTC rejects invalid calendar, non-UTC, missing timezone and malformed values', async t => {
+  const f = await bridgeTimestampFixture(t);
+  for (const updatedAt of [
+    '2026-02-29T02:21:57.4256181Z','2026-02-30T02:21:57.4256181Z','2026-04-31T02:21:57.4256181Z',
+    '2026-00-03T02:21:57.4256181Z','2026-13-03T02:21:57.4256181Z','2026-11-00T02:21:57.4256181Z',
+    '2026-11-32T02:21:57.4256181Z','2026-11-03T24:00:00.0000000Z',
+    '2026-11-03T02:60:00.0000000Z','2026-11-03T02:21:60.0000000Z',
+    '2026-11-03T02:21:57.4256181','2026-11-03T02:21:57.4256181+00:00',
+    '2026-11-03T03:21:57.4256181+01:00','2026-11-03T01:21:57.4256181-01:00',
+    '2026-11-03T02:21:57Z','2026-11-03T02:21:57.Z','2026-11-03T02:21:57.42561810Z',
+    '2026-11-03T02:21:57.4256181z','2026-11-03 02:21:57.4256181Z',
+    '2026-11-03T02:21:57,4256181Z','2026-11-03T02:21:57.4256181Zjunk',
+    ' 2026-11-03T02:21:57.4256181Z','2026-11-03T02:21:57.4256181Z ',
+    '', 'invalid', null, undefined, f.now, true, {}, []
+  ]) assert.deepEqual(await f.guard({},{updatedAt}),[],`updatedAt=${JSON.stringify(updatedAt)}`);
+});
+test('guardArgs bridge UTC rejects fresh-looking rolled calendar dates', async t => {
+  const f = await bridgeTimestampFixture(t);
+  // Each invalid date normalizes into a fresh instant under Date.parse. This
+  // isolates calendar rejection from the independent 10-second freshness guard.
+  for (const updatedAt of ['2026-02-29T02:21:57.4256181Z','2026-04-31T02:21:57.4256181Z',
+    '2026-11-03T24:00:00.0000000Z']) {
+    const now = Date.parse(updatedAt)+1000;
+    assert.ok(Number.isFinite(now));
+    assert.deepEqual(await f.guard({countdownStartedAt:new Date(now-901000).toISOString(),
+      deployAt:new Date(now-1000).toISOString()},{updatedAt},now),[],updatedAt);
+  }
+});
+test('guardArgs bridge UTC rejects future and stale timestamps at millisecond boundaries', async t => {
+  const f = await bridgeTimestampFixture(t);
+  for (const age of [-1,-10000,10001,60000]) {
+    for (const suffix of ['Z','0000Z']) {
+      const updatedAt = new Date(f.now-age).toISOString().replace(/Z$/,suffix);
+      assert.deepEqual(await f.guard({},{updatedAt}),[],`age=${age} ms timestamp=${updatedAt}`);
+    }
+  }
+});
+test('guardArgs bridge UTC rejects missing, noninteger and inconsistent player counts', async t => {
+  const f = await bridgeTimestampFixture(t);
+  for (const field of ['playerCount','connectedCount']) {
+    for (const value of [undefined,null,-1,1.5,'2',true,{},[],Number.MAX_SAFE_INTEGER+1])
+      assert.deepEqual(await f.guard({},{[field]:value}),[],`${field}=${JSON.stringify(value)}`);
+  }
+  assert.deepEqual(await f.guard({},{connectedCount:1}),[],'connectedCount cannot be below playerCount');
+});
+test('guardArgs bridge UTC does not relax canonical countdown timestamps or completed fifteen-minute admission', async t => {
+  const f = await bridgeTimestampFixture(t);
+  for (const field of ['countdownStartedAt','deployAt']) {
+    const canonical = f.countdown[field];
+    for (const value of [canonical.replace('.000Z','.0Z'),canonical.replace('.000Z','.0000000Z'),
+      canonical.replace('.000Z','Z'),canonical.replace('Z','+00:00'),canonical.replace('Z','z'),
+      '2026-02-29T02:21:57.425Z',null,undefined,f.now])
+      assert.deepEqual(await f.guard({[field]:value}),[],`${field}=${JSON.stringify(value)}`);
+  }
+  for (const change of [
+    {countdownStartedAt:new Date(f.now-899000).toISOString(),deployAt:new Date(f.now+1000).toISOString()},
+    {countdownStartedAt:new Date(f.now-900999).toISOString()},
+    {countdownMinutes:14},{countdownMinutes:'15'},{countdownAnnouncements:[]},{countdownAnnouncements:['900000']},
+    {force:false},{force:'true'},{status:'queued'},{schemaVersion:2},{version:'kesas-rc31'}
+  ]) assert.deepEqual(await f.guard(change),[],JSON.stringify(change));
+});
+
 async function guardFixture(t) {
   const f=await fixture(t,{publishFailure:true});
   await f.tick();

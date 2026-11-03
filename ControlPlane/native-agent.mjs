@@ -369,7 +369,13 @@ export class NativeAgent {
           deadline - started < 900000 || !Number.isFinite(now) || now < deadline ||
           !Array.isArray(state.countdownAnnouncements) || !state.countdownAnnouncements.includes(900000)) return [];
       const bridge = await strictFile(path.join(this.settings.nativeRoot,'Server','APFDiscordBridge','status.json'),4*1024*1024,undefined,true);
-      const age = now - timestamp(bridge.updatedAt);
+      // The .NET bridge emits round-trip UTC timestamps with seven fractional
+      // digits, unlike JavaScript's three. Normalize only that bounded UTC
+      // fraction, then retain the canonical calendar and freshness checks.
+      // Countdown state above still requires its exact JavaScript timestamp.
+      const updated = typeof bridge.updatedAt === 'string' && /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})\.(\d{1,7})Z$/.exec(bridge.updatedAt);
+      const normalized = updated ? `${updated[1]}.${updated[2].padEnd(3,'0').slice(0,3)}Z` : null;
+      const age = now - timestamp(normalized);
       if (!Number.isFinite(age) || age < 0 || age > 10000 || !Number.isSafeInteger(bridge.playerCount) || bridge.playerCount < 0 ||
           !Number.isSafeInteger(bridge.connectedCount) || bridge.connectedCount < bridge.playerCount) return [];
       return ['-AllowActivePlayers'];

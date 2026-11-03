@@ -27751,8 +27751,8 @@
       "path": "ControlPlane/native-agent.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 47647,
-      "sha256": "1b662ec2ff741b21c1b576afcf2bb159ab6831a3366b0cb96d9ef194fbe47fb5",
+      "bytes": 49089,
+      "sha256": "7208818b88125fbfed1d3189ad47f95a423f1d2688c8882ecb0d98e3743584ee",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -27828,8 +27828,8 @@
       "path": "ControlPlane/test/native-agent.test.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 27474,
-      "sha256": "7b48d3ed496dabf1c015e948743b19ae3ab78d9046185b181176e0deb51a6218",
+      "bytes": 39476,
+      "sha256": "a0b272d4a7d7067df2e9b9de8707cd114affa550e377c8e942bcf5069ffef46a",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -29089,7 +29089,7 @@
       ]
     }
   ],
-  "totalFileBytes": 16906261,
+  "totalFileBytes": 16919705,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",
