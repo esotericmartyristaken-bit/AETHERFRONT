@@ -1163,6 +1163,46 @@
     {
       "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
       "source": "Aetherfront-RC44-Work/Deployment/Start-LocalBot.ps1"
+    },
+    {
+      "source": "Aetherfront-RC46-Work/Build-Release.py",
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC46-Work/Client/ResearchQueue.cs",
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC46-Work/Client/ResearchSync.cs",
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC46-Work/Client/ResearchSync.csproj",
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC46-Work/Patch/Patch.csproj",
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC46-Work/Patch/Program.cs",
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC46-Work/README.md",
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC46-Work/Tests/Program.cs",
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC46-Work/Tests/Run-Mono.ps1",
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC46-Work/Tests/Tests.csproj",
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source"
     }
   ],
   "binaryPrerequisites": [

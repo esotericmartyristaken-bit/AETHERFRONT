@@ -637,3 +637,22 @@ production evidence before player admission. Online admission requires the
 No remote-host Git deployment, elevation bypass, forced admission, journal reset,
 or blind recovery is authorized by these results. Candidate boot is not a client
 join or flight test. See [RC45 evidence, limits, and operator workflow](Aetherfront-RC45-Work/README.md).
+
+## RC46 research purchase confirmation
+
+The shipping server core reproduces concurrent purchases reusing a cached
+sequence: the first succeeds, the second returns `PersonalSequenceMismatch`,
+and retrying the still-locked node with the saved counter succeeds without a
+duplicate charge. The client now serializes distinct purchase intents and waits
+for the authoritative personal unlock. Snapshot refresh precedes timeout retry;
+three attempts or a missing fresh snapshot pause visibly. Session identity
+changes clear pending intents. Server sequence and balance checks are unchanged.
+
+Nine cases / 40 checks pass both on .NET 8 and against the actual grafted helper
+under KSP's embedded Mono. The patch audit restricts original changes to three
+personal-client methods and the LmpClient version getter/constant; all other
+methods, resources, dependencies and original fields are preserved. RC46 layers
+only these DLLs and version/manifests onto pinned RC45. Its native server payload
+and ground/orbit repairs are unchanged, so their prior test results are retained,
+not claimed as new RC46 gameplay tests. An interactive stock R&D multiplayer
+playthrough remains unperformed. See [RC46 source and bounds](Aetherfront-RC46-Work/README.md).

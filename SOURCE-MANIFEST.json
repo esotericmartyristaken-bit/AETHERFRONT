@@ -29545,8 +29545,8 @@
       "path": "TESTING.md",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 41449,
-      "sha256": "6700e48fdbdfdaf9a0756048558c585eb80f2f1f7deb246ac642f9a208e5de51",
+      "bytes": 42689,
+      "sha256": "d28d4e8f6305d32c52bc74018911864ebd3380e25a1a88b84c2f56a63e6ba7f5",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately.",
@@ -29567,8 +29567,8 @@
       "path": "export-policy.json",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 45356,
-      "sha256": "86156d070718605032997028e6147fd16442387e99ca0be34a3fac65aa34d9d1",
+      "bytes": 46988,
+      "sha256": "a21b610700e969f785f55224837a512abde41ea76487538d6a31fa05123c2a3c",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately.",
@@ -30115,9 +30115,129 @@
         "Maintained directly in the repository; reviewed source addition only.",
         "Production state, credentials and licensed runtime references excluded."
       ]
+    },
+    {
+      "path": "Aetherfront-RC46-Work/Patch/Program.cs",
+      "source": null,
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source",
+      "bytes": 11403,
+      "sha256": "1735c4d2944a9c0773757e29ec78556a09be04e991b4252720f4176c5191f02c",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC46-Work/Client/ResearchSync.csproj",
+      "source": null,
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source",
+      "bytes": 1176,
+      "sha256": "39ef1428668305686dc3c5a4e41c2e8712c60bd5bf0106802c69ae218198cec9",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC46-Work/Tests/Tests.csproj",
+      "source": null,
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source",
+      "bytes": 425,
+      "sha256": "439f446e69be6feb481a2065e5db229a0f4766f6ecdbaf32176ce71cd25dd596",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC46-Work/Patch/Patch.csproj",
+      "source": null,
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source",
+      "bytes": 338,
+      "sha256": "141ca610899c713e2ecd77c13eb0777f4c6ba797b993a98bb69df23baf2661cd",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC46-Work/README.md",
+      "source": null,
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source",
+      "bytes": 3067,
+      "sha256": "99ad8d0db3845780b28fd317105eccc70f4f83c9047d11b929ed6157851bc921",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC46-Work/Build-Release.py",
+      "source": null,
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source",
+      "bytes": 5721,
+      "sha256": "ec8d4d78df8c1458f9e9ce76ed582a0730ceafd44d9929e63fd02dd513e47dd8",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC46-Work/Tests/Run-Mono.ps1",
+      "source": null,
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source",
+      "bytes": 1943,
+      "sha256": "003359633e328efd73b995f73c941a5a0bc6c3e864ecb3bc3b8ca89c42fb4e39",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC46-Work/Tests/Program.cs",
+      "source": null,
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source",
+      "bytes": 7392,
+      "sha256": "85dee1dd74f5a9f8ace307885878b31e6b609ac9517049ce1249f5196e3549f0",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC46-Work/Client/ResearchQueue.cs",
+      "source": null,
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source",
+      "bytes": 5870,
+      "sha256": "949a80eae9ff35c1c288ec3f90e4b9139b2668a13fca9a6786d9b83046d30b2c",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC46-Work/Client/ResearchSync.cs",
+      "source": null,
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source",
+      "bytes": 1957,
+      "sha256": "b45a5a285fa73c68c09e2bcb113c7db2f0eeb973a88fc1d9d37268dad4a263f3",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
     }
   ],
-  "totalFileBytes": 17791282.0,
+  "totalFileBytes": 17794154.0,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",
@@ -30136,5 +30256,5 @@
     "report": "PRIVACY-SCAN.json",
     "limitation": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
   },
-  "fileCount": 2999
+  "fileCount": 3009
 }

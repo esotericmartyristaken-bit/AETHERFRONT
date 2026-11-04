@@ -141,5 +141,26 @@
     "reviewedSyntheticMatches": [],
     "contentOrMatchedValuesPrinted": false,
     "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
+  },
+  "incrementalRC46": {
+    "scannedUtc": "2026-11-04T07:09:02.0087199Z",
+    "filesScanned": 12,
+    "elapsedSeconds": 0.4136479,
+    "ruleMilliseconds": {
+      "credential-url": 3.9188,
+      "discord-token": 22.0479,
+      "private-key": 9.904599999999999,
+      "credential-literal": 23.5091,
+      "cloud-key": 4.2344,
+      "user-home": 4.0254,
+      "github-token": 4.4325,
+      "private-host": 39.8076
+    },
+    "regexTimeoutSecondsPerFileRule": 5,
+    "findingCount": 0,
+    "findings": [],
+    "reviewedSyntheticMatches": [],
+    "contentOrMatchedValuesPrinted": false,
+    "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
   }
 }

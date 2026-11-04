@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><TargetFramework>net472</TargetFramework><AssemblyName>AetherfrontResearchSync</AssemblyName><LangVersion>10</LangVersion></PropertyGroup>
+ <ItemGroup>
+  <Reference Include="AetherfrontCore"><HintPath>$(ClientPlugins)/AetherfrontCore.dll</HintPath><Private>false</Private></Reference>
+  <Reference Include="AetherfrontPersonalClient"><HintPath>$(ClientPlugins)/AetherfrontPersonalClient.dll</HintPath><Private>false</Private></Reference>
+  <Reference Include="LmpClient"><HintPath>$(ClientPlugins)/LmpClient.dll</HintPath><Private>false</Private></Reference>
+  <Reference Include="Assembly-CSharp"><HintPath>$(KspManaged)/Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+  <Reference Include="UnityEngine"><HintPath>$(KspManaged)/UnityEngine.dll</HintPath><Private>false</Private></Reference>
+  <Reference Include="UnityEngine.CoreModule"><HintPath>$(KspManaged)/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+  <Reference Include="UnityEngine.IMGUIModule"><HintPath>$(KspManaged)/UnityEngine.IMGUIModule.dll</HintPath><Private>false</Private></Reference>
+ </ItemGroup>
+</Project>
