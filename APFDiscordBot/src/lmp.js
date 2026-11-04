@@ -79,6 +79,8 @@ const SAFE_SERVER_COMMANDS = new Set([
   'help', 'countclients', 'listclients', 'listlocks', 'connectionstats', 'backup', 'changesettings',
   'dekessler', 'nukeksc', 'clearvessels', 'kick', 'ban', 'vessel', 'setfunds', 'setscience', 'restartserver'
 ]);
+const LOCAL_HOST_CONTROL_REASON = 'host-deployment-local-only: use the reviewed local host operator workflow';
+const LIFECYCLE_COMMANDS = new Set(['start', 'stop', 'restart', 'restartserver', 'shutdown']);
 
 export function parseBridgeJson(text) {
   return JSON.parse(String(text ?? '').replace(/^\uFEFF/, ''));
@@ -109,6 +111,10 @@ export class LmpController extends EventEmitter {
     if (!root) return null;
     if (path.resolve(root, 'Server').toLowerCase() !== this.root.toLowerCase()) throw new Error('KESAS deployment does not own this server directory');
     return path.resolve(root);
+  }
+
+  get localHostDeploymentOnly() {
+    return Boolean(this.config.lmp?.deploymentRoot) && this.config.updates?.hostDeploymentMode === 'local-only';
   }
 
   async readSettings() {
@@ -577,13 +583,14 @@ export class LmpController extends EventEmitter {
       players: playerSnapshot.players,
       playerSnapshot,
       mode: this.config.lmp.control?.mode || 'observe',
-      externalLifecycleEnabled: Boolean(this.config.lmp.control?.allowExternalProcessStart && this.config.lmp.control?.allowExternalProcessStop && this.config.lmp.control?.allowExternalProcessRestart)
+      externalLifecycleEnabled: !this.localHostDeploymentOnly && Boolean(this.config.lmp.control?.allowExternalProcessStart && this.config.lmp.control?.allowExternalProcessStop && this.config.lmp.control?.allowExternalProcessRestart)
     };
     this.lastStatus = status;
     return status;
   }
 
   async start() {
+    if (this.localHostDeploymentOnly) return { ok: false, reason: LOCAL_HOST_CONTROL_REASON };
     const existing = await this.processInfo();
     if (existing) return { ok: false, reason: 'already-running', process: existing };
     const mode = this.config.lmp.control?.mode || 'observe';
@@ -604,10 +611,12 @@ export class LmpController extends EventEmitter {
   }
 
   async sendConsoleLine(line) {
+    const text = String(line).replace(/[\r\n]/g, ' ').trim();
+    if (this.localHostDeploymentOnly && text.startsWith('/') && LIFECYCLE_COMMANDS.has(text.slice(1).split(/\s+/, 1)[0].toLowerCase()))
+      return { ok: false, reason: LOCAL_HOST_CONTROL_REASON };
     const process = await this.processInfo();
     if (!process) return { ok: false, reason: 'offline' };
     if (!process.owned || !this.child?.stdin?.writable) return { ok: false, reason: 'not-controller-owned' };
-    const text = String(line).replace(/[\r\n]/g, ' ').trim();
     if (!text) return { ok: false, reason: 'empty-command' };
     this.child.stdin.write(`${text}\n`);
     return { ok: true, command: text };
@@ -648,6 +657,7 @@ export class LmpController extends EventEmitter {
 
   async sendBridgeCommand(command, argument = '') {
     const name = String(command || '').trim().toLowerCase();
+    if (this.localHostDeploymentOnly && LIFECYCLE_COMMANDS.has(name)) return { ok: false, reason: LOCAL_HOST_CONTROL_REASON };
     const commandArgument = String(argument || '').replace(/[\r\n\x00-\x1f\x7f]/g, ' ').trim();
     if (!SAFE_SERVER_COMMANDS.has(name) || commandArgument.length > 260) return { ok: false, reason: 'invalid-bridge-command' };
     const readyPath = path.join(this.bridgeRoot, 'ready.json');
@@ -700,6 +710,7 @@ export class LmpController extends EventEmitter {
     let normalized = String(command).trim().replace(/^\//, '');
     if (!normalized || normalized.length > 300 || /[\x00-\x1f\x7f]/.test(normalized)) return { ok: false, reason: 'invalid-command-text' };
     const name = normalized.split(/\s+/, 1)[0].toLowerCase();
+    if (this.localHostDeploymentOnly && LIFECYCLE_COMMANDS.has(name)) return { ok: false, reason: LOCAL_HOST_CONTROL_REASON };
     if (!SAFE_SERVER_COMMANDS.has(name)) return { ok: false, reason: `command-not-allowlisted:${name}` };
     if (['kick', 'ban', 'setfunds', 'setscience'].includes(name)) {
       const argument = normalized.slice(name.length).trim();
@@ -724,6 +735,7 @@ export class LmpController extends EventEmitter {
   }
 
   async restart() {
+    if (this.localHostDeploymentOnly) return { ok: false, reason: LOCAL_HOST_CONTROL_REASON };
     const process = await this.processInfo();
     if (!process) return { ok: false, reason: 'offline' };
     if (process.owned) return this.sendConsoleLine('/restartserver');
@@ -735,6 +747,7 @@ export class LmpController extends EventEmitter {
   }
 
   async stop() {
+    if (this.localHostDeploymentOnly) return { ok: false, reason: LOCAL_HOST_CONTROL_REASON };
     const process = await this.processInfo();
     if (!process) return { ok: false, reason: 'offline' };
     if (!process.owned && !this.config.lmp.control?.allowExternalProcessStop) return { ok: false, reason: 'external-process-protected' };
@@ -744,6 +757,7 @@ export class LmpController extends EventEmitter {
   }
 
   async startExternal() {
+    if (this.localHostDeploymentOnly) return { ok: false, reason: LOCAL_HOST_CONTROL_REASON };
     if (this.deploymentRoot) {
       const root = shellQuotePowerShell(this.deploymentRoot);
       const launcher = shellQuotePowerShell(path.join(this.deploymentRoot, 'Start-Server.ps1'));
@@ -756,6 +770,7 @@ export class LmpController extends EventEmitter {
   }
 
   async stopExternal(process) {
+    if (this.localHostDeploymentOnly) return { ok: false, reason: LOCAL_HOST_CONTROL_REASON };
     if (this.deploymentRoot) {
       const script = shellQuotePowerShell(path.join(this.config.__root, 'scripts', 'Stop-KesasGracefully.ps1'));
       const root = shellQuotePowerShell(this.deploymentRoot);
@@ -774,6 +789,7 @@ export class LmpController extends EventEmitter {
   }
 
   async publishRelease(archive, notes = '', options = {}) {
+    if (this.localHostDeploymentOnly) return { ok: false, reason: LOCAL_HOST_CONTROL_REASON };
     const root = this.deploymentRoot;
     if (!root) throw new Error('KESAS deployment root is not configured');
     if (this.config.__controlRoot) return publishThroughBroker(this.config, archive, notes, options);

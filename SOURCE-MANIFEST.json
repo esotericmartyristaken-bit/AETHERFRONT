@@ -836,7 +836,7 @@
       "source": "APFDiscordBot/package-lock.json",
       "role": "Node dependency lock",
       "bytes": 11787,
-      "sha256": "33fcb0168aaf32c5a593306ed1d7312cb93fed4e60d8f5711f9f8ba6f1a0a9c7",
+      "sha256": "612d5af266a239d24ac5251db294429a7e11faf782448b01adaac627d5388065",
       "sourceSha256": "33fcb0168aaf32c5a593306ed1d7312cb93fed4e60d8f5711f9f8ba6f1a0a9c7",
       "sourceModifiedUtc": "2026-08-12T21:57:15.2735636Z",
       "transformations": []
@@ -1127,8 +1127,8 @@
       "path": "APFDiscordBot/src/lmp.js",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 56142,
-      "sha256": "41ab62116821a21a398d2910257acc19ddf5f72cf69c1065fa9427fa855135d7",
+      "bytes": 57556,
+      "sha256": "096578812d59ccbf1a3df2cca62086ed380326bc85b9bba2e91f630ae78e382e",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately.",
@@ -1212,8 +1212,8 @@
       "path": "APFDiscordBot/src/update-manager.js",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 38532,
-      "sha256": "84357bb270b0ac0b66712fde2a083b20da978877c5961209be19c3485c24a6d8",
+      "bytes": 40620,
+      "sha256": "37c2a0239a24859ae7be2cf4dc49a4191fa8a39144f3e8914a7b641b584a86d1",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -28151,8 +28151,8 @@
       "path": "ControlPlane/Build-ControlBundle.ps1",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 3557,
-      "sha256": "d8b614e2419a1f82b15f5001b6d3217539841af0c364fa291fec46b62a3f2f31",
+      "bytes": 4394,
+      "sha256": "5dbfd1619b914519c9bfe94943015f157ecea8e28438ef08a235006ce2df2621",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -28250,8 +28250,8 @@
       "path": "ControlPlane/README.md",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 16667,
-      "sha256": "bacc40bdc4553c8ad4a6235110271ee764b29058f3cbaede1a9d745ffa7ed0e6",
+      "bytes": 22749,
+      "sha256": "ec960bbf7d9ff0a5b5ab7df7405d73d82c45e19c14a9f1d8cf3e0c71ad4a7b85",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -28360,8 +28360,8 @@
       "path": "ControlPlane/broker-host.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 2325,
-      "sha256": "c225c87e5fd752210c6babd3cebd5d6fda3cc007dce7e0e8fb5de15f8264847c",
+      "bytes": 2351,
+      "sha256": "6f890c9393c2e0772e62626fef94db3684ef44166baaf0f49a30b919bacbd534",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -28382,8 +28382,8 @@
       "path": "ControlPlane/controller.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 48550,
-      "sha256": "1784e28ec934e5684677054a628bac2a7db615568e3dc35f7e45ae8675c2ec61",
+      "bytes": 48812,
+      "sha256": "b6aba6a66378b15d74cdf2234f6b339f49d86d182300465b8d3fe428cf956bde",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -28415,8 +28415,8 @@
       "path": "ControlPlane/host-reporter.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 27288,
-      "sha256": "d366ab7b36e44c8165b06314f9c4606a357a68f67645dfb3ec81eac2f93c2f60",
+      "bytes": 28950,
+      "sha256": "3e58af3f5d24dac091a4bb53148fad3878328f2411dbe39916aa9bef0ee11bab",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -28459,8 +28459,8 @@
       "path": "ControlPlane/public-status.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 12503,
-      "sha256": "b271a14cfc87d5bf5a660640ea34269ec1ba1090ffe04fc366da19dcde177cf5",
+      "bytes": 20152,
+      "sha256": "ad4c006428e24ea8177ff8d5a1c9c4102e8260d9bd5f785b9ab8da6630b965a5",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -28492,8 +28492,8 @@
       "path": "ControlPlane/test/engine.test.mjs",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 21366,
-      "sha256": "350b2e6cf96a2480d66c5c84b3e37f991aaedd39a956d5ff073ac97fc4de970f",
+      "bytes": 21441,
+      "sha256": "7ba0bbfd6f5984e38c3822164187b34315c646a465685017c9ea3a685bedf8bb",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -29469,8 +29469,8 @@
       "path": "KESAS-VPS-Server/Publish-Release.ps1",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 46031,
-      "sha256": "8eda4cc98aed6f763bb1de13a244554231f3a82b77b823ad11c108b28b92b9f8",
+      "bytes": 49289,
+      "sha256": "f388d38ebe790ff2099c20911fffbf33d20e3b7fd44398d1a6401447bf1fb91b",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately.",
@@ -29503,8 +29503,8 @@
       "path": "KESAS-VPS-Server/Update.Common.ps1",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 20665,
-      "sha256": "f77526806f656e916539fb879a206ab6787060477ad4a4a866bddc9b2b421a57",
+      "bytes": 21437,
+      "sha256": "728a7d440c8529ddb0f7b5a6e21d7506257decd803ed40403d2720003a1c8c24",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -29545,8 +29545,8 @@
       "path": "TESTING.md",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 38444,
-      "sha256": "c554e3af71da63e16791614245e49ab557263241cc1dbb15e21abe235bffa6ee",
+      "bytes": 41449,
+      "sha256": "6700e48fdbdfdaf9a0756048558c585eb80f2f1f7deb246ac642f9a208e5de51",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately.",
@@ -29567,8 +29567,8 @@
       "path": "export-policy.json",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 39792,
-      "sha256": "2397b2b296038c552b7240ebeda9b26008aa5f852579d631f3066e96b8de8188",
+      "bytes": 45356,
+      "sha256": "86156d070718605032997028e6147fd16442387e99ca0be34a3fac65aa34d9d1",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately.",
@@ -29791,9 +29791,333 @@
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
       ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/Deployment/Install-LocalBot.ps1",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 7919,
+      "sha256": "1dfe8f950a74ab644078bc6860a6e8ca5d142953ad27c094e496fc09960c932f",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/Deployment/Test-PreparedCandidate.ps1",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 53507,
+      "sha256": "f456b91ba8b4bcd1a763e920d586284ba96c73417f1ff04754378e2b642ef454",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC45-Work/Build-Release.py",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 6406,
+      "sha256": "656bace5a4a078fe9aa94e5d5949ddead353ee91d75601a371abacbb4ca1d335",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/Deployment/Restore-PreactivationService.ps1",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 26446,
+      "sha256": "84ee33484006ba6922fa3e7e088af7baf6a2814359b06cd1901463851511863f",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/PhysicsTests/Run.ps1",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 10770,
+      "sha256": "a3ef327d0252f57c9871a4338cd55451d890300c3fae5a69b6a7efc0c865b719",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC45-Work/ClientFixes/GroundClearance.csproj",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 1361,
+      "sha256": "0591e6c58affd7f0384b5c6fd0bbf5450f794cfbc88b32c1b89fc801f4d609ff",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/PhysicsTests/GroundClearanceProbe.cs",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 15675,
+      "sha256": "747c2df34d9c9ba0991ff9ddd204ca6070e14c6bbf120bb352a519dbac80398f",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC45-Work/ClientFixes/LocalOrbitTracking.cs",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 2365,
+      "sha256": "07a4d50c7c00b7a9fc822729228f6ae7a31a933f236771bfa8c2fcc9cd11f74e",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/Deployment/Test-RestorePreactivationService.ps1",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 19693,
+      "sha256": "430c90087728b2b6f686851321993ad7825f9f3e2da3f067e12ec2ff699735e1",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/Deployment/Test-StartPreactivationRecovery.ps1",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 8572,
+      "sha256": "95bb65797e8b3473381e44fe48751197354eb03cfd24cacbde24cb048d011aa2",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC45-Work/README.md",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 10361,
+      "sha256": "76f41df344c84437ae5ac1a9b0af1be973e7f602976f10ac4d6d6508f68d8f79",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/Deployment/Start-PreactivationRecovery.ps1",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 12972,
+      "sha256": "aac2b512abfc9763c532fce8c9b8a93efee41cd4080e0b1db567a266926ded83",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC45-Work/Patch/Program.cs",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 14286,
+      "sha256": "a20a064c416c9c48c0d087608f98d13b66a5066d4aad7c0f2447579f565a0d25",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC45-Work/Patch/Patch.csproj",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 338,
+      "sha256": "141ca610899c713e2ecd77c13eb0777f4c6ba797b993a98bb69df23baf2661cd",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/Deployment/Assert-PreparedReceipt.ps1",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 1909,
+      "sha256": "38a8eaca9af4119737833dffe568929a59b568524b95c55aece9bf959a8e3be3",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/Deployment/Test-PreparedCandidate.Tests.ps1",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 37769,
+      "sha256": "02818df4d3636088690298baecc01474917fb793d09f24155595f283e9300c56",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/Deployment/LocalBridge.mjs",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 5583,
+      "sha256": "c5582fc356c942119c7ac585ae79973ac95270c74db074c72e4a462cf08ec1b2",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/PhysicsTests/PrefixGuardProbe.cs",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 4428,
+      "sha256": "f1c91f3fdaa2cf32c458c0a16f5a6a98f855e840461a24dc311258dcedd0602b",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/Deployment/LocalBridge.test.mjs",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 1105,
+      "sha256": "ab315ad81b7a9dec319e4240c8450067757a6ad4d642ce5479f3f42a5978320f",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/PhysicsTests/UnityTrackingProbe.cs",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 22581,
+      "sha256": "f325898e04f99dbc09ca0ced74de2c9e7c2a8ef05a56d3e924810287ed05966e",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/Deployment/Start-LocalBot.ps1",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 2160,
+      "sha256": "b9630d7ba60284c67a97f2e3fec69589aaf94c18d486ed4a67dc36c61063bcf3",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "APFDiscordBot/test/local-only-updates.test.js",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 16065,
+      "sha256": "2f08bc2272420955f0a0fcb4cbaa85be5b8da25ece5ab52da54a4d2928ec331b",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/Deployment/Deploy-LocalRelease.ps1",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 10934,
+      "sha256": "12b51e52400ee4a37ab902972025c0af62695de6d92d38449f2432e5271f81cc",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/Deployment/LocalAdmission.ps1",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 3363,
+      "sha256": "ff8a57cb728e318e3f2a549ad999fc6673b323d29e45c0ba4bbd2f91748f76e1",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/PhysicsTests/TrackingEligibility.cs",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 776,
+      "sha256": "c13e6b000cec2835798b920f6a557bca4d4b8b93bd3619e7364453c320487346",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC45-Work/ClientFixes/LocalOrbitTracking.csproj",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 1383,
+      "sha256": "af3224225ccc24274ed78ddcbf3cfe8731281c3c8a9c4bcd424b3dd102d5ab6f",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC45-Work/ClientFixes/GroundClearance.cs",
+      "source": null,
+      "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
+      "bytes": 7825,
+      "sha256": "d34d31ae20049c316c2a759b1a8f38af39fc661ac61d415edc363dcb434f1ebc",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
     }
   ],
-  "totalFileBytes": 17438748,
+  "totalFileBytes": 17471442.0,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",
@@ -29812,5 +30136,5 @@
     "report": "PRIVACY-SCAN.json",
     "limitation": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
   },
-  "fileCount": 2972
+  "fileCount": 2999
 }

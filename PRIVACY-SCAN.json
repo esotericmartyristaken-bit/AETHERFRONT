@@ -120,5 +120,26 @@
     }
   ],
   "contentOrMatchedValuesPrinted": false,
-  "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
+  "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check.",
+  "incrementalRC45": {
+    "scannedUtc": "2026-11-04T05:33:16.4007325Z",
+    "filesScanned": 33,
+    "elapsedSeconds": 2.9725837,
+    "ruleMilliseconds": {
+      "credential-literal": 207.53119999999993,
+      "github-token": 17.0513,
+      "user-home": 15.064399999999997,
+      "private-key": 33.07070000000001,
+      "credential-url": 19.7717,
+      "private-host": 231.14890000000003,
+      "discord-token": 117.27259999999998,
+      "cloud-key": 31.7888
+    },
+    "regexTimeoutSecondsPerFileRule": 5,
+    "findingCount": 0,
+    "findings": [],
+    "reviewedSyntheticMatches": [],
+    "contentOrMatchedValuesPrinted": false,
+    "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
+  }
 }

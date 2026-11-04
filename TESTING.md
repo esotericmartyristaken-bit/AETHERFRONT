@@ -591,3 +591,49 @@ getter/constant; its other 6,326 methods retain RC43 science and pacing fixes.
 Native preflight verifies the keyless RC44 archive; both profiles and all media
 retain their previous payloads except coordinated version metadata and the
 audited clock helper/client release stamp. No saved clock is reset or edited.
+
+# RC45 ground-clearance and local-orbit regression gates
+
+RC45 combines the immutable RC44 clock repair with two client repairs; changed
+bytes use `kesas-rc45`, not a replacement RC44 release. The reviewed launch
+failures span multiple craft and sites: five unsupported closest-point warnings
+immediately precede 997.561-997.707 m ground corrections, while the successful
+comparison has no such warning and a 0.878 m correction. This is a shared failure
+signature, not evidence of a persistent water-launch mode.
+
+A final Unity 2019.4.18f1 native graft run passed 43 cases / 918 checks. Three
+non-convex mesh fixtures make the unsupported query return its 1000 m-offset
+probe unchanged; the shipping getLowestPoint reports 1000 m. The single-call
+replacement and actual ground helper installation recover fixture extents of
+1 m, 2 m, and 3 m. Supported colliders, existing bounds layers, and disabled/
+trigger exclusions retain their tested behavior. Policy tests separately cover
+finite/invalid bounds and probes, routing, and exact-one-call transpiler matching.
+
+Native tracking fixtures inject stale velocity into an unpacked-but-kinematic
+rigidbody and reproduce 94.258, 95.016, and 96.163 degree orbital-plane changes.
+The production orbit prefix retains the stock plane for the active, locally owned,
+non-spectated, kinematic vessel without queued updates. Dynamic, remote,
+spectated, foreign-lock, and queued-update fixtures preserve the shipping LMP
+path. The final run executes production GroundClearance.Install, the production
+orbit prefix, and the native guard with actual ownership/queue resolution,
+including no-owner behavior and all 128 policy combinations. Tested assemblies
+are Candidate5 LmpClient SHA256
+`5441fc826e5861dcad99257640805386a8ae774f9f69c18f9c2876ec01a24799`
+and Candidate2 AetherfrontContinuityClient SHA256
+`564cd10e83bc8b3bce298044ef9e54048616b7557651b678c1bd45519e893b58`.
+
+The native run tests the actual final grafts, not natural unpack, full flight,
+full modpack, a multiplayer session, or an end-to-end gameplay replay. Historical
+collider identities, natural transition timing, third-party patch interactions,
+and exceptional cleanup remain unproven. TimeSync is unchanged; nearby clock
+steps do not alone prove causation. The ff3a6c99-prefixed server clock helper is
+unchanged from RC44, including its previously reported 32/206 and 8/103 results;
+those counts are not new RC45 tests.
+
+The local operator workflow requires exact archive/source identity, isolated
+prepared-candidate startup and shutdown, a fresh bound receipt, and unchanged
+production evidence before player admission. Online admission requires the
+15-minute warning; fresh authoritative empty status permits early admission.
+No remote-host Git deployment, elevation bypass, forced admission, journal reset,
+or blind recovery is authorized by these results. Candidate boot is not a client
+join or flight test. See [RC45 evidence, limits, and operator workflow](Aetherfront-RC45-Work/README.md).

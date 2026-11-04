@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>AetherfrontLocalOrbitTracking</AssemblyName>
+    <LangVersion>10</LangVersion>
+    <Deterministic>true</Deterministic>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <KspManaged Condition="'$(KspManaged)' == ''">$(MSBuildThisFileDirectory)../../../Aetherfront-KSP-Smoke/KSP_x64_Data/Managed</KspManaged>
+    <LmpClientPath Condition="'$(LmpClientPath)' == ''">$(MSBuildThisFileDirectory)../../../UpdateBuilds/MissionTime-20261104/client-patched/LmpClient.dll</LmpClientPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="LocalOrbitTracking.cs" />
+    <Reference Include="LmpClient"><HintPath>$(LmpClientPath)</HintPath><Private>false</Private></Reference>
+    <Reference Include="Assembly-CSharp"><HintPath>$(KspManaged)/Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine"><HintPath>$(KspManaged)/UnityEngine.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(KspManaged)/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.PhysicsModule"><HintPath>$(KspManaged)/UnityEngine.PhysicsModule.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

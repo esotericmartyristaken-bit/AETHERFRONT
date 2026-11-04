@@ -1,6 +1,10 @@
 [CmdletBinding()]
-param([Parameter(Mandatory=$true)][string]$ReleaseZip,[string]$Notes='KESAS update',[switch]$AllowActivePlayers,[string]$DeploymentRoot=$env:APF_NATIVE_ROOT)
+param([Parameter(Mandatory=$true)][string]$ReleaseZip,[string]$Notes='KESAS update',[switch]$AllowActivePlayers,[string]$DeploymentRoot=$env:APF_NATIVE_ROOT,
+    [switch]$LocalDeployment,[string]$LocalBotConfig,[string]$LocalNode,[string]$LocalEvidenceRoot)
 . "$PSScriptRoot/Update.Common.ps1"
+if(-not $LocalDeployment){throw 'Git-triggered host publication is retired. Use the reviewed Deploy-LocalRelease.ps1 operator command.'}
+if($AllowActivePlayers){throw 'External active-player override is disabled. Local admission must deliver the fifteen-minute warning.'}
+if(-not $LocalBotConfig -or -not $LocalNode -or -not $LocalEvidenceRoot){throw 'Local deployment configuration and private evidence root are required'}
 
 function Write-PublisherStage([string]$Stage) {
     Write-Information -MessageData $Stage -Tags 'Aetherfront-PublisherStage' -InformationAction Continue
@@ -372,13 +376,13 @@ foreach($name in @('Server','PackHost','CertificateTool','Updates','Backups','.r
 $releaseLock=New-Object IO.FileStream((Get-UpdateChildPath $root '.publish.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
 $stage=Get-UpdateChildPath $root ('.release-staging/'+[Guid]::NewGuid().ToString('N'))
 $journal=Get-UpdateChildPath $root '.update-transaction.json'
-$backup=$null;$changed=$false;$stopped=$false;$started=$false;$published=$null;$journalWritten=$false
+$backup=$null;$changed=$false;$stopped=$false;$stopAttempted=$false;$started=$false;$published=$null;$journalWritten=$false
 $activationLock=$null
 $replacements=New-Object 'Collections.Generic.List[object]'
 $states=New-Object 'Collections.Generic.List[object]'
 $wasRunning=$false
 $githubPlan=$null
-$nativeReady=$false
+$nativeReady=$false;$recoveryWatchdog=$null
 try{
     Write-PublisherStage 'guard-admission'
     $releasePath=Assert-UpdatePath (Resolve-Path -LiteralPath $ReleaseZip).Path
@@ -537,13 +541,36 @@ try{
         $destination=Get-UpdateChildPath $root $item.relative
         if([IO.Directory]::Exists($destination)){throw "Expected a file destination: $($item.relative)"}
     }
+    # The candidate boots and shuts down on isolated ports using these exact
+    # prepared bytes before players are warned or production is stopped.
+    $localCode=Assert-UpdatePath (Join-Path $PSScriptRoot '../Aetherfront-RC44-Work/Deployment')
+    $candidateGate=Join-Path $localCode 'Test-PreparedCandidate.ps1'
+    . $candidateGate
+    . (Join-Path $localCode 'Assert-PreparedReceipt.ps1')
+    . (Join-Path $localCode 'LocalAdmission.ps1')
+    . (Join-Path $localCode 'Start-PreactivationRecovery.ps1')
+    $candidateReceipt=Join-Path $LocalEvidenceRoot ('candidate-'+[Guid]::NewGuid().ToString('N')+'.json')
+    Write-PublisherStage 'candidate-preflight'
+    $candidate=Invoke-PreparedCandidate -DeploymentRoot $root -ReleaseDirectory "$stage/Release" -PublishedDirectory "$stage/Published" -ExpectedVersion $version -ResultPath $candidateReceipt
+    Assert-LocalPreparedReceipt $candidateReceipt $candidate.ReceiptSha256 $root "$stage/Release" "$stage/Published" $version $candidateGate
+    Write-PublisherStage 'local-player-warning'
+    $admission=Wait-LocalDeploymentAdmission $LocalNode $localCode $LocalBotConfig $LocalEvidenceRoot $version $Notes
+    Assert-LocalPreparedReceipt $candidateReceipt $candidate.ReceiptSha256 $root "$stage/Release" "$stage/Published" $version $candidateGate
+    $AllowActivePlayers=[bool]$admission.allowActivePlayers
     Write-PublisherStage 'guard-admission'
+    $runningNow=@(Get-UpdateServiceProcesses $root $cfg).Count -gt 0
+    $wasRunning=$wasRunning -or $runningNow
     if($wasRunning){
         if(-not $AllowActivePlayers){Assert-PublisherEmpty $root $cfg}
+        if(-not $env:APF_CONTROL_ROOT){throw 'Protected native startup routing is required before shutdown'}
+        $selection=Read-UpdateText (Join-Path $env:APF_CONTROL_ROOT 'native-cache/current-native.json')|ConvertFrom-Json
+        $recoveryWatchdog=Start-PreactivationRecovery -Root $root -SelectedRoot $selection.directory -OldVersion $oldPack.packVersion -CandidateVersion $version -ExpectedGamePid $admission.serverPid
+        if(-not $AllowActivePlayers){Assert-PublisherEmpty $root $cfg}
+        $stopAttempted=$true
         Wait-UpdateServerStopped $root $cfg;$stopped=$true
     }
     Write-PublisherStage 'native-activation'
-    $activationLock=New-Object IO.FileStream((Get-UpdateChildPath $root '.server.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
+    $activationLock=Wait-UpdateServerStopped $root $cfg -TimeoutSeconds 30 -WaitOnly -AcquireLock
     $backup=Get-UpdateChildPath $root ("Backups/updates/$(Get-Date -Format 'yyyyMMdd-HHmmss-fff')-$version-"+[Guid]::NewGuid().ToString('N'))
     New-UpdateDirectory $backup
     foreach($name in @('Aetherfront','Universe')){
@@ -579,10 +606,12 @@ try{
         $nativeReady=$true
         $transaction.phase='github-completion'
         Write-UpdateAtomic $journal ($transaction|ConvertTo-Json -Depth 16)
+        if($recoveryWatchdog){$null=Stop-PreactivationRecovery -Recovery $recoveryWatchdog -VerifiedHappyPath;$recoveryWatchdog=$null}
         Write-PublisherStage 'github-completion'
         Invoke-PublisherCompletion $githubPlan
     }
     [IO.File]::Delete($journal);$journalWritten=$false
+    if($recoveryWatchdog){$null=Stop-PreactivationRecovery -Recovery $recoveryWatchdog -VerifiedHappyPath;$recoveryWatchdog=$null}
     Write-Host "Published $version. Clients receive the signed update from $($cfg.packOrigin)/updates/APFClientUpdate.json"
     Write-Host "Recovery backup: $backup"
 }catch{
@@ -593,10 +622,20 @@ try{
     }
     $recoveryErrors=New-Object 'Collections.Generic.List[string]'
     $safeToRestore=$true
+    if(-not $changed -and $stopAttempted -and -not $activationLock){
+        try{
+            $activationLock=Wait-UpdateServerStopped $root $cfg -TimeoutSeconds 300 -WaitOnly -AcquireLock
+            $stopped=$true
+        }catch{$recoveryErrors.Add($_.Exception.Message);$safeToRestore=$false}
+    }
     if($changed){
         if($started){try{Wait-UpdateServerStopped $root $cfg}catch{$recoveryErrors.Add($_.Exception.Message);$safeToRestore=$false}}
         if($safeToRestore -and !$activationLock){
-            try{$activationLock=New-Object IO.FileStream((Get-UpdateChildPath $root '.server.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)}
+            try{$activationLock=Wait-UpdateServerStopped $root $cfg -TimeoutSeconds 30 -WaitOnly -AcquireLock}
+            catch{$recoveryErrors.Add($_.Exception.Message);$safeToRestore=$false}
+        }
+        if($safeToRestore){
+            try{if(@(Get-UpdateServiceProcesses $root $cfg).Count){throw 'Native services are still active; rollback is unsafe'}}
             catch{$recoveryErrors.Add($_.Exception.Message);$safeToRestore=$false}
         }
         if($safeToRestore){

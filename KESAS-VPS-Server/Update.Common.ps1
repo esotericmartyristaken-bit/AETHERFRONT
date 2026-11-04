@@ -239,7 +239,7 @@ function Get-BundledUpdateRelease([string]$Root) {
 function Get-UpdateServiceProcesses([string]$Root,$Config) {
     $gamePath=[IO.Path]::GetFullPath("$Root/Server/Server.exe")
     $packPath=[IO.Path]::GetFullPath("$Root/PackHost/ApfPackHost.exe")
-    $endpoints=@(Get-NetUDPEndpoint -LocalPort $Config.gamePort -ErrorAction SilentlyContinue)+@(Get-NetTCPConnection -LocalPort $Config.packPort -State Listen -ErrorAction SilentlyContinue)
+    $endpoints=@(Get-NetUDPEndpoint -ErrorAction Stop | Where-Object LocalPort -eq $Config.gamePort)+@(Get-NetTCPConnection -ErrorAction Stop | Where-Object {$_.LocalPort -eq $Config.packPort -and $_.State -eq 'Listen'})
     $ids=New-Object 'Collections.Generic.HashSet[int]'
     foreach($endpoint in $endpoints){
         $process=Get-Process -Id $endpoint.OwningProcess -ErrorAction Stop
@@ -247,24 +247,42 @@ function Get-UpdateServiceProcesses([string]$Root,$Config) {
         if($ids.Add($process.Id)){$process}
     }
     foreach($process in Get-Process -Name Server,ApfPackHost -ErrorAction SilentlyContinue){
+        $process.Refresh()
+        if($process.HasExited){continue}
+        if(-not $process.Path){throw 'Cannot verify native service process identity; no service changes requested'}
         if(($process.Path -ieq $gamePath -or $process.Path -ieq $packPath) -and $ids.Add($process.Id)){$process}
     }
 }
-function Wait-UpdateServerStopped([string]$Root,$Config) {
-    $processes=@(Get-UpdateServiceProcesses $Root $Config)
-    & "$UpdateCodeRoot/Stop-Server.ps1" -DeploymentRoot $Root
-    $deadline=(Get-Date).AddSeconds(40)
+function Wait-UpdateServerStopped([string]$Root,$Config,[ValidateRange(1,600)][int]$TimeoutSeconds=180,[switch]$WaitOnly,[switch]$AcquireLock) {
+    $deadline=(Get-Date).AddSeconds($TimeoutSeconds)
+    if(-not $WaitOnly){
+        $null=@(Get-UpdateServiceProcesses $Root $Config)
+        & "$UpdateCodeRoot/Stop-Server.ps1" -DeploymentRoot $Root
+    }
     do{
-        $busy=$false
-        foreach($process in $processes){if(!$process.HasExited){$busy=$true}}
-        $busy=$busy -or [bool](Get-NetUDPEndpoint -LocalPort $Config.gamePort -ErrorAction SilentlyContinue) -or [bool](Get-NetTCPConnection -LocalPort $Config.packPort -State Listen -ErrorAction SilentlyContinue)
-        $lockPath=Get-UpdateChildPath $Root '.server.lock'
-        if([IO.File]::Exists($lockPath)){
-            try{$probe=New-Object IO.FileStream($lockPath,[IO.FileMode]::Open,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None);$probe.Dispose()}
-            catch [IO.IOException]{$busy=$true}
+        $probe=$null;$keepLock=$false
+        try{
+            $busy=@(Get-UpdateServiceProcesses $Root $Config).Count -gt 0
+            if($env:APF_SERVER_TASK -ceq 'KESAS Server'){
+                $busy=$busy -or (Get-ScheduledTask -TaskName 'KESAS Server' -ErrorAction Stop).State -notin @('Ready','Disabled')
+            }
+            if(-not $busy){
+                try{$probe=New-Object IO.FileStream((Get-UpdateChildPath $Root '.server.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)}
+                catch [IO.IOException]{if(($_.Exception.GetBaseException().HResult -band 65535) -notin @(32,33)){throw};$busy=$true}
+                if($probe){
+                    $busy=@(Get-UpdateServiceProcesses $Root $Config).Count -gt 0
+                    if(-not $busy){
+                        if($AcquireLock){$keepLock=$true;return $probe}
+                        return
+                    }
+                }
+            }
+        }catch{
+            if($_.CategoryInfo.Category -ne 'ObjectNotFound'){throw}
+        }finally{
+            if($probe -and -not $keepLock){$probe.Dispose()}
         }
-        if(!$busy){return}
-        if((Get-Date)-gt $deadline){throw 'Server did not stop cleanly; no update will be applied'}
+        if((Get-Date) -ge $deadline){throw 'Server did not stop cleanly; no update will be applied'}
         Start-Sleep -Milliseconds 500
     }while($true)
 }
@@ -276,17 +294,16 @@ function Start-UpdatedServer([string]$Root,$Config) {
         # The independently supervised native publisher does not own the game
         # process tree. Reuse its existing SYSTEM task and protected code router.
         if(-not $env:APF_CONTROL_ROOT){throw 'Protected control root is required for managed publication startup'}
-        $deadline=(Get-Date).AddSeconds(10)
-        while((Get-ScheduledTask -TaskName 'KESAS Server' -ErrorAction Stop).State -eq 'Running'){
-            if((Get-Date)-gt $deadline){throw 'Prior SYSTEM launcher has not exited; no duplicate start requested'}
-            Start-Sleep -Milliseconds 250
-        }
         $nativeJournal=Get-UpdateChildPath $Root '.update-transaction.json'
         $journalHash=if([IO.File]::Exists($nativeJournal)){(Get-FileHash -LiteralPath $nativeJournal).Hash.ToLowerInvariant()}else{$null}
         $permit=@{schemaVersion=1;purpose='native-publication-start';id=[Guid]::NewGuid().ToString('N');createdAt=[DateTime]::UtcNow.ToString('o');nativeRoot=$Root;journalSha256=$journalHash;launcherSha256=(Get-FileHash -LiteralPath "$UpdateCodeRoot/Start-Server.ps1").Hash.ToLowerInvariant()}
+        $probe=Wait-UpdateServerStopped $Root $Config -TimeoutSeconds 30 -WaitOnly -AcquireLock
+        $probe.Dispose()
         Write-UpdateAtomic (Get-UpdateChildPath $env:APF_CONTROL_ROOT 'native-cache/server-start-permit.json') ($permit|ConvertTo-Json)
         Start-ScheduledTask -TaskName 'KESAS Server' -ErrorAction Stop
     } else {
+        $probe=Wait-UpdateServerStopped $Root $Config -TimeoutSeconds 30 -WaitOnly -AcquireLock
+        $probe.Dispose()
         $launcher=Start-Process powershell.exe -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',"`"$UpdateCodeRoot/Start-Server.ps1`"",'-LauncherLog',"`"$Root/LauncherLogs/$stamp.log`"",'-PublicationActivation','-DeploymentRoot',"`"$Root`"") -WindowStyle Hidden -PassThru
     }
     # A cold managed server can spend over 30 seconds loading configuration and

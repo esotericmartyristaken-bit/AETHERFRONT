@@ -15,6 +15,7 @@ const DEFAULT_COUNTDOWN_MINUTES = 15;
 const COUNTDOWN_MARKS_MS = [15 * 60_000, 10 * 60_000, 5 * 60_000, 60_000, 15_000];
 const BLOCKED_DESTINATION_ROOTS = new Set(['universe', 'logs', 'backups', 'updates']);
 const ACTIVE_STATES = new Set(['queued', 'deploying', 'failed']);
+const LOCAL_ONLY_REASON = 'host-deployment-local-only';
 
 function text(value, max = 240) {
   return String(value ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, max);
@@ -126,6 +127,17 @@ export class UpdateManager {
     this.operation = null;
   }
 
+  get localHostDeploymentOnly() {
+    return Boolean(this.config.lmp?.deploymentRoot) && this.config.updates?.hostDeploymentMode === 'local-only';
+  }
+
+  assertHostDeploymentAllowed() {
+    if (!this.localHostDeploymentOnly) return;
+    const error = new Error('KESAS host deployment is local-only; use the reviewed local operator workflow');
+    error.code = LOCAL_ONLY_REASON;
+    throw error;
+  }
+
   async load() {
     if (this.loaded) return this.state;
     const revision = this.stateRevision;
@@ -168,6 +180,7 @@ export class UpdateManager {
   }
 
   async save() {
+    this.assertHostDeploymentAllowed();
     this.stateRevision++;
     this.pendingSave = writeJsonAtomic(this.statePath, this.state);
     await this.pendingSave;
@@ -175,8 +188,9 @@ export class UpdateManager {
   }
 
   async listStaged() {
-    await fs.mkdir(this.stagingRoot, { recursive: true });
-    const entries = await fs.readdir(this.stagingRoot, { withFileTypes: true });
+    let entries;
+    try { entries = await fs.readdir(this.stagingRoot, { withFileTypes: true }); }
+    catch (error) { if (error.code === 'ENOENT') return []; throw error; }
     const rows = [];
     for (const entry of entries) {
       if (!entry.isDirectory() || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/.test(entry.name)) continue;
@@ -198,6 +212,7 @@ export class UpdateManager {
   }
 
   async acknowledgeReviewedRollback(requestId, priorResultSha256) {
+    this.assertHostDeploymentAllowed();
     if(!this.config.__controlRoot||![requestId,priorResultSha256].every(value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value)))throw new Error('Invalid reviewed rollback identity');
     await this.refreshFromDisk();
     if(this.operation||this.state.status!=='failed')throw new Error('Only an inactive failed queue can acknowledge rollback');
@@ -257,6 +272,7 @@ export class UpdateManager {
   }
 
   async stage(sourceDirectory, options = {}) {
+    this.assertHostDeploymentAllowed();
     await this.load();
     const sourceRoot = path.resolve(String(sourceDirectory || ''));
     const sourceStat = await fs.stat(sourceRoot).catch(() => null);
@@ -286,6 +302,7 @@ export class UpdateManager {
     }
     const packageDir = safeJoin(this.stagingRoot, id);
     if (await fs.stat(packageDir).catch(() => null)) throw new Error(`staged update already exists: ${id}`);
+    this.assertHostDeploymentAllowed();
     await fs.mkdir(path.join(packageDir, 'payload'), { recursive: true });
     try {
       for (const row of rows) {
@@ -310,6 +327,7 @@ export class UpdateManager {
   }
 
   async stageKesas(archive, options = {}) {
+    this.assertHostDeploymentAllowed();
     const version = String(options.version || path.basename(archive).match(/kesas-rc[1-9][0-9]*/)?.[0] || '');
     if (!/^kesas-rc[1-9][0-9]*$/.test(version) || !archive.toLowerCase().endsWith('.zip')) throw new Error('KESAS release archive/version required');
     const executable = this.config.updates?.powerShellExecutable || 'pwsh.exe';
@@ -319,6 +337,7 @@ export class UpdateManager {
     const id = packageId(options.id || version);
     const packageDir = safeJoin(this.stagingRoot, id);
     if (await fs.stat(packageDir).catch(() => null)) throw new Error(`staged update already exists: ${id}`);
+    this.assertHostDeploymentAllowed();
     const name = `KESAS-Release-${version}.zip`;
     const source = `payload/${name}`;
     await fs.mkdir(path.join(packageDir, 'payload'), { recursive: true });
@@ -334,6 +353,7 @@ export class UpdateManager {
   }
 
   async queue(id, queuedBy = 'operator', options = {}) {
+    if (this.localHostDeploymentOnly) return { ok: false, reason: LOCAL_ONLY_REASON };
     if(this.controlDraining)return {ok:false,reason:'control-plane-activation'};
     if (await this.controlMaintenance()) return { ok: false, reason: 'control-plane-activation' };
     await this.load();
@@ -355,6 +375,7 @@ export class UpdateManager {
     // Quiescence closes queue admission synchronously, including requests that
     // began before the control drain and awaited archive/state validation.
     if(this.controlDraining)return {ok:false,reason:'control-plane-activation'};
+    if (this.localHostDeploymentOnly) return { ok: false, reason: LOCAL_ONLY_REASON };
     this.state = {
       ...initialState(),
       status: 'queued',
@@ -375,7 +396,9 @@ export class UpdateManager {
   }
 
   async cancel() {
+    if (this.localHostDeploymentOnly) return { ok: false, reason: LOCAL_ONLY_REASON };
     await this.load();
+    if (this.localHostDeploymentOnly) return { ok: false, reason: LOCAL_ONLY_REASON };
     if (this.operation || this.state.status === 'deploying') return { ok: false, reason: 'deployment-in-progress' };
     if (!ACTIVE_STATES.has(this.state.status) || !this.state.packageId) return { ok: false, reason: 'no-update-queued' };
     const cancelled = { id: this.state.packageId, version: this.state.version, cancelledAt: new Date().toISOString() };
@@ -385,7 +408,9 @@ export class UpdateManager {
   }
 
   async force() {
+    if (this.localHostDeploymentOnly) return { ok: false, reason: LOCAL_ONLY_REASON };
     await this.load();
+    if (this.localHostDeploymentOnly) return { ok: false, reason: LOCAL_ONLY_REASON };
     if (this.operation || this.state.status === 'deploying') return { ok: false, reason: 'deployment-in-progress' };
     if (this.state.status !== 'queued' || !this.state.packageId) return { ok: false, reason: 'no-update-queued' };
     this.state.force = true;
@@ -395,8 +420,10 @@ export class UpdateManager {
   }
 
   async reconcile(status, hooks = {}, now = Date.now()) {
+    if (this.localHostDeploymentOnly) return { ok: false, deferred: true, reason: LOCAL_ONLY_REASON };
     if (await this.controlMaintenance()) return { ok: false, deferred: true, reason: 'control-plane-activation' };
     await this.refreshFromDisk();
+    if (this.localHostDeploymentOnly) return { ok: false, deferred: true, reason: LOCAL_ONLY_REASON };
     if(this.config.__controlRoot&&this.state.status==='deploying'&&!this.operation)return this.recoverNativePublication(status);
     if (this.state.status !== 'queued' || !this.state.packageId) return { ok: true, idle: true, state: await this.status() };
     const count = status?.playerCount == null ? NaN : Number(status.playerCount);
@@ -448,14 +475,17 @@ export class UpdateManager {
   }
 
   async notify(hooks, message) {
+    this.assertHostDeploymentAllowed();
     if (typeof hooks.onProgress === 'function') await hooks.onProgress(message, await this.status());
   }
 
   async notifyAnnouncement(hooks, message) {
+    this.assertHostDeploymentAllowed();
     if (typeof hooks.onAnnouncement === 'function') await hooks.onAnnouncement(message, await this.status());
   }
 
   async announceCountdown(now, hooks) {
+    this.assertHostDeploymentAllowed();
     const deployAt = Date.parse(this.state.deployAt || '');
     if (!Number.isFinite(deployAt) || now >= deployAt) return;
 
@@ -478,15 +508,18 @@ export class UpdateManager {
   }
 
   async setPhase(phase, hooks, message = '') {
+    this.assertHostDeploymentAllowed();
     this.state.phase = phase;
     await this.save();
     if (message) await this.notify(hooks, message);
   }
 
   async deploy(status, hooks) {
+    if (this.localHostDeploymentOnly) return { ok: false, deferred: true, reason: LOCAL_ONLY_REASON };
     if (await this.controlMaintenance()) return { ok: false, deferred: true, reason: 'control-plane-activation' };
     const packageIdValue = this.state.packageId;
     const { packageDir, manifest } = await this.readManifest(packageIdValue);
+    if (this.localHostDeploymentOnly) return { ok: false, deferred: true, reason: LOCAL_ONLY_REASON };
     let applied = null;
     let stopped = false;
     const kesas = manifest.provider === 'kesas-release';
@@ -619,6 +652,8 @@ export class UpdateManager {
   }
 
   async recoverNativePublication(status) {
+    // Local operators own completion and recovery. Never adopt or requeue it.
+    if (this.localHostDeploymentOnly) return { ok: false, deferred: true, reason: LOCAL_ONLY_REASON };
     const {packageDir,manifest}=await this.readManifest(this.state.packageId);
     if(manifest.provider!=='kesas-release'||manifest.files.length!==1)throw new Error('Unknown interrupted native transaction; preserve state');
     const row=manifest.files[0];const archive=safeJoin(packageDir,row.source);
@@ -659,6 +694,7 @@ export class UpdateManager {
   }
 
   async applyManifest(packageDir, manifest) {
+    this.assertHostDeploymentAllowed();
     const rollbackRoot = path.join(this.rollbackRoot, `${manifest.id}-${Date.now()}`);
     const changed = [];
     const serverRoot = this.controller.root;
@@ -687,6 +723,7 @@ export class UpdateManager {
   }
 
   async rollback(applied) {
+    this.assertHostDeploymentAllowed();
     for (const record of [...(applied?.changed || [])].reverse()) {
       if (record.existed) {
         const temporary = `${record.destination}.apf-rollback-${process.pid}-${Date.now()}.tmp`;
