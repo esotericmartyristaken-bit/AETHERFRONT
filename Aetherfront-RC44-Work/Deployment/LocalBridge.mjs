@@ -14,13 +14,13 @@ export function validateSnapshot(value, now = Date.now()) {
   return { serverPid:value.serverPid, updatedAt:value.updatedAt,
     playerCount:value.playerCount, connectedCount:value.connectedCount };
 }
-export async function snapshot(root) {
+export async function snapshot(root, io={readFile:fs.readFile,wait:milliseconds=>new Promise(resolve=>setTimeout(resolve,milliseconds))}) {
   const file=path.join(root,'Server','APFDiscordBridge','status.json');
   for(let attempt=0;attempt<20;attempt++){
-    try{return validateSnapshot(parse(await fs.readFile(file,'utf8')));}
+    try{return validateSnapshot(parse(await io.readFile(file,'utf8')));}
     catch(error){
-      if(!['EACCES','EPERM','EBUSY'].includes(error.code)||attempt===19)throw error;
-      await new Promise(resolve=>setTimeout(resolve,50));
+      if(!['EACCES','EPERM','EBUSY','ENOENT'].includes(error.code)||attempt===19)throw error;
+      await io.wait(50);
     }
   }
   throw Error('Authoritative player status unavailable');

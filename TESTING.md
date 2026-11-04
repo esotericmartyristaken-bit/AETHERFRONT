@@ -679,7 +679,7 @@ Windows firewall IPv6 prefixes must contain at least one bit (MS-FASP
 FW_IPV6_SUBNET); the unsupported `::/0` is replaced by `::2/1` and `8000::/1`,
 preserving all-IPv6 blocking without an unspecified/loopback subnet address.
 The firewall fixture rejects zero-bit prefixes and unspecified/loopback bases.
-The local operator now creates/read-backs/removes the real three-rule plan on
+The local operator now creates/read-backs/removes the real four-rule plan on
 a new private, never-executed Probe.exe before bot reload or media preparation.
 It still requires the complete isolated native candidate gate afterward.
 
@@ -694,3 +694,12 @@ also receive explicit nonloopback inbound blocks, in addition to outbound
 isolation. Atomic bridge-file disappearance is treated as not-ready, not success.
 Twenty-six hermetic candidate fixtures cover the updated policy; a full native
 pass remains mandatory and is not inferred from the startup log alone.
+
+The operator's initial live status read now uses the same validated Node reader
+as player admission, rather than a restrictive PowerShell file share. Sharing
+errors and atomic replacement gaps retry at most 20 reads, 50 ms apart. Stale,
+malformed or unknown-count snapshots do not authorize shutdown. Twenty Node
+tests cover snapshot validation, transient and persistent read failures, and
+operator routing through the admission reader. A live read also succeeded with
+the production game unchanged. These results do not replace native candidate
+startup or occupied-player warning verification.

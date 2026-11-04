@@ -115,7 +115,10 @@ try{
     $probeContext=@{Candidate=$probeRoot;GamePort=28865;PackPort=28866;Receipt=@{};Firewall=[Collections.Generic.List[string]]::new();Owned=[Collections.Generic.List[object]]::new()}
     try{Enable-PCIsolation $probeContext}finally{Disable-PCIsolation $probeContext}
     $report.firewallApiVerified=$true;Report-Local 'local-mode-reload'
-    $initialBridge=Get-Content -LiteralPath "$deployment/Server/APFDiscordBridge/status.json" -Raw|ConvertFrom-Json
+    # The live bridge atomically replaces this file. Use the same bounded,
+    # freshness-checked reader as admission, not PowerShell's restrictive share.
+    . (Join-Path $bundle 'Aetherfront-RC44-Work/Deployment/LocalAdmission.ps1')
+    $initialBridge=Invoke-LocalDeploymentBridge $node (Join-Path $bundle 'Aetherfront-RC44-Work/Deployment') $BotConfig 'status'
     $report.previousGamePid=$initialBridge.serverPid
     . (Join-Path $bundle 'Aetherfront-RC44-Work/Deployment/Install-LocalBot.ps1')
     $localBot=Install-LocalBot $bundle $hostSettings $BotConfig
