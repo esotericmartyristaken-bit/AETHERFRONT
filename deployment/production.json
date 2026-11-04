@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
-  "version": "kesas-rc43",
-  "releaseTag": "host-kesas-rc43",
-  "assetName": "Aetherfront-Release-kesas-rc43.zip",
-  "sha256": "710ac479c893bb874b706df54838286a139871b9638a2d05e439f649f96ba383",
-  "sizeBytes": 5917530,
-  "notes": "Fix science confirmation retries, transmission reply traffic, and reliable sender queue pacing.",
+  "version": "kesas-rc44",
+  "releaseTag": "host-kesas-rc44",
+  "assetName": "Aetherfront-Release-kesas-rc44.zip",
+  "sha256": "1751b1f8772fadb1c809852d954fea8c1d1fc472907f7190193202be06a89787",
+  "sizeBytes": 5917960,
+  "notes": "Retry brief Windows clock-file replacement conflicts without disconnecting; preserve saved mission time and safety checks.",
   "requirements": {
     "contractVersion": 1,
     "capabilities": [
