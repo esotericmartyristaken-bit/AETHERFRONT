@@ -1,6 +1,23 @@
 #requires -Version 7.4
 Set-StrictMode -Version Latest
 
+function Start-LocalDeploymentNotification([string]$BotConfig,[string]$Version) {
+    if($Version -cnotmatch '^kesas-rc[1-9][0-9]*$'){throw 'Invalid notification release'}
+    $path=Join-Path ([IO.Path]::GetDirectoryName($BotConfig)) 'state/local-host-operation.json'
+    if([IO.File]::Exists($path)){throw 'An existing local operation notification needs review'}
+    $created=[DateTime]::UtcNow;$id=[Guid]::NewGuid().ToString('N')
+    $value=@{schemaVersion=1;id=$id;ownerPid=$PID;version=$Version;createdAt=$created.ToString('o');expiresAt=$created.AddMinutes(45).ToString('o')}
+    $stream=[IO.FileStream]::new($path,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::Read)
+    try{$bytes=[Text.UTF8Encoding]::new($false).GetBytes(($value|ConvertTo-Json -Compress));$stream.Write($bytes,0,$bytes.Length);$stream.Flush($true)}finally{$stream.Dispose()}
+    return [pscustomobject]@{path=$path;id=$id}
+}
+function Stop-LocalDeploymentNotification($Notification) {
+    if(-not $Notification -or -not [IO.File]::Exists($Notification.path)){return}
+    $current=[IO.File]::ReadAllText($Notification.path)|ConvertFrom-Json
+    if($current.id -cne $Notification.id){throw 'Local operation notification ownership changed'}
+    [IO.File]::Delete($Notification.path)
+}
+
 function Invoke-LocalDeploymentBridge([string]$Node,[string]$CodeRoot,[string]$BotConfig,[string]$Action,[string]$InputPath='') {
     $arguments=@((Join-Path $CodeRoot 'LocalBridge.mjs'),$Action,$BotConfig)
     if($InputPath){$arguments+=$InputPath}

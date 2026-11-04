@@ -291,3 +291,110 @@ test('local-only setting leaves generic non-KESAS lifecycle commands unchanged',
   assert.equal((await controller.stop()).ok, true);
   assert.deepEqual(calls, ['/restartserver\n', 'SIGTERM']);
 });
+
+async function operationFixture(t) {
+  const f = await fixture(t);
+  const saved = await f.seed('failed');
+  const markerPath = path.join(f.root, 'state', 'local-host-operation.json');
+  const now = Date.now();
+  const marker = { schemaVersion: 1, id: 'a'.repeat(32), ownerPid: 12345, version: 'kesas-rc100',
+    createdAt: new Date(now - 1000).toISOString().replace('Z', '0000Z'),
+    expiresAt: new Date(now + 60_000).toISOString() };
+  const write = value => fs.writeFile(markerPath, JSON.stringify(value));
+  return { ...f, saved, markerPath, marker, write };
+}
+
+test('valid live local operation overlays notification status without changing failed state or persisted bytes', async t => {
+  const f = await operationFixture(t);
+  const state = structuredClone(f.manager.state);
+  const revision = f.manager.stateRevision;
+  const probes = [];
+  t.mock.method(process, 'kill', (pid, signal) => { probes.push([pid, signal]); return true; });
+  await f.write(f.marker);
+  const status = await f.manager.status();
+  assert.equal(status.status, 'deploying');
+  assert.equal(status.version, f.marker.version);
+  assert.equal(status.phase, 'local-operator');
+  assert.equal(status.packageId, state.packageId);
+  assert.deepEqual(f.manager.state, state);
+  assert.equal(f.manager.stateRevision, revision);
+  assert.equal(f.manager.operation, null);
+  assert.equal(await fs.readFile(f.manager.statePath, 'utf8'), f.saved);
+  assert.deepEqual(probes, [[f.marker.ownerPid, 0]]);
+});
+
+test('dead local operation owner does not suppress ordinary outage notification status', async t => {
+  const f = await operationFixture(t);
+  t.mock.method(process, 'kill', () => { throw Object.assign(new Error('dead'), { code: 'ESRCH' }); });
+  await f.write(f.marker);
+  assert.equal((await f.manager.status()).status, 'failed');
+  assert.equal(await fs.readFile(f.manager.statePath, 'utf8'), f.saved);
+});
+
+test('EPERM owner probe counts as existing for notification-only local operation view', async t => {
+  const f = await operationFixture(t);
+  t.mock.method(process, 'kill', () => { throw Object.assign(new Error('limited token'), { code: 'EPERM' }); });
+  await f.write(f.marker);
+  assert.equal((await f.manager.status()).phase, 'local-operator');
+  assert.equal(f.manager.state.status, 'failed');
+});
+
+test('expired, future, overlong and invalid-calendar local operation windows are ignored', async t => {
+  const f = await operationFixture(t);
+  t.mock.method(process, 'kill', () => assert.fail('Invalid timestamps must not probe any process'));
+  const now = Date.now();
+  for (const changes of [
+    { expiresAt: new Date(now - 1).toISOString() },
+    { createdAt: new Date(now + 30_000).toISOString() },
+    { expiresAt: new Date(now + 45 * 60_000).toISOString() },
+    { expiresAt: f.marker.createdAt },
+    { createdAt: '2026-02-30T12:00:00.000Z' },
+    { createdAt: 'not-a-date' }, { expiresAt: 'not-a-date' },
+    { createdAt: Date.now() }, { expiresAt: '2026-11-04T12:00:00' }
+  ]) {
+    await f.write({ ...f.marker, ...changes });
+    assert.equal((await f.manager.status()).status, 'failed');
+  }
+});
+
+test('local operation markers exceeding 4096 bytes are ignored before process probing', async t => {
+  const f = await operationFixture(t);
+  t.mock.method(process, 'kill', () => assert.fail('Oversized marker must not probe any process'));
+  await fs.writeFile(f.markerPath, JSON.stringify(f.marker).padEnd(4097, ' '));
+  assert.equal((await f.manager.status()).status, 'failed');
+  assert.equal(await fs.readFile(f.manager.statePath, 'utf8'), f.saved);
+});
+
+test('missing, malformed and bad-field local operation markers never alter notification status', async t => {
+  const f = await operationFixture(t);
+  t.mock.method(process, 'kill', () => assert.fail('Invalid marker must not probe any process'));
+  assert.equal((await f.manager.status()).status, 'failed');
+  for (const value of [null, [], {}, { ...f.marker, schemaVersion: 2 }, { ...f.marker, schemaVersion: '1' },
+    { ...f.marker, id: 'not-a-guid' }, { ...f.marker, ownerPid: 0 }, { ...f.marker, ownerPid: -1 },
+    { ...f.marker, ownerPid: '12345' }, { ...f.marker, ownerPid: 1.5 },
+    { ...f.marker, version: '../kesas-rc100' }, { ...f.marker, version: 'kesas-rc0' },
+    { ...f.marker, extraAuthority: true }]) {
+    await f.write(value);
+    assert.equal((await f.manager.status()).status, 'failed');
+  }
+  await fs.writeFile(f.markerPath, '{');
+  assert.equal((await f.manager.status()).status, 'failed');
+  assert.deepEqual(f.calls, []);
+});
+
+test('local operation marker grants no update authority and removal immediately restores failed notification view', async t => {
+  const f = await operationFixture(t);
+  t.mock.method(process, 'kill', () => true);
+  await f.write(f.marker);
+  assert.equal((await f.manager.status()).status, 'deploying');
+  assert.deepEqual(await f.manager.queue('kesas-rc100'), { ok: false, reason });
+  assert.deepEqual(await f.manager.deploy(live, {}), { ok: false, deferred: true, reason });
+  assert.deepEqual(await f.manager.recoverNativePublication(live), { ok: false, deferred: true, reason });
+  assert.equal(await fs.readFile(f.manager.statePath, 'utf8'), f.saved);
+  await fs.unlink(f.markerPath);
+  assert.equal((await f.manager.status()).status, 'failed');
+  f.config.updates.hostDeploymentMode = 'remote';
+  await f.write(f.marker);
+  assert.equal((await f.manager.status()).status, 'failed');
+  assert.deepEqual(f.calls, []);
+});

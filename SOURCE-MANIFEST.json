@@ -1212,8 +1212,8 @@
       "path": "APFDiscordBot/src/update-manager.js",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 40620,
-      "sha256": "37c2a0239a24859ae7be2cf4dc49a4191fa8a39144f3e8914a7b641b584a86d1",
+      "bytes": 43183,
+      "sha256": "5abba91581bf92331065a69b42cf6f02ab45a01039d4f6a7f9caace9b3daf466",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately."
@@ -29469,8 +29469,8 @@
       "path": "KESAS-VPS-Server/Publish-Release.ps1",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 49289,
-      "sha256": "f388d38ebe790ff2099c20911fffbf33d20e3b7fd44398d1a6401447bf1fb91b",
+      "bytes": 49574,
+      "sha256": "9ab39e686740d9f7eaca614ed41aa4593b4def92c1a9ae11cd3de6fd3323d5b0",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately.",
@@ -29808,8 +29808,8 @@
       "path": "Aetherfront-RC44-Work/Deployment/Test-PreparedCandidate.ps1",
       "source": null,
       "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
-      "bytes": 53507,
-      "sha256": "f456b91ba8b4bcd1a763e920d586284ba96c73417f1ff04754378e2b642ef454",
+      "bytes": 53804,
+      "sha256": "9e9cece336b00541f06a5b0201e5844ec33593cf02fc68bfdfc15089e990ebcc",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed source addition only.",
@@ -29976,8 +29976,8 @@
       "path": "Aetherfront-RC44-Work/Deployment/Test-PreparedCandidate.Tests.ps1",
       "source": null,
       "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
-      "bytes": 37769,
-      "sha256": "02818df4d3636088690298baecc01474917fb793d09f24155595f283e9300c56",
+      "bytes": 41192,
+      "sha256": "15bd354f1d782fc6647c20d214e976f4590dc7970ab50ed56021c45b533ab1b7",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed source addition only.",
@@ -30048,8 +30048,8 @@
       "path": "APFDiscordBot/test/local-only-updates.test.js",
       "source": null,
       "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
-      "bytes": 16065,
-      "sha256": "2f08bc2272420955f0a0fcb4cbaa85be5b8da25ece5ab52da54a4d2928ec331b",
+      "bytes": 21510,
+      "sha256": "e3a023c9f95becda115cd1b613b82a22a11bd72d687562cce222594229b6e37b",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed source addition only.",
@@ -30072,8 +30072,8 @@
       "path": "Aetherfront-RC44-Work/Deployment/LocalAdmission.ps1",
       "source": null,
       "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
-      "bytes": 3363,
-      "sha256": "ff8a57cb728e318e3f2a549ad999fc6673b323d29e45c0ba4bbd2f91748f76e1",
+      "bytes": 4638,
+      "sha256": "9b7b992316647eefdfc4dea81d34022daa8c62ffebb68ca22d22fb4ddf1c87f3",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed source addition only.",
@@ -30117,7 +30117,7 @@
       ]
     }
   ],
-  "totalFileBytes": 17471442.0,
+  "totalFileBytes": 17791282.0,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",

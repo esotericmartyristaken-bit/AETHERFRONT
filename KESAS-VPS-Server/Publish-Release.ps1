@@ -382,7 +382,7 @@ $replacements=New-Object 'Collections.Generic.List[object]'
 $states=New-Object 'Collections.Generic.List[object]'
 $wasRunning=$false
 $githubPlan=$null
-$nativeReady=$false;$recoveryWatchdog=$null
+$nativeReady=$false;$recoveryWatchdog=$null;$localNotification=$null
 try{
     Write-PublisherStage 'guard-admission'
     $releasePath=Assert-UpdatePath (Resolve-Path -LiteralPath $ReleaseZip).Path
@@ -549,6 +549,7 @@ try{
     . (Join-Path $localCode 'Assert-PreparedReceipt.ps1')
     . (Join-Path $localCode 'LocalAdmission.ps1')
     . (Join-Path $localCode 'Start-PreactivationRecovery.ps1')
+    $localNotification=Start-LocalDeploymentNotification $LocalBotConfig $version
     $candidateReceipt=Join-Path $LocalEvidenceRoot ('candidate-'+[Guid]::NewGuid().ToString('N')+'.json')
     Write-PublisherStage 'candidate-preflight'
     $candidate=Invoke-PreparedCandidate -DeploymentRoot $root -ReleaseDirectory "$stage/Release" -PublishedDirectory "$stage/Published" -ExpectedVersion $version -ResultPath $candidateReceipt
@@ -662,6 +663,7 @@ try{
     foreach($errorText in $recoveryErrors){Write-Warning "Recovery needs attention: $errorText. Preserve $backup and .update-transaction.json"}
     throw $failure
 }finally{
+    if($localNotification){try{Stop-LocalDeploymentNotification $localNotification}catch{Write-Warning 'Local notification cleanup needs review; native journals are unchanged'}}
     if($activationLock){$activationLock.Dispose()}
     $releaseLock.Dispose()
     $resolved=Get-UpdateChildPath $root ('.release-staging/'+[IO.Path]::GetFileName($stage))

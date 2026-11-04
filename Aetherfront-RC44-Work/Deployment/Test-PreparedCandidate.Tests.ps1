@@ -11,7 +11,7 @@ run is NOT a passed production candidate or a signed-client verification.
 Run: pwsh -NoProfile -File ./Test-PreparedCandidate.Tests.ps1
 ##>
 [CmdletBinding()]
-param([string]$Filter='*')
+param([string]$Filter='*', [string]$ReleaseArchive='', [string]$ExpectedReleaseArchiveSha256='')
 $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
 if (-not $IsWindows) { throw 'Windows fixtures required for NTFS ACL/sharing checks' }
@@ -250,6 +250,47 @@ try {
         $manifest=Read-PCText "$($f.Release)/RELEASE.json" | ConvertFrom-Json
         $manifest.files+=@{path='ServerPayload/Universe/world.json';sha256=Get-PCHash $path}; Write-PCJson "$($f.Release)/RELEASE.json" $manifest
         Expect-Failure { Invoke-Fixture $f } '*gate failed*'; Assert-Fixture ($script:launches.Count -eq 0 -and $script:productionStops -eq 0)
+    }
+    Test-Fixture 'exact LunaCompat LICENSE is accepted and hash-bound; other notices remain rejected' {
+        $f=New-Fixture
+        $manifest=Read-PCText "$($f.Release)/RELEASE.json" | ConvertFrom-Json
+        $relative='ServerPayload/Plugins/LunaCompat/LICENSE.txt'
+        $path=Get-UpdateChildPath $f.Release $relative
+        $null=[IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($path))
+        [IO.File]::WriteAllText($path,'fixture exact-path license')
+        $manifest.files+=@{path=$relative;sha256=Get-PCHash $path}
+        Write-PCJson "$($f.Release)/RELEASE.json" $manifest
+        $answer=Invoke-Fixture $f; $receipt=Read-FixtureReceipt $f
+        Assert-Fixture ($answer.Success -and $receipt.success -and $receipt.releasePayloadHashes.Count -eq 2)
+        $target="$($script:lastContext.Candidate)/Server/Plugins/LunaCompat/LICENSE.txt"
+        Assert-Fixture ((Get-PCHash $target) -ceq (Get-PCHash $path))
+        Assert-Fixture (@($receipt.candidateFiles | Where-Object path -CEQ 'Server/Plugins/LunaCompat/LICENSE.txt').Count -eq 1)
+        foreach ($forbidden in @('ServerPayload/Plugins/Other/LICENSE.txt','ServerPayload/Plugins/LunaCompat/NOTICE.txt','ServerPayload/Plugins/LunaCompat/runtime-output.txt','ServerPayload/Plugins/LunaCompat/execute.ps1','ServerPayload/Universe/LICENSE.txt','ServerPayload/secrets/NOTICE.md')) {
+            $forbiddenPath=Get-UpdateChildPath $f.Release $forbidden
+            $null=[IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($forbiddenPath))
+            [IO.File]::WriteAllText($forbiddenPath,'fixture not permitted')
+            Write-PCJson "$($f.Release)/RELEASE.json" @{version='kesas-rc999';files=@($manifest.files)+@(@{path=$forbidden;sha256=Get-PCHash $forbiddenPath})}
+            Expect-Failure { Get-PCRelease $f.Release 'kesas-rc999' } '*payload*'
+            [IO.File]::Delete($forbiddenPath)
+        }
+        Write-PCJson "$($f.Release)/RELEASE.json" $manifest
+        [IO.File]::AppendAllText($path,' tampered')
+        Expect-Failure { Get-PCRelease $f.Release 'kesas-rc999' } '*payload hash mismatch*'
+        Assert-Fixture ($script:productionStops -eq 0)
+    }
+    if ($ReleaseArchive) {
+        Test-Fixture 'exact supplied release archive inventory passes without native execution' {
+            if ($ExpectedReleaseArchiveSha256 -cnotmatch '^[a-f0-9]{64}$') { throw 'Supply exact ExpectedReleaseArchiveSha256 with ReleaseArchive' }
+            Assert-Fixture ((Get-PCHash $ReleaseArchive) -ceq $ExpectedReleaseArchiveSha256) 'Supplied release archive SHA mismatch'
+            $destination=Join-Path $scratchBase ('native-inventory-'+[Guid]::NewGuid().ToString('N'))
+            Expand-UpdateArchive $ReleaseArchive $destination
+            $version=(Read-PCText "$destination/RELEASE.json" | ConvertFrom-Json).version
+            $release=Get-PCRelease $destination $version
+            Assert-Fixture ($release.version -ceq $version)
+            Assert-Fixture (@($release.files | Where-Object path -CEQ 'ServerPayload/Plugins/LunaCompat/LICENSE.txt').Count -eq 1) 'Native LunaCompat notice regression not exercised'
+            Assert-Fixture ($script:launches.Count -eq 0 -and $script:productionStops -eq 0)
+            Assert-Fixture ((Get-PCHash $ReleaseArchive) -ceq $ExpectedReleaseArchiveSha256) 'Input archive changed'
+        }
     }
     Test-Fixture 'changed prepared ZIP rejected before executable launch' {
         $f=New-Fixture; [IO.File]::AppendAllText("$($f.Published)/APFClient-kesas-rc999.zip",'tamper')

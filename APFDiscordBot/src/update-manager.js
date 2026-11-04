@@ -204,11 +204,51 @@ export class UpdateManager {
 
   async status() {
     await this.refreshFromDisk();
-    return {
+    const base = {
       ...this.state,
       lastObservation: this.lastObservation,
       staged: await this.listStaged()
     };
+    const marker = await this.readLocalHostOperation();
+    return marker ? { ...base, status: 'deploying', version: marker.version, phase: 'local-operator' } : base;
+  }
+
+  async readLocalHostOperation() {
+    if (!this.localHostDeploymentOnly) return null;
+    let handle;
+    try {
+      const markerPath = path.join(this.config.__root || process.cwd(), 'state', 'local-host-operation.json');
+      const entry = await fs.lstat(markerPath);
+      if (!entry.isFile() || entry.isSymbolicLink() || entry.size > 4096) return null;
+      handle = await fs.open(markerPath, 'r');
+      const stat = await handle.stat();
+      if (!stat.isFile() || stat.size > 4096) return null;
+      const buffer = Buffer.alloc(4097);
+      const { bytesRead } = await handle.read(buffer, 0, buffer.length, 0);
+      if (bytesRead > 4096) return null;
+      const marker = JSON.parse(buffer.subarray(0, bytesRead).toString('utf8').replace(/^\uFEFF/, ''));
+      const fields = ['schemaVersion', 'id', 'ownerPid', 'version', 'createdAt', 'expiresAt'];
+      if (!marker || typeof marker !== 'object' || Array.isArray(marker) ||
+          Object.keys(marker).length !== fields.length || Object.keys(marker).some(key => !fields.includes(key)) ||
+          marker.schemaVersion !== 1 || typeof marker.id !== 'string' || !/^[a-f0-9]{32}$/i.test(marker.id) ||
+          !Number.isSafeInteger(marker.ownerPid) || marker.ownerPid <= 0 ||
+          typeof marker.version !== 'string' || !/^kesas-rc[1-9][0-9]{0,14}$/.test(marker.version)) return null;
+      const timestamp = value => {
+        const match = typeof value === 'string' && /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d{1,7}))?Z$/.exec(value);
+        if (!match) return NaN;
+        const normalized = `${match[1]}.${(match[2] || '').padEnd(3, '0').slice(0, 3)}Z`;
+        const parsed = Date.parse(normalized);
+        return Number.isFinite(parsed) && new Date(parsed).toISOString() === normalized ? parsed : NaN;
+      };
+      const created = timestamp(marker.createdAt), expires = timestamp(marker.expiresAt), now = Date.now();
+      if (!Number.isFinite(created) || !Number.isFinite(expires) || expires <= created ||
+          expires - created > 45 * 60_000 || now < created || now >= expires) return null;
+      // This is notification evidence only, never a deployment or recovery permit.
+      try { process.kill(marker.ownerPid, 0); }
+      catch (error) { if (error.code !== 'EPERM') return null; }
+      return marker;
+    } catch { return null; }
+    finally { await handle?.close().catch(() => {}); }
   }
 
   async acknowledgeReviewedRollback(requestId, priorResultSha256) {

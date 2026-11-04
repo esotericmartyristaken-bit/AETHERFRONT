@@ -324,7 +324,10 @@ function Get-PCRelease([string]$Directory, [string]$Version) {
         if ($relative -cmatch '^(ServerPayload|PackHostPayload|CertificateToolPayload|UpdateToolPayload)/') {
             $tail = $relative.Substring($relative.IndexOf('/') + 1)
             if ($tail -match '(?i)(^|/)(Config|Universe|Aetherfront|APFDiscordBridge|secrets|logs?)(/|$)' -and $tail -notmatch '^Plugins/APFDiscordBridge/[^/]+\.(dll|json)$') { throw 'Release payload contains protected state' }
-            if ($tail -notmatch '\.(dll|exe|json|config)$' -or $tail -match '(?i)(^|/)(secrets?|passwords?|credentials?|private)([-_.]|$)') { throw 'Unsupported native payload file' }
+            # Exact existing RC44/RC45 dependency notice only; its declared SHA
+            # and bytes are verified below like every other release payload.
+            $notice=$relative -ceq 'ServerPayload/Plugins/LunaCompat/LICENSE.txt'
+            if ((-not $notice -and $tail -notmatch '\.(dll|exe|json|config)$') -or $tail -match '(?i)(^|/)(secrets?|passwords?|credentials?|private)([-_.]|$)') { throw "Unsupported native payload file: $relative" }
         } elseif ($relative -cnotin @('ClientTemplate.zip','APFPack-template.json','AetherfrontTechnology.json','MediaReferences.json','AccountReset.json') -and $relative -cnotmatch '^MediaPayload/kesas-[a-z0-9-]+-[a-f0-9]{64}\.zip$') { throw 'Unsupported release entry' }
         if ((Get-PCHash (Get-UpdateChildPath $Directory $relative)) -cne $file.sha256) { throw 'Release payload hash mismatch' }
     }
@@ -794,7 +797,7 @@ function Invoke-PreparedCandidate {
         try { $bytes=[Text.UTF8Encoding]::new($false).GetBytes(($receipt | ConvertTo-Json -Depth 80)); $stream.Write($bytes,0,$bytes.Length); $stream.Flush($true) }
         finally { $stream.Dispose() }
     }
-    if (-not $receipt.success) { throw "Prepared candidate gate failed ($($receipt.failureStage)); inspect private receipt/logs: $result" }
+    if (-not $receipt.success) { throw "Prepared candidate gate failed ($($receipt.failureStage)): $($receipt.failureDetail); inspect private receipt/logs: $result" }
     return [pscustomobject]@{Success=$true;Version=$ExpectedVersion;ResultPath=$result;ReceiptSha256=Get-PCHash $result}
 }
 
