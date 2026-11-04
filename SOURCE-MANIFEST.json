@@ -18,6 +18,138 @@
   ],
   "files": [
     {
+      "path": "Aetherfront-RC44-Work/Build-Release.py",
+      "source": null,
+      "role": "Reviewed RC44 guarded clock-persistence repair and isolated regression source",
+      "bytes": 5651,
+      "sha256": "322a1ff858e095c6c3e877ee9a10137cb43e900bbd4ccc7da19985885cdfffe4",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC44 source addition only.",
+        "Reviewed RC44 source update; production state and credentials excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/ClockRepair/ClockRepair.cs",
+      "source": null,
+      "role": "Reviewed RC44 guarded clock-persistence repair and isolated regression source",
+      "bytes": 4176,
+      "sha256": "eac63726ccbef7ad7e81b3a2ba9f7796aedbbf2b0214eb5f05fcdc4b0f563725",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC44 source addition only.",
+        "Reviewed RC44 source update; production state and credentials excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/ClockRepair/ClockRepair.csproj",
+      "source": null,
+      "role": "Reviewed RC44 guarded clock-persistence repair and isolated regression source",
+      "bytes": 244,
+      "sha256": "465ef29d773d5c0576d77d0e497b5822bf73b008d6c9bca44cc79f5bc0963f85",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC44 source addition only.",
+        "Reviewed RC44 source update; production state and credentials excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/Patch/Patch.csproj",
+      "source": null,
+      "role": "Reviewed RC44 guarded clock-persistence repair and isolated regression source",
+      "bytes": 338,
+      "sha256": "141ca610899c713e2ecd77c13eb0777f4c6ba797b993a98bb69df23baf2661cd",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC44 source addition only.",
+        "Reviewed RC44 source update; production state and credentials excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/Patch/Program.cs",
+      "source": null,
+      "role": "Reviewed RC44 guarded clock-persistence repair and isolated regression source",
+      "bytes": 9148,
+      "sha256": "0a1f37a06896d2064404b7bbf4027b0017ac143f6abf2e86944fcfc33104393c",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC44 source addition only.",
+        "Reviewed RC44 source update; production state and credentials excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/README.md",
+      "source": null,
+      "role": "Reviewed RC44 guarded clock-persistence repair and isolated regression source",
+      "bytes": 2043,
+      "sha256": "a37d0a3f264ad92f42791c62157539163617193b494b8d896f8f321df383971d",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC44 source addition only.",
+        "Reviewed RC44 source update; production state and credentials excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/ServerTests/Program.cs",
+      "source": null,
+      "role": "Reviewed RC44 guarded clock-persistence repair and isolated regression source",
+      "bytes": 18671,
+      "sha256": "d37a72080592714e523c248185126d1360c6146ce3423be032ae397ae9ae1fda",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC44 source addition only.",
+        "Reviewed RC44 source update; production state and credentials excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/ServerTests/Run.ps1",
+      "source": null,
+      "role": "Reviewed RC44 guarded clock-persistence repair and isolated regression source",
+      "bytes": 1732,
+      "sha256": "9178a4e99fc2db3430a3247794beef9317bded6d068522d6242e54379d6fe6fb",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC44 source addition only.",
+        "Reviewed RC44 source update; production state and credentials excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/ServerTests/ServerTests.csproj",
+      "source": null,
+      "role": "Reviewed RC44 guarded clock-persistence repair and isolated regression source",
+      "bytes": 3171,
+      "sha256": "f6f9391afa583128fad2135d7da44c1305b8b7b63a974f618ab6d4a928862dd1",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC44 source addition only.",
+        "Reviewed RC44 source update; production state and credentials excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/Tests/ClockStoreTests.csproj",
+      "source": null,
+      "role": "Reviewed RC44 guarded clock-persistence repair and isolated regression source",
+      "bytes": 258,
+      "sha256": "a12df67293622d7b55d75b811b5fa82d9a3e881b4fc78240f057348df6759d38",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC44 source addition only.",
+        "Reviewed RC44 source update; production state and credentials excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/Tests/Program.cs",
+      "source": null,
+      "role": "Reviewed RC44 guarded clock-persistence repair and isolated regression source",
+      "bytes": 19479,
+      "sha256": "821fb94bbe2958ba75224852ab916fa2141f5f88c50a4f7e8ec4bb5ba94d4d57",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed RC44 source addition only.",
+        "Reviewed RC44 source update; production state and credentials excluded."
+      ]
+    },
+    {
       "path": "Aetherfront-RC43-Work/Audit/Audit.csproj",
       "source": null,
       "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source",
@@ -29413,12 +29545,13 @@
       "path": "TESTING.md",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 36587,
-      "sha256": "d7228e48f4c38985d779f7b0a183ea52a36fa4dc3e05cd95c3a963b6f112d7b6",
+      "bytes": 38444,
+      "sha256": "c554e3af71da63e16791614245e49ab557263241cc1dbb15e21abe235bffa6ee",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately.",
-        "Reviewed RC43 source update; production state and credentials excluded."
+        "Reviewed RC43 source update; production state and credentials excluded.",
+        "Reviewed RC44 source update; production state and credentials excluded."
       ]
     },
     {
@@ -29434,14 +29567,15 @@
       "path": "export-policy.json",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 37923,
-      "sha256": "7a03fdcfadb1a75ab13d3b9fd1ae73a5096eef3d85f46c936c6abe96637d3e6f",
+      "bytes": 39792,
+      "sha256": "2397b2b296038c552b7240ebeda9b26008aa5f852579d631f3066e96b8de8188",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately.",
         "Reviewed RC41 source update; production state and credentials excluded.",
         "Reviewed RC42 source update; production state and credentials excluded.",
-        "Reviewed RC43 source update; production state and credentials excluded."
+        "Reviewed RC43 source update; production state and credentials excluded.",
+        "Reviewed RC44 source update; production state and credentials excluded."
       ]
     },
     {
@@ -29659,7 +29793,7 @@
       ]
     }
   ],
-  "totalFileBytes": 17370111,
+  "totalFileBytes": 17438748,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",
@@ -29678,5 +29812,5 @@
     "report": "PRIVACY-SCAN.json",
     "limitation": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
   },
-  "fileCount": 2961
+  "fileCount": 2972
 }

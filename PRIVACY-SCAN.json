@@ -1,4 +1,25 @@
 {
+  "incrementalRC44": {
+    "scannedUtc": "2026-11-04T03:34:39.5415729Z",
+    "filesScanned": 13,
+    "elapsedSeconds": 0.7390297,
+    "ruleMilliseconds": {
+      "discord-token": 23.2656,
+      "cloud-key": 8.9751,
+      "credential-url": 4.304900000000001,
+      "private-host": 27.840100000000003,
+      "user-home": 4.1713000000000005,
+      "credential-literal": 54.521300000000004,
+      "github-token": 4.263400000000001,
+      "private-key": 12.6623
+    },
+    "regexTimeoutSecondsPerFileRule": 5,
+    "findingCount": 0,
+    "findings": [],
+    "reviewedSyntheticMatches": [],
+    "contentOrMatchedValuesPrinted": false,
+    "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
+  },
   "incrementalRC43": {
     "scannedUtc": "2026-11-04T00:08:09.2447882Z",
     "filesScanned": 33,

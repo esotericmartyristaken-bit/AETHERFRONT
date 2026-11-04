@@ -405,6 +405,50 @@
   ],
   "explicitFiles": [
     {
+      "source": "Aetherfront-RC44-Work/Build-Release.py",
+      "role": "Reviewed RC44 guarded clock-persistence repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC44-Work/ClockRepair/ClockRepair.cs",
+      "role": "Reviewed RC44 guarded clock-persistence repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC44-Work/ClockRepair/ClockRepair.csproj",
+      "role": "Reviewed RC44 guarded clock-persistence repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC44-Work/Patch/Patch.csproj",
+      "role": "Reviewed RC44 guarded clock-persistence repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC44-Work/Patch/Program.cs",
+      "role": "Reviewed RC44 guarded clock-persistence repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC44-Work/README.md",
+      "role": "Reviewed RC44 guarded clock-persistence repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC44-Work/ServerTests/Program.cs",
+      "role": "Reviewed RC44 guarded clock-persistence repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC44-Work/ServerTests/Run.ps1",
+      "role": "Reviewed RC44 guarded clock-persistence repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC44-Work/ServerTests/ServerTests.csproj",
+      "role": "Reviewed RC44 guarded clock-persistence repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC44-Work/Tests/ClockStoreTests.csproj",
+      "role": "Reviewed RC44 guarded clock-persistence repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC44-Work/Tests/Program.cs",
+      "role": "Reviewed RC44 guarded clock-persistence repair and isolated regression source"
+    },
+    {
       "source": "Aetherfront-RC43-Work/Mono/ReceiverProgram.cs",
       "role": "Reviewed RC43 embedded Mono regression source"
     },

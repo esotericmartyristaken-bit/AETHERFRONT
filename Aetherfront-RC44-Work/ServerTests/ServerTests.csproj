@@ -1,0 +1,38 @@
+<Project>
+  <PropertyGroup>
+    <Artifacts>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../../UpdateBuilds/MissionTime-20261104/server-tests'))</Artifacts>
+    <BuildTag Condition="'$(BuildTag)' == ''">local</BuildTag>
+    <BaseIntermediateOutputPath>$(Artifacts)/$(BuildTag)/obj/</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+  </PropertyGroup>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><LangVersion>latest</LangVersion>
+    <StartupObject>MissionTimeProgram</StartupObject><EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <OutputPath>$(Artifacts)/$(BuildTag)/bin/</OutputPath><AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Runtime Condition="'$(Runtime)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../../KESAS-VPS-Server/Server'))</Runtime>
+    <Core Condition="'$(Core)' == ''">$(Runtime)</Core>
+    <Continuity Condition="'$(Continuity)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../../UpdateBuilds/MissionTime-20261104/code/AetherfrontContinuityServer.dll'))</Continuity>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="../../Development/ContinuityServerTests/Program.cs" Link="Legacy/Program.cs" />
+    <Compile Include="../../Development/ContinuityServerTests/ResourceTests.cs" Link="Legacy/ResourceTests.cs" />
+    <Compile Include="../../Development/ContinuityServerTests/VisibilityScaleTests.cs" Link="Legacy/VisibilityScaleTests.cs" />
+    <Compile Include="../../Development/ContinuityServerTests/DeepFreezeDiagnostics.cs" Link="Legacy/DeepFreezeDiagnostics.cs" />
+    <Compile Include="../../Development/ContinuityServerTests/DeepFreezeNativeRegression.cs" Link="Legacy/DeepFreezeNativeRegression.cs" />
+    <Reference Include="Server"><HintPath>$(Runtime)/Server.dll</HintPath></Reference>
+    <Reference Include="AetherfrontContinuityServer"><HintPath>$(Continuity)</HintPath></Reference>
+    <Reference Include="AetherfrontCore"><HintPath>$(Core)/AetherfrontCore.dll</HintPath></Reference>
+    <Reference Include="Lidgren.Core"><HintPath>$(Runtime)/Lidgren.Core.dll</HintPath></Reference>
+    <Reference Include="ApfCore"><HintPath>$(Runtime)/ApfCore.dll</HintPath></Reference>
+    <Reference Include="JsonFx"><HintPath>$(Runtime)/JsonFx.dll</HintPath></Reference>
+    <Reference Include="Newtonsoft.Json"><HintPath>$(Runtime)/Newtonsoft.Json.dll</HintPath></Reference>
+    <Reference Include="LunaConfigNode"><HintPath>$(Runtime)/LunaConfigNode.dll</HintPath></Reference>
+    <Reference Include="Microsoft.VisualStudio.Threading"><HintPath>$(Runtime)/Microsoft.VisualStudio.Threading.dll</HintPath></Reference>
+    <AssemblyMetadata Include="Artifacts" Value="$(Artifacts)" />
+    <AssemblyMetadata Include="RuntimeInput" Value="$(Runtime)" />
+    <AssemblyMetadata Include="ContinuityInput" Value="$(Continuity)" />
+  </ItemGroup>
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+</Project>

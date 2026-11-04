@@ -561,3 +561,33 @@ The release builder pins RC42, verifies helper/graft audits, updates both
 profiles, and changes only the reviewed client/helper files and release
 metadata. Media, transport DLLs, Server.dll, authentication, and science math
 remain unchanged. No account operation, key, log, or live state is included.
+
+# RC44 personal-clock replacement regression gates
+
+Production logs establish two failed atomic clock checkpoints immediately
+followed by the affected player's mission-time disconnect. Both proposed times advanced;
+the previous checksummed clock remained intact. The historical Windows reader
+or other interfering process was not identified.
+
+The pinned shipping ClockStore reproduces an immediate checkpoint failure under
+a held non-delete-sharing reader. This fixture produces sharing error 32, not
+the production log's error-1175 wording; delete-sharing and Node-reader fixtures
+succeed and must not be represented as reproducing the historical interference.
+
+The actual repaired DLL passes 32 clock-store cases / 206 assertions, including
+short-lock recovery, persistent-lock failure, exact single sequence advancement,
+record integrity, account/universe isolation, retry-code filtering, corruption,
+time bounds, and rollback rejection. Eight isolated authenticated server cases /
+103 assertions exercise the shipping admission, checkpoint and disconnect hooks.
+Short locks no longer terminate the session; persistent locks, corruption,
+rollback, and missing subspaces retain the fail-closed behavior. Offline and
+peer-warp isolation remain intact. No test starts a listener or initializes
+production state.
+
+The repair changes one existing File.Replace call in ClockStore.Write. Its
+other 52 original methods are unchanged, and restoring that call recovers the
+original writer, including flush and cleanup. Client changes only the release
+getter/constant; its other 6,326 methods retain RC43 science and pacing fixes.
+Native preflight verifies the keyless RC44 archive; both profiles and all media
+retain their previous payloads except coordinated version metadata and the
+audited clock helper/client release stamp. No saved clock is reset or edited.
