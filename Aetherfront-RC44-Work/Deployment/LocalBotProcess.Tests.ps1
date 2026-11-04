@@ -34,4 +34,24 @@ if(-not $rejected){throw 'Wrong process owner accepted'};$checks++
 $process.CommandLine=$settings.node+' "'+$runtime+'\APFDiscordBot\src\index.js"';Valid
 $errorsFound=$null;$null=[Management.Automation.Language.Parser]::ParseFile((Join-Path $PSScriptRoot 'Install-LocalBot.ps1'),[ref]$null,[ref]$errorsFound)
 if($errorsFound.Count){throw 'Installer syntax invalid'};$checks++
+$fixture=Join-Path ([IO.Path]::GetTempPath()) ('local-bot-records-'+[Guid]::NewGuid().ToString('N'))
+$null=New-Item -ItemType Directory -Path (Join-Path $fixture 'state')
+$recordSettings=[pscustomobject]@{botRoot=$fixture}
+$legacy=Join-Path $fixture 'state/local-bot-launch.json'
+$old=[pscustomobject]@{pid=99999;startedAt=$created.ToString('o')}
+[IO.File]::WriteAllText($legacy,($old|ConvertTo-Json))
+$checks++;if(Get-LocalBotLaunchRecord $recordSettings $process){throw 'Wrong PID launch record accepted'}
+$interrupted=Join-Path $fixture 'state/local-bot-launch.json.111.tmp'
+[IO.File]::WriteAllText($interrupted,($launch|ConvertTo-Json))
+$checks++;if((Get-LocalBotLaunchRecord $recordSettings $process).pid -ne 12345){throw 'Interrupted legacy record migration failed'}
+[IO.File]::WriteAllText($interrupted,'partial invalid JSON')
+$checks++;if(Get-LocalBotLaunchRecord $recordSettings $process){throw 'Partial record accepted'}
+$versioned=Join-Path $fixture 'state/local-bot-launch-20261104T000000000Z-111-12345.json'
+[IO.File]::WriteAllText($versioned,($launch|ConvertTo-Json))
+$checks++;if((Get-LocalBotLaunchRecord $recordSettings $process).runtime -cne $runtime){throw 'Per-launch record unavailable'}
+$process.CreationDate=$created.AddSeconds(3)
+$checks++;if(Get-LocalBotLaunchRecord $recordSettings $process){throw 'Reused PID accepted'}
+$process.CreationDate=$created
+$errorsFound=$null;$null=[Management.Automation.Language.Parser]::ParseFile((Join-Path $PSScriptRoot 'Start-LocalBot.ps1'),[ref]$null,[ref]$errorsFound)
+if($errorsFound.Count){throw 'Launcher syntax invalid'};$checks++
 "PASS $checks identity/syntax checks; no live process, task, ACL or server mutation"

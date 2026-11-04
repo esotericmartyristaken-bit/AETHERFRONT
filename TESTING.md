@@ -662,5 +662,9 @@ launch record, exact trusted Node/immutable entry point, process owner SID and
 creation time. Scheduler triggers are disabled during replacement. Only that
 verified child generation is stopped if the scheduler leaves it orphaned; no
 process tree, game process, unrelated Node process or instance-lock file is
-removed. Sixteen hermetic identity/syntax checks cover this guard. Native bot
-replacement still requires normal Windows consent and authenticated startup.
+removed. Twenty-two hermetic identity/record/syntax checks cover this guard.
+Per-launch records are published by a unique move, never replacement of the
+old administrator-owned shared pointer. Valid interrupted legacy records can
+identify an existing child during migration; malformed/reused-PID records
+cannot. Launcher failure cleans up its owned child. Native bot replacement
+still requires normal Windows consent and authenticated startup.

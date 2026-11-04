@@ -16,11 +16,22 @@ Set-Location -LiteralPath $configuration.botRoot
 $stamp=[DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ')+'-'+$PID
 $output=Join-Path $configuration.botRoot "state/local-bot-$stamp.stdout.log"
 $errors=Join-Path $configuration.botRoot "state/local-bot-$stamp.stderr.log"
+$child=$null
 try{
     $child=Start-Process -FilePath $configuration.node -ArgumentList @("`"$runtime/APFDiscordBot/src/index.js`"") -WorkingDirectory $configuration.botRoot -WindowStyle Hidden -RedirectStandardOutput $output -RedirectStandardError $errors -PassThru
-    $launchPath=Join-Path $configuration.botRoot 'state/local-bot-launch.json'
-    $temporary=$launchPath+'.'+$PID+'.tmp'
+    # New immutable record per launch. A limited task must never replace an
+    # administrator-owned shared pointer left by an older installer.
+    $launchPath=Join-Path $configuration.botRoot "state/local-bot-launch-$stamp-$($child.Id).json"
+    $temporary=$launchPath+'.tmp'
     [IO.File]::WriteAllText($temporary,(@{pid=$child.Id;startedAt=$child.StartTime.ToUniversalTime().ToString('o');stdout=$output;stderr=$errors;runtime=$runtime}|ConvertTo-Json),[Text.UTF8Encoding]::new($false))
-    if([IO.File]::Exists($launchPath)){[IO.File]::Replace($temporary,$launchPath,$null)}else{[IO.File]::Move($temporary,$launchPath)}
-    try{$child.WaitForExit();exit $child.ExitCode}finally{$child.Dispose()}
-}finally{$env:APF_DISCORD_TOKEN=$null}
+    [IO.File]::Move($temporary,$launchPath)
+    $child.WaitForExit();$exitCode=$child.ExitCode;exit $exitCode
+}catch{
+    [IO.File]::WriteAllText($errors+'.launcher.txt',$_.Exception.ToString())
+    throw
+}finally{
+    $env:APF_DISCORD_TOKEN=$null
+    if($child){
+        try{if(-not $child.HasExited){$child.Kill();$null=$child.WaitForExit(15000)}}finally{$child.Dispose()}
+    }
+}

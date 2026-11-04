@@ -1,4 +1,27 @@
 #requires -Version 7.4
+function Get-LocalBotLaunchRecord($Settings,$Process) {
+    $directory=Join-Path $Settings.botRoot 'state'
+    $number=[int]$Process.ProcessId
+    if($number -le 0){throw 'Invalid bot process PID'}
+    $files=@(Get-ChildItem -LiteralPath $directory -Filter "local-bot-launch-*-$number.json" -File)
+    if($files.Count -gt 32){throw 'Too many launch records for one bot PID'}
+    # Migration from the old shared pointer and an interrupted legacy replace.
+    $legacy=Join-Path $directory 'local-bot-launch.json'
+    if([IO.File]::Exists($legacy)){$files+=Get-Item -LiteralPath $legacy}
+    $temporary=@(Get-ChildItem -LiteralPath $directory -Filter 'local-bot-launch.json.*.tmp' -File)
+    if($temporary.Count -gt 64){throw 'Too many interrupted legacy launch records'}
+    $files+=$temporary
+    $created=([DateTime]$Process.CreationDate).ToUniversalTime()
+    foreach($file in $files|Sort-Object LastWriteTimeUtc -Descending){
+        if($file.Length -gt 8192){continue}
+        try{
+            $value=[IO.File]::ReadAllText($file.FullName)|ConvertFrom-Json
+            if($value.pid -eq $number -and [Math]::Abs(($created-([DateTimeOffset]$value.startedAt).UtcDateTime).TotalSeconds) -lt 2){return $value}
+        }catch{continue} # A concurrently written record cannot authorize a stop.
+    }
+    return $null
+}
+
 function Assert-LocalBotChildIdentity($Settings,[string]$ExpectedSid,$Holder,$Launch,$Process,[string]$OwnerSid) {
     if(-not $Holder -or $Holder.pid -isnot [long] -and $Holder.pid -isnot [int] -or $Holder.pid -le 0){throw 'Invalid bot instance PID'}
     if(-not $Launch -or $Launch.pid -ne $Holder.pid -or -not $Process -or $Process.ProcessId -ne $Holder.pid){throw 'Bot launch/instance/process identities differ'}
@@ -24,7 +47,7 @@ function Stop-LocalBotChild($Settings,[string]$ExpectedSid) {
     if($holder.pid -isnot [long] -and $holder.pid -isnot [int] -or $holder.pid -le 0){throw 'Invalid bot instance PID'}
     $process=Get-CimInstance Win32_Process -Filter "ProcessId=$($holder.pid)" -ErrorAction Stop
     if(-not $process){return} # Existing singleton code handles the stale lock.
-    $launch=Get-Content -LiteralPath (Join-Path $Settings.botRoot 'state/local-bot-launch.json') -Raw|ConvertFrom-Json
+    $launch=Get-LocalBotLaunchRecord $Settings $process
     $owner=Invoke-CimMethod -InputObject $process -MethodName GetOwnerSid -ErrorAction Stop
     if($owner.ReturnValue -ne 0){throw 'Cannot verify bot process owner'}
     $created=Assert-LocalBotChildIdentity $Settings $ExpectedSid $holder $launch $process $owner.Sid

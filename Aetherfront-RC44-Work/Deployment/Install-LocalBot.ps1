@@ -68,8 +68,7 @@ function Install-LocalBot([string]$Bundle,$Settings,[string]$BotConfig) {
             if($holder.pid -is [long] -or $holder.pid -is [int]){
                 $process=Get-CimInstance Win32_Process -Filter "ProcessId=$($holder.pid)" -ErrorAction Stop
                 if($process -and $process.ExecutablePath -ieq $Settings.node -and $process.CommandLine.Replace('/','\').Contains($expectedEntry,[StringComparison]::OrdinalIgnoreCase) -and $process.CreationDate.ToUniversalTime() -ge $launched.AddSeconds(-2)){
-                    $launchPath=Join-Path $Settings.botRoot 'state/local-bot-launch.json'
-                    $launch=if([IO.File]::Exists($launchPath)){Get-Content -LiteralPath $launchPath -Raw|ConvertFrom-Json}else{$null}
+                    $launch=Get-LocalBotLaunchRecord $Settings $process
                     $stateRoot=[IO.Path]::GetFullPath((Join-Path $Settings.botRoot 'state')).TrimEnd('\')+'\'
                     if($launch -and $launch.pid -eq $holder.pid -and $launch.runtime -ieq $runtime -and [Math]::Abs(($process.CreationDate.ToUniversalTime()-([DateTimeOffset]$launch.startedAt).UtcDateTime).TotalSeconds) -lt 2 -and [IO.Path]::GetFullPath($launch.stdout).StartsWith($stateRoot,[StringComparison]::OrdinalIgnoreCase) -and [IO.Path]::GetFileName($launch.stdout) -cmatch '^local-bot-[0-9TZ]+-[0-9]+\.stdout\.log$'){
                         $stream=[IO.FileStream]::new($launch.stdout,[IO.FileMode]::Open,[IO.FileAccess]::Read,([IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete))
