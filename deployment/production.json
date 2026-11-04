@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
-  "version": "kesas-rc42",
-  "releaseTag": "host-kesas-rc42",
-  "assetName": "Aetherfront-Release-kesas-rc42.zip",
-  "sha256": "7bceff2674ce133750ad7ea5400bce3ef90e7e704399c207c2031c1408b7958f",
-  "sizeBytes": 5895672,
-  "notes": "Fix excessive pooled-buffer allocation during reliable synchronization.",
+  "version": "kesas-rc43",
+  "releaseTag": "host-kesas-rc43",
+  "assetName": "Aetherfront-Release-kesas-rc43.zip",
+  "sha256": "710ac479c893bb874b706df54838286a139871b9638a2d05e439f649f96ba383",
+  "sizeBytes": 5917530,
+  "notes": "Fix science confirmation retries, transmission reply traffic, and reliable sender queue pacing.",
   "requirements": {
     "contractVersion": 1,
     "capabilities": [
