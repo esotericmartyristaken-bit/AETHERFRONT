@@ -692,7 +692,7 @@ they must be gone before success and any post-HTTPS recheck. Wrong owners or a
 nonloopback main game listener still fail immediately. Candidate executables now
 also receive explicit nonloopback inbound blocks, in addition to outbound
 isolation. Atomic bridge-file disappearance is treated as not-ready, not success.
-Twenty-eight hermetic candidate fixtures cover the updated policy; a full native
+Twenty-nine hermetic candidate fixtures cover the updated policy; a full native
 pass remains mandatory and is not inferred from the startup log alone.
 
 The operator's initial live status read now uses the same validated Node reader
@@ -730,3 +730,11 @@ remain not-ready within the unchanged startup timeout. This reader is not used
 to authorize stopping an old bot: its owner, immutable entry point, launch record
 and held process-generation checks remain mandatory. A valid shared record and
 recovery after an exclusive write are covered by the identity/readiness tests.
+
+One native run observed an owned auxiliary UDP socket reappear after HTTPS
+verification. The gate now continues its original 180-second deadline in that
+case, repeating all pinned HTTPS/hash checks into new create-only evidence
+directories. It still requires exactly the expected loopback UDP/TCP listeners
+before passing. Main/foreign listener violations remain fatal; persistent
+auxiliary sockets still time out. A regression reproduces the old post-probe
+failure and requires two complete probe rounds before acceptance.

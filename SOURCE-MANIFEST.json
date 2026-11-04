@@ -29545,8 +29545,8 @@
       "path": "TESTING.md",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 47754,
-      "sha256": "b395238dbfdeb7f3b90c1ae87ade4692a637b3a86082e42f25ba320317a9ce77",
+      "bytes": 48278,
+      "sha256": "3cd2eea401e672d1841e25a1e30b790235044c98b9fcbccc4f38294c177d287b",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately.",
@@ -29808,8 +29808,8 @@
       "path": "Aetherfront-RC44-Work/Deployment/Test-PreparedCandidate.ps1",
       "source": null,
       "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
-      "bytes": 55239,
-      "sha256": "ad53243c6ff6bec1e6e92e5542d43dd5e4d7d1418c94f3d7257012309fc715a1",
+      "bytes": 55574,
+      "sha256": "c91f4868e56030c1d9429110e54bded71edcad00951da1c4bd09db791e726028",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed source addition only.",
@@ -29976,8 +29976,8 @@
       "path": "Aetherfront-RC44-Work/Deployment/Test-PreparedCandidate.Tests.ps1",
       "source": null,
       "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
-      "bytes": 45113,
-      "sha256": "42927ebf5905f22c44b7bdbb845815347379cad2f3d1ee270855132aea3ff672",
+      "bytes": 46415,
+      "sha256": "6289fc71dc2fea0af7526c2639c01a247b0dcc4ba541234c655c228858990630",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed source addition only.",
@@ -30261,7 +30261,7 @@
       ]
     }
   ],
-  "totalFileBytes": 17861793.0,
+  "totalFileBytes": 17863954.0,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",

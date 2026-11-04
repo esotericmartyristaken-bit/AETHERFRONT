@@ -429,6 +429,25 @@ try {
         $script:auxiliaryUdp=$false
         Assert-Fixture (Assert-PCListeners $context -Require)
     }
+    Test-Fixture 'post-HTTPS auxiliary socket retries bounded readiness and probes again before passing' {
+        $owned=[pscustomobject]@{Process=@{Id=70001;HasExited=$false};OutputTask=@{IsFaulted=$false};ErrorTask=@{IsFaulted=$false}}
+        $owned|Add-Member ScriptMethod AssertOwned {}
+        $context=@{Game=$owned;Pack=$owned;Receipt=@{}}
+        $script:listenerCalls=0;$script:probeCalls=0;$script:heartbeatCalls=0
+        Set-FixtureMock Assert-PCProduction {param($Context)}
+        Set-FixtureMock Read-PCStartup {param($Context) return $true}
+        Set-FixtureMock Read-PCBridge {param($Context) $script:heartbeatCalls++;return ([DateTime]::UtcNow.AddSeconds($script:heartbeatCalls).ToString('o'))}
+        Set-FixtureMock Assert-PCListeners {
+            param($Context,[switch]$Require)
+            $script:listenerCalls++
+            if($script:listenerCalls -eq 3){if($Require){throw 'fixture auxiliary UDP still settling'};return $false}
+            return $true
+        }
+        Set-FixtureMock Invoke-PCHttps {param($Context) $script:probeCalls++}
+        & $original['Wait-PCReady'] $context
+        Assert-Fixture ($script:probeCalls -eq 2 -and $script:listenerCalls -eq 5)
+        Assert-Fixture ($null -ne $context.Receipt.bridge -and $script:productionStops -eq 0)
+    }
     Test-Fixture 'accepted loopback HTTPS ephemeral remote ports including CloseWait are inbound' {
         $context=@{Game=@{Process=@{Id=70001}};Pack=@{Process=@{Id=70002}};GamePort=28865;PackPort=28866}
         $script:fixtureForbiddenOutbound=$false

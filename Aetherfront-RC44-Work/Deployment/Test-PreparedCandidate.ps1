@@ -573,7 +573,7 @@ function Read-PCBridge($Context) {
 }
 
 function Invoke-PCHttps($Context) {
-    $base="https://127.0.0.1:$($Context.PackPort)"; $probes="$($Context.Scratch)/Probes"
+    $base="https://127.0.0.1:$($Context.PackPort)"; $probes="$($Context.Scratch)/Probes/"+[Guid]::NewGuid().ToString('N')
     $null=[IO.Directory]::CreateDirectory($probes)
     $pin=$Context.Config.certificateSha256
     $null=[PreparedCandidate.Https]::Fetch("$base/health",$pin,"$probes/health.json",64KB)
@@ -605,11 +605,16 @@ function Wait-PCReady($Context) {
             if ($heartbeat -and $fresh -cne $heartbeat) {
                 Invoke-PCHttps $Context
                 if ([DateTime]::UtcNow -ge $deadline) { throw 'Candidate readiness deadline exceeded during HTTPS verification' }
-                $null=Assert-PCListeners $Context -Require
+                # An owned auxiliary socket can briefly reappear after the
+                # probe. Continue the SAME deadline, then repeat every HTTPS
+                # check; do not admit it or discard earlier probe evidence.
+                $listeningAfterProbe=Assert-PCListeners $Context
                 $null=Read-PCStartup $Context
                 if (-not (Read-PCBridge $Context)) { throw 'Candidate bridge vanished during HTTPS checks' }
-                $Context.Receipt.bridge=@{pid=$Context.Game.Process.Id;firstHeartbeat=$heartbeat;secondHeartbeat=$fresh}
-                return
+                if($listeningAfterProbe){
+                    $Context.Receipt.bridge=@{pid=$Context.Game.Process.Id;firstHeartbeat=$heartbeat;secondHeartbeat=$fresh}
+                    return
+                }
             }
             if (-not $heartbeat) { $heartbeat=$fresh }
         }
