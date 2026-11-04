@@ -714,3 +714,11 @@ and trims only ending separators. Equivalent Windows paths pass; changed roots,
 release/published directories, schema/version, gate hash, readiness flags,
 expired proof and modified receipt bytes still fail. Production activation is
 not established by these candidate results.
+
+The protected recovery task check also canonicalizes its executable and working
+directory, preserving the fixed SYSTEM principal, sole action, exact router
+arguments and captured task-XML hash. A task spelled as emitted by the installer
+reproduced the old rejection. Equivalent paths now pass; altered principal,
+executable, arguments, directory and additional actions remain rejected. The
+local operator checks that task binding before firewall, bot and media work;
+full recovery-plan and unchanged-task checks still run before any game stop.

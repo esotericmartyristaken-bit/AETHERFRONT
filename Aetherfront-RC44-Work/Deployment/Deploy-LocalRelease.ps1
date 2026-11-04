@@ -104,7 +104,12 @@ try{
     [IO.File]::WriteAllText((Join-Path $bundle 'SOURCE.json'),(@{commit=$SourceCommit;files=$files}|ConvertTo-Json -Depth 5),[Text.UTF8Encoding]::new($false))
     $frozenArchive=Join-Path $bundle 'Release.zip';Copy-Item -LiteralPath $archivePath -Destination $frozenArchive
     if((Get-FileHash -LiteralPath $frozenArchive).Hash.ToLowerInvariant() -cne $ArchiveSha256){throw 'Frozen archive differs from reviewed release'}
-    $report.bundle=$bundle;Report-Local 'local-mode-reload'
+    $report.bundle=$bundle;Report-Local 'verifying-server-task'
+    # Validate the unchanged protected startup route before bot/media work.
+    . (Join-Path $bundle 'Aetherfront-RC44-Work/Deployment/Start-PreactivationRecovery.ps1')
+    Initialize-PreactivationRecovery
+    Assert-RecoveryTaskBinding @{ControlRoot=$control;NativeRoot=$deployment}
+    $report.gameTaskBindingVerified=$true
     # Exercise real Windows firewall syntax before bot changes, long media work,
     # or native startup. Only a NEW private, never-executed copy is targeted.
     Report-Local 'verifying-candidate-firewall'

@@ -195,6 +195,21 @@ function Open-RecoveryLock([string]$Path) {
     catch [IO.IOException]{if(($_.Exception.GetBaseException().HResult -band 65535) -notin @(32,33)){throw};return $null}
 }
 
+function Assert-RecoveryTaskBinding($Context) {
+    $task=Get-ScheduledTask -TaskName 'KESAS Server' -TaskPath '\' -ErrorAction Stop
+    if(@($task.Actions).Count -ne 1 -or $task.Principal.UserId -notin @('SYSTEM','NT AUTHORITY\SYSTEM','S-1-5-18')){throw 'Fixed KESAS Server task no longer matches its protected router (principal/actions)'}
+    $execute=Assert-RecoveryLocalPath (Join-Path ([Environment]::GetFolderPath('Windows')) 'System32/WindowsPowerShell/v1.0/powershell.exe')
+    $router=Get-RecoveryChild $Context.ControlRoot 'bootstrap/Start-NativeServer.ps1'
+    $settings=Get-RecoveryChild $Context.ControlRoot 'host.json'
+    $arguments="-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$router`" -Settings `"$settings`""
+    # The installer uses forward slashes in task paths. Keep exact routing and
+    # argument checks, but compare executable/directory identities canonically.
+    $actualExecute=Assert-RecoveryLocalPath $task.Actions[0].Execute
+    $actualDirectory=[IO.Path]::TrimEndingDirectorySeparator((Assert-RecoveryLocalPath $task.Actions[0].WorkingDirectory))
+    $expectedDirectory=[IO.Path]::TrimEndingDirectorySeparator((Assert-RecoveryLocalPath $Context.NativeRoot))
+    if($actualExecute -ine $execute -or $task.Actions[0].Arguments.Replace('/','\') -ine $arguments -or $actualDirectory -ine $expectedDirectory){throw 'Fixed KESAS Server task no longer matches its protected router (executable/arguments/directory)'}
+}
+
 function Assert-RecoveryUnchanged($Context) {
     $plan=$Context.Plan
     if((Get-FileHash -LiteralPath $Context.PlanPath -Algorithm SHA256).Hash -ine $Context.PlanSha256){throw 'Recovery plan changed'}
@@ -223,12 +238,7 @@ function Assert-RecoveryUnchanged($Context) {
     if($feed.version -cne $plan.oldVersion -or $pack.requiredClientVersion -cne $plan.oldVersion -or $pack.packVersion -cne $plan.oldVersion){throw 'Old native release is not active'}
     $configuration=Read-RecoveryJson (Get-RecoveryChild $Context.NativeRoot 'deployment.json')
     if($configuration.gamePort -lt 1024 -or $configuration.gamePort -gt 65535 -or $configuration.packPort -lt 1024 -or $configuration.packPort -gt 65535 -or $configuration.gamePort -eq $configuration.packPort -or $configuration.certificateSha256 -cnotmatch '^[a-fA-F0-9]{64}$'){throw 'Invalid pinned native deployment settings'}
-    $task=Get-ScheduledTask -TaskName 'KESAS Server' -TaskPath '\' -ErrorAction Stop
-    $execute=Join-Path ([Environment]::GetFolderPath('Windows')) 'System32/WindowsPowerShell/v1.0/powershell.exe'
-    $router=Get-RecoveryChild $Context.ControlRoot 'bootstrap/Start-NativeServer.ps1'
-    $settings=Get-RecoveryChild $Context.ControlRoot 'host.json'
-    $arguments="-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$router`" -Settings `"$settings`""
-    if(@($task.Actions).Count -ne 1 -or $task.Principal.UserId -notin @('SYSTEM','NT AUTHORITY\SYSTEM','S-1-5-18') -or $task.Actions[0].Execute -ine $execute -or $task.Actions[0].Arguments.Replace('/','\') -ine $arguments -or $task.Actions[0].WorkingDirectory -ine $Context.NativeRoot){throw 'Fixed KESAS Server task no longer matches its protected router'}
+    Assert-RecoveryTaskBinding $Context
     $sha=[Security.Cryptography.SHA256]::Create()
     try{$taskHash=[BitConverter]::ToString($sha.ComputeHash([Text.UTF8Encoding]::new($false).GetBytes([string](Export-ScheduledTask -TaskName 'KESAS Server' -TaskPath '\' -ErrorAction Stop)))).Replace('-','').ToLowerInvariant()}finally{$sha.Dispose()}
     if($taskHash -cne $plan.taskXmlSha256){throw 'Fixed KESAS Server task definition changed'}

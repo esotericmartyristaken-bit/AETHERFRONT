@@ -36,12 +36,14 @@ function Assert-RecoveryProtection {param($Path,[switch]$Private,[switch]$Contro
 function Export-ScheduledTask {param($TaskName,$TaskPath,$ErrorAction) '<Task>fixed fixture router</Task>'}
 function Get-ScheduledTask {
     param($TaskName,$TaskPath,$ErrorAction)
+    if($script:taskOverride){return $script:taskOverride}
     $control=$script:fixtureControl
     $arguments="-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$control/bootstrap/Start-NativeServer.ps1`" -Settings `"$control/host.json`""
     [pscustomobject]@{State='Ready';Principal=[pscustomobject]@{UserId='SYSTEM'};Actions=@([pscustomobject]@{Execute=(Join-Path ([Environment]::GetFolderPath('Windows')) 'System32/WindowsPowerShell/v1.0/powershell.exe');Arguments=$arguments;WorkingDirectory=$script:fixtureNative})}
 }
 
 try{
+    $script:taskOverride=$null
     $script:fixtureControl=Join-Path $fixture 'control'
     $script:fixtureNative=Join-Path $fixture 'native'
     $selected=Join-Path $fixtureControl 'bootstrap/native'
@@ -80,6 +82,26 @@ try{
     $configuration=Assert-RecoveryUnchanged $context
     Assert-Fixture ($configuration.gamePort -eq 18865) 'Valid old release rejected'
     Pass-Fixture 'protected-plan schema, exact roots, old hashes/feed and fixed task binding'
+
+    $script:taskOverride=Get-ScheduledTask -TaskName 'KESAS Server'
+    $script:taskOverride.Actions[0].Execute=$script:taskOverride.Actions[0].Execute.Replace('\','/')
+    $script:taskOverride.Actions[0].WorkingDirectory=$script:taskOverride.Actions[0].WorkingDirectory.Replace('\','/')
+    $null=Assert-RecoveryUnchanged $context
+    Pass-Fixture 'fixed router accepts canonical equivalent task executable and working directory'
+    $script:taskOverride=$null
+    foreach($change in @('principal','execute','arguments','directory','extra-action')){
+        $task=Get-ScheduledTask -TaskName 'KESAS Server';$script:taskOverride=$task
+        switch($change){
+            'principal' {$task.Principal.UserId='untrusted-user'}
+            'execute' {$task.Actions[0].Execute=Join-Path $fixture 'wrong.exe'}
+            'arguments' {$task.Actions[0].Arguments+=' -Command unexpected'}
+            'directory' {$task.Actions[0].WorkingDirectory=$fixture}
+            'extra-action' {$task.Actions+=@($task.Actions[0])}
+        }
+        Reject-Fixture {Assert-RecoveryUnchanged $context} 'Fixed KESAS Server task'
+        $script:taskOverride=$null
+    }
+    Pass-Fixture 'changed principal executable arguments directory and extra task actions rejected'
 
     Assert-Fixture ((Get-RecoveryReleaseNumber 'kesas-rc9223372036854775807') -eq [long]::MaxValue) 'Positive Int64 maximum rejected'
     foreach($version in @('kesas-rc0','kesas-rc01','kesas-rc-1','KESAS-rc45','kesas-rc9223372036854775808')){Reject-Fixture {Get-RecoveryReleaseNumber $version} 'positive Int64'}
