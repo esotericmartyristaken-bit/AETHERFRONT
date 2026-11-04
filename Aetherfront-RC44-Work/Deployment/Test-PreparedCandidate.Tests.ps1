@@ -412,11 +412,12 @@ try {
     }
     Test-Fixture 'firewall plan blocks nonloopback and other loopback ports for candidate executables only' {
         $f=New-Fixture; $script:firewallSpecifications=@{}
-        $context=@{Candidate=$f.Root;Root="$($f.Base)/Live-not-candidate";GamePort=28865;PackPort=28866;Receipt=@{};Firewall=[Collections.Generic.List[string]]::new()}
+        $context=@{Candidate=($f.Root+'/.');Root="$($f.Base)/Live-not-candidate";GamePort=28865;PackPort=28866;Receipt=@{};Firewall=[Collections.Generic.List[string]]::new()}
         function Get-NetFirewallProfile { @([pscustomobject]@{Enabled=$true},[pscustomobject]@{Enabled=$true},[pscustomobject]@{Enabled=$true}) }
         function New-NetFirewallRule {
             [CmdletBinding()]param($Name,$DisplayName,$Program,$Direction,$Action,$Enabled,$Profile,$Protocol,$RemoteAddress,$RemotePort)
             $script:firewallSpecifications[$Name]=[pscustomobject]@{Name=$Name;Program=$Program;Direction=$Direction;Action=$Action;Enabled=$Enabled;Protocol=$Protocol;RemoteAddress=$RemoteAddress;RemotePort=$RemotePort}
+            if($Program.Contains('/') -or $Program -cne [IO.Path]::GetFullPath($Program)){throw 'Noncanonical Windows firewall application path'}
         }
         function Get-NetFirewallRule { [CmdletBinding()]param($PolicyStore,$Name) return $script:firewallSpecifications[$Name] }
         function Get-NetFirewallApplicationFilter { [CmdletBinding()]param([Parameter(ValueFromPipeline)]$InputObject) process { [pscustomobject]@{Program=$InputObject.Program} } }

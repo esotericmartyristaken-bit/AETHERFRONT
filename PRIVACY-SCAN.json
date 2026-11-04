@@ -143,18 +143,18 @@
     "scope": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
   },
   "incrementalRC46": {
-    "scannedUtc": "2026-11-04T07:40:01.1037816Z",
-    "filesScanned": 6,
-    "elapsedSeconds": 0.4399717,
+    "scannedUtc": "2026-11-04T07:52:03.6113197Z",
+    "filesScanned": 4,
+    "elapsedSeconds": 0.49253,
     "ruleMilliseconds": {
-      "private-host": 27.9758,
-      "user-home": 3.5476,
-      "github-token": 3.3932,
-      "credential-url": 27.152,
-      "credential-literal": 26.289099999999998,
-      "cloud-key": 4.592700000000001,
-      "discord-token": 19.625,
-      "private-key": 13.331699999999998
+      "credential-url": 5.6854000000000005,
+      "private-key": 15.1551,
+      "discord-token": 29.8938,
+      "user-home": 36.2424,
+      "private-host": 46.2479,
+      "cloud-key": 4.8142,
+      "credential-literal": 32.5588,
+      "github-token": 6.0877
     },
     "regexTimeoutSecondsPerFileRule": 5,
     "findingCount": 0,

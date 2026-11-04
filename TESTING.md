@@ -668,3 +668,9 @@ old administrator-owned shared pointer. Valid interrupted legacy records can
 identify an existing child during migration; malformed/reused-PID records
 cannot. Launcher failure cleans up its owned child. Native bot replacement
 still requires normal Windows consent and authenticated startup.
+
+Candidate firewall application paths are canonicalized through the existing
+validated Windows path helper. The firewall-plan fixture now supplies mixed
+separators/dot segments and rejects noncanonical program arguments. Missing
+rules after rejected creation do not cause spurious cleanup failures. Real
+firewall creation and native boot remain required before production admission.
