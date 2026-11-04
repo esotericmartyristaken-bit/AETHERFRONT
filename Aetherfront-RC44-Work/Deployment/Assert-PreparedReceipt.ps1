@@ -2,8 +2,14 @@
 function Assert-LocalPreparedReceipt([string]$ReceiptPath,[string]$ReceiptSha256,[string]$DeploymentRoot,[string]$ReleaseDirectory,[string]$PublishedDirectory,[string]$Version,[string]$GatePath) {
     if((Get-PCHash $ReceiptPath) -cne $ReceiptSha256){throw 'Candidate receipt changed; no shutdown authorized'}
     $receipt=Read-UpdateText $ReceiptPath 16MB|ConvertFrom-Json
+    # The candidate canonicalizes paths, while its publisher builds some with
+    # forward slashes. Compare validated directory identities, not spellings.
+    foreach($pair in @(@{actual=$receipt.deploymentRoot;expected=$DeploymentRoot},@{actual=$receipt.releaseDirectory;expected=$ReleaseDirectory},@{actual=$receipt.publishedDirectory;expected=$PublishedDirectory})){
+        $actual=[IO.Path]::TrimEndingDirectorySeparator((Assert-UpdatePath $pair.actual))
+        $expected=[IO.Path]::TrimEndingDirectorySeparator((Assert-UpdatePath $pair.expected))
+        if($actual -ine $expected){throw 'Candidate readiness proof does not match this deployment'}
+    }
     if($receipt.schema -cne 'apf-prepared-candidate/v1' -or $receipt.version -cne $Version -or
-       $receipt.deploymentRoot -ine $DeploymentRoot -or $receipt.releaseDirectory -ine $ReleaseDirectory -or $receipt.publishedDirectory -ine $PublishedDirectory -or
        $receipt.success -ne $true -or $receipt.startPassed -ne $true -or $receipt.shutdownPassed -ne $true -or
        $receipt.productionUnchanged -ne $true -or $receipt.productionPidUnchanged -ne $true -or
        $receipt.gateSha256 -cne (Get-PCHash $GatePath)){throw 'Candidate readiness proof does not match this deployment'}

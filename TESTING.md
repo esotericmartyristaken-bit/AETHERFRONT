@@ -692,7 +692,7 @@ they must be gone before success and any post-HTTPS recheck. Wrong owners or a
 nonloopback main game listener still fail immediately. Candidate executables now
 also receive explicit nonloopback inbound blocks, in addition to outbound
 isolation. Atomic bridge-file disappearance is treated as not-ready, not success.
-Twenty-six hermetic candidate fixtures cover the updated policy; a full native
+Twenty-eight hermetic candidate fixtures cover the updated policy; a full native
 pass remains mandatory and is not inferred from the startup log alone.
 
 The operator's initial live status read now uses the same validated Node reader
@@ -703,3 +703,14 @@ tests cover snapshot validation, transient and persistent read failures, and
 operator routing through the admission reader. A live read also succeeded with
 the production game unchanged. These results do not replace native candidate
 startup or occupied-player warning verification.
+
+A subsequent real isolated candidate passed game startup, loopback ownership,
+pinned HTTPS pack/feed/archive checks, progressing bridge heartbeat and clean
+shutdown, with production files and PID unchanged. Activation then stopped on
+receipt path spelling: the gate canonicalized directories while the publisher
+passed mixed separators. A regression reproduced that false rejection. Receipt
+validation now canonicalizes both paths through the existing reparse/name guard
+and trims only ending separators. Equivalent Windows paths pass; changed roots,
+release/published directories, schema/version, gate hash, readiness flags,
+expired proof and modified receipt bytes still fail. Production activation is
+not established by these candidate results.

@@ -19,6 +19,7 @@ $gate=Join-Path $PSScriptRoot 'Test-PreparedCandidate.ps1'
 $common=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../KESAS-VPS-Server/Update.Common.ps1'))
 . $gate
 . $common
+. (Join-Path $PSScriptRoot 'Assert-PreparedReceipt.ps1')
 Initialize-PCNative
 Add-Type -TypeDefinition @'
 using System;
@@ -333,6 +334,27 @@ try {
         Assert-PCPrivate ([IO.Path]::GetDirectoryName($f.Result))
         Assert-Fixture ($script:productionStops -eq 0)
         $existing=Get-PCHash $f.Result; Expect-Failure { Invoke-Fixture $f } '*NEW JSON receipt*'; Assert-Fixture ((Get-PCHash $f.Result) -ceq $existing)
+    }
+    Test-Fixture 'receipt accepts equivalent Windows path spellings without weakening proof' {
+        $f=New-Fixture; $answer=Invoke-Fixture $f
+        Assert-LocalPreparedReceipt $f.Result $answer.ReceiptSha256 ($f.Root.Replace('\','/')+'/.') ($f.Release.Replace('\','/')+'/.') ($f.Published.Replace('\','/')+'/.') 'kesas-rc999' $gate
+        Assert-Fixture ($script:productionStops -eq 0)
+    }
+    Test-Fixture 'receipt still rejects changed identity flags gate expiry and bytes' {
+        $f=New-Fixture; $answer=Invoke-Fixture $f; $original=Read-PCText $f.Result
+        foreach($change in @(
+            @{field='deploymentRoot';value=$f.Release},@{field='releaseDirectory';value=$f.Root},@{field='publishedDirectory';value=$f.Release},
+            @{field='version';value='kesas-rc998'},@{field='schema';value='wrong'},@{field='gateSha256';value=('0'*64)},
+            @{field='success';value=$false},@{field='startPassed';value=$false},@{field='shutdownPassed';value=$false},
+            @{field='productionUnchanged';value=$false},@{field='productionPidUnchanged';value=$false},
+            @{field='createdAt';value=([DateTime]::UtcNow.AddHours(-2).ToString('o'))}
+        )){
+            $changed=$original|ConvertFrom-Json; $changed.($change.field)=$change.value; Write-PCJson $f.Result $changed
+            Expect-Failure { Assert-LocalPreparedReceipt $f.Result (Get-PCHash $f.Result) $f.Root $f.Release $f.Published 'kesas-rc999' $gate } '*proof*'
+        }
+        [IO.File]::WriteAllText($f.Result,$original)
+        Expect-Failure { Assert-LocalPreparedReceipt $f.Result ('0'*64) $f.Root $f.Release $f.Published 'kesas-rc999' $gate } '*receipt changed*'
+        Assert-Fixture ($script:productionStops -eq 0)
     }
     Test-Fixture 'production static drift invalidates otherwise passing candidate' {
         $f=New-Fixture
