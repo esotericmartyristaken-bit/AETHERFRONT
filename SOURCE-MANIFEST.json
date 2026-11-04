@@ -29545,8 +29545,8 @@
       "path": "TESTING.md",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 42689,
-      "sha256": "d28d4e8f6305d32c52bc74018911864ebd3380e25a1a88b84c2f56a63e6ba7f5",
+      "bytes": 43231,
+      "sha256": "0ea588e5962e685be420e775d3c4bced4b1c54336b269b7937377da5b3fba34e",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately.",
@@ -29567,8 +29567,8 @@
       "path": "export-policy.json",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 46988,
-      "sha256": "a21b610700e969f785f55224837a512abde41ea76487538d6a31fa05123c2a3c",
+      "bytes": 47344,
+      "sha256": "020ab756af0fafcc87f6fe9c2c718ad22451178de5d00568e4cb7e81d2153767",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately.",
@@ -29796,8 +29796,8 @@
       "path": "Aetherfront-RC44-Work/Deployment/Install-LocalBot.ps1",
       "source": null,
       "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
-      "bytes": 7919,
-      "sha256": "1dfe8f950a74ab644078bc6860a6e8ca5d142953ad27c094e496fc09960c932f",
+      "bytes": 8232,
+      "sha256": "63b7e2029ac136f0f82c8cffb6f36b6fa95e5671fa38d5e51ec1b25c5805381a",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed source addition only.",
@@ -30235,9 +30235,33 @@
         "Maintained directly in the repository; reviewed source addition only.",
         "Production state, credentials and licensed runtime references excluded."
       ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/Deployment/LocalBotProcess.ps1",
+      "source": null,
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source",
+      "bytes": 3660,
+      "sha256": "c3cac75f9c22ebdd091a214ff8277ec42499f965b16a5f6e8284aef0780eea01",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/Deployment/LocalBotProcess.Tests.ps1",
+      "source": null,
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source",
+      "bytes": 2717,
+      "sha256": "aeb8e7bc5babf12de3dcaa81a5d73b406f6490ef5ac9ca8d101ff2678401a352",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
     }
   ],
-  "totalFileBytes": 17794154.0,
+  "totalFileBytes": 17834657.0,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",
@@ -30256,5 +30280,5 @@
     "report": "PRIVACY-SCAN.json",
     "limitation": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
   },
-  "fileCount": 3009
+  "fileCount": 3011
 }

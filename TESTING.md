@@ -656,3 +656,11 @@ only these DLLs and version/manifests onto pinned RC45. Its native server payloa
 and ground/orbit repairs are unchanged, so their prior test results are retained,
 not claimed as new RC46 gameplay tests. An interactive stock R&D multiplayer
 playthrough remains unperformed. See [RC46 source and bounds](Aetherfront-RC46-Work/README.md).
+
+Local bot replacement additionally checks the existing singleton against its
+launch record, exact trusted Node/immutable entry point, process owner SID and
+creation time. Scheduler triggers are disabled during replacement. Only that
+verified child generation is stopped if the scheduler leaves it orphaned; no
+process tree, game process, unrelated Node process or instance-lock file is
+removed. Sixteen hermetic identity/syntax checks cover this guard. Native bot
+replacement still requires normal Windows consent and authenticated startup.

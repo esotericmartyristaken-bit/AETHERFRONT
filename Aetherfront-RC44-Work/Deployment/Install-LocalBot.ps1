@@ -1,4 +1,5 @@
 #requires -Version 7.4
+. (Join-Path $PSScriptRoot 'LocalBotProcess.ps1')
 function Assert-LocalBotIdle($Settings,$Configuration) {
     $state=Get-Content -LiteralPath (Join-Path $Settings.botRoot $Configuration.updates.stateFile) -Raw|ConvertFrom-Json
     if($state.schemaVersion -ne 1 -or $state.status -notin @('idle','failed')){throw 'A bot update was queued during local preparation; preserve it for review'}
@@ -42,11 +43,16 @@ function Install-LocalBot([string]$Bundle,$Settings,[string]$BotConfig) {
     [IO.File]::WriteAllText((Join-Path $Bundle 'prior-remote-task.xml'),$remote.Xml)
     Assert-LocalBotIdle $Settings $configuration
     $remote.Enabled=$false
+    # Scheduler Stop can leave a redirected Node child alive. Disable triggers
+    # first, then stop only the independently verified singleton generation.
+    $bot.Enabled=$false
     if($remote.State -eq 4){$remote.Stop(0)}
     if($bot.State -eq 4){$bot.Stop(0)}
     $timer=[Diagnostics.Stopwatch]::StartNew()
     while($bot.State -eq 4 -or $remote.State -eq 4){if($timer.Elapsed.TotalSeconds -gt 60){throw 'Control tasks did not stop; production untouched'};Start-Sleep -Milliseconds 200}
     Assert-LocalBotIdle $Settings $configuration
+    Stop-LocalBotChild $Settings $sid.Value
+    $definition.Settings.Enabled=$true
     $definition.Actions.Clear();$action=$definition.Actions.Create(0)
     $action.Path=Join-Path $env:SystemRoot 'System32/WindowsPowerShell/v1.0/powershell.exe'
     $action.Arguments="-NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$runtime/Start-LocalBot.ps1`" -Settings `"$($Settings.root)/host.json`""

@@ -1203,6 +1203,14 @@
     {
       "source": "Aetherfront-RC46-Work/Tests/Tests.csproj",
       "role": "Reviewed RC46 research confirmation repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC44-Work/Deployment/LocalBotProcess.ps1",
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC44-Work/Deployment/LocalBotProcess.Tests.ps1",
+      "role": "Reviewed RC46 research confirmation repair and isolated regression source"
     }
   ],
   "binaryPrerequisites": [
