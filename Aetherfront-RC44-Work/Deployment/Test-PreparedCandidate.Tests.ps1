@@ -390,6 +390,23 @@ try {
         function Get-NetUDPEndpoint { [pscustomobject]@{OwningProcess=101;LocalAddress='127.0.0.1';LocalPort=28865} }
         Expect-Failure { Assert-PCListeners $context -Require } '*UDP*'
     }
+    Test-Fixture 'owned auxiliary UDP must settle before readiness; main and foreign listeners stay fatal' {
+        $context=@{Game=@{Process=@{Id=70001}};Pack=@{Process=@{Id=70002}};GamePort=28865;PackPort=28866;Receipt=@{}}
+        $script:auxiliaryUdp=$true
+        function Get-NetUDPEndpoint {
+            [pscustomobject]@{OwningProcess=70001;LocalAddress='127.0.0.1';LocalPort=28865}
+            if($script:auxiliaryUdp){[pscustomobject]@{OwningProcess=70001;LocalAddress='0.0.0.0';LocalPort=55123}}
+        }
+        function Get-NetTCPConnection {
+            [CmdletBinding()]param($State)
+            if($State -eq 'Listen'){[pscustomobject]@{OwningProcess=70002;LocalAddress='127.0.0.1';LocalPort=28866}}
+        }
+        Assert-Fixture (-not (Assert-PCListeners $context))
+        Assert-Fixture ($context.Receipt.lastPendingUdp.port -eq 55123)
+        Expect-Failure {Assert-PCListeners $context -Require} '*auxiliary UDP*'
+        $script:auxiliaryUdp=$false
+        Assert-Fixture (Assert-PCListeners $context -Require)
+    }
     Test-Fixture 'accepted loopback HTTPS ephemeral remote ports including CloseWait are inbound' {
         $context=@{Game=@{Process=@{Id=70001}};Pack=@{Process=@{Id=70002}};GamePort=28865;PackPort=28866}
         $script:fixtureForbiddenOutbound=$false
@@ -424,10 +441,11 @@ try {
         function Get-NetFirewallRule { [CmdletBinding()]param($PolicyStore,$Name) return $script:firewallSpecifications[$Name] }
         function Get-NetFirewallApplicationFilter { [CmdletBinding()]param([Parameter(ValueFromPipeline)]$InputObject) process { [pscustomobject]@{Program=$InputObject.Program} } }
         & $original['Enable-PCIsolation'] $context
-        Assert-Fixture ($context.Firewall.Count -eq 12)
+        Assert-Fixture ($context.Firewall.Count -eq 16)
+        Assert-Fixture (@($script:firewallSpecifications.Values|Where-Object Direction -eq 'Inbound').Count -eq 4)
         foreach ($specification in $script:firewallSpecifications.Values) {
             Assert-Fixture (Test-PCWithin $specification.Program $context.Candidate)
-            Assert-Fixture ($specification.Direction -ceq 'Outbound' -and $specification.Action -ceq 'Block')
+            Assert-Fixture ($specification.Direction -in @('Outbound','Inbound') -and $specification.Action -ceq 'Block')
             if ($specification.Protocol -eq 'Any') { Assert-Fixture ('::2/1' -in $specification.RemoteAddress -and '8000::/1' -in $specification.RemoteAddress -and '127.0.0.2-255.255.255.255' -in $specification.RemoteAddress) }
             else { Assert-Fixture ($specification.RemoteAddress -ceq '127.0.0.1' -and '1-28864' -in $specification.RemotePort -and '28867-65535' -in $specification.RemotePort) }
         }

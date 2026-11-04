@@ -682,3 +682,15 @@ The firewall fixture rejects zero-bit prefixes and unspecified/loopback bases.
 The local operator now creates/read-backs/removes the real three-rule plan on
 a new private, never-executed Probe.exe before bot reload or media preparation.
 It still requires the complete isolated native candidate gate afterward.
+
+The shipping transport was separately observed binding one IPv4 loopback UDP
+endpoint with UPnP and dual stack disabled. The first full native run reached
+server startup but failed an opaque UDP assertion; its final listener cause was
+not recorded. The gate now records offending UDP PID/address/port. Owned
+auxiliary UDP endpoints may settle only within the existing readiness deadline;
+they must be gone before success and any post-HTTPS recheck. Wrong owners or a
+nonloopback main game listener still fail immediately. Candidate executables now
+also receive explicit nonloopback inbound blocks, in addition to outbound
+isolation. Atomic bridge-file disappearance is treated as not-ready, not success.
+Twenty-six hermetic candidate fixtures cover the updated policy; a full native
+pass remains mandatory and is not inferred from the startup log alone.

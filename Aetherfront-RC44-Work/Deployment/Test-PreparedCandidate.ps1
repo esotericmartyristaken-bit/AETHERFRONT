@@ -451,16 +451,17 @@ function Enable-PCIsolation($Context) {
             # MS-FASP FW_IPV6_SUBNET requires 1..128 prefix bits; /0 is invalid.
             # Nonzero ::2 avoids the forbidden unspecified/loopback address;
             # its one-bit network is still the full lower half of IPv6.
-            @{Protocol='Any'; RemoteAddress=@('0.0.0.0-127.0.0.0','127.0.0.2-255.255.255.255','::2/1','8000::/1')},
-            @{Protocol='TCP'; RemoteAddress='127.0.0.1';RemotePort=@("1-$($Context.GamePort-1)","$($Context.PackPort+1)-65535")},
-            @{Protocol='UDP'; RemoteAddress='127.0.0.1';RemotePort=@("1-$($Context.GamePort-1)","$($Context.PackPort+1)-65535")}
+            @{Direction='Outbound';Protocol='Any'; RemoteAddress=@('0.0.0.0-127.0.0.0','127.0.0.2-255.255.255.255','::2/1','8000::/1')},
+            @{Direction='Inbound';Protocol='Any'; RemoteAddress=@('0.0.0.0-127.0.0.0','127.0.0.2-255.255.255.255','::2/1','8000::/1')},
+            @{Direction='Outbound';Protocol='TCP'; RemoteAddress='127.0.0.1';RemotePort=@("1-$($Context.GamePort-1)","$($Context.PackPort+1)-65535")},
+            @{Direction='Outbound';Protocol='UDP'; RemoteAddress='127.0.0.1';RemotePort=@("1-$($Context.GamePort-1)","$($Context.PackPort+1)-65535")}
         )
         foreach ($specification in $specifications) {
             $name = 'APF-PreparedCandidate-' + [Guid]::NewGuid().ToString('N')
             $Context.Firewall.Add($name)
-            $null = New-NetFirewallRule -Name $name -DisplayName $name -Program $program -Direction Outbound -Action Block -Enabled True -Profile Any @specification -ErrorAction Stop
+            $null = New-NetFirewallRule -Name $name -DisplayName $name -Program $program -Action Block -Enabled True -Profile Any @specification -ErrorAction Stop
             $effective = @(Get-NetFirewallRule -PolicyStore ActiveStore -Name $name -ErrorAction Stop)
-            if ($effective.Count -ne 1 -or $effective[0].Enabled -ne 'True' -or $effective[0].Direction -ne 'Outbound' -or $effective[0].Action -ne 'Block') { throw 'Candidate outbound firewall rule not effective' }
+            if ($effective.Count -ne 1 -or $effective[0].Enabled -ne 'True' -or $effective[0].Direction -ne $specification.Direction -or $effective[0].Action -ne 'Block') { throw 'Candidate isolation firewall rule not effective' }
             $filter = $effective[0] | Get-NetFirewallApplicationFilter -ErrorAction Stop
             if ($filter.Program -ine $program) { throw 'Candidate firewall program mismatch' }
         }
@@ -525,7 +526,16 @@ function Assert-PCListeners($Context, [switch]$Require) {
     $gameId=$Context.Game.Process.Id; $packId=$Context.Pack.Process.Id
     $udp=@(Get-NetUDPEndpoint -ErrorAction Stop | Where-Object { $_.OwningProcess -in @($gameId,$packId) -or $_.LocalPort -eq $Context.GamePort })
     $tcp=@(Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.OwningProcess -in @($gameId,$packId) -or $_.LocalPort -eq $Context.PackPort })
-    foreach ($row in $udp) { if ($row.OwningProcess -ne $gameId -or $row.LocalAddress -cne '127.0.0.1' -or $row.LocalPort -ne $Context.GamePort) { throw 'Candidate UDP not exclusively owned/loopback' } }
+    $pendingUdp=$false
+    foreach ($row in $udp) {
+        $detail="pid=$($row.OwningProcess) address=$($row.LocalAddress) port=$($row.LocalPort); expected gamePid=$gameId port=$($Context.GamePort)"
+        if ($row.OwningProcess -notin @($gameId,$packId) -or ($row.LocalPort -eq $Context.GamePort -and ($row.OwningProcess -ne $gameId -or $row.LocalAddress -cne '127.0.0.1'))) { throw "Candidate UDP not exclusively owned/loopback ($detail)" }
+        if ($row.OwningProcess -ne $gameId -or $row.LocalAddress -cne '127.0.0.1' -or $row.LocalPort -ne $Context.GamePort) {
+            if ($Require) { throw "Candidate auxiliary UDP has not settled ($detail)" }
+            $pendingUdp=$true
+            if ($Context.ContainsKey('Receipt')) { $Context.Receipt.lastPendingUdp=@{pid=$row.OwningProcess;address=$row.LocalAddress;port=$row.LocalPort;observedAt=[DateTime]::UtcNow.ToString('o')} }
+        }
+    }
     foreach ($row in $tcp) { if ($row.OwningProcess -ne $packId -or $row.LocalAddress -cne '127.0.0.1' -or $row.LocalPort -ne $Context.PackPort) { throw 'Candidate HTTPS not exclusively owned/loopback' } }
     $connections=@(Get-NetTCPConnection -ErrorAction Stop | Where-Object { $_.OwningProcess -in @($gameId,$packId) -and $_.State -ne 'Listen' -and $_.RemotePort -gt 0 })
     foreach ($row in $connections) {
@@ -535,7 +545,7 @@ function Assert-PCListeners($Context, [switch]$Require) {
         if (-not $acceptedHttps -and ($row.RemoteAddress -cne '127.0.0.1' -or $row.RemotePort -notin @($Context.GamePort,$Context.PackPort))) { throw 'Candidate opened a forbidden outbound connection' }
     }
     if ($Require -and ($udp.Count -ne 1 -or $tcp.Count -ne 1)) { throw 'Candidate owned loopback listeners missing' }
-    return $udp.Count -eq 1 -and $tcp.Count -eq 1
+    return -not $pendingUdp -and $udp.Count -eq 1 -and $tcp.Count -eq 1
 }
 
 function Read-PCStartup($Context) {
@@ -553,7 +563,7 @@ function Read-PCBridge($Context) {
     if (-not [IO.File]::Exists("$directory/ready.json") -or -not [IO.File]::Exists("$directory/status.json")) { return $null }
     # Only transient sharing conflicts are retryable by the outer readiness loop.
     try { $ready=Read-PCText "$directory/ready.json" 64KB | ConvertFrom-Json; $status=Read-PCText "$directory/status.json" 4MB | ConvertFrom-Json }
-    catch [IO.IOException] { if (($_.Exception.GetBaseException().HResult -band 65535) -in @(32,33)) { return $null }; throw }
+    catch [IO.IOException] { if (($_.Exception.GetBaseException().HResult -band 65535) -in @(2,3,32,33)) { return $null }; throw }
     $start=[DateTimeOffset]$ready.startedAt; $updated=[DateTimeOffset]$status.updatedAt
     $now=[DateTimeOffset]::UtcNow; $age=($now-$updated).TotalSeconds
     if ($ready.pid -ne $Context.Game.Process.Id -or $status.serverPid -ne $Context.Game.Process.Id -or
