@@ -662,7 +662,7 @@ launch record, exact trusted Node/immutable entry point, process owner SID and
 creation time. Scheduler triggers are disabled during replacement. Only that
 verified child generation is stopped if the scheduler leaves it orphaned; no
 process tree, game process, unrelated Node process or instance-lock file is
-removed. Twenty-two hermetic identity/record/syntax checks cover this guard.
+removed. Thirty-four hermetic identity/record/readiness/syntax checks cover this guard.
 Per-launch records are published by a unique move, never replacement of the
 old administrator-owned shared pointer. Valid interrupted legacy records can
 identify an existing child during migration; malformed/reused-PID records
@@ -722,3 +722,11 @@ reproduced the old rejection. Equivalent paths now pass; altered principal,
 executable, arguments, directory and additional actions remain rejected. The
 local operator checks that task binding before firewall, bot and media work;
 full recovery-plan and unchanged-task checks still run before any game stop.
+
+Bot readiness tolerates a singleton file observed between creation and completed
+write. Its shared reader accepts only a positive integer PID and valid startup
+timestamp; missing, empty, partial, malformed and exclusively locked records
+remain not-ready within the unchanged startup timeout. This reader is not used
+to authorize stopping an old bot: its owner, immutable entry point, launch record
+and held process-generation checks remain mandatory. A valid shared record and
+recovery after an exclusive write are covered by the identity/readiness tests.

@@ -1,4 +1,22 @@
 #requires -Version 7.4
+function Read-LocalBotReadinessRecord([string]$Path) {
+    # A newly created singleton file can be observed before its write completes.
+    # Missing/incomplete metadata is not ready, never permission to stop a PID.
+    try{
+        $stream=[IO.File]::Open($Path,'Open','Read',([IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete))
+        try{
+            if($stream.Length -gt 8192){return $null}
+            $reader=[IO.StreamReader]::new($stream)
+            try{$text=$reader.ReadToEnd()}finally{$reader.Dispose()}
+        }finally{$stream.Dispose()}
+    }catch [IO.IOException]{if(($_.Exception.GetBaseException().HResult -band 65535) -in @(2,3,32,33)){return $null};throw}
+    try{$value=$text|ConvertFrom-Json -ErrorAction Stop}catch{return $null}
+    if($null -eq $value -or $value -isnot [pscustomobject] -or -not $value.PSObject.Properties['pid'] -or -not $value.PSObject.Properties['startedAt']){return $null}
+    if(($value.pid -isnot [int] -and $value.pid -isnot [long]) -or $value.pid -le 0){return $null}
+    try{$null=[DateTimeOffset]$value.startedAt}catch{return $null}
+    return $value
+}
+
 function Get-LocalBotLaunchRecord($Settings,$Process) {
     $directory=Join-Path $Settings.botRoot 'state'
     $number=[int]$Process.ProcessId

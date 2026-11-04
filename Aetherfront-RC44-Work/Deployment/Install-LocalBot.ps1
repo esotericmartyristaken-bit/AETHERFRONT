@@ -64,8 +64,8 @@ function Install-LocalBot([string]$Bundle,$Settings,[string]$BotConfig) {
     while($timer.Elapsed.TotalSeconds -lt 120){
         $lockPath=Join-Path $Settings.botRoot 'state/bot-instance.lock'
         if([IO.File]::Exists($lockPath)){
-            $holder=Get-Content -LiteralPath $lockPath -Raw|ConvertFrom-Json
-            if($holder.pid -is [long] -or $holder.pid -is [int]){
+            $holder=Read-LocalBotReadinessRecord $lockPath
+            if($holder){
                 $process=Get-CimInstance Win32_Process -Filter "ProcessId=$($holder.pid)" -ErrorAction Stop
                 if($process -and $process.ExecutablePath -ieq $Settings.node -and $process.CommandLine.Replace('/','\').Contains($expectedEntry,[StringComparison]::OrdinalIgnoreCase) -and $process.CreationDate.ToUniversalTime() -ge $launched.AddSeconds(-2)){
                     $launch=Get-LocalBotLaunchRecord $Settings $process

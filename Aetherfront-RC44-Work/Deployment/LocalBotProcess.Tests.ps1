@@ -52,6 +52,18 @@ $checks++;if((Get-LocalBotLaunchRecord $recordSettings $process).runtime -cne $r
 $process.CreationDate=$created.AddSeconds(3)
 $checks++;if(Get-LocalBotLaunchRecord $recordSettings $process){throw 'Reused PID accepted'}
 $process.CreationDate=$created
+$readiness=Join-Path $fixture 'state/readiness-fixture.json'
+$checks++;if(Read-LocalBotReadinessRecord $readiness){throw 'Missing singleton accepted'}
+foreach($invalid in @('','{','{}','null','[]','{"pid":"12345","startedAt":"2026-11-04T00:00:00Z"}','{"pid":12345}','{"pid":12345,"startedAt":"invalid"}')){
+ [IO.File]::WriteAllText($readiness,$invalid)
+ $checks++;if(Read-LocalBotReadinessRecord $readiness){throw 'Incomplete singleton accepted'}
+}
+[IO.File]::WriteAllText($readiness,($holder|ConvertTo-Json))
+$shared=[IO.File]::Open($readiness,'Open','ReadWrite',([IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete))
+try{$checks++;if((Read-LocalBotReadinessRecord $readiness).pid -ne 12345){throw 'Valid shared singleton rejected'}}finally{$shared.Dispose()}
+$exclusive=[IO.File]::Open($readiness,'Open','ReadWrite','None')
+try{$checks++;if(Read-LocalBotReadinessRecord $readiness){throw 'Exclusive singleton write accepted'}}finally{$exclusive.Dispose()}
+$checks++;if((Read-LocalBotReadinessRecord $readiness).pid -ne 12345){throw 'Singleton did not recover after write'}
 $errorsFound=$null;$null=[Management.Automation.Language.Parser]::ParseFile((Join-Path $PSScriptRoot 'Start-LocalBot.ps1'),[ref]$null,[ref]$errorsFound)
 if($errorsFound.Count){throw 'Launcher syntax invalid'};$checks++
 "PASS $checks identity/syntax checks; no live process, task, ACL or server mutation"
