@@ -528,3 +528,36 @@ raised to hide them.
 All real KSP processes were isolated, owned and resource-guarded. No graphical
 KSP test is launched on the shared production host. Final interactive testing
 uses the user's separately authorized vanilla test installation.
+
+# RC43 science transport regression gates
+
+RC43 retains authoritative science validation and idempotent reward IDs. The
+isolated server suite passes 49 cases / 741 assertions, including cumulative
+transmission, replay after restart, cap/receipt rejection, small correlated
+confirmations, two-second burst coalescing, trailing delivery, callback races,
+and shutdown/error handling. Only TryHandle changes among the 59 original
+server-helper methods; its other 58 methods remain unchanged.
+
+Reliable sender pacing passes 27 cases / 23,942 checks against the actual
+unstarted RC42 transport: 4,097-message ACK-drained FIFO, all six storage budgets,
+conservative fragment costs, alias accounting, cancellation/replacement, single
+recycling ownership, progress versus enqueue churn, and a real 30-second
+no-progress timeout. No test sockets or transport network threads are started.
+
+The outbox suite passes 135 .NET 8 cases. Nine additional .NET 8 cases are
+runtime-blocked by the unchanged legacy JsonFx nonempty-list deserializer's
+`Bad IL format.` exception; these are not counted as passes. KSP's actual
+embedded Mono passes ten migration/storage cases covering that blocker, old
+version-1 evidence, decimal precision, chunk IDs, write failures, restart
+recovery, persisted backoff, and paused-claim upgrade behavior. Client and
+server fixtures use private temporary state, not production accounts.
+
+Nine additional embedded-Mono cases / 108 assertions execute the final patched
+client DLL and actual helper. Accepted, paused, and retry receipts leave normal
+state flags untouched, ordinary replies still run ApplyReply, and both receiver
+and cancelled-sender paths execute the original recycle finally exactly once.
+
+The release builder pins RC42, verifies helper/graft audits, updates both
+profiles, and changes only the reviewed client/helper files and release
+metadata. Media, transport DLLs, Server.dll, authentication, and science math
+remain unchanged. No account operation, key, log, or live state is included.

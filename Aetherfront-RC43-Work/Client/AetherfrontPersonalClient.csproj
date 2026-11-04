@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net472</TargetFramework><AssemblyName>AetherfrontPersonalClient</AssemblyName><LangVersion>10</LangVersion></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Aetherfront-RC33-Work/PersonalClient/LaunchPositionCompatibility.cs" Link="LaunchPositionCompatibility.cs" />
+    <Compile Include="../../Aetherfront-RC33-Work/PersonalClient/DefaultDisplay.cs" Link="DefaultDisplay.cs" />
+    <Compile Include="../../Aetherfront-RC33-Work/PersonalClient/DefaultDisplayPolicy.cs" Link="DefaultDisplayPolicy.cs" />
+    <Compile Include="../Shared/ScienceReceipt.cs" Link="ScienceReceipt.cs" />
+    <Compile Include="../Pacing/*.cs" Link="Pacing/%(Filename)%(Extension)" />
+    <Reference Include="AetherfrontCore"><HintPath>$(ClientPlugins)/AetherfrontCore.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="LmpClient"><HintPath>$(ClientPlugins)/LmpClient.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="ApfCore"><HintPath>$(ClientPlugins)/ApfCore.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Lidgren.Network"><HintPath>$(ClientPlugins)/Lidgren.Network.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="KesasInstall"><HintPath>$(ClientPlugins)/KesasInstall.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Assembly-CSharp"><HintPath>$(KspManaged)/Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine"><HintPath>$(KspManaged)/UnityEngine.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(KspManaged)/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.IMGUIModule"><HintPath>$(KspManaged)/UnityEngine.IMGUIModule.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

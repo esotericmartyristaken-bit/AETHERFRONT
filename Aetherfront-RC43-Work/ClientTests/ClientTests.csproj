@@ -1,0 +1,32 @@
+<Project>
+  <PropertyGroup>
+    <TestArtifactsRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../../UpdateBuilds/ScienceTransmit-20261104/outbox-tests'))</TestArtifactsRoot>
+    <BaseIntermediateOutputPath>$(TestArtifactsRoot)/obj/</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+  </PropertyGroup>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <OutputPath>$(TestArtifactsRoot)/bin/</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <ClientPlugins Condition="'$(ClientPlugins)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../../UpdateBuilds/ScienceTransmit-20261104/client'))</ClientPlugins>
+    <RestoreIgnoreFailedSources>true</RestoreIgnoreFailedSources>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="../Client/ScienceOutbox.cs" Link="ScienceOutbox.cs" />
+    <Compile Include="../Client/ScienceClaim.cs" Link="ScienceClaim.cs" />
+    <Compile Include="../Client/ScienceRetryPolicy.cs" Link="ScienceRetryPolicy.cs" />
+    <Compile Include="../Shared/ScienceReceipt.cs" Link="ScienceReceipt.cs" />
+    <Reference Include="AetherfrontCore"><HintPath>$(ClientPlugins)/AetherfrontCore.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="JsonFx"><HintPath>$(ClientPlugins)/JsonFx.dll</HintPath><Private>true</Private></Reference>
+    <AssemblyMetadata Include="FixtureRoot" Value="$(TestArtifactsRoot)" />
+    <AssemblyMetadata Include="SourceRoot" Value="$(MSBuildThisFileDirectory).." />
+    <AssemblyMetadata Include="ClientPlugins" Value="$(ClientPlugins)" />
+  </ItemGroup>
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+</Project>

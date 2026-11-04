@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework><AssemblyName>AetherfrontClientPacing</AssemblyName>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems><LangVersion>10</LangVersion><Nullable>disable</Nullable>
+    <ClientPlugins Condition="'$(ClientPlugins)' == ''">$(MSBuildThisFileDirectory)../../../UpdateBuilds/ScienceTransmit-20261104/client</ClientPlugins>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../Pacing/*.cs" Link="%(Filename)%(Extension)" />
+    <Reference Include="LmpClient"><HintPath>$(ClientPlugins)/LmpClient.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Lidgren.Network"><HintPath>$(ClientPlugins)/Lidgren.Network.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

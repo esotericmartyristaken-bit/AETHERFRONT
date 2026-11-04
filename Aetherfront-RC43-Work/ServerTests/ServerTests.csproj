@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><ImplicitUsings>enable</ImplicitUsings><Nullable>disable</Nullable>
+    <Runtime Condition="'$(Runtime)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../../KESAS-VPS-Server/Server'))</Runtime>
+    <EvidenceRoot Condition="'$(EvidenceRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../../UpdateBuilds/ScienceTransmit-20261104/RC43ServerTests'))</EvidenceRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <AssemblyMetadata Include="Runtime" Value="$(Runtime)" />
+    <AssemblyMetadata Include="EvidenceRoot" Value="$(EvidenceRoot)" />
+    <Reference Include="Server"><HintPath>$(Runtime)/Server.dll</HintPath></Reference>
+    <Reference Include="AetherfrontCore"><HintPath>$(Runtime)/AetherfrontCore.dll</HintPath></Reference>
+    <Reference Include="AetherfrontPersonalServer"><HintPath>$(Candidate)/AetherfrontPersonalServer.dll</HintPath></Reference>
+    <Reference Include="ApfCore"><HintPath>$(Runtime)/ApfCore.dll</HintPath></Reference>
+    <Reference Include="Lidgren.Core"><HintPath>$(Runtime)/Lidgren.Core.dll</HintPath></Reference>
+    <Reference Include="JsonFx"><HintPath>$(Runtime)/JsonFx.dll</HintPath></Reference>
+    <Reference Include="Newtonsoft.Json"><HintPath>$(Runtime)/Newtonsoft.Json.dll</HintPath></Reference>
+    <Reference Include="LunaConfigNode"><HintPath>$(Runtime)/LunaConfigNode.dll</HintPath></Reference>
+    <Reference Include="Microsoft.VisualStudio.Threading"><HintPath>$(Runtime)/Microsoft.VisualStudio.Threading.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>

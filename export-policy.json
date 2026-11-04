@@ -405,6 +405,130 @@
   ],
   "explicitFiles": [
     {
+      "source": "Aetherfront-RC43-Work/Mono/ReceiverProgram.cs",
+      "role": "Reviewed RC43 embedded Mono regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Audit/Audit.csproj",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Audit/Program.cs",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Build-Release.py",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Client/AetherfrontPersonalClient.csproj",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Client/PersonalClient.cs",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Client/ScienceClaim.cs",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Client/ScienceOutbox.cs",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Client/ScienceRetryPolicy.cs",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/ClientTests/ClientTests.csproj",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/ClientTests/Program.cs",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Mono/MonoGate.cs",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Mono/OutboxProgram.cs",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Mono/OutboxStubs.cs",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Mono/Run.ps1",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Pacing/ClientPacing.cs",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Pacing/ReliableBudget.cs",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Pacing/ReliableCounterReader.cs",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/PacingTests/ClientStubs.cs",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/PacingTests/PacingHelper.csproj",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/PacingTests/PacingTests.csproj",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/PacingTests/Program.cs",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/PacingTests/README.md",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Patch/Patch.csproj",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Patch/Program.cs",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/README.md",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Server/AetherfrontPersonalServer.csproj",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Server/PersonalServer.cs",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/ServerTests/Program.cs",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/ServerTests/ServerTests.csproj",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Shared/ScienceReceipt.cs",
+      "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source"
+    },
+    {
       "source": "Aetherfront-RC41-Work/Build-Release.py",
       "role": "Reviewed RC41 immutable release assembly source"
     },
