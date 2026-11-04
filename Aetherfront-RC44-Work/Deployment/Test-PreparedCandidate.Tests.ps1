@@ -418,6 +418,8 @@ try {
             [CmdletBinding()]param($Name,$DisplayName,$Program,$Direction,$Action,$Enabled,$Profile,$Protocol,$RemoteAddress,$RemotePort)
             $script:firewallSpecifications[$Name]=[pscustomobject]@{Name=$Name;Program=$Program;Direction=$Direction;Action=$Action;Enabled=$Enabled;Protocol=$Protocol;RemoteAddress=$RemoteAddress;RemotePort=$RemotePort}
             if($Program.Contains('/') -or $Program -cne [IO.Path]::GetFullPath($Program)){throw 'Noncanonical Windows firewall application path'}
+            foreach($address in $RemoteAddress){if($address -match '^(.+)/(\d+)$' -and $Matches[1].Contains(':') -and [int]$Matches[2] -lt 1){throw 'Windows rejects zero-bit IPv6 firewall prefixes'}}
+            foreach($address in $RemoteAddress){if($address -match '^(.+)/(\d+)$' -and $Matches[1].Contains(':') -and $Matches[1] -in @('::','::1')){throw 'Windows rejects unspecified/loopback IPv6 subnet addresses'}}
         }
         function Get-NetFirewallRule { [CmdletBinding()]param($PolicyStore,$Name) return $script:firewallSpecifications[$Name] }
         function Get-NetFirewallApplicationFilter { [CmdletBinding()]param([Parameter(ValueFromPipeline)]$InputObject) process { [pscustomobject]@{Program=$InputObject.Program} } }
@@ -426,9 +428,13 @@ try {
         foreach ($specification in $script:firewallSpecifications.Values) {
             Assert-Fixture (Test-PCWithin $specification.Program $context.Candidate)
             Assert-Fixture ($specification.Direction -ceq 'Outbound' -and $specification.Action -ceq 'Block')
-            if ($specification.Protocol -eq 'Any') { Assert-Fixture ('::/0' -in $specification.RemoteAddress -and '127.0.0.2-255.255.255.255' -in $specification.RemoteAddress) }
+            if ($specification.Protocol -eq 'Any') { Assert-Fixture ('::2/1' -in $specification.RemoteAddress -and '8000::/1' -in $specification.RemoteAddress -and '127.0.0.2-255.255.255.255' -in $specification.RemoteAddress) }
             else { Assert-Fixture ($specification.RemoteAddress -ceq '127.0.0.1' -and '1-28864' -in $specification.RemotePort -and '28867-65535' -in $specification.RemotePort) }
         }
+        $context.Owned=[Collections.Generic.List[object]]::new()
+        function Remove-NetFirewallRule { [CmdletBinding()]param($Name) $script:firewallSpecifications.Remove($Name) }
+        & $original['Disable-PCIsolation'] $context
+        Assert-Fixture ($context.Firewall.Count -eq 0 -and $script:firewallSpecifications.Count -eq 0)
         function Get-NetFirewallProfile { @([pscustomobject]@{Enabled=$false},[pscustomobject]@{Enabled=$true},[pscustomobject]@{Enabled=$true}) }
         Expect-Failure { & $original['Enable-PCIsolation'] $context } '*already be enabled*'
     }

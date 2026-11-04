@@ -674,3 +674,11 @@ validated Windows path helper. The firewall-plan fixture now supplies mixed
 separators/dot segments and rejects noncanonical program arguments. Missing
 rules after rejected creation do not cause spurious cleanup failures. Real
 firewall creation and native boot remain required before production admission.
+
+Windows firewall IPv6 prefixes must contain at least one bit (MS-FASP
+FW_IPV6_SUBNET); the unsupported `::/0` is replaced by `::2/1` and `8000::/1`,
+preserving all-IPv6 blocking without an unspecified/loopback subnet address.
+The firewall fixture rejects zero-bit prefixes and unspecified/loopback bases.
+The local operator now creates/read-backs/removes the real three-rule plan on
+a new private, never-executed Probe.exe before bot reload or media preparation.
+It still requires the complete isolated native candidate gate afterward.

@@ -105,6 +105,16 @@ try{
     $frozenArchive=Join-Path $bundle 'Release.zip';Copy-Item -LiteralPath $archivePath -Destination $frozenArchive
     if((Get-FileHash -LiteralPath $frozenArchive).Hash.ToLowerInvariant() -cne $ArchiveSha256){throw 'Frozen archive differs from reviewed release'}
     $report.bundle=$bundle;Report-Local 'local-mode-reload'
+    # Exercise real Windows firewall syntax before bot changes, long media work,
+    # or native startup. Only a NEW private, never-executed copy is targeted.
+    Report-Local 'verifying-candidate-firewall'
+    . (Join-Path $bundle 'KESAS-VPS-Server/Update.Common.ps1')
+    . (Join-Path $bundle 'Aetherfront-RC44-Work/Deployment/Test-PreparedCandidate.ps1')
+    $probeRoot=New-PCPrivateDirectory (Join-Path $bundle 'FirewallProbe')
+    $null=Copy-PCFile (Join-Path $deployment 'Server/Server.exe') (Join-Path $probeRoot 'Probe.exe')
+    $probeContext=@{Candidate=$probeRoot;GamePort=28865;PackPort=28866;Receipt=@{};Firewall=[Collections.Generic.List[string]]::new();Owned=[Collections.Generic.List[object]]::new()}
+    try{Enable-PCIsolation $probeContext}finally{Disable-PCIsolation $probeContext}
+    $report.firewallApiVerified=$true;Report-Local 'local-mode-reload'
     $initialBridge=Get-Content -LiteralPath "$deployment/Server/APFDiscordBridge/status.json" -Raw|ConvertFrom-Json
     $report.previousGamePid=$initialBridge.serverPid
     . (Join-Path $bundle 'Aetherfront-RC44-Work/Deployment/Install-LocalBot.ps1')

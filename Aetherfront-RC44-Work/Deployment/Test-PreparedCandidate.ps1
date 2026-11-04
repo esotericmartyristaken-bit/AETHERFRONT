@@ -448,7 +448,10 @@ function Enable-PCIsolation($Context) {
         # Block all nonloopback destinations, plus loopback services other than
         # this candidate's pair. No production-address exception is installed.
         $specifications = @(
-            @{Protocol='Any'; RemoteAddress=@('0.0.0.0-127.0.0.0','127.0.0.2-255.255.255.255','::/0')},
+            # MS-FASP FW_IPV6_SUBNET requires 1..128 prefix bits; /0 is invalid.
+            # Nonzero ::2 avoids the forbidden unspecified/loopback address;
+            # its one-bit network is still the full lower half of IPv6.
+            @{Protocol='Any'; RemoteAddress=@('0.0.0.0-127.0.0.0','127.0.0.2-255.255.255.255','::2/1','8000::/1')},
             @{Protocol='TCP'; RemoteAddress='127.0.0.1';RemotePort=@("1-$($Context.GamePort-1)","$($Context.PackPort+1)-65535")},
             @{Protocol='UDP'; RemoteAddress='127.0.0.1';RemotePort=@("1-$($Context.GamePort-1)","$($Context.PackPort+1)-65535")}
         )

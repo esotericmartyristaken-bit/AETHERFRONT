@@ -29545,8 +29545,8 @@
       "path": "TESTING.md",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 43903,
-      "sha256": "f897fa9989ff3a2b73341d625b45df5ae71a6416b835256f0f7af663e474f0a9",
+      "bytes": 44440,
+      "sha256": "11dd78973bdd8ef32bda1c83d45ccbf7d20199473b928fa11c420002f6880b42",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately.",
@@ -29808,8 +29808,8 @@
       "path": "Aetherfront-RC44-Work/Deployment/Test-PreparedCandidate.ps1",
       "source": null,
       "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
-      "bytes": 54075,
-      "sha256": "90f5b0be6ba26fa2de69d173804144470acad4b2b60af6f2a5c79e97750d3e5e",
+      "bytes": 54317,
+      "sha256": "b1e0a6be3c7b63be6bc32af26d8fb2004aeb1cda918d07b7dba27a15206bdbeb",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed source addition only.",
@@ -29976,8 +29976,8 @@
       "path": "Aetherfront-RC44-Work/Deployment/Test-PreparedCandidate.Tests.ps1",
       "source": null,
       "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
-      "bytes": 41345,
-      "sha256": "d24760941f62d753c891988326c21d3409b5988dd188cbb41e23644f2a9dce67",
+      "bytes": 42152,
+      "sha256": "02e29d0edfd3b51760764fd7d4205a4e15e81f50a4dcbf26695b5e34ed9665b2",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed source addition only.",
@@ -30060,8 +30060,8 @@
       "path": "Aetherfront-RC44-Work/Deployment/Deploy-LocalRelease.ps1",
       "source": null,
       "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
-      "bytes": 10934,
-      "sha256": "12b51e52400ee4a37ab902972025c0af62695de6d92d38449f2432e5271f81cc",
+      "bytes": 11805,
+      "sha256": "1d54cd4562ebfad3888e383789507967028bf8a371ab4ce8c2d99321faaf037f",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed source addition only.",
@@ -30261,7 +30261,7 @@
       ]
     }
   ],
-  "totalFileBytes": 17845132.0,
+  "totalFileBytes": 17847589.0,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",
