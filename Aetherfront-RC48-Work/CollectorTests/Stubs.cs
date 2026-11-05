@@ -28,11 +28,11 @@ public sealed class ScienceEvent {
 public static class GameEvents {public static readonly ScienceEvent OnScienceRecieved=new ScienceEvent();}
 public sealed class ResearchAndDevelopment {
  public float Science;
- public bool ThrowBeforeAward,ThrowAfterAward;
+ public bool ThrowBeforeAward,ThrowAfterAward,ThrowInsideCurrencyEvent,ThrowBeforeWallet;
  public Action AfterAward;
  [MethodImpl(MethodImplOptions.NoInlining)] private ScienceSubject getScienceSubject(ScienceSubject subject){return subject;}
  public static float GetSubjectValue(float science,ScienceSubject subject){return Math.Max(0,1-science/subject.scienceCap);}
- [MethodImpl(MethodImplOptions.NoInlining)] public void AddScience(float value,TransactionReasons reason){Science+=value;}
+ [MethodImpl(MethodImplOptions.NoInlining)] public void AddScience(float value,TransactionReasons reason){if(ThrowBeforeWallet)throw new InvalidOperationException("before wallet mutation");Science+=value;if(ThrowInsideCurrencyEvent)throw new InvalidOperationException("currency event after wallet mutation");}
  // Stock order verified from the actual licensed KSP assembly: subject cache
  // read by recovery, cumulative change, AddScience, then OnScienceRecieved.
  [MethodImpl(MethodImplOptions.NoInlining)] public float SubmitScienceData(float dataAmount,float scienceValueRatio,ScienceSubject subject,float xmitScalar,ProtoVessel source,bool reverseEngineered){

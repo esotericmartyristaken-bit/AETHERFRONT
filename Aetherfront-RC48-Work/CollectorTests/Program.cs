@@ -62,6 +62,22 @@ internal static class CollectorProgram
    var rd=new ResearchAndDevelopment{ThrowBeforeAward=true};try{rd.SubmitScienceData(25,1,Subject(),1,null,false);}catch(InvalidOperationException){}
    Tick();MonoGate.Equal(0,Claims.Count,"No AddScience evidence means no award");
   });
+  Case("currency-event-exception-after-wallet-mutation-is-durable",()=>{
+   var rd=new ResearchAndDevelopment{ThrowInsideCurrencyEvent=true};bool threw=false;
+   try{rd.SubmitScienceData(23,1,Subject(),1,null,false);}catch(InvalidOperationException){threw=true;}
+   MonoGate.Check(threw,"Original currency exception retained");MonoGate.Equal(23m,Claims.Single().Amount,"Wallet award saved despite AddScience exception");
+   Tick();MonoGate.Check(Claims.Count==1 && Claims[0].Command==40,"No generic duplicate after currency failure");
+  });
+  Case("AddScience-failure-before-wallet-mutation-cannot-mint-science",()=>{
+   var rd=new ResearchAndDevelopment{ThrowBeforeWallet=true};try{rd.SubmitScienceData(23,1,Subject(),1,null,false);}catch(InvalidOperationException){}
+   Tick();MonoGate.Equal(0,Claims.Count,"No wallet mutation means no science evidence");
+  });
+  Case("currency-exception-tiny-reward-at-large-cumulative-keeps-evidence",()=>{
+   var subject=Subject(science:1000);subject.scienceCap=2000;
+   var rd=new ResearchAndDevelopment{ThrowInsideCurrencyEvent=true};
+   try{rd.SubmitScienceData(.0001f,1,subject,1,null,false);}catch(InvalidOperationException){}
+   MonoGate.Check(Claims.Count==1 && Claims[0].Command==40 && Claims[0].Amount>1000,"Cumulative float ULP must not lose the subject receipt");
+  });
   Case("disconnect-during-submission-keeps-original-identity",()=>{
    var rd=new ResearchAndDevelopment();rd.AfterAward=()=>{PersonalClient.Active=false;MainSystem.UniqueIdentifier="other-account";AetherfrontClientSystem.State.ServerId="other-server";};
    rd.SubmitScienceData(19,1,Subject(),1,null,false);

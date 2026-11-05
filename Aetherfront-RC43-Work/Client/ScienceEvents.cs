@@ -62,7 +62,7 @@ namespace Aetherfront.Personal.Client
                     if (target == null) throw new MissingMethodException("KSP science reward hook");
                     var parameters = new object[patch.GetParameters().Length]; parameters[0] = target;
                     parameters[1] = Activator.CreateInstance(harmonyMethod, typeof(ScienceEvents).GetMethod(nameof(BeforeScience)));
-                    parameters[2] = Activator.CreateInstance(harmonyMethod, typeof(ScienceEvents).GetMethod(nameof(AfterScience)));
+                    parameters[4] = Activator.CreateInstance(harmonyMethod, typeof(ScienceEvents).GetMethod(nameof(AfterScience)));
                     patch.Invoke(owner, parameters); awardHookInstalled = true;
                 }
                 if (!submissionHookInstalled)
@@ -89,13 +89,17 @@ namespace Aetherfront.Personal.Client
             }
         }
         public static void BeforeScience(ResearchAndDevelopment __instance, out float __state) { __state = __instance.Science; }
-        public static void AfterScience(ResearchAndDevelopment __instance, float value, TransactionReasons reason, float __state)
+        public static void AfterScience(ResearchAndDevelopment __instance, float value, TransactionReasons reason, float __state, Exception __exception)
         {
             if (live == null || value <= 0 || value > (float)PersonalProgression.MaxScience || float.IsNaN(value) || float.IsInfinity(value) ||
                 (long)reason < 0 || ((long)reason & ~PersonalProgression.ScienceRewardReasons) != 0) return;
+            // KSP mutates its wallet before firing currency events. An event
+            // exception skips a postfix; a finalizer still captures the actual
+            // wallet increase. Never treat a pre-wallet failure as an award.
+            if (__exception != null && !(__instance.Science > __state)) return;
             var submission = live.submissions.Count > 0 ? live.submissions.Peek() : null;
             if (submission == null && !Context()) return;
-            live.observed.Add(new ObservedAward { Frame = Time.frameCount, Input = value, Amount = decimal.Round((decimal)value, 6), Reason = (long)reason,
+            live.observed.Add(new ObservedAward { Frame = Time.frameCount, Input = value, Amount = decimal.Round((decimal)(double)value, 6), Reason = (long)reason,
                 Server = submission == null ? AetherfrontClientSystem.State.ServerId : submission.Server,
                 Account = submission == null ? MainSystem.UniqueIdentifier : submission.Account, Owner = submission });
         }
@@ -119,12 +123,17 @@ namespace Aetherfront.Personal.Client
             {
                 if (!ValidSubject(__2) || __2.id != __state.Source || __2.science <= __state.Before) return;
                 float expected = __result > 0 ? __result : (__2.science - __state.Before) * __state.Multiplier;
+                // Subtracting two cumulative floats loses low reward bits.
+                // Exception correlation must allow their float ULP, not only
+                // a relative tolerance based on the much smaller reward.
+                float tolerance = Math.Max(.00001f, Math.Max(Math.Abs(expected) / 100000f,
+                    Math.Max(Math.Abs(__2.science), Math.Abs(__state.Before)) * .00000024f * Math.Abs(__state.Multiplier)));
                 bool matched = false;
                 for (int i = live.observed.Count - 1; i >= __state.ObservationStart; i--)
                 {
                     var award = live.observed[i];
                     if (!ReferenceEquals(award.Owner, __state) || award.Server != __state.Server || award.Account != __state.Account || (award.Reason != 0x20 && award.Reason != 0x400)) continue;
-                    if (Math.Abs(award.Input - expected) <= Math.Max(.00001f, Math.Abs(expected) / 100000f))
+                    if (Math.Abs(award.Input - expected) <= tolerance)
                     { award.HasSubject = true; matched = true; break; }
                 }
                 if (__exception != null && !matched) return; // No observed wallet award: never invent one.
@@ -144,7 +153,10 @@ namespace Aetherfront.Personal.Client
         }
         private static void Capture(string server, string account, ScienceSubject subject)
         {
-            decimal cumulative = decimal.Round((decimal)subject.science, 6, MidpointRounding.ToEven);
+            // The direct float-to-decimal conversion retains only seven
+            // significant digits. Widen first so small increments on larger
+            // subject totals survive the six-decimal wire representation.
+            decimal cumulative = decimal.Round((decimal)(double)subject.science, 6, MidpointRounding.ToEven);
             if (cumulative <= 0) return;
             ScienceOutbox.Enqueue(new PendingScienceClaim { ServerId = server, AccountId = account, Command = 40, SourceId = subject.id, Amount = cumulative });
             ScienceOutbox.Save(true);

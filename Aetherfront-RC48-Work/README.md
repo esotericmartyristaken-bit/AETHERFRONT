@@ -22,7 +22,12 @@ must not depend solely on that event or on the next frame occurring.
 RC48 restores both saved server history and unsent local cumulative history at
 submission entry, before stock reward calculation. A submission-scoped finalizer
 saves evidence immediately after a successful award, including an observed
-wallet award followed by an event exception. Original exceptions remain intact;
+wallet award followed by an event exception. Both AddScience and submission use
+finalizers: KSP changes its wallet before firing currency events, whose exceptions
+would skip an AddScience postfix. Cumulative float ULP is included when correlating
+a small award after an exception. Original exceptions remain intact;
+float values are widened before decimal conversion so small increments on larger
+subject totals survive the six-decimal wire representation;
 failures before any wallet award cannot mint science. Event and finalizer capture
 merge into one cumulative claim. Nested equal-amount submissions are attributed
 to their own scope. Identity is captured before submission and never migrated
