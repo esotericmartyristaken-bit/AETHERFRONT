@@ -114,7 +114,7 @@ function Reset-FixtureMocks {
     }
     Set-FixtureMock Get-PCProduction {
         param($Context)
-        [pscustomobject]@{ processes=@(@{pid=101;path='fixture-production-game'},@{pid=102;path='fixture-production-pack'});udp=@('0.0.0.0:18865/101');tcp=@('0.0.0.0:18866/102');packSha256=Get-PCHash "$($Context.Root)/Server/Config/APFPack.json" }
+        [pscustomobject]@{ processes=@(@{pid=101;path='fixture-production-game';startedAt='2026-11-05T08:48:52.7532470Z'},@{pid=102;path='fixture-production-pack';startedAt='2026-11-05T08:48:52.8300270Z'});udp=@('0.0.0.0:18865/101');tcp=@('0.0.0.0:18866/102');packSha256=Get-PCHash "$($Context.Root)/Server/Config/APFPack.json" }
     }
     Set-FixtureMock Get-PCPorts { param($Context) $Context.GamePort=28865; $Context.PackPort=28866 }
     Set-FixtureMock Enable-PCIsolation { param($Context) $Context.Receipt.isolation=@{fixtureOnly=$true}; $Context.IsolationEnabled=$true }
@@ -338,6 +338,35 @@ try {
     Test-Fixture 'receipt accepts equivalent Windows path spellings without weakening proof' {
         $f=New-Fixture; $answer=Invoke-Fixture $f
         Assert-LocalPreparedReceipt $f.Result $answer.ReceiptSha256 ($f.Root.Replace('\','/')+'/.') ($f.Release.Replace('\','/')+'/.') ($f.Published.Replace('\','/')+'/.') 'kesas-rc999' $gate
+        Assert-Fixture ($script:productionStops -eq 0)
+    }
+    Test-Fixture 'receipt preserves UTC process-start timestamp precision and rejects real drift' {
+        $f=New-Fixture
+        $script:fixtureStart='2026-11-05T08:48:52.7532470Z'
+        Set-FixtureMock Get-PCProduction {
+            param($Context)
+            [pscustomobject]@{
+                processes=@([pscustomobject]@{pid=101;path='fixture-production-game';startedAt=$script:fixtureStart},[pscustomobject]@{pid=102;path='fixture-production-pack';startedAt='2026-11-05T08:48:52.8300270Z'})
+                udp=@('0.0.0.0:18865/101');tcp=@('0.0.0.0:18866/102');packSha256=Get-PCHash "$($Context.Root)/Server/Config/APFPack.json"
+            }
+        }
+        $answer=Invoke-Fixture $f
+        Assert-LocalPreparedReceipt $f.Result $answer.ReceiptSha256 $f.Root $f.Release $f.Published 'kesas-rc999' $gate
+        $script:fixtureStart='2026-11-05T08:48:52.7532471Z'
+        Expect-Failure {Assert-LocalPreparedReceipt $f.Result $answer.ReceiptSha256 $f.Root $f.Release $f.Published 'kesas-rc999' $gate} '*Production PID/ports/pack changed*'
+        $script:fixtureStart='2026-11-05T08:48:52.7532470Z'
+        $raw=Read-PCText $f.Result
+        foreach($change in @('pid','udp','tcp','packSha256')){
+            $changed=$raw|ConvertFrom-Json
+            switch($change){
+                'pid' {$changed.production.processes[0].pid=103}
+                'udp' {$changed.production.udp[0]='0.0.0.0:18865/103'}
+                'tcp' {$changed.production.tcp[0]='0.0.0.0:18866/103'}
+                'packSha256' {$changed.production.packSha256='0'*64}
+            }
+            Write-PCJson $f.Result $changed
+            Expect-Failure {Assert-LocalPreparedReceipt $f.Result (Get-PCHash $f.Result) $f.Root $f.Release $f.Published 'kesas-rc999' $gate} '*Production PID/ports/pack changed*'
+        }
         Assert-Fixture ($script:productionStops -eq 0)
     }
     Test-Fixture 'receipt still rejects changed identity flags gate expiry and bytes' {

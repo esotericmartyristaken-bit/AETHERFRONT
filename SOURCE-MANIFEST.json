@@ -29964,8 +29964,8 @@
       "path": "Aetherfront-RC44-Work/Deployment/Assert-PreparedReceipt.ps1",
       "source": null,
       "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
-      "bytes": 2405,
-      "sha256": "5f1f0e95770c65b3c48c8f182ed3cf78e175ce4d54d4dcbb0e0525d0eb26fb18",
+      "bytes": 3400,
+      "sha256": "44b30a4cd99d84a998c4cf73e293d7c514ccf4e21147e34a40ff37dd85782645",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed source addition only.",
@@ -29976,8 +29976,8 @@
       "path": "Aetherfront-RC44-Work/Deployment/Test-PreparedCandidate.Tests.ps1",
       "source": null,
       "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
-      "bytes": 46415,
-      "sha256": "6289fc71dc2fea0af7526c2639c01a247b0dcc4ba541234c655c228858990630",
+      "bytes": 48365,
+      "sha256": "52d03a9c00aebb95c2dc2cdb9da50860cf453ba55ec9c8d9688c782afac58a0d",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed source addition only.",
@@ -30432,8 +30432,8 @@
       "path": "Aetherfront-RC48-Work/README.md",
       "source": null,
       "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source",
-      "bytes": 4703,
-      "sha256": "2e54217973eaad2e8174c517e169e622737d07228a10fbf07183e2adf1c65ea5",
+      "bytes": 5100,
+      "sha256": "dd146ec7601074a29a6b65c856db0889ea65e6643b18a057bd90a76c3179c7ef",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed source addition only.",
@@ -30585,7 +30585,7 @@
       ]
     }
   ],
-  "totalFileBytes": 17995931.0,
+  "totalFileBytes": 17999273.0,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",

@@ -73,3 +73,9 @@ receipts block replay. This is not a network-accessible administrator grant API.
 Deployment remains local-only. If occupied, the existing 15-minute in-game and
 Discord warning is required. Only fresh authoritative player and connection
 counts of zero permit earlier activation. No extra restart is used for credit.
+
+The receipt reader preserves hash-bound process-start timestamp strings instead
+of round-tripping them through PowerShell's automatic DateTime conversion. This
+prevents trailing fractional zeros from producing a false live-process-change
+failure. Tests still reject a one-tick start-time change and changed PID, listener
+ownership or pack hash. No identity check is rounded, skipped or weakened.
