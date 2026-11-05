@@ -8,7 +8,7 @@ $apf = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../..'))
 $artifactParent = Join-Path $apf 'UpdateBuilds/ScienceTransmit-20261104'
 if (-not $OutputDirectory) { $OutputDirectory = Join-Path $artifactParent 'outbox-mono' }
 $OutputDirectory = [IO.Path]::GetFullPath($OutputDirectory)
-if (-not $OutputDirectory.StartsWith($artifactParent + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -and -not $OutputDirectory.StartsWith((Join-Path $apf 'UpdateBuilds/RC47-20261105') + [IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)) { throw 'OutputDirectory must remain under the reviewed science evidence roots' }
+if (-not $OutputDirectory.StartsWith($artifactParent + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -and -not $OutputDirectory.StartsWith((Join-Path $apf 'UpdateBuilds/RC47-20261105') + [IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase) -and -not $OutputDirectory.StartsWith((Join-Path $apf 'UpdateBuilds/RC48-20261105') + [IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)) { throw 'OutputDirectory must remain under the reviewed science evidence roots' }
 $run = Join-Path $OutputDirectory ((Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssfffZ') + '-' + [Guid]::NewGuid().ToString('N'))
 $null = New-Item -ItemType Directory -Path $run
 $dotnet = Join-Path $apf 'tools/dotnet-sdk8/dotnet.exe'
@@ -52,7 +52,7 @@ try {
             if($CandidateDirectory){
                 foreach($name in $expected.Keys|ForEach-Object {$_}){
                     $audit=Get-Content -LiteralPath "$candidate/$name.audit.json" -Raw|ConvertFrom-Json
-                    if($audit.version -cne 'kesas-rc47' -or -not $audit.identityPreserved -or -not $audit.allOtherMethodsUnchanged){throw 'Unreviewed RC47 receiver candidate'}
+                    if($audit.version -cnotin @('kesas-rc47','kesas-rc48') -or -not $audit.identityPreserved -or -not $audit.allOtherMethodsUnchanged){throw 'Unreviewed receiver candidate'}
                     $expected[$name]=$audit.outputSha256
                 }
             }

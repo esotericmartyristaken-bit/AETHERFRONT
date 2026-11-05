@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param([Parameter(Mandatory=$true)][string]$ReleaseZip,[string]$Notes='KESAS update',[switch]$AllowActivePlayers,[string]$DeploymentRoot=$env:APF_NATIVE_ROOT,
-    [switch]$LocalDeployment,[string]$LocalBotConfig,[string]$LocalNode,[string]$LocalEvidenceRoot)
+    [switch]$LocalDeployment,[string]$LocalBotConfig,[string]$LocalNode,[string]$LocalEvidenceRoot,
+    [string]$ScienceCompensationPlan='',[string]$ScienceCompensationSha256='')
 . "$PSScriptRoot/Update.Common.ps1"
 if(-not $LocalDeployment){throw 'Git-triggered host publication is retired. Use the reviewed Deploy-LocalRelease.ps1 operator command.'}
 if($AllowActivePlayers){throw 'External active-player override is disabled. Local admission must deliver the fifteen-minute warning.'}
@@ -473,6 +474,8 @@ try{
     $fingerprint=$null;$prepared=$null;$reuse=$false
     $bootstrapSource="$stage/KESAS-Client-Bootstrap.zip"
     if($null -ne $accountResetText){Invoke-PublisherAccountReset $root $accountResetText $version -ValidateOnly}
+    . (Join-Path $PSScriptRoot '../Aetherfront-RC44-Work/Deployment/Invoke-ScienceCompensation.ps1')
+    Invoke-ScienceCompensation $root $ScienceCompensationPlan $ScienceCompensationSha256 $version -ValidateOnly
     if($githubEnabled){
         if(-not [IO.File]::Exists("$PSScriptRoot/GitHub.Publish.ps1")){throw 'GitHub publisher is not installed; no services have been stopped.'}
         . "$PSScriptRoot/GitHub.Publish.ps1"
@@ -597,6 +600,10 @@ try{
     if($null -ne $accountResetText){
         if(@(Get-UpdateServiceProcesses $root $cfg).Count){throw 'Account reset requires stopped native services'}
         Invoke-PublisherAccountReset $root $accountResetText $version
+    }
+    if($ScienceCompensationPlan){
+        if(@(Get-UpdateServiceProcesses $root $cfg).Count){throw 'Science compensation requires stopped native services'}
+        Invoke-ScienceCompensation $root $ScienceCompensationPlan $ScienceCompensationSha256 $version
     }
     if($wasRunning){$activationLock.Dispose();$activationLock=$null;$started=$true;Start-UpdatedServer $root $cfg}
     # The stable feed becomes visible only after every file and service is ready.

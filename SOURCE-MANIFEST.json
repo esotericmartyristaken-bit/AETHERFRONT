@@ -197,8 +197,8 @@
       "path": "Aetherfront-RC43-Work/Client/PersonalClient.cs",
       "source": null,
       "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source",
-      "bytes": 20088,
-      "sha256": "d8ded2cd92d55dd958a5c5eae264aa677de6850203c02b40aeab0e41777c9d73",
+      "bytes": 12874,
+      "sha256": "40484494aca4e3dca041ddb9938306d02b808d224a593d8371ee37f2ddd97212",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed RC43 source addition only."
@@ -219,8 +219,8 @@
       "path": "Aetherfront-RC43-Work/Client/ScienceOutbox.cs",
       "source": null,
       "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source",
-      "bytes": 14800,
-      "sha256": "2812e1fbfd36dad465fc66f555e068afc68e4677025edfe421e54ea359fcd214",
+      "bytes": 15231,
+      "sha256": "5af425124bdec7c596c49297fd983eae409b44af4d975b25627c5fe60b1afacc",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed RC43 source addition only."
@@ -307,8 +307,8 @@
       "path": "Aetherfront-RC43-Work/Mono/Run.ps1",
       "source": null,
       "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source",
-      "bytes": 6875,
-      "sha256": "4e09429fd96efcd9098868fb2b3ca814f54db0abbd492b88bfcb33f919dea2fe",
+      "bytes": 7048,
+      "sha256": "47b31d13d0bf44afbd423ae436cb639d350c0e0b2562bfe1f59f27e1b59c40ff",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed RC43 source addition only."
@@ -450,8 +450,8 @@
       "path": "Aetherfront-RC43-Work/Server/PersonalServer.cs",
       "source": null,
       "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source",
-      "bytes": 29825,
-      "sha256": "1c4043d5dfa607fba1962d381679ed85aa9e00ee69f764996c66894047fecb25",
+      "bytes": 30805,
+      "sha256": "06807c85ac930cbae893858ed8e49c30bd3d5e01e98174a5ac011135d61c9b42",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed RC43 source addition only."
@@ -29469,8 +29469,8 @@
       "path": "KESAS-VPS-Server/Publish-Release.ps1",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 49574,
-      "sha256": "9ab39e686740d9f7eaca614ed41aa4593b4def92c1a9ae11cd3de6fd3323d5b0",
+      "bytes": 50130,
+      "sha256": "98c152d32acab4ca4f69e0f6889bffbd17a1d95c2f1e0aa424bf0c06c3209db1",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately.",
@@ -29567,8 +29567,8 @@
       "path": "export-policy.json",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 49140,
-      "sha256": "5f73dd8691aec6d654ef00e881a77c90e401c174c85e531e146c0aae702c79b1",
+      "bytes": 52122,
+      "sha256": "45ff9984279614e223113cf95712521b9cd3f4f4133194a1f35ccae24aae62b7",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately.",
@@ -30060,8 +30060,8 @@
       "path": "Aetherfront-RC44-Work/Deployment/Deploy-LocalRelease.ps1",
       "source": null,
       "role": "Reviewed RC45 local deployment safety, native ground/orbit repair and isolated regression source",
-      "bytes": 12384,
-      "sha256": "4fcadec407569573ce9822ceb992952df2e1a1c6ed49e12acc8fa334c6d78922",
+      "bytes": 13321,
+      "sha256": "752d72785879f3e882a7b770d2c4ad2df116b929bda76cf58de8864f1cd26836",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed source addition only.",
@@ -30192,8 +30192,8 @@
       "path": "Aetherfront-RC46-Work/Tests/Run-Mono.ps1",
       "source": null,
       "role": "Reviewed RC46 research confirmation repair and isolated regression source",
-      "bytes": 1995,
-      "sha256": "8f873a4bd3beeb871803797ecda7d4db3d873b83e2b7def963414d9961e05575",
+      "bytes": 2001,
+      "sha256": "802ea2506d4b76dd951d8ab8c815f37c5e9b07c8212f8f2a44a61b5c7af9971d",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed source addition only.",
@@ -30391,9 +30391,201 @@
         "Maintained directly in the repository; reviewed source addition only.",
         "Production state, credentials and licensed runtime references excluded."
       ]
+    },
+    {
+      "path": "Aetherfront-RC48-Work/CollectorTests/Program.cs",
+      "source": null,
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source",
+      "bytes": 7294,
+      "sha256": "b29ddb69629d1d3a68cb1c2edd4a2feb5f5559bcdfe0ae2d0211a78b4ea963a6",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC48-Work/NativeCompensationTests/Program.cs",
+      "source": null,
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source",
+      "bytes": 2441,
+      "sha256": "89ed4c298b337900a558e1a95d7628c0e45eeda6ad92141e12f73441128a56c7",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC48-Work/Patch/Patch.csproj",
+      "source": null,
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source",
+      "bytes": 310,
+      "sha256": "4655110c4b0d099a7f03b5b5ac30427a831df7498d410339144f8a29a759a251",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC48-Work/README.md",
+      "source": null,
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source",
+      "bytes": 4326,
+      "sha256": "1072343a1d9035e5ad26a94dd5681570b5c4a2d91f80a0355cf1f1069e8490c4",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC48-Work/Test.ps1",
+      "source": null,
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source",
+      "bytes": 3862,
+      "sha256": "4f309a15e37ec6a9e1deb7891bcea84100422ee0fe453879d2caf271946e947c",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC43-Work/Client/SubjectHistory.cs",
+      "source": null,
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source",
+      "bytes": 721,
+      "sha256": "0f02d57185b0f6f1ddc2597d81d64e5e55cdcb8609f6092a6e4f92cadd378feb",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/Deployment/ScienceCompensation.cs",
+      "source": null,
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source",
+      "bytes": 5670,
+      "sha256": "dc270fd1a6ac08c360d17eaf7dd25b8b2eaa67a39583223b18d910c22ec46307",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC48-Work/CollectorTests/Stubs.cs",
+      "source": null,
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source",
+      "bytes": 5149,
+      "sha256": "77a923a0d2c0c5f62b7e2be36a57d274d24b9bf36ea908d1252d1eb9a63eeee5",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC48-Work/Build.ps1",
+      "source": null,
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source",
+      "bytes": 2446,
+      "sha256": "4f792a31f6150ad8220692933f5bc35d460f5fb8dd4460fe7213d5f1cd4b6386",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC48-Work/NativeCompensationTests/Tests.csproj",
+      "source": null,
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source",
+      "bytes": 719,
+      "sha256": "1c07b3c86b8970ffb9b724540546aa8091d6edce7783b877b73084d6ba573582",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC48-Work/Test-Compensation.ps1",
+      "source": null,
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source",
+      "bytes": 5503,
+      "sha256": "6bd4458a6a273245540908f7421490c0681168ce16d3355dd566f2c8184ce9f7",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC48-Work/CollectorTests/Run.ps1",
+      "source": null,
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source",
+      "bytes": 2024,
+      "sha256": "b7f9af0c869a3dbc6220608abcbc944ba479c7ca77ff8de626011ab91dacd792",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC48-Work/Patch/Program.cs",
+      "source": null,
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source",
+      "bytes": 13240,
+      "sha256": "1009afc8d6c8fa1f5e9d5a2cfd0721c0b46d3fea48439d08b6b0b4c164c9b960",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC48-Work/Build-Release.py",
+      "source": null,
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source",
+      "bytes": 5246,
+      "sha256": "01012785e14ffc0952f8fd6cd6e62d83f35da44e6b433f5e01a99732456ef565",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC44-Work/Deployment/Invoke-ScienceCompensation.ps1",
+      "source": null,
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source",
+      "bytes": 3500,
+      "sha256": "03ffea6610bd99172f4855b6516c7c2d202b593785f99d684ee13514aea57759",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC43-Work/Client/ScienceEvents.cs",
+      "source": null,
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source",
+      "bytes": 11608,
+      "sha256": "27983029f943a7e7eb26a94899a8f01c97e738098a656d194128715cebb92878",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
     }
   ],
-  "totalFileBytes": 17874690.0,
+  "totalFileBytes": 17918959.0,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",
@@ -30412,5 +30604,5 @@
     "report": "PRIVACY-SCAN.json",
     "limitation": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
   },
-  "fileCount": 3022
+  "fileCount": 3038
 }

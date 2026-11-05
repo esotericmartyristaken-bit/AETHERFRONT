@@ -1251,6 +1251,70 @@
     {
       "source": "Aetherfront-RC47-Work/Tests/Tests.csproj",
       "role": "Reviewed RC47 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Client/ScienceEvents.cs",
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Client/SubjectHistory.cs",
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC44-Work/Deployment/Invoke-ScienceCompensation.ps1",
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC44-Work/Deployment/ScienceCompensation.cs",
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC48-Work/Build-Release.py",
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC48-Work/Build.ps1",
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC48-Work/CollectorTests/Program.cs",
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC48-Work/CollectorTests/Run.ps1",
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC48-Work/CollectorTests/Stubs.cs",
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC48-Work/NativeCompensationTests/Program.cs",
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC48-Work/NativeCompensationTests/Tests.csproj",
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC48-Work/Patch/Patch.csproj",
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC48-Work/Patch/Program.cs",
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC48-Work/README.md",
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC48-Work/Test-Compensation.ps1",
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC48-Work/Test.ps1",
+      "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source"
     }
   ],
   "binaryPrerequisites": [

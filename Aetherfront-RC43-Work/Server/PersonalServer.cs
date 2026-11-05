@@ -386,6 +386,19 @@ namespace Aetherfront.Personal.Server
             var data = ServerContext.ServerMessageFactory.CreateNewMessageData<AetherfrontCommandReplyMsgData>();
             data.PayloadJson = JsonConvert.SerializeObject(reply);
             MessageQueuer.SendToClient<AetherfrontSrvMsg>(client, data);
+            // Record the authenticated application message, not raw packets or
+            // full snapshots. Correlation fields above are bounded/control-free.
+            // Logging must never turn a saved award into a rejected request.
+            if (reply.ScienceReceipt != null)
+                try
+                {
+                    var receipt = reply.ScienceReceipt;
+                    LunaLog.Info("[Aetherfront] Science receipt: actor=" + actor + " command=" + receipt.Command +
+                        " source=" + receipt.SourceId + " requested=" + receipt.RequestedAmount.ToString(CultureInfo.InvariantCulture) +
+                        " recorded=" + receipt.RecordedCumulative.ToString(CultureInfo.InvariantCulture) +
+                        " disposition=" + receipt.Disposition + " reason=" + reply.ReasonCode + " revision=" + reply.Revision);
+                }
+                catch { /* Receipt delivery and durable progression remain authoritative. */ }
         }
 
         private static bool TerminalScienceRejection(string reason)

@@ -7,7 +7,9 @@ param(
     [Parameter(Mandatory)][string]$ReportPath,
     [string]$DeploymentRoot='',
     [string]$BotConfig='',
-    [string]$Notes='Verified combined Aetherfront update'
+    [string]$Notes='Verified combined Aetherfront update',
+    [string]$ScienceCompensationPlan='',
+    [string]$ScienceCompensationSha256=''
 )
 $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
@@ -81,6 +83,7 @@ try{
         @{path='KESAS-VPS-Server';filter='*.ps1'},
         @{path='Aetherfront-RC44-Work/Deployment';filter='*.ps1'},
         @{path='Aetherfront-RC44-Work/Deployment';filter='*.mjs'},
+        @{path='Aetherfront-RC44-Work/Deployment';filter='*.cs'},
         @{path='APFDiscordBot/src';filter='*.js'},
         @{path='APFDiscordBot/scripts';filter='*.ps1'},
         @{path='ControlPlane';filter='*.mjs'}
@@ -104,6 +107,13 @@ try{
     [IO.File]::WriteAllText((Join-Path $bundle 'SOURCE.json'),(@{commit=$SourceCommit;files=$files}|ConvertTo-Json -Depth 5),[Text.UTF8Encoding]::new($false))
     $frozenArchive=Join-Path $bundle 'Release.zip';Copy-Item -LiteralPath $archivePath -Destination $frozenArchive
     if((Get-FileHash -LiteralPath $frozenArchive).Hash.ToLowerInvariant() -cne $ArchiveSha256){throw 'Frozen archive differs from reviewed release'}
+    $frozenCompensation=''
+    if($ScienceCompensationPlan){
+        if($ScienceCompensationSha256 -cnotmatch '^[a-f0-9]{64}$' -or (Get-FileHash -LiteralPath $ScienceCompensationPlan).Hash.ToLowerInvariant() -cne $ScienceCompensationSha256){throw 'Reviewed compensation plan differs'}
+        $frozenCompensation=Join-Path $bundle 'ScienceCompensation.json'
+        Copy-Item -LiteralPath $ScienceCompensationPlan -Destination $frozenCompensation
+        if((Get-FileHash -LiteralPath $frozenCompensation).Hash.ToLowerInvariant() -cne $ScienceCompensationSha256){throw 'Frozen compensation plan differs'}
+    }elseif($ScienceCompensationSha256){throw 'Compensation hash requires a plan'}
     $report.bundle=$bundle;Report-Local 'verifying-server-task'
     # Validate the unchanged protected startup route before bot/media work.
     . (Join-Path $bundle 'Aetherfront-RC44-Work/Deployment/Start-PreactivationRecovery.ps1')
@@ -135,7 +145,7 @@ try{
     $publisher=Join-Path $bundle 'KESAS-VPS-Server/Publish-Release.ps1'
     Report-Local 'preparing-and-verifying-candidate'
     $evidence=Join-Path $bundle 'Evidence';New-LocalPrivateDirectory $evidence
-    & $publisher -ReleaseZip $frozenArchive -Notes $Notes -DeploymentRoot $deployment -LocalDeployment -LocalBotConfig $BotConfig -LocalNode $node -LocalEvidenceRoot $evidence
+    & $publisher -ReleaseZip $frozenArchive -Notes $Notes -DeploymentRoot $deployment -LocalDeployment -LocalBotConfig $BotConfig -LocalNode $node -LocalEvidenceRoot $evidence -ScienceCompensationPlan $frozenCompensation -ScienceCompensationSha256 $ScienceCompensationSha256
     if(-not $?){throw 'Local publisher did not complete'}
     $pack=Get-Content -LiteralPath "$deployment/Server/Config/APFPack.json" -Raw|ConvertFrom-Json
     $feed=Get-Content -LiteralPath "$deployment/Updates/APFClientUpdate.json" -Raw|ConvertFrom-Json

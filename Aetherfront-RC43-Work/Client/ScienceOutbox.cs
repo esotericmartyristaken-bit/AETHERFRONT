@@ -39,6 +39,14 @@ namespace Aetherfront.Personal.Client
         internal static string Warning { get; private set; }
         internal static int PendingCount => pending == null ? 0 : pending.Claims.Count(c => Matches(c) && !c.Held);
         internal static int HeldCount => pending == null ? 0 : pending.Claims.Count(c => Matches(c) && c.Held);
+        internal static decimal PendingCumulative(string source)
+        {
+            if (!PersonalClient.Active || string.IsNullOrEmpty(source) || !Load()) return 0;
+            decimal cumulative = 0;
+            foreach (var claim in pending.Claims)
+                if (claim.Command == 40 && claim.SourceId == source && Matches(claim)) cumulative = Math.Max(cumulative, claim.Amount);
+            return cumulative;
+        }
 
         private static bool Matches(PendingScienceClaim c) => PersonalClient.Active && c.ServerId == AetherfrontClientSystem.State.ServerId && c.AccountId == MainSystem.UniqueIdentifier;
 

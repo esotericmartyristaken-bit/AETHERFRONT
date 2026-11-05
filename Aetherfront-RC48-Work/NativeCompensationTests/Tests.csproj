@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><ImplicitUsings>enable</ImplicitUsings><Nullable>disable</Nullable></PropertyGroup><ItemGroup>
+<Compile Include="../../Aetherfront-RC44-Work/Deployment/ScienceCompensation.cs" Link="ScienceCompensation.cs" />
+<Reference Include="Server"><HintPath>$(Candidate)/Server.dll</HintPath></Reference>
+<Reference Include="AetherfrontCore"><HintPath>$(Runtime)/AetherfrontCore.dll</HintPath></Reference>
+<Reference Include="JsonFx"><HintPath>$(Runtime)/JsonFx.dll</HintPath></Reference>
+<Reference Include="Newtonsoft.Json"><HintPath>$(Runtime)/Newtonsoft.Json.dll</HintPath></Reference>
+</ItemGroup></Project>
