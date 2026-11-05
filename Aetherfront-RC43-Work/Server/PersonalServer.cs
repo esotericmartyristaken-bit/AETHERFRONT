@@ -69,7 +69,10 @@ namespace Aetherfront.Personal.Server
                     if (result.Accepted && result.Revision > beforeRevision)
                     {
                         if (command == ScienceClaimCommand || command == GameplayScienceCommand) NotifyScience();
-                        else Notify();
+                        // The purchaser already receives its saved personal
+                        // snapshot. Unlocks are not shared; do not trigger a
+                        // world snapshot on every other connection per click.
+                        else if (command != (int)AetherfrontCommandType.UnlockTechnology) Notify();
                     }
                     return true;
                 }
@@ -409,7 +412,7 @@ namespace Aetherfront.Personal.Server
         // Isolate new static initialization from the original PersonalServer cctor.
         private static class ScienceNotices
         {
-            private const int DelayMilliseconds = 2000;
+            private const int DelayMilliseconds = 10000;
             private static readonly object Gate = new object();
             private static readonly Timer Clock = new Timer(Flush, null, Timeout.Infinite, Timeout.Infinite);
             private static bool pending;

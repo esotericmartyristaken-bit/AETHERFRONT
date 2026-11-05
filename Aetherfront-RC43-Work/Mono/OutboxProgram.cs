@@ -31,6 +31,7 @@ internal static class OutboxProgram
     private static void Restart()
     {
         Set("pending", null); Set("dirty", false); Set("failed", false); Set("cursor", 0); Set("nextSend", 0f); Set("nextSave", 0f); Set("path", null); Set("wantedRevision", 0L); Set("nextSnapshot", 0f); Set("<Warning>k__BackingField", null);
+        Set("activeServer", null); Set("activeAccount", null);
         Get<IDictionary>("flights").Clear(); var q = Get<object>("receipts"); q.GetType().GetMethod("Clear").Invoke(q, null);
     }
     private static void Reset()

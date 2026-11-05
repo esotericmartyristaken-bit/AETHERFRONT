@@ -45,7 +45,10 @@ namespace Aetherfront.Continuity
                 double previous;
                 long sequence;
                 bool exists = Read(key, out previous, out sequence);
-                if (exists && universeTime < previous - 0.001d)
+                // Small server/subspace corrections are not a mission rollback.
+                // Always compare against the durable high-water, so repeated
+                // two-second corrections cannot accumulate into a rewind.
+                if (exists && universeTime < previous - 2d)
                     throw new InvalidDataException("Personal clock cannot move backwards");
                 // Avoid writing an older value due to floating point clock conversion.
                 Write(key, exists ? Math.Max(previous, universeTime) : universeTime, checked(sequence + 1));

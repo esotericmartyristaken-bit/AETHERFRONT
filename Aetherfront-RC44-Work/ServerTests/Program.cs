@@ -28,7 +28,7 @@ internal static class MissionTimeProgram
 {
     const BindingFlags Private = BindingFlags.Static | BindingFlags.NonPublic;
     const string ShippingHash = "98a5541f2701b7961039da3261f6c4bb74149d313f33dcafbeafb6950d824fa1";
-    const string CandidateHash = "ff3a6c99ef8a8a076ca77c0344788f7f8b59110cdb959b81537e2c2bc745dea9";
+    static string CandidateHash => Metadata("CandidateHash");
     static string root, caseRoot;
     static bool baseline;
     static int assertions;
@@ -214,6 +214,17 @@ internal static class MissionTimeProgram
             var c = Client(); PersonalClockServer.Checkpoint(c); double saved = Durable(c); c.Subspace = -1;
             PersonalClockServer.Checkpoint(c); Check(!Disconnected(c), "Mid-warp checkpoint does not disconnect"); Equal(saved, Durable(c), "Mid-warp uses previous stable UT");
             PersonalClockServer.BeforeDisconnect(c); Check(!Sessions.Contains(c), "Mid-warp disconnect clears session"); Equal(saved, Durable(c), "Mid-warp disconnect preserves stable UT");
+        });
+        if (!baseline && CandidateHash != "ff3a6c99ef8a8a076ca77c0344788f7f8b59110cdb959b81537e2c2bc745dea9")
+        Case("subsecond-server-correction-does-not-kick-flight", () =>
+        {
+            var c = Client(); double saved=Durable(c);
+            WarpContext.Subspaces[c.Subspace].Time=saved-PersonalClockServer.ServerSeconds-.65;
+            PersonalClockServer.Checkpoint(c);
+            Check(!Disconnected(c)&&Sessions.Contains(c)&&PersonalClockServer.MayPersistPosition(c), "Normal clock correction disconnected flight");
+            Equal(saved,Durable(c),"Clock correction decreased durable UT");
+            c.Subspace=-1;PersonalClockServer.Checkpoint(c);
+            Check(!Disconnected(c),"Corrected mid-warp stable checkpoint disconnected flight");Equal(saved,Durable(c),"Mid-warp rewound corrected clock");
         });
         int failures = results.Count(r => !(bool)r.GetType().GetProperty("passed").GetValue(r));
         int legacyAssertions = (int)typeof(Program).GetField("checks", Private).GetValue(null);

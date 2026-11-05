@@ -18,6 +18,28 @@ namespace Aetherfront.Personal.Client
         public string Warning { get; private set; }
         public int Count { get { return pending.Count; } }
 
+        // A presentation-only reservation. Never mutate the server snapshot or
+        // spend a wallet locally. Protect queued stock purchases from an older
+        // snapshot while keeping costs and prerequisite ordering visible.
+        public HashSet<string> Project(AetherfrontState state, PlayerProgression player, out decimal science)
+        {
+            var desired = new HashSet<string>(player.TechnologyUnlocks, StringComparer.OrdinalIgnoreCase);
+            science = player.Science;
+            if (paused || state.ServerId != server || player.AccountId != account) return desired;
+            foreach (string id in pending)
+            {
+                if (desired.Contains(id)) continue;
+                var definition = state.FindTechnology(id);
+                if (definition == null || definition.ScienceCost < 0 || science < definition.ScienceCost) break;
+                bool any = false, all = true;
+                foreach (string prerequisite in definition.PrerequisiteIds)
+                { bool has = desired.Contains(prerequisite); any |= has; all &= has; }
+                if (definition.PrerequisiteIds.Count > 0 && !(definition.AnyPrerequisite ? any : all)) break;
+                desired.Add(definition.Id); science -= definition.ScienceCost;
+            }
+            return desired;
+        }
+
         public void Context(string serverId, string accountId, bool active)
         {
             if (!active || server != serverId || account != accountId)

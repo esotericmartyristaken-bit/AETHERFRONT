@@ -1,9 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><ImplicitUsings>enable</ImplicitUsings><Nullable>disable</Nullable>
+  <PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><ImplicitUsings>enable</ImplicitUsings><Nullable>disable</Nullable><EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <Runtime Condition="'$(Runtime)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../../KESAS-VPS-Server/Server'))</Runtime>
     <EvidenceRoot Condition="'$(EvidenceRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../../UpdateBuilds/ScienceTransmit-20261104/RC43ServerTests'))</EvidenceRoot>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Program.cs" />
     <AssemblyMetadata Include="Runtime" Value="$(Runtime)" />
     <AssemblyMetadata Include="EvidenceRoot" Value="$(EvidenceRoot)" />
     <Reference Include="Server"><HintPath>$(Runtime)/Server.dll</HintPath></Reference>

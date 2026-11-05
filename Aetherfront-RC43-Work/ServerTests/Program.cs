@@ -88,7 +88,7 @@ static class Program
         bool IsPending() { lock (gate) return (bool)pending.GetValue(null); }
         int Active() { lock (gate) return (int)active.GetValue(null); }
         bool IsQuiet() { lock (gate) return !(bool)pending.GetValue(null) && (int)active.GetValue(null) == 0; }
-        Until(IsQuiet, 7000, "initial science timer did not become idle");
+        Until(IsQuiet, 17000, "initial science timer did not become idle");
         var observer = (ClientStructure)RuntimeHelpers.GetUninitializedObject(typeof(ClientStructure));
         observer.ConnectionStatus = ConnectionStatus.Connected; observer.Authenticated = true;
         typeof(ClientStructure).GetField("<SendMessageQueue>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic)
@@ -122,7 +122,7 @@ static class Program
         bool disposed = false;
         try
         {
-            // An accepted ordinary command retains its immediate original notice.
+            // Personal research returns its saved state only to its purchaser.
             AetherfrontServerSystem.Execute(s => { s.TechnologyDefinitions.Add(new TechnologyDefinition { Id = "coalescer-control", ScienceCost = 0 }); return AetherfrontResult.Success(s.Revision); });
             while (client.SendMessageQueue.TryDequeue(out _)) { }
             Check(PersonalServer.TryHandle(client, new AetherfrontWireRequest { Operation = AetherfrontWireOperation.CommandRequest, CommandType = AetherfrontCommandType.UnlockTechnology, TechnologyId = "coalescer-control", Amount2 = PersonalProgression.Find(AetherfrontServerSystem.Snapshot(), Actor).NextCommandSequence }), "non-science control not handled");
@@ -130,23 +130,23 @@ static class Program
             var control = AetherfrontProtocol.DeserializeReply(((AetherfrontCommandReplyMsgData)controlMessage.Data).PayloadJson);
             Check(control.Accepted && control.Operation == AetherfrontWireOperation.CommandReply && !string.IsNullOrEmpty(control.StateJson), "non-science control reply changed");
             var immediate = Drain();
-            Check(immediate.Count == 1 && immediate[0].Revision == AetherfrontServerSystem.Snapshot().Revision && IsQuiet(), "non-science notice was delayed or coalesced");
+            Check(immediate.Count == 0 && IsQuiet(), "personal research unnecessarily refreshed other players");
 
             var elapsed = Stopwatch.StartNew();
             for (int i = 0; i < 8; i++) Transmit("positive_transmission_burst_" + i, (i + 1) / 100m);
             long burstRevision = AetherfrontServerSystem.Snapshot().Revision;
             Check(observer.SendMessageQueue.IsEmpty, "science burst notified immediately");
-            Until(() => !observer.SendMessageQueue.IsEmpty, 7000, "science burst lost its notice");
+            Until(() => !observer.SendMessageQueue.IsEmpty, 17000, "science burst lost its notice");
             burstMilliseconds = elapsed.ElapsedMilliseconds;
             var first = Drain();
-            Check(first.Count == 1 && first[0].Revision == burstRevision && burstMilliseconds >= 1500, "burst was not coalesced to latest revision in one two-second window");
+            Check(first.Count == 1 && first[0].Revision == burstRevision && burstMilliseconds >= 9000, "burst was not coalesced to latest revision in one ten-second window");
             Until(IsQuiet, 2000, "burst callback did not finish");
             elapsed.Restart(); Transmit("positive_transmission_tail", .09m);
             long tailRevision = AetherfrontServerSystem.Snapshot().Revision;
-            Until(() => !observer.SendMessageQueue.IsEmpty, 7000, "tail award never notified");
+            Until(() => !observer.SendMessageQueue.IsEmpty, 17000, "tail award never notified");
             tailMilliseconds = elapsed.ElapsedMilliseconds;
             var tail = Drain();
-            Check(tail.Count == 1 && tail[0].Revision == tailRevision && tailMilliseconds >= 1500, "tail notice missing latest revision or emitted immediately");
+            Check(tail.Count == 1 && tail[0].Revision == tailRevision && tailMilliseconds >= 9000, "tail notice missing latest revision or emitted immediately");
             Until(IsQuiet, 2000, "tail callback did not finish");
 
             // Hold only the fixture observer's enqueue gate. This keeps a real
@@ -155,13 +155,13 @@ static class Program
             try
             {
                 Award("callback_race_first");
-                Until(() => Active() > 0 && !IsPending(), 7000, "callback did not clear pending before sending");
+                Until(() => Active() > 0 && !IsPending(), 17000, "callback did not clear pending before sending");
                 Transmit("callback_race_transmission_during_send", .10m);
                 Check(IsPending(), "award during callback failed to schedule a trailing window");
             }
             finally { Monitor.Exit(budgetGate); }
             var racing = new List<AetherfrontWireReply>();
-            Until(() => { racing.AddRange(Drain()); return racing.Count >= 2 && IsQuiet(); }, 7000, "callback race lost its trailing notice");
+            Until(() => { racing.AddRange(Drain()); return racing.Count >= 2 && IsQuiet(); }, 17000, "callback race lost its trailing notice");
             callbackRaceNotices = racing.Count;
             Check(racing.Count == 2 && racing.Last().Revision == AetherfrontServerSystem.Snapshot().Revision, "callback race tail did not include latest state");
 
@@ -189,7 +189,7 @@ static class Program
             Check(loggedErrors == 1 && (bool)notices.GetField("errorLogged", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null), "timer failures were not contained/logged once");
             Drain();
             Award("after_callback_error");
-            Until(() => !observer.SendMessageQueue.IsEmpty && IsQuiet(), 7000, "timer failed to recover after a callback error");
+            Until(() => !observer.SendMessageQueue.IsEmpty && IsQuiet(), 17000, "timer failed to recover after a callback error");
             var recovered = Drain();
             Check(recovered.Count == 1 && recovered[0].Revision == AetherfrontServerSystem.Snapshot().Revision, "recovered timer missed latest state");
 
@@ -197,7 +197,7 @@ static class Program
             Award("shutdown_pending_notice");
             Check(IsPending(), "shutdown fixture did not schedule notice");
             AetherfrontServerSystem.Shutdown();
-            Until(IsQuiet, 7000, "disabled server timer did not drain safely");
+            Until(IsQuiet, 17000, "disabled server timer did not drain safely");
             Check(Drain().Count == 0, "disabled server emitted a stale notice");
         }
         finally
@@ -207,7 +207,7 @@ static class Program
             disposed = clock.Dispose(completed) && completed.WaitOne(7000);
             Check(disposed && Active() == 0 && !IsPending(), "fixture left a timer or callback active");
         }
-        noticeEvidence = new { positiveTransmissionAwards = 8, transmissionCommand = 40, burstNotices = 1, burstMilliseconds, tailNotices = 1, tailMilliseconds, callbackRaceNotices, immediateNonScienceNotice = true, loggedErrors, callbackErrorRecovery = true, shutdownSafe = true, timerDisposed = disposed };
+        noticeEvidence = new { positiveTransmissionAwards = 8, transmissionCommand = 40, burstNotices = 1, burstMilliseconds, tailNotices = 1, tailMilliseconds, callbackRaceNotices, personalResearchBroadcast = false, loggedErrors, callbackErrorRecovery = true, shutdownSafe = true, timerDisposed = disposed };
         Console.WriteLine(JsonSerializer.Serialize(noticeEvidence));
     }
 

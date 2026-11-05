@@ -1211,6 +1211,46 @@
     {
       "source": "Aetherfront-RC44-Work/Deployment/LocalBotProcess.Tests.ps1",
       "role": "Reviewed RC46 research confirmation repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC47-Work/Build-Release.py",
+      "role": "Reviewed RC47 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC47-Work/Build.ps1",
+      "role": "Reviewed RC47 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC47-Work/Patch/Patch.csproj",
+      "role": "Reviewed RC47 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC47-Work/Patch/Program.cs",
+      "role": "Reviewed RC47 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC47-Work/README.md",
+      "role": "Reviewed RC47 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC47-Work/Server/StateAtomic.cs",
+      "role": "Reviewed RC47 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC47-Work/Server/StateAtomic.csproj",
+      "role": "Reviewed RC47 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC47-Work/Test.ps1",
+      "role": "Reviewed RC47 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC47-Work/Tests/Program.cs",
+      "role": "Reviewed RC47 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC47-Work/Tests/Tests.csproj",
+      "role": "Reviewed RC47 science reliability and clock correction repair and isolated regression source"
     }
   ],
   "binaryPrerequisites": [

@@ -250,6 +250,26 @@ internal static class Program
         Add("receipt-queue-bound-64-keeps-newest", QueueBound);
         Add("receipt-queue-concurrent-capture-bound", ConcurrentCapture);
         Add("accepted-snapshot-coalesces-until-revision-catches-up", SnapshotCoalescing);
+        Add("active-server-switch-clears-obsolete-revision-target", () =>
+        {
+            Enqueue(Claim()); Tick(0); Capture(Receipt(revision: 90000)); Tick(.1f);
+            Equal(90000L, TestEnvironment.Get<long>("wantedRevision"), "Receipt requires its server revision");
+            AetherfrontClientSystem.State.ServerId = "another-server"; Tick(1);
+            Equal(0L, TestEnvironment.Get<long>("wantedRevision"), "Old revision cannot flood another server");
+            Equal(0, TestEnvironment.Flights.Count, "Old flights cleared");
+            int requests = AetherfrontClientSystem.SnapshotTimes.Count; Tick(100);
+            Equal(requests, AetherfrontClientSystem.SnapshotTimes.Count, "No stale snapshot requests");
+        });
+        Add("active-account-switch-releases-flight-capacity-without-deleting-evidence", () =>
+        {
+            Enqueue(Claim("old-a")); Enqueue(Claim("old-b")); Tick(0); Tick(1);
+            Equal(2, TestEnvironment.Flights.Count, "Old account fills flight bound");
+            MainSystem.UniqueIdentifier = "another-account";
+            var c = Claim("new-account"); c.AccountId = MainSystem.UniqueIdentifier; Enqueue(c); Tick(2);
+            Equal(1, TestEnvironment.Flights.Count, "New account does not wait on obsolete flights");
+            Equal(3, Claims.Count, "Original account evidence preserved");
+            Equal("new-account", Last.EntityId, "Only current account sends");
+        });
         Add("pending-cap-4096-retains-existing", PendingCap);
         Add("load-over-4096-preserves-evidence", () =>
         {
@@ -654,6 +674,7 @@ internal static class TestEnvironment
     {
         Set("pending", null); Set("dirty", false); Set("failed", false); Set("cursor", 0); Set("nextSend", 0f); Set("nextSave", 0f); Set("path", null);
         Set("wantedRevision", 0L); Set("nextSnapshot", 0f); Set("<Warning>k__BackingField", null);
+        Set("activeServer", null); Set("activeAccount", null);
         Flights.Clear(); Get<object>("receipts").GetType().GetMethod("Clear").Invoke(Get<object>("receipts"), null);
     }
     internal static void RequireSyntheticPath(string path)

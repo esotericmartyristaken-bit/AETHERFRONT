@@ -1,6 +1,6 @@
 #requires -Version 7.4
 [CmdletBinding()]
-param([switch]$OutboxOnly, [switch]$ReceiverOnly, [string]$OutputDirectory)
+param([switch]$OutboxOnly, [switch]$ReceiverOnly, [string]$OutputDirectory, [string]$CandidateDirectory, [string]$ClientPlugins)
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 if ($OutboxOnly -and $ReceiverOnly) { throw 'Choose only one gate selector' }
@@ -8,7 +8,7 @@ $apf = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../..'))
 $artifactParent = Join-Path $apf 'UpdateBuilds/ScienceTransmit-20261104'
 if (-not $OutputDirectory) { $OutputDirectory = Join-Path $artifactParent 'outbox-mono' }
 $OutputDirectory = [IO.Path]::GetFullPath($OutputDirectory)
-if (-not $OutputDirectory.StartsWith($artifactParent + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { throw 'OutputDirectory must remain under UpdateBuilds/ScienceTransmit-20261104' }
+if (-not $OutputDirectory.StartsWith($artifactParent + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -and -not $OutputDirectory.StartsWith((Join-Path $apf 'UpdateBuilds/RC47-20261105') + [IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)) { throw 'OutputDirectory must remain under the reviewed science evidence roots' }
 $run = Join-Path $OutputDirectory ((Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssfffZ') + '-' + [Guid]::NewGuid().ToString('N'))
 $null = New-Item -ItemType Directory -Path $run
 $dotnet = Join-Path $apf 'tools/dotnet-sdk8/dotnet.exe'
@@ -17,6 +17,8 @@ $managed = Join-Path $apf 'Aetherfront-KSP-Smoke/KSP_x64_Data/Managed'
 $hostExecutable = Join-Path $apf 'Aetherfront-RC20-Work/MonoHost/bin/Release/net472/MonoHost.exe'
 $plugins = Join-Path $artifactParent 'client'
 $candidate = Join-Path $artifactParent 'code'
+if($ClientPlugins){$plugins=[IO.Path]::GetFullPath($ClientPlugins)}
+if($CandidateDirectory){$candidate=[IO.Path]::GetFullPath($CandidateDirectory)}
 $sourceRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $inputs = @($PSCommandPath, $hostExecutable, $compiler, (Join-Path $apf 'Aetherfront-KSP-Smoke/MonoBleedingEdge/EmbedRuntime/mono-2.0-bdwgc.dll'))
 $references = @('mscorlib.dll', 'System.dll', 'System.Core.dll') | ForEach-Object { $p = Join-Path $managed $_; $inputs += $p; '-r:' + $p }
@@ -47,6 +49,13 @@ try {
                 'LmpClient.dll' = '6eb9ecd45e45fa908ca532eea1d632ddefae7a24547d9bd1d976390fcd86f801'
                 'AetherfrontPersonalClient.dll' = '02157055d47a3fe3c68b05fe8637f666db5af1815b8d5d23e14f2b78eb36da61'
             }
+            if($CandidateDirectory){
+                foreach($name in $expected.Keys|ForEach-Object {$_}){
+                    $audit=Get-Content -LiteralPath "$candidate/$name.audit.json" -Raw|ConvertFrom-Json
+                    if($audit.version -cne 'kesas-rc47' -or -not $audit.identityPreserved -or -not $audit.allOtherMethodsUnchanged){throw 'Unreviewed RC47 receiver candidate'}
+                    $expected[$name]=$audit.outputSha256
+                }
+            }
             foreach ($name in $expected.Keys) {
                 $assemblySource = Join-Path $candidate $name
                 if ((Get-FileHash -LiteralPath $assemblySource -Algorithm SHA256).Hash -ne $expected[$name]) { throw "Unexpected final candidate SHA256: $name" }
@@ -67,6 +76,10 @@ try {
         & $dotnet $compiler -nologo -noconfig -nostdlib -langversion:latest -target:exe -platform:x64 -optimize+ "-out:$exe" @compileReferences @sources
         if ($LASTEXITCODE -ne 0) { throw "$phase Mono fixture compilation failed" }
         $env:AF_SCIENCE_MONO_PHASE = $phase
+        if($phase -eq 'receiver'){
+            $env:AF_SCIENCE_MONO_CLIENT_HASH=$expected['LmpClient.dll']
+            $env:AF_SCIENCE_MONO_HELPER_HASH=$expected['AetherfrontPersonalClient.dll']
+        }
         $rawOutput = @(& $hostExecutable $exe 2>&1 | ForEach-Object ToString)
         $phaseExit = $LASTEXITCODE
         [IO.File]::WriteAllLines((Join-Path $run ($phase + '-console.txt')), [string[]]$rawOutput)

@@ -32,6 +32,7 @@ namespace Aetherfront.Personal.Client
         private static string path;
         private static long wantedRevision;
         private static float nextSnapshot;
+        private static string activeServer, activeAccount;
         private static readonly Dictionary<string, Flight> flights = new Dictionary<string, Flight>(StringComparer.Ordinal);
         private static readonly object receiptGate = new object();
         private static readonly Queue<ScienceReceiptEnvelope> receipts = new Queue<ScienceReceiptEnvelope>();
@@ -190,6 +191,16 @@ namespace Aetherfront.Personal.Client
 
         internal static void Tick()
         {
+            string currentServer = PersonalClient.Active ? AetherfrontClientSystem.State.ServerId : null;
+            string currentAccount = PersonalClient.Active ? MainSystem.UniqueIdentifier : null;
+            if (activeServer != currentServer || activeAccount != currentAccount)
+            {
+                // Only session correlation is reset. Durable claims remain
+                // scoped to their original server and authenticated account.
+                flights.Clear(); wantedRevision = 0; nextSnapshot = 0; nextSend = 0;
+                lock (receiptGate) receipts.Clear();
+                activeServer = currentServer; activeAccount = currentAccount;
+            }
             if (!PersonalClient.Active || HighLogic.CurrentGame == null || HighLogic.CurrentGame.Mode == Game.Modes.SANDBOX)
             { flights.Clear(); wantedRevision = 0; nextSnapshot = 0; lock (receiptGate) receipts.Clear(); return; }
             if (!Load()) return;

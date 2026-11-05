@@ -106,6 +106,9 @@ namespace Aetherfront.Personal.Client
                 CommandType = (AetherfrontCommandType)40, EntityId = subject.id,
                 Body = cumulative.ToString(CultureInfo.InvariantCulture)
             });
+            // Recovery can immediately change scenes. Commit the evidence in
+            // this event, not only on the next addon Update.
+            ScienceOutbox.Save(true);
         }
     }
 
@@ -200,7 +203,8 @@ namespace Aetherfront.Personal.Client
             if (player == null) return; // No fallback to a faction wallet.
             bool identityChanged = server != AetherfrontClientSystem.State.ServerId || account != player.AccountId;
             bool treeChanged = identityChanged || game != HighLogic.CurrentGame || research != ResearchAndDevelopment.Instance || scene != HighLogic.LoadedScene;
-            var desired = new HashSet<string>(player.TechnologyUnlocks, StringComparer.OrdinalIgnoreCase);
+            decimal visibleScience;
+            var desired = ResearchSync.Project(AetherfrontClientSystem.State, player, out visibleScience);
             applying = true;
             try
             {
@@ -208,7 +212,7 @@ namespace Aetherfront.Personal.Client
                 {
                     if (treeChanged || !ReferenceEquals(indexedPlayer, player))
                         foreach (var subject in ResearchAndDevelopment.GetSubjects()) RestoreSubject(subject);
-                    SetScience.Invoke(null, new object[] { ResearchAndDevelopment.Instance, (float)player.Science });
+                    SetScience.Invoke(null, new object[] { ResearchAndDevelopment.Instance, (float)visibleScience });
                     if ((treeChanged || unlocks == null || !unlocks.SetEquals(desired)) &&
                         (bool)ApplyTechnology.Invoke(null, new object[] { ResearchAndDevelopment.Instance, desired, identityChanged }))
                     {

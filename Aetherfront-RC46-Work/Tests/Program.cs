@@ -91,6 +91,24 @@ public static class ResearchTests
             for (int i = 0; i < 40; i++) q.Enqueue("node-" + i);
             Check(q.Count == 32 && q.Warning.Contains("full"), "unbounded queue");
         });
+        Case("pending-overlay-preserves-nodes-and-reserves-cost-without-changing-ledger", () => {
+            var s = State(); var q = Queue(s); q.Enqueue("a"); q.Enqueue("b"); q.Enqueue("c");
+            var desired=q.Project(s,Player(s),out var visible);
+            Check(desired.Contains("a") && desired.Contains("b") && desired.Contains("c") && visible==40,"pending projection");
+            Check(Player(s).Science==100 && Player(s).TechnologyUnlocks.Count==1 && Player(s).NextCommandSequence==1,"projection changed authoritative state");
+            var a=q.Step(s,Actor,0,0); Buy(s,a);
+            desired=q.Project(s,Player(s),out visible);
+            Check(desired.Contains("c") && visible==40,"accepted first purchase relocked later pending nodes or double-reserved cost");
+            q.Context(s.ServerId,Actor,false); desired=q.Project(s,Player(s),out visible);
+            Check(!desired.Contains("b") && visible==90,"disconnect must reconcile only saved purchases");
+        });
+        Case("overlay-cannot-bypass-prerequisites-budget-or-paused-state", () => {
+            var s=State(25); var q=Queue(s); q.Enqueue("a"); q.Enqueue("b");
+            var desired=q.Project(s,Player(s),out var visible); Check(desired.Contains("a")&&!desired.Contains("b")&&visible==15,"budget bypass");
+            q=Queue(s);q.Enqueue("c");desired=q.Project(s,Player(s),out visible);Check(!desired.Contains("c")&&visible==25,"prerequisite bypass");
+            q=Queue(s);q.Enqueue("a");q.Step(s,Actor,0,0);q.Step(s,Actor,10,0);q.Step(s,Actor,30,0);
+            desired=q.Project(s,Player(s),out visible);Check(!desired.Contains("a")&&visible==25,"paused purchase must reconcile with visible error");
+        });
         Console.WriteLine("RESULT " + cases + " cases / " + checks + " checks"); return 0;
     }
 }

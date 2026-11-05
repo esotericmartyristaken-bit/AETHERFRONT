@@ -13,6 +13,7 @@
     <Runtime Condition="'$(Runtime)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../../KESAS-VPS-Server/Server'))</Runtime>
     <Core Condition="'$(Core)' == ''">$(Runtime)</Core>
     <Continuity Condition="'$(Continuity)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../../UpdateBuilds/MissionTime-20261104/code/AetherfrontContinuityServer.dll'))</Continuity>
+    <CandidateHash Condition="'$(CandidateHash)' == ''">ff3a6c99ef8a8a076ca77c0344788f7f8b59110cdb959b81537e2c2bc745dea9</CandidateHash>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
@@ -33,6 +34,7 @@
     <AssemblyMetadata Include="Artifacts" Value="$(Artifacts)" />
     <AssemblyMetadata Include="RuntimeInput" Value="$(Runtime)" />
     <AssemblyMetadata Include="ContinuityInput" Value="$(Continuity)" />
+    <AssemblyMetadata Include="CandidateHash" Value="$(CandidateHash)" />
   </ItemGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 </Project>

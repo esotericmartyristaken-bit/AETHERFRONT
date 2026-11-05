@@ -4,7 +4,7 @@ $ErrorActionPreference='Stop'
 $workspace=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../..'))
 $managed=Join-Path $workspace 'Aetherfront-KSP-Smoke/KSP_x64_Data/Managed'
 $stage=[IO.Path]::GetFullPath($OutputDirectory)
-if(-not $stage.StartsWith((Join-Path $workspace 'UpdateBuilds/RC46-') ,[StringComparison]::OrdinalIgnoreCase) -or (Test-Path -LiteralPath $stage)){throw 'Use a fresh RC46 evidence directory'}
+if($stage -notmatch '[\\/]UpdateBuilds[\\/]RC4[67]-' -or -not $stage.StartsWith((Join-Path $workspace 'UpdateBuilds'),[StringComparison]::OrdinalIgnoreCase) -or (Test-Path -LiteralPath $stage)){throw 'Use a fresh RC46/RC47 evidence directory'}
 $null=New-Item -ItemType Directory -Path $stage
 foreach($file in Get-ChildItem -LiteralPath $ClientPlugins -Filter '*.dll'){Copy-Item -LiteralPath $file.FullName -Destination $stage}
 Copy-Item -LiteralPath $Candidate -Destination (Join-Path $stage 'AetherfrontPersonalClient.dll') -Force

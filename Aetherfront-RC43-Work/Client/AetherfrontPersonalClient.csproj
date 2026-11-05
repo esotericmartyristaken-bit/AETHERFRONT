@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><TargetFramework>net472</TargetFramework><AssemblyName>AetherfrontPersonalClient</AssemblyName><LangVersion>10</LangVersion></PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../Aetherfront-RC46-Work/Client/ResearchQueue.cs" Link="ResearchQueue.cs" />
+    <Compile Include="../../Aetherfront-RC46-Work/Client/ResearchSync.cs" Link="ResearchSync.cs" />
     <Compile Include="../../Aetherfront-RC33-Work/PersonalClient/LaunchPositionCompatibility.cs" Link="LaunchPositionCompatibility.cs" />
     <Compile Include="../../Aetherfront-RC33-Work/PersonalClient/DefaultDisplay.cs" Link="DefaultDisplay.cs" />
     <Compile Include="../../Aetherfront-RC33-Work/PersonalClient/DefaultDisplayPolicy.cs" Link="DefaultDisplayPolicy.cs" />

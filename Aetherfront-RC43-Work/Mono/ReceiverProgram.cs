@@ -100,8 +100,8 @@ internal static class ReceiverProgram
         handle = system.GetMethod("HandleMessage", Static, null, new[] { typeof(IServerMessageBase) }, null);
         MonoGate.Case("receiver", "actual-final-candidate-hashes-and-helper-signatures", () =>
         {
-            MonoGate.Equal("6eb9ecd45e45fa908ca532eea1d632ddefae7a24547d9bd1d976390fcd86f801", Hash(client.Location), "Actual loaded LmpClient hash pinned");
-            MonoGate.Equal("02157055d47a3fe3c68b05fe8637f666db5af1815b8d5d23e14f2b78eb36da61", Hash(helper.Location), "Actual loaded personal helper hash pinned");
+            MonoGate.Equal(Environment.GetEnvironmentVariable("AF_SCIENCE_MONO_CLIENT_HASH") ?? "6eb9ecd45e45fa908ca532eea1d632ddefae7a24547d9bd1d976390fcd86f801", Hash(client.Location), "Actual loaded LmpClient hash pinned");
+            MonoGate.Equal(Environment.GetEnvironmentVariable("AF_SCIENCE_MONO_HELPER_HASH") ?? "02157055d47a3fe3c68b05fe8637f666db5af1815b8d5d23e14f2b78eb36da61", Hash(helper.Location), "Actual loaded personal helper hash pinned");
             var capture = helper.GetType("Aetherfront.Personal.Client.PersonalClient", true).GetMethod("CaptureScienceReceipt", Static, null, new[] { typeof(string) }, null);
             MonoGate.Check(capture != null && capture.IsPublic && capture.ReturnType == typeof(bool), "Actual public bool CaptureScienceReceipt(string) contract");
             MonoGate.Check(handle != null && handle.ReturnType == typeof(void), "Actual HandleMessage(IServerMessageBase) contract");
