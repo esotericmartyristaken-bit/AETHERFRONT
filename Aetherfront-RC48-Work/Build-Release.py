@@ -7,11 +7,12 @@ if sys.flags.optimize:
 p = argparse.ArgumentParser()
 for name in ('baseline', 'code', 'output'):
     p.add_argument('--' + name, required=True, type=Path)
+p.add_argument('--version', choices=('kesas-rc48', 'kesas-rc49'), default='kesas-rc48')
 a = p.parse_args()
 sha = lambda data: hashlib.sha256(data).hexdigest()
 load = lambda data: json.loads(data.decode('utf-8-sig'))
 encode = lambda value: (json.dumps(value, ensure_ascii=False, separators=(',', ':')) + '\n').encode()
-version, previous = 'kesas-rc48', 'kesas-rc47'
+version, previous = a.version, 'kesas-rc48' if a.version == 'kesas-rc49' else 'kesas-rc47'
 
 def unpack(data):
     with zipfile.ZipFile(io.BytesIO(data)) as z:
@@ -33,7 +34,7 @@ def pack(files):
     return data
 
 baseline = a.baseline.read_bytes()
-assert sha(baseline) == '466d66c5f92a769377fe2ee9cd12a578dc4a2f947ff9d70f09a06a798f419f85'
+assert sha(baseline) == ('7640f0d0de5f2ce93e39a83f74e894fbf3735849d2148271e46d575079c30aac' if version == 'kesas-rc49' else '466d66c5f92a769377fe2ee9cd12a578dc4a2f947ff9d70f09a06a798f419f85')
 native = unpack(baseline)
 release = load(native.pop('RELEASE.json'))
 assert release['version'] == previous and set(native) == {x['path'] for x in release['files']}
@@ -54,6 +55,10 @@ for name, mode, files, member in (
     assert audit['inputSha256'] == sha(files[member]) and audit['outputSha256'] == sha(data)
     files[member] = data
     audits[name] = audit
+if version == 'kesas-rc49':
+    startup = load((a.code / 'AetherfrontPersonalClient.dll.startup.json').read_bytes())
+    assert startup['passed'] and startup['discovered'] and startup['fallback'] and startup['recovery']
+    assert startup['sha256'] == sha(client[prefix + 'Plugins/AetherfrontPersonalClient.dll'])
 catalog_path, settings_path, manifest_path = prefix + 'Launcher/install-catalog.json', prefix + 'Data/APFClient.json', 'KESAS/PATCH-MANIFEST.json'
 catalog, settings, apf_pack = load(client[catalog_path]), load(client[settings_path]), load(native['APFPack-template.json'])
 assert catalog['version'] == settings['clientVersion'] == previous

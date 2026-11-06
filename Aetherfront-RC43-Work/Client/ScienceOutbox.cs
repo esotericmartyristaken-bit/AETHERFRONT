@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Aetherfront.Core;
 using Aetherfront.Personal.Transport;
 using ApfCore;
@@ -17,6 +18,9 @@ namespace Aetherfront.Personal.Client
     // retained, not silently deleted or treated as an earned award.
     internal static class ScienceOutbox
     {
+        // The accepted 4096 bounded records can legitimately exceed 4 MiB.
+        // Reader and writer must agree on a reloadable, bounded representation.
+        private static readonly int MaximumFileBytes = 32 * 1024 * 1024;
         private sealed class Flight
         {
             internal PendingScienceClaim Claim;
@@ -78,7 +82,7 @@ namespace Aetherfront.Personal.Client
                 string root = Path.GetFullPath(KSPUtil.ApplicationRootPath);
                 path = Path.Combine(root, "APF", "PendingScience-v1.json");
                 ApfPaths.EnsureNoReparsePoints(root, path);
-                if (File.Exists(path) && new FileInfo(path).Length > 4 * 1024 * 1024) throw new InvalidDataException("Science outbox too large");
+                if (File.Exists(path) && new FileInfo(path).Length > MaximumFileBytes) throw new InvalidDataException("Science outbox too large");
                 var loaded = File.Exists(path) ? AetherfrontJson.Deserialize<PendingScienceClaims>(File.ReadAllText(path)) : new PendingScienceClaims();
                 if (loaded == null || loaded.Version != 1 || loaded.Claims == null || loaded.Claims.Count > 4096 || loaded.Claims.Any(c => !ValidClaim(c)))
                     throw new InvalidDataException("Invalid science outbox; preserve for recovery");
@@ -100,19 +104,24 @@ namespace Aetherfront.Personal.Client
 
         internal static void Enqueue(PendingScienceClaim claim)
         {
-            if (claim == null || claim.Amount <= 0 || !ValidClaim(claim) || !Load()) return;
+            TryEnqueue(claim);
+        }
+
+        internal static bool TryEnqueue(PendingScienceClaim claim)
+        {
+            if (claim == null || claim.Amount <= 0 || !ValidClaim(claim) || !Load()) return false;
             var existing = pending.Claims.FirstOrDefault(c => c.ServerId == claim.ServerId && c.AccountId == claim.AccountId && c.Command == claim.Command && c.SourceId == claim.SourceId);
             if (existing != null)
             {
                 if (claim.Command == 40 && claim.Amount > existing.Amount) { existing.Amount = claim.Amount; dirty = true; }
-                return;
+                return true;
             }
             if (pending.Claims.Count >= 4096)
             {
                 Warning = "Science sync has too many pending rewards. Existing records were preserved.";
-                Debug.LogError("[Aetherfront] Science outbox capacity reached; existing records preserved."); return;
+                Debug.LogError("[Aetherfront] Science outbox capacity reached; existing records preserved."); return false;
             }
-            pending.Claims.Add(claim); dirty = true;
+            pending.Claims.Add(claim); dirty = true; return true;
         }
 
         internal static void Save(bool force = false)
@@ -122,7 +131,9 @@ namespace Aetherfront.Personal.Client
             {
                 ApfPaths.EnsureNoReparsePoints(KSPUtil.ApplicationRootPath, path);
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
-                KesasInstall.Installer.AtomicText(path, AetherfrontJson.Serialize(pending));
+                string json = AetherfrontJson.Serialize(pending);
+                if (Encoding.UTF8.GetByteCount(json) > MaximumFileBytes) throw new InvalidDataException("Science outbox exceeds its reload limit; evidence retained in memory");
+                KesasInstall.Installer.AtomicText(path, json);
                 dirty = false; Warning = null;
             }
             catch (Exception error)
@@ -199,6 +210,9 @@ namespace Aetherfront.Personal.Client
 
         internal static void Tick()
         {
+            // Capture and persistence must not depend on still being connected.
+            // A lab/recovery award may flush after the network session ends.
+            Save();
             string currentServer = PersonalClient.Active ? AetherfrontClientSystem.State.ServerId : null;
             string currentAccount = PersonalClient.Active ? MainSystem.UniqueIdentifier : null;
             if (activeServer != currentServer || activeAccount != currentAccount)

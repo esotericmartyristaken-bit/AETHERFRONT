@@ -31,6 +31,7 @@ internal static class CollectorProgram
   else typeof(ScienceEvents).GetField("subjectHookInstalled",Private).SetValue(collector,true);
  }
  static bool installed;
+ static ProtoVessel Vessel(string id="test@MunInSpaceHigh",float amount=25){var vessel=new ProtoVessel();var part=new ProtoPartSnapshot();var module=new ProtoPartModuleSnapshot();var data=module.moduleValues.AddNode("ScienceData");data.AddValue("subjectID",id);data.AddValue("data",amount.ToString(System.Globalization.CultureInfo.InvariantCulture));part.modules.Add(module);vessel.parts.Add(part);return vessel;}
  static void Tick(){UnityEngine.Time.frameCount++;UnityEngine.Time.realtimeSinceStartup++;Call("Update");}
  static void Case(string name,Action test){MonoGate.Case("collector",name,test,Reset);}
  public static int Main(){
@@ -98,6 +99,60 @@ internal static class CollectorProgram
   });
   Case("sandbox-cannot-create-science-claims",()=>{
    HighLogic.CurrentGame.Mode=Game.Modes.SANDBOX;new ResearchAndDevelopment().SubmitScienceData(25,1,Subject(),1,null,false);Tick();MonoGate.Check(Field<PendingScienceClaims>("pending")==null||Claims.Count==0,"Sandbox grant rejected");
+  });
+  Case("reconnect-missing-RnD-subject-cache-does-not-skip-recovery",()=>{
+   var rd=new ResearchAndDevelopment();rd.Recover(Vessel());MonoGate.Equal(25m,Claims.Single().Amount,"Previously stock skipped the data before any capture hook");
+   MonoGate.Check(Directory.GetFiles(Path.Combine(MonoGate.CaseRoot,"APF","RecoveryEvidence-v1")).Length==1,"Raw carried science saved before recovery callbacks");
+  });
+  Case("recovered-subject-restores-personal-high-water-before-award",()=>{
+   PersonalClient.Credits["test@MunInSpaceHigh"]=80;var rd=new ResearchAndDevelopment();rd.Recover(Vessel(amount:100));
+   MonoGate.Check(Math.Abs(rd.Science-20)<.001,"Only unearned remainder granted by stock");MonoGate.Equal(100m,Claims.Single().Amount,"Cumulative high-water retained");
+  });
+  Case("unscoped-award-flushed-after-disconnect-is-durable",()=>{
+   new ResearchAndDevelopment().AddScience(13,TransactionReasons.ScienceTransmission);PersonalClient.Active=false;Tick();
+   MonoGate.Check(File.Exists(Path.Combine(MonoGate.CaseRoot,"APF","PendingScience-v1.json")),"Inactive Tick must not discard dirty persistence");MonoGate.Equal(13m,Claims.Single().Amount,"Late lab award retained");
+  });
+  Case("award-completing-after-disconnect-keeps-bound-game-identity",()=>{
+   PersonalClient.Active=false;new ResearchAndDevelopment().AddScience(17,TransactionReasons.ScienceTransmission);Tick();
+   MonoGate.Equal(17m,Claims.Single().Amount,"Same multiplayer Game retains capture during disconnect");MonoGate.Equal("fixture-account",Claims.Single().AccountId,"Bound account remains original");
+  });
+  Case("disconnected-new-singleplayer-game-cannot-borrow-identity",()=>{
+   PersonalClient.Active=false;HighLogic.CurrentGame=new Game();new ResearchAndDevelopment().AddScience(17,TransactionReasons.ScienceTransmission);Tick();
+   MonoGate.Check(Field<PendingScienceClaims>("pending")==null||Claims.Count==0,"Different Game cannot mint multiplayer claims");
+  });
+  Case("recovery-lab-evidence-saved-before-next-Update",()=>{
+   var rd=new ResearchAndDevelopment{LabAward=31};rd.AfterRecovery=()=>{PersonalClient.Active=false;};rd.Recover(new ProtoVessel());
+   MonoGate.Equal(31m,Claims.Single().Amount,"Recovery finalizer flushes non-subject lab science immediately");
+   MonoGate.Check(File.Exists(Path.Combine(MonoGate.CaseRoot,"APF","PendingScience-v1.json")),"No later active Update required");
+  });
+  Case("interrupted-recovery-preserves-unprocessed-raw-experiments",()=>{
+   var vessel=Vessel(amount:11);var extra=Vessel(amount:19);vessel.parts.AddRange(extra.parts);var rd=new ResearchAndDevelopment{ThrowAfterAward=true};
+   try{rd.Recover(vessel);}catch(InvalidOperationException){}
+   var file=Directory.GetFiles(Path.Combine(MonoGate.CaseRoot,"APF","RecoveryEvidence-v1")).Single();var text=File.ReadAllText(file);
+   MonoGate.Check(text.Contains("data=11")&&text.Contains("data=19"),"Even an interrupted batch retains the remaining experiment evidence");
+   MonoGate.Equal(11m,Claims.Single().Amount,"Unprocessed evidence is not automatically minted as science");
+  });
+  Case("unknown-or-source-UID-subject-is-preserved-not-fabricated",()=>{
+   new ResearchAndDevelopment().Recover(Vessel("unknown@MunInSpaceHigh_asteroid-uid"));
+   MonoGate.Check(Field<PendingScienceClaims>("pending")==null||Claims.Count==0,"Unknown subject cannot mint a wallet award");
+   MonoGate.Check(Directory.GetFiles(Path.Combine(MonoGate.CaseRoot,"APF","RecoveryEvidence-v1")).Length==1,"Unresolved data still recoverable by operator");
+  });
+  Case("mirror-bootstrap-does-not-create-duplicate-collectors",()=>{
+   var method=typeof(ScienceEvents).GetMethod("EnsureStarted");MonoGate.Check(method!=null,"Runtime fallback exists in addition to addon metadata");
+   int before=UnityEngine.GameObject.Created;method.Invoke(null,null);method.Invoke(null,null);MonoGate.Equal(before,UnityEngine.GameObject.Created,"Existing collector retained");
+  });
+  Case("collector-recreation-does-not-stack-Harmony-award-hooks",()=>{
+   Call("OnDestroy");collector=new ScienceEvents();Call("Awake");Call("Update");
+   var target=typeof(ResearchAndDevelopment).GetMethod("AddScience");var info=HarmonyLib.Harmony.GetPatchInfo(target);
+   MonoGate.Equal(1,info.Prefixes.Count(p=>p.owner=="aetherfront.personal.subject-history"),"Only one native award prefix after recreation");
+   MonoGate.Equal(1,info.Finalizers.Count(p=>p.owner=="aetherfront.personal.subject-history"),"Only one native award finalizer after recreation");
+   new ResearchAndDevelopment().AddScience(7,TransactionReasons.ScienceTransmission);Tick();MonoGate.Equal(7m,Claims.Single().Amount,"Lab award not doubled after lifecycle recovery");
+  });
+  Case("valid-bounded-outbox-over-four-MiB-remains-reloadable",()=>{
+   var state=new PendingScienceClaims();for(int i=0;i<4096;i++)state.Claims.Add(new PendingScienceClaim{ServerId=new string('s',256),AccountId=new string('a',256),SourceId=i.ToString().PadRight(256,'x'),Command=40,Amount=1,LastRejection=new string('r',128),HeldVersion=new string('v',64)});
+   string path=Path.Combine(MonoGate.CaseRoot,"APF","PendingScience-v1.json");Directory.CreateDirectory(Path.GetDirectoryName(path));File.WriteAllText(path,AetherfrontJson.Serialize(state));
+   MonoGate.Check(new FileInfo(path).Length>4*1024*1024,"Fixture exceeds former inconsistent reader limit");
+   bool loaded=(bool)typeof(ScienceOutbox).GetMethod("Load",Private).Invoke(null,null);MonoGate.Check(loaded,"Valid bounded rewards must remain readable after restart");MonoGate.Equal(4096,Claims.Count,"Every existing reward retained");
   });
   return MonoGate.Finish("collector");
  }

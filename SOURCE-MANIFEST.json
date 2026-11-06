@@ -197,8 +197,8 @@
       "path": "Aetherfront-RC43-Work/Client/PersonalClient.cs",
       "source": null,
       "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source",
-      "bytes": 12874,
-      "sha256": "40484494aca4e3dca041ddb9938306d02b808d224a593d8371ee37f2ddd97212",
+      "bytes": 13209,
+      "sha256": "d4c7f67844aa4381be4fbbce0a8fd3f1cb49e4a8965266fbf83baf4e236bdb20",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed RC43 source addition only."
@@ -219,8 +219,8 @@
       "path": "Aetherfront-RC43-Work/Client/ScienceOutbox.cs",
       "source": null,
       "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source",
-      "bytes": 15231,
-      "sha256": "5af425124bdec7c596c49297fd983eae409b44af4d975b25627c5fe60b1afacc",
+      "bytes": 16022,
+      "sha256": "30efbf0f27d787f91feb72917dd5924ea5ba4c65393cf334abe55edb76155aca",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed RC43 source addition only."
@@ -307,8 +307,8 @@
       "path": "Aetherfront-RC43-Work/Mono/Run.ps1",
       "source": null,
       "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source",
-      "bytes": 7048,
-      "sha256": "47b31d13d0bf44afbd423ae436cb639d350c0e0b2562bfe1f59f27e1b59c40ff",
+      "bytes": 7061,
+      "sha256": "c08d6081838efedd991d6226bda52d5a7d8262bf2e2e0332c9cb652b77462d7a",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed RC43 source addition only."
@@ -450,8 +450,8 @@
       "path": "Aetherfront-RC43-Work/Server/PersonalServer.cs",
       "source": null,
       "role": "Reviewed RC43 science receipt, reliable pacing, build, and isolated regression source",
-      "bytes": 30805,
-      "sha256": "06807c85ac930cbae893858ed8e49c30bd3d5e01e98174a5ac011135d61c9b42",
+      "bytes": 30852,
+      "sha256": "68402254ee5099e1e0c5419895e1f7874d5677b797d2a235430dba9aa1762d47",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed RC43 source addition only."
@@ -29567,8 +29567,8 @@
       "path": "export-policy.json",
       "source": null,
       "role": "Reviewed repository-maintained host control implementation, contract, tests or documentation",
-      "bytes": 52122,
-      "sha256": "45ff9984279614e223113cf95712521b9cd3f4f4133194a1f35ccae24aae62b7",
+      "bytes": 54166,
+      "sha256": "ed062ba18d876e8bd5f9b32e6aeb824a59789ea1dd48f8c96edcc94391e1f039",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; running host copies are selected and inventoried separately.",
@@ -30396,8 +30396,8 @@
       "path": "Aetherfront-RC48-Work/CollectorTests/Program.cs",
       "source": null,
       "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source",
-      "bytes": 8614,
-      "sha256": "5d4c560ad762be6a76cec7a9d0f4146a65e0a001ef3e566bca2d2f6eeffcfe8b",
+      "bytes": 14611,
+      "sha256": "0fc9d5125786a66ac5348240e0e1594847cc69f384d28cd4950a4c6811e45d72",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed source addition only.",
@@ -30480,8 +30480,8 @@
       "path": "Aetherfront-RC48-Work/CollectorTests/Stubs.cs",
       "source": null,
       "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source",
-      "bytes": 5379,
-      "sha256": "7bdf48c869603d36568a8b0dfcc8cf802663e18469024bd1ff5e70ea10b6834e",
+      "bytes": 8896,
+      "sha256": "00dbe3254c4642d6dd2f6f3d2d3e1c0125dcad8cb271959ab294a0a177450b81",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed source addition only.",
@@ -30528,8 +30528,8 @@
       "path": "Aetherfront-RC48-Work/CollectorTests/Run.ps1",
       "source": null,
       "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source",
-      "bytes": 2024,
-      "sha256": "b7f9af0c869a3dbc6220608abcbc944ba479c7ca77ff8de626011ab91dacd792",
+      "bytes": 2488,
+      "sha256": "7a5bd6e8f707efa6a2b2ac94f8c082c03afcdd971d26de1cea00da0e5c9a4651",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed source addition only.",
@@ -30540,8 +30540,8 @@
       "path": "Aetherfront-RC48-Work/Patch/Program.cs",
       "source": null,
       "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source",
-      "bytes": 13240,
-      "sha256": "1009afc8d6c8fa1f5e9d5a2cfd0721c0b46d3fea48439d08b6b0b4c164c9b960",
+      "bytes": 16386,
+      "sha256": "2bd7f502cbbb4f9d1828a078a122e604178b4c8f93ad2e23a058c0a4783c0c15",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed source addition only.",
@@ -30552,8 +30552,8 @@
       "path": "Aetherfront-RC48-Work/Build-Release.py",
       "source": null,
       "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source",
-      "bytes": 5246,
-      "sha256": "01012785e14ffc0952f8fd6cd6e62d83f35da44e6b433f5e01a99732456ef565",
+      "bytes": 5793,
+      "sha256": "2a5c9b5387082736a255148e8237174c28d94ed19081bf3ccdaedb5481ce998e",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed source addition only.",
@@ -30576,8 +30576,128 @@
       "path": "Aetherfront-RC43-Work/Client/ScienceEvents.cs",
       "source": null,
       "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source",
-      "bytes": 12594,
-      "sha256": "0daa4242f9f382ef6e0fc6168668a0b6d1a0ab0d3474f2d2a87aee8cbf52e65a",
+      "bytes": 16350,
+      "sha256": "e4136e4beeb48cb4c17e21b46904950d0c13fc8aa51c0a37b9b5e553984ca6b1",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC49-Work/Refresh-SourceMetadata.ps1",
+      "source": null,
+      "role": "Reviewed RC49 recovery capture, startup packaging, personal operator command and isolated regression source",
+      "bytes": 4712,
+      "sha256": "de06310bd2360880b4b7318892f9c0004891bc40ee1f94fb4ca6746fa4d0ce2e",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC43-Work/Client/RecoverySubjects.cs",
+      "source": null,
+      "role": "Reviewed RC49 recovery capture, startup packaging, personal operator command and isolated regression source",
+      "bytes": 6223,
+      "sha256": "3e0a5b5703ee363e7b3f4eb61bbfb262ad86d0c6864fc0c2bcd58837f6cc02c0",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC43-Work/Server/OperatorScienceCommands.cs",
+      "source": null,
+      "role": "Reviewed RC49 recovery capture, startup packaging, personal operator command and isolated regression source",
+      "bytes": 6336,
+      "sha256": "9e8087ecd47beec06ddc6307bf27a1bd598b65223d0c3a21645cb109f6f4612c",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC49-Work/OperatorTests/Program.cs",
+      "source": null,
+      "role": "Reviewed RC49 recovery capture, startup packaging, personal operator command and isolated regression source",
+      "bytes": 4879,
+      "sha256": "42a814e944cc64029bb07d7fa86c16820cd4330a01ffe397e0bb59c5e23a5b7a",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC49-Work/Build.ps1",
+      "source": null,
+      "role": "Reviewed RC49 recovery capture, startup packaging, personal operator command and isolated regression source",
+      "bytes": 2918,
+      "sha256": "e0f44e2c8a03fa73d89a0776c2f8adf652191f02a444450bc14630f67ee0a866",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC49-Work/UnityTests/StartupProbe.cs",
+      "source": null,
+      "role": "Reviewed RC49 recovery capture, startup packaging, personal operator command and isolated regression source",
+      "bytes": 3833,
+      "sha256": "9c92bf70d5b7749d8429a9d3483d3743e91c235adea2fbd20a603a4124f08781",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC49-Work/OperatorTests/OperatorTests.csproj",
+      "source": null,
+      "role": "Reviewed RC49 recovery capture, startup packaging, personal operator command and isolated regression source",
+      "bytes": 906,
+      "sha256": "5261ab06688da763d64c069610da2db50e6d64ad3b289049877149ea887edcb6",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC49-Work/UnityTests/Run.ps1",
+      "source": null,
+      "role": "Reviewed RC49 recovery capture, startup packaging, personal operator command and isolated regression source",
+      "bytes": 4454,
+      "sha256": "38a0b3c65eb3390c0e67a4ef76f937a6b96f5874ed2b624cd31bfb79710ab6d5",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC49-Work/ArtifactTests/Program.cs",
+      "source": null,
+      "role": "Reviewed RC49 recovery capture, startup packaging, personal operator command and isolated regression source",
+      "bytes": 2024,
+      "sha256": "477edd3924632e6084231a796e5916b64809b1378011b2c71462b156607b4b45",
+      "sourceSha256": null,
+      "transformations": [
+        "Maintained directly in the repository; reviewed source addition only.",
+        "Production state, credentials and licensed runtime references excluded."
+      ]
+    },
+    {
+      "path": "Aetherfront-RC49-Work/ArtifactTests/ArtifactTests.csproj",
+      "source": null,
+      "role": "Reviewed RC49 recovery capture, startup packaging, personal operator command and isolated regression source",
+      "bytes": 310,
+      "sha256": "4655110c4b0d099a7f03b5b5ac30427a831df7498d410339144f8a29a759a251",
       "sourceSha256": null,
       "transformations": [
         "Maintained directly in the repository; reviewed source addition only.",
@@ -30585,7 +30705,7 @@
       ]
     }
   ],
-  "totalFileBytes": 17999273.0,
+  "totalFileBytes": 18019930.0,
   "exclusions": [
     "All Git history and Git metadata; operator/editor settings",
     "All binaries, archives, native executables, PDBs, compiled resources, downloaded dependencies and SDKs",
@@ -30604,5 +30724,5 @@
     "report": "PRIVACY-SCAN.json",
     "limitation": "Heuristic static text scan; not a guarantee of absence of secrets. A regex timeout is a failing finding, never an omitted check."
   },
-  "fileCount": 3038
+  "fileCount": 3048
 }

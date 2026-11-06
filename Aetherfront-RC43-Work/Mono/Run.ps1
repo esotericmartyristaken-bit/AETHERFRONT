@@ -52,7 +52,7 @@ try {
             if($CandidateDirectory){
                 foreach($name in $expected.Keys|ForEach-Object {$_}){
                     $audit=Get-Content -LiteralPath "$candidate/$name.audit.json" -Raw|ConvertFrom-Json
-                    if($audit.version -cnotin @('kesas-rc47','kesas-rc48') -or -not $audit.identityPreserved -or -not $audit.allOtherMethodsUnchanged){throw 'Unreviewed receiver candidate'}
+                    if($audit.version -cnotin @('kesas-rc47','kesas-rc48','kesas-rc49') -or -not $audit.identityPreserved -or -not $audit.allOtherMethodsUnchanged){throw 'Unreviewed receiver candidate'}
                     $expected[$name]=$audit.outputSha256
                 }
             }

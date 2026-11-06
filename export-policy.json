@@ -1315,6 +1315,46 @@
     {
       "source": "Aetherfront-RC48-Work/Test.ps1",
       "role": "Reviewed RC48 science reliability and clock correction repair and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Client/RecoverySubjects.cs",
+      "role": "Reviewed RC49 recovery capture, startup packaging, personal operator command and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC43-Work/Server/OperatorScienceCommands.cs",
+      "role": "Reviewed RC49 recovery capture, startup packaging, personal operator command and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC49-Work/ArtifactTests/ArtifactTests.csproj",
+      "role": "Reviewed RC49 recovery capture, startup packaging, personal operator command and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC49-Work/ArtifactTests/Program.cs",
+      "role": "Reviewed RC49 recovery capture, startup packaging, personal operator command and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC49-Work/Build.ps1",
+      "role": "Reviewed RC49 recovery capture, startup packaging, personal operator command and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC49-Work/OperatorTests/OperatorTests.csproj",
+      "role": "Reviewed RC49 recovery capture, startup packaging, personal operator command and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC49-Work/OperatorTests/Program.cs",
+      "role": "Reviewed RC49 recovery capture, startup packaging, personal operator command and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC49-Work/Refresh-SourceMetadata.ps1",
+      "role": "Reviewed RC49 recovery capture, startup packaging, personal operator command and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC49-Work/UnityTests/Run.ps1",
+      "role": "Reviewed RC49 recovery capture, startup packaging, personal operator command and isolated regression source"
+    },
+    {
+      "source": "Aetherfront-RC49-Work/UnityTests/StartupProbe.cs",
+      "role": "Reviewed RC49 recovery capture, startup packaging, personal operator command and isolated regression source"
     }
   ],
   "binaryPrerequisites": [

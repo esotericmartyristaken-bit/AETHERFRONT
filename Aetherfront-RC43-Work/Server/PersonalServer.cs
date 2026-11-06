@@ -32,6 +32,7 @@ namespace Aetherfront.Personal.Server
         // suspended-account admission path and its fleet transaction gate.
         public static bool TryHandle(ClientStructure client, AetherfrontWireRequest request)
         {
+            OperatorScienceCommands.Install();
             if (!AetherfrontServerSystem.Enabled || request == null || client == null || !client.Authenticated) return false;
             string actor = AetherfrontServerSystem.GetBoundAccountId(client);
             if (string.IsNullOrWhiteSpace(actor) || !AetherfrontServerSystem.Read(s => s.FindAccount(actor)?.Suspended == false)) return false;

@@ -97,6 +97,9 @@ namespace Aetherfront.Personal.Client
             { game = null; research = null; unlocks = null; server = null; account = null; indexedPlayer = null; subjectCredits = null; return; }
             var player = Current;
             if (player == null) return; // No fallback to a faction wallet.
+            // Also bootstrap through the already-running mirror: a missing
+            // addon registration must never silently disable durable science.
+            ScienceEvents.EnsureStarted();
             bool identityChanged = server != AetherfrontClientSystem.State.ServerId || account != player.AccountId;
             bool treeChanged = identityChanged || game != HighLogic.CurrentGame || research != ResearchAndDevelopment.Instance || scene != HighLogic.LoadedScene;
             decimal visibleScience;
@@ -139,6 +142,7 @@ namespace Aetherfront.Personal.Client
         private static void DrawSyncStatus()
         {
             if (HighLogic.CurrentGame == null || HighLogic.CurrentGame.Mode == Game.Modes.SANDBOX) return;
+            if (!ScienceEvents.CaptureReady) GUILayout.Label("Science capture is not ready. Avoid recovery/transmission; see KSP.log.");
             if (!string.IsNullOrEmpty(ScienceOutbox.Warning)) GUILayout.Label(ScienceOutbox.Warning);
             else if (ScienceOutbox.PendingCount > 0) GUILayout.Label("Science sync: " + ScienceOutbox.PendingCount + " reward(s) awaiting server confirmation.");
             if (ScienceOutbox.HeldCount > 0)
