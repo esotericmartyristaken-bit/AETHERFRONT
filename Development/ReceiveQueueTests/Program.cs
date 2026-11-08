@@ -2,10 +2,15 @@ using System.Net;
 using System.Reflection;
 using System.Runtime.Loader;
 
-if (args.Length != 2 || args[0] is not ("reproduce" or "verify" or "verify-client" or "udp" or "impaired-udp" or "reproduce-pong-timeout" or "verify-pong-timeout"))
+if (args.Length != 2 || args[0] is not ("reproduce" or "verify" or "verify-client" or "udp" or "impaired-udp" or "reproduce-pong-timeout" or "verify-pong-timeout" or "reproduce-approval" or "verify-approval"))
     throw new ArgumentException("Expected a queue or UDP regression mode and a transport DLL path");
 
 var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.GetFullPath(args[1]));
+if (args[0] is "reproduce-approval" or "verify-approval")
+{
+    Loopback.RunApproval(assembly, args[0] == "reproduce-approval");
+    return;
+}
 if (args[0] is "reproduce-pong-timeout" or "verify-pong-timeout")
 {
     Loopback.RunReceiveOnly(assembly, args[0] == "reproduce-pong-timeout");
@@ -35,6 +40,7 @@ var other = transport.Connection(20002);
 for (int sequence = 0; sequence < 4096; sequence++)
     transport.Enqueue(source, sequence);
 var sample = transport.Enqueue(other, 63);
+var approval = transport.Enqueue(transport.Connection(20009), 0, incoming: "ConnectionApproval");
 var retained = transport.Drain();
 bool otherDisconnected = transport.Disconnecting(other);
 bool sampleDelivered = retained.Contains(sample);
@@ -49,6 +55,7 @@ else
 {
     Check(transport.Disconnecting(source), "Reliable sender exceeding its own backlog was not isolated");
     Check(!otherDisconnected && sampleDelivered, "Unrelated peer lost reliable data or its connection");
+    Check(retained[0] == approval, "Transport approval waited behind unrelated queued flight traffic");
     Check(transport.Bytes == 0, "Draining the queue leaked byte accounting");
     var next = transport.Enqueue(other, 64);
     Check(transport.Drain().Single() == next, "Healthy peer did not resume after overload");
@@ -129,9 +136,9 @@ sealed class Transport
         return connection;
     }
 
-    internal object Enqueue(object connection, int sequence, string delivery = "UserReliableOrdered1")
+    internal object Enqueue(object connection, int sequence, string delivery = "UserReliableOrdered1", string incoming = "Data")
     {
-        var message = create.Invoke(peer, new[] { Enum.Parse(incomingKind, "Data"), (object)64 })!;
+        var message = create.Invoke(peer, new[] { Enum.Parse(incomingKind, incoming), (object)64 })!;
         messageType.GetField("m_senderConnection", Flags)!.SetValue(message, connection);
         messageType.GetField("m_receivedMessageType", Flags)!.SetValue(message, Enum.Parse(deliveryKind, delivery));
         messageType.GetField("m_sequenceNumber", Flags)!.SetValue(message, sequence % 1024);

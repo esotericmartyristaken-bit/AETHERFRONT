@@ -4,6 +4,94 @@ using System.Reflection;
 
 internal static class Loopback
 {
+    internal static void RunApproval(Assembly assembly, bool reproduce)
+    {
+        Type Type(string name) => assembly.GetType("Lidgren.Network." + name, true)!;
+        dynamic Configure()
+        {
+            dynamic config = Activator.CreateInstance(Type("NetPeerConfiguration"), "aetherfront-approval-test")!;
+            config.LocalAddress = IPAddress.Loopback;
+            return config;
+        }
+        dynamic configuration = Configure();
+        dynamic approval = Enum.Parse(Type("NetIncomingMessageType"), "ConnectionApproval");
+        dynamic reliable = Enum.Parse(Type("NetDeliveryMethod"), "ReliableOrdered");
+        configuration.EnableMessageType(approval);
+        dynamic server = Activator.CreateInstance(Type("NetServer"), (object)configuration)!;
+        dynamic active = Activator.CreateInstance(Type("NetClient"), (object)Configure())!;
+        dynamic joining = Activator.CreateInstance(Type("NetClient"), (object)Configure())!;
+        dynamic queue = Type("NetPeer").GetField("m_releasedIncomingMessages", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue((object)server)!;
+        server.Start();
+        try
+        {
+            active.Start();
+            active.Connect("127.0.0.1", (int)server.Port);
+            WaitUntil(() =>
+            {
+                while (server.ReadMessage() is object incoming)
+                {
+                    dynamic message = incoming;
+                    if (message.MessageType == approval) message.SenderConnection.Approve();
+                    server.Recycle(message);
+                }
+                while (active.ReadMessage() is object activeMessage) active.Recycle((dynamic)activeMessage);
+                return active.ConnectionStatus.ToString() == "Connected";
+            }, TimeSpan.FromSeconds(8), "First peer approval");
+            // Drain Connected status before adding the simulated traffic backlog.
+            WaitUntil(() =>
+            {
+                while (server.ReadMessage() is object incoming) server.Recycle((dynamic)incoming);
+                return server.ConnectionsCount == 1;
+            }, TimeSpan.FromSeconds(5), "First peer transport established");
+            for (int sequence = 0; sequence < 200; sequence++)
+            {
+                dynamic message = active.CreateMessage();
+                message.Write(sequence);
+                active.SendMessage(message, reliable, 0);
+            }
+            WaitUntil(() => (int)queue.Count == 200, TimeSpan.FromSeconds(8), "Flight traffic backlog");
+            joining.Start();
+            dynamic hail = joining.CreateMessage();
+            hail.Write("test-password");
+            joining.Connect("127.0.0.1", (int)server.Port, hail);
+            WaitUntil(() => (int)queue.Count > 200, TimeSpan.FromSeconds(6), "Approval arrived over UDP");
+            dynamic first = server.ReadMessage();
+            if (reproduce)
+            {
+                if (first.MessageType.ToString() != "Data")
+                    throw new InvalidOperationException("Original transport unexpectedly prioritized connection approval");
+                server.Recycle(first);
+                Console.WriteLine("Reproduced: a real UDP approval was queued behind 200 reliable flight messages.");
+                return;
+            }
+            if (first.MessageType != approval || first.ReadString() != "test-password")
+                throw new InvalidOperationException("Approval remained delayed or its password payload was lost");
+            first.SenderConnection.Approve();
+            server.Recycle(first);
+            int read = 0;
+            while (server.ReadMessage() is object incoming)
+            {
+                dynamic message = incoming;
+                if (message.MessageType.ToString() == "Data" && message.ReadInt32() != read++)
+                    throw new InvalidOperationException("Prioritizing approval reordered reliable flight traffic");
+                server.Recycle(message);
+            }
+            if (read != 200) throw new InvalidOperationException("Prioritizing approval lost reliable flight traffic");
+            WaitUntil(() =>
+            {
+                while (joining.ReadMessage() is object incoming) joining.Recycle((dynamic)incoming);
+                return joining.ConnectionStatus.ToString() == "Connected";
+            }, TimeSpan.FromSeconds(6), "Second peer transport established");
+            Console.WriteLine("PASS: new UDP connection approval bypassed 200 queued flight messages and preserved the password payload and reliable order.");
+        }
+        finally
+        {
+            joining.Shutdown("Test complete");
+            active.Shutdown("Test complete");
+            server.Shutdown("Test complete");
+        }
+    }
+
     internal static void RunReceiveOnly(Assembly assembly, bool reproduce)
     {
         Type Type(string name) => assembly.GetType("Lidgren.Network." + name, true)!;

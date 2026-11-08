@@ -85,6 +85,34 @@ InsertAfter(code, decision,
     Instruction.Create(OpCodes.Call, Method("RejectIncoming")),
     Instruction.Create(OpCodes.Stloc_0));
 
+if (dedicatedServer)
+{
+    // Transport approval precedes authentication and can be handled ahead of
+    // unrelated application data without changing reliable application order.
+    var enqueue = release.Body.Instructions.Single(instruction => instruction.Offset == 0x77 &&
+        instruction.Operand is MethodReference called && called.Name == "Enqueue");
+    var enqueueTail = (MethodReference)enqueue.Operand;
+    var enqueueFirst = new MethodReference("EnqueueFirst", enqueueTail.ReturnType, enqueueTail.DeclaringType) { HasThis = true };
+    enqueueFirst.Parameters.Add(new ParameterDefinition(enqueueTail.Parameters.Single().ParameterType));
+    var approval = module.GetType("Lidgren.Network.NetIncomingMessageType").Fields.Single(field => field.Name == "ConnectionApproval");
+    var queue = release.Body.Instructions.Single(instruction => instruction.Offset == 0x70 && instruction.OpCode == OpCodes.Ldarg_0);
+    var queueField = (FieldReference)queue.Next.Operand;
+    var messageType = module.GetType("Lidgren.Network.NetIncomingMessage").Methods.Single(method => method.Name == "get_MessageType");
+    foreach (var instruction in new[]
+    {
+        Instruction.Create(OpCodes.Ldarg_1),
+        Instruction.Create(OpCodes.Callvirt, messageType),
+        Instruction.Create(OpCodes.Ldc_I4, Convert.ToInt32(approval.Constant)),
+        Instruction.Create(OpCodes.Bne_Un, queue),
+        Instruction.Create(OpCodes.Ldarg_0),
+        Instruction.Create(OpCodes.Ldfld, queueField),
+        Instruction.Create(OpCodes.Ldarg_1),
+        Instruction.Create(OpCodes.Callvirt, enqueueFirst),
+        Instruction.Create(OpCodes.Br, enqueue.Next)
+    })
+        code.InsertBefore(queue, instruction);
+}
+
 // Rejected unreliable messages are recycled without a connection shutdown.
 var recycle = release.Body.Instructions.Single(instruction => instruction.Offset == 0xba && instruction.OpCode == OpCodes.Ldarg_0);
 var check = release.Body.Instructions.Single(instruction => instruction.Offset == 0x8b && instruction.OpCode == OpCodes.Ldarg_1);

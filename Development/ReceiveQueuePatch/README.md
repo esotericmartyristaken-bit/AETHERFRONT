@@ -19,6 +19,8 @@ to assemble the release.
    old overflow on the unchanged shipping dedicated transport.
    `reproduce-pong-timeout` and `verify-pong-timeout` check the client under
    selective Pong loss with live traffic and then a full link outage.
+   `reproduce-approval` and `verify-approval` compare new UDP approval
+   latency and confirm that the password payload and reliable ordering survive.
 4. Use the existing RC44 clock integration harness against a private RC50
    runtime, passing the actual continuity SHA as `CandidateHash`. Set
    `APF_VERIFY_STALE_SUBSPACE=reproduce` for the old server and
@@ -37,6 +39,8 @@ Unreliable data can be dropped under pressure. Reliable messages keep their
 ordering and an over-budget connection is explicitly closed for resync.
 Validated data on an established connection counts as liveness alongside
 Pongs and advancing ACKs. A silent link still times out.
+New transport approvals can run ahead of existing flight traffic. The
+server's password and subsequent identity checks still apply.
 
 The warp guard checks the requested offset before moving the player and their
 vessels. A stale request reasserts the current subspace through the existing
