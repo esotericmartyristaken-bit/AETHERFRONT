@@ -4,6 +4,83 @@ using System.Reflection;
 
 internal static class Loopback
 {
+    internal static void RunReceiveOnly(Assembly assembly, bool reproduce)
+    {
+        Type Type(string name) => assembly.GetType("Lidgren.Network." + name, true)!;
+        dynamic unreliable = Enum.Parse(Type("NetDeliveryMethod"), "Unreliable");
+        dynamic Configure(float timeout)
+        {
+            dynamic config = Activator.CreateInstance(Type("NetPeerConfiguration"), "aetherfront-inactivity-test")!;
+            config.LocalAddress = IPAddress.Loopback;
+            config.PingInterval = 1f;
+            config.ConnectionTimeout = timeout;
+            return config;
+        }
+
+        dynamic server = Activator.CreateInstance(Type("NetServer"), (object)Configure(15f))!;
+        dynamic client = Activator.CreateInstance(Type("NetClient"), (object)Configure(4f))!;
+        server.Start();
+        using var proxy = new ImpairedRoute((int)server.Port, 1);
+        string reason = "";
+        int received = 0;
+        try
+        {
+            client.Start();
+            client.Connect("127.0.0.1", proxy.Port(0));
+            WaitUntil(() =>
+            {
+                Pump();
+                return server.ConnectionsCount == 1 && client.ConnectionStatus.ToString() == "Connected";
+            }, TimeSpan.FromSeconds(15), "Receive-only connection");
+            proxy.SuppressServerPongs();
+            var started = Stopwatch.StartNew();
+            while (started.Elapsed < TimeSpan.FromSeconds(10) && reason.Length == 0)
+            {
+                if ((int)server.ConnectionsCount == 1)
+                {
+                    dynamic message = server.CreateMessage();
+                    message.Write(received);
+                    server.SendMessage(message, server.Connections[0], unreliable, 0);
+                }
+                Thread.Sleep(85);
+                Pump();
+            }
+            if (received < 15 || proxy.SuppressedPongs < 2)
+                throw new InvalidOperationException("Fixture did not exchange enough one-way application data or lose enough Pongs");
+            if (reproduce)
+            {
+                if (!reason.Contains("timed out", StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException("Original transport did not reproduce a false timeout: " + reason);
+                Console.WriteLine($"Reproduced: the original transport timed out after receiving {received} live messages.");
+                return;
+            }
+            if (reason.Length > 0) throw new InvalidOperationException("Receiving real data still timed out: " + reason);
+            proxy.Pause(TimeSpan.FromSeconds(12));
+            WaitUntil(() => { Pump(); return reason.Length > 0; }, TimeSpan.FromSeconds(9), "Actual inactivity timeout");
+            if (!reason.Contains("timed out", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Unexpected outage disconnect: " + reason);
+            Console.WriteLine($"PASS: {received} live receive-only messages kept the connection alive without Pongs. A fully silent link still timed out.");
+        }
+        finally
+        {
+            client.Shutdown("Test complete");
+            server.Shutdown("Test complete");
+        }
+
+        void Pump()
+        {
+            while (server.ReadMessage() is object incoming) server.Recycle((dynamic)incoming);
+            while (client.ReadMessage() is object incoming)
+            {
+                dynamic message = incoming;
+                if (message.MessageType.ToString() == "Data") received++;
+                if (message.MessageType.ToString() == "StatusChanged" && message.ReadByte() == 7)
+                    reason = message.ReadString();
+                client.Recycle(message);
+            }
+        }
+    }
+
     internal static void Run(Assembly assembly, bool impaired)
     {
         const int peerCount = 24;

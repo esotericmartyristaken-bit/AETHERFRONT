@@ -2,10 +2,15 @@ using System.Net;
 using System.Reflection;
 using System.Runtime.Loader;
 
-if (args.Length != 2 || args[0] is not ("reproduce" or "verify" or "verify-client" or "udp" or "impaired-udp"))
-    throw new ArgumentException("Expected reproduce|verify|verify-client|udp|impaired-udp and a transport DLL path");
+if (args.Length != 2 || args[0] is not ("reproduce" or "verify" or "verify-client" or "udp" or "impaired-udp" or "reproduce-pong-timeout" or "verify-pong-timeout"))
+    throw new ArgumentException("Expected a queue or UDP regression mode and a transport DLL path");
 
 var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.GetFullPath(args[1]));
+if (args[0] is "reproduce-pong-timeout" or "verify-pong-timeout")
+{
+    Loopback.RunReceiveOnly(assembly, args[0] == "reproduce-pong-timeout");
+    return;
+}
 if (args[0] is "udp" or "impaired-udp")
 {
     Loopback.Run(assembly, args[0] == "impaired-udp");

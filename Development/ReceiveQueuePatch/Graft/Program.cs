@@ -20,7 +20,7 @@ foreach (var name in new[] { "NetPeer", "NetConnection" })
 {
     var type = module.GetType("Lidgren.Network." + name);
     foreach (var field in donor.MainModule.GetType(type.FullName).Fields)
-        if (field.Name != "m_pendingIncomingBytes")
+        if (!type.Fields.Any(existing => existing.FullName == field.FullName))
             type.Fields.Add(new FieldDefinition(field.Name, field.Attributes, Primitive(field.FieldType)));
 }
 

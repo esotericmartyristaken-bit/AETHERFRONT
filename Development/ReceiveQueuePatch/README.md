@@ -17,6 +17,8 @@ to assemble the release.
    dedicated transport, `verify-client` for the client transport, and `udp`
    and `impaired-udp` for real loopback traffic. `reproduce` verifies the
    old overflow on the unchanged shipping dedicated transport.
+   `reproduce-pong-timeout` and `verify-pong-timeout` check the client under
+   selective Pong loss with live traffic and then a full link outage.
 4. Use the existing RC44 clock integration harness against a private RC50
    runtime, passing the actual continuity SHA as `CandidateHash`. Set
    `APF_VERIFY_STALE_SUBSPACE=reproduce` for the old server and
@@ -25,13 +27,16 @@ to assemble the release.
    read-lock retry, corruption detection and offline resume still work.
 5. Assemble with `Build-Release.py` using the original archive, all three
    reviewed output binaries and their recorded SHA-256 values. Run isolated
-   authenticated LMP testing and the existing guarded release operator.
+   authenticated LMP testing with `Development/PersonalUdpTests` in its
+   `--connection-soak 16 180` mode and use the guarded release operator.
 
 The queue changes keep the original aggregate limits, reserve headroom for
 reliable traffic, isolate a reliable sender with excessive backlog on the
 server, and distinguish future server and client receive overruns in logs.
 Unreliable data can be dropped under pressure. Reliable messages keep their
 ordering and an over-budget connection is explicitly closed for resync.
+Validated data on an established connection counts as liveness alongside
+Pongs and advancing ACKs. A silent link still times out.
 
 The warp guard checks the requested offset before moving the player and their
 vessels. A stale request reasserts the current subspace through the existing

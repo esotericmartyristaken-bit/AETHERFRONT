@@ -9,6 +9,8 @@ internal sealed class ImpairedRoute : IDisposable
     private readonly Thread worker;
     private long pauseUntil;
     private volatile bool stop;
+    private volatile bool suppressServerPongs;
+    private int suppressedPongs;
     private int delayed;
     private int dropped;
     private Exception? failure;
@@ -30,6 +32,9 @@ internal sealed class ImpairedRoute : IDisposable
 
     internal void Pause(TimeSpan duration) =>
         Interlocked.Exchange(ref pauseUntil, Stopwatch.GetTimestamp() + (long)(duration.TotalSeconds * Stopwatch.Frequency));
+
+    internal void SuppressServerPongs() => suppressServerPongs = true;
+    internal int SuppressedPongs => Volatile.Read(ref suppressedPongs);
 
     internal void Verify()
     {
@@ -68,6 +73,11 @@ internal sealed class ImpairedRoute : IDisposable
                         if (!fromServer && !source.Equals(clients[index])) continue;
                         var destination = fromServer ? clients[index] : server;
                         if (destination == null) continue;
+                        if (fromServer && suppressServerPongs && size > 0 && buffer[0] == 130)
+                        {
+                            Interlocked.Increment(ref suppressedPongs);
+                            continue;
+                        }
                         if (outage || random.Next(100) == 0)
                         {
                             dropped++;

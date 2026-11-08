@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Threading;
+using System.Threading.Tasks;
 using Aetherfront.Core;
 using Lidgren.Network;
 using LmpCommon;
@@ -14,6 +15,8 @@ using LmpCommon.Message.Client;
 using LmpCommon.Message.Data.Aetherfront;
 using LmpCommon.Message.Data.Apf;
 using LmpCommon.Message.Data.Handshake;
+using LmpCommon.Message.Data.Vessel;
+using LmpCommon.Message.Data.Warp;
 using LmpCommon.Message.Interface;
 using Newtonsoft.Json.Linq;
 
@@ -21,10 +24,11 @@ static class Program
 {
     static int checks;
     static string clientVersion;
-    static void Check(bool value,string name){if(!value)throw new Exception(name);checks++;Console.WriteLine("PASS "+name);}
+    static void Check(bool value,string name){if(!value)throw new Exception(name);Interlocked.Increment(ref checks);Console.WriteLine("PASS "+name);}
     static void Main(string[] args)
     {
-        if(args.Length!=1)throw new Exception("Explicit isolated server root required");
+        if(args.Length!=1 && (args.Length!=4 || args[1]!="--connection-soak"))
+            throw new Exception("Expected isolated server root [--connection-soak peers seconds]");
         var root=Path.GetFullPath(args[0]);
         if(!root.EndsWith(Path.Combine("staging","PersonalServer"),StringComparison.OrdinalIgnoreCase) ||
            !File.ReadAllText(Path.Combine(root,"Config","ConnectionSettings.xml")).Contains("<ListenAddress>127.0.0.1</ListenAddress>"))throw new Exception("Local fixture required");
@@ -34,6 +38,15 @@ static class Program
             return File.Exists(path)?context.LoadFromAssemblyPath(path):null;
         };
         clientVersion=(string)JObject.Parse(File.ReadAllText(Path.Combine(root,"Config","APFPack.json")))["requiredClientVersion"];
+        if (args.Length == 4)
+        {
+            int peers = int.Parse(args[2]);
+            int seconds = int.Parse(args[3]);
+            if (peers is < 2 or > 64 || seconds is < 10 or > 1800)
+                throw new ArgumentOutOfRangeException("Soak supports 2–64 peers and 10–1800 seconds");
+            Soak(peers, seconds);
+            return;
+        }
         var subject=((JArray)JObject.Parse(File.ReadAllText(Path.Combine(root,"AetherfrontScienceSubjects.json")))["Subjects"]).First(s=>(decimal)s["Cap"]>=300);
         string source=(string)subject["Id"];
         using var alphaKey=RSA.Create(2048);using var betaKey=RSA.Create(2048);using var lateKey=RSA.Create(2048);
@@ -65,6 +78,49 @@ static class Program
         Check(alpha.Lab(labReceipt,500,0x400).Accepted && alpha.Player().EarnedScience==800,"lab UDP replay remains idempotent");
         Check(!alpha.Lab("award:"+Guid.NewGuid().ToString("N"),500,0x10000).Accepted,"UDP cheat reason rejected");
         Console.WriteLine("PASS: "+checks+" real UDP assertions; protocol-synthetic clients, not physical experiment collection.");
+    }
+
+    private static void Soak(int peerCount, int seconds)
+    {
+        string prefix = "Net" + Guid.NewGuid().ToString("N").Substring(0, 7);
+        using var allAdmitted = new Barrier(peerCount);
+        using var cancellation = new CancellationTokenSource();
+        var elapsed = Stopwatch.StartNew();
+        var workers = Enumerable.Range(0, peerCount).Select(index => Task.Factory.StartNew(() =>
+        {
+            try
+            {
+                string name = prefix + index.ToString("D2");
+                using var key = RSA.Create(2048);
+                using (var peer = new Peer(name, key))
+                {
+                    peer.VerifySubspaceAndRequestVessels();
+                    if (peer.Player() == null) throw new InvalidDataException("Authenticated player has no progression state");
+                    if (!allAdmitted.SignalAndWait(TimeSpan.FromSeconds(40), cancellation.Token))
+                        throw new TimeoutException("Concurrent authenticated admission");
+                    for (int second = 0; second < seconds; second += 5)
+                    {
+                        cancellation.Token.ThrowIfCancellationRequested();
+                        peer.PollConnection();
+                        peer.RequestVessels();
+                        if (second > 0 && second % 15 == 0 && peer.Player() == null)
+                            throw new InvalidDataException("Active player lost progression state");
+                        Thread.Sleep(5000 + 17 * (index % 6));
+                    }
+                }
+                Thread.Sleep(650 + index * 20);
+                using var returned = new Peer(name, key);
+                returned.VerifySubspaceAndRequestVessels();
+                if (returned.Player() == null) throw new InvalidDataException("Returning player lost progression state");
+            }
+            catch
+            {
+                cancellation.Cancel();
+                throw;
+            }
+        }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default)).ToArray();
+        Task.WaitAll(workers);
+        Console.WriteLine($"PASS: {peerCount} simultaneous RSA-authenticated sessions stayed connected for {seconds}s, synchronized personal subspaces and vessel requests, and rejoined with the same identities in {elapsed.Elapsed.TotalSeconds:F1}s.");
     }
 
     sealed class Peer:IDisposable
@@ -136,6 +192,38 @@ static class Program
         }
         public PlayerProgression Player()
         {var reply=Execute(new AetherfrontWireRequest{Operation=AetherfrontWireOperation.SnapshotRequest});Check(reply.Accepted,"personal snapshot");return PersonalProgression.Find(AetherfrontJson.Deserialize<AetherfrontState>(reply.StateJson),Account);}
+        public void VerifySubspaceAndRequestVessels()
+        {
+            var sync = outgoing.CreateNewMessageData<WarpSubspacesRequestMsgData>();
+            Send(outgoing.CreateNew<WarpCliMsg>(sync));
+            var subspaces = Receive<WarpSubspacesReplyMsgData>();
+            if (!subspaces.Subspaces.Take(subspaces.SubspaceCount)
+                .Any(space => space.SubspaceKey >= 0 && space.Players.Take(space.PlayerCount).Contains(Name)))
+                throw new InvalidDataException("Server did not assign the authenticated player a personal subspace");
+            RequestVessels();
+        }
+        public void RequestVessels()
+        {
+            var vessels = outgoing.CreateNewMessageData<VesselSyncMsgData>();
+            vessels.VesselsCount = 0;
+            Send(outgoing.CreateNew<VesselCliMsg>(vessels));
+        }
+        public void PollConnection()
+        {
+            NetIncomingMessage packet;
+            while ((packet = client.ReadMessage()) != null)
+            {
+                try
+                {
+                    if (packet.MessageType == NetIncomingMessageType.StatusChanged &&
+                        (NetConnectionStatus)packet.ReadByte() == NetConnectionStatus.Disconnected)
+                        throw new IOException("Unexpected UDP disconnect: " + packet.ReadString());
+                }
+                finally { client.Recycle(packet); }
+            }
+            if (client.ConnectionStatus != NetConnectionStatus.Connected)
+                throw new IOException("UDP peer is no longer connected");
+        }
         public AetherfrontWireReply Claim(string source,decimal value)=>Execute(new AetherfrontWireRequest{Operation=AetherfrontWireOperation.CommandRequest,CommandType=(AetherfrontCommandType)40,EntityId=source,Body=value.ToString(System.Globalization.CultureInfo.InvariantCulture)});
         public AetherfrontWireReply Lab(string id,decimal value,long reason)=>Execute(new AetherfrontWireRequest{Operation=AetherfrontWireOperation.CommandRequest,CommandType=(AetherfrontCommandType)42,EntityId=id,Body=value.ToString(System.Globalization.CultureInfo.InvariantCulture),Amount2=reason});
         public AetherfrontWireReply Transfer(string target,long amount,long sequence)=>Execute(new AetherfrontWireRequest{Operation=AetherfrontWireOperation.CommandRequest,CommandType=(AetherfrontCommandType)41,TargetAccountId=target,Amount=amount,Amount2=sequence});

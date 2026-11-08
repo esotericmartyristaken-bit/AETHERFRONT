@@ -10,11 +10,16 @@ internal sealed class NetPeer
     // The existing receive queue lock protects these counters and both call sites.
     private bool RejectIncoming(bool sharedLimitReached, NetIncomingMessage message, int pendingCount, bool dedicatedServer)
     {
-        if (sharedLimitReached)
-            return true;
         var sender = message.SenderConnection;
         if (message.MessageType != NetIncomingMessageType.Data || sender == null)
-            return false;
+            return sharedLimitReached;
+        // Complete Data has passed Lidgren's connection and delivery-channel
+        // checks. Receive-only players can have live data without a recent Pong
+        // or an advancing ACK for their own outbound reliable messages.
+        if (sender.m_status == NetConnectionStatus.Connected)
+            sender.ResetTimeout(NetTime.Now);
+        if (sharedLimitReached)
+            return true;
         if (sender.m_receiveQueueGeneration != m_receiveQueueGeneration)
         {
             sender.m_receiveQueueGeneration = m_receiveQueueGeneration;
@@ -70,9 +75,11 @@ internal sealed class NetPeer
 
 internal sealed class NetConnection
 {
+    internal NetConnectionStatus m_status = 0; // Uses the existing shipping field.
     internal long m_receiveQueueGeneration;
     internal int m_queuedIncomingCount;
     internal int m_queuedIncomingBytes;
+    internal void ResetTimeout(double now) => throw new System.NotSupportedException();
 }
 
 internal sealed class NetIncomingMessage
@@ -84,3 +91,9 @@ internal sealed class NetIncomingMessage
 
 internal enum NetIncomingMessageType : byte { Data = 8 }
 internal enum NetDeliveryMethod : byte { Unreliable = 1, UnreliableSequenced = 2 }
+internal enum NetConnectionStatus : byte { Connected = 5 }
+
+internal static class NetTime
+{
+    internal static double Now => throw new System.NotSupportedException();
+}
