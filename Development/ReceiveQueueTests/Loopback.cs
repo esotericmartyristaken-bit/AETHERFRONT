@@ -7,7 +7,10 @@ internal static class Loopback
     internal static void Run(Assembly assembly, bool impaired)
     {
         const int peerCount = 24;
-        const int checkpoints = 300;
+        int checkpoints = 300;
+        if (Environment.GetEnvironmentVariable("APF_UDP_ROUNDS") is string configured &&
+            (!int.TryParse(configured, out checkpoints) || checkpoints < 300 || checkpoints > 20000))
+            throw new ArgumentException("APF_UDP_ROUNDS must be between 300 and 20000");
         Type Type(string name) => assembly.GetType("Lidgren.Network." + name, true)!;
         dynamic reliable = Enum.Parse(Type("NetDeliveryMethod"), "ReliableOrdered");
         dynamic unreliable = Enum.Parse(Type("NetDeliveryMethod"), "Unreliable");
@@ -46,7 +49,7 @@ internal static class Loopback
             var elapsed = Stopwatch.StartNew();
             for (int sequence = 0; sequence < checkpoints; sequence++)
             {
-                if (sequence == 110) proxy?.Pause(TimeSpan.FromSeconds(3));
+                if (sequence % 300 == 110) proxy?.Pause(TimeSpan.FromSeconds(3));
                 for (int id = 0; id < peerCount; id++)
                 {
                     dynamic sample = peers[id].CreateMessage();
@@ -56,7 +59,7 @@ internal static class Loopback
                 }
                 // Reproduce a temporarily stalled consumer with a burst of position
                 // traffic from one client. Other clients keep their reliable messages.
-                if (sequence is 60 or 180)
+                if (sequence % 300 is 60 or 180)
                 {
                     for (int burst = 0; burst < 160; burst++)
                     {
@@ -79,7 +82,7 @@ internal static class Loopback
             }, TimeSpan.FromSeconds(12), "Reliable delivery");
             if ((int)server.ConnectionsCount != peerCount)
                 throw new InvalidOperationException("A UDP peer disconnected during the load run");
-            Console.WriteLine($"PASS: {peerCount} concurrent real UDP peers, {peerCount * checkpoints:N0} reliable round trips in {elapsed.Elapsed.TotalSeconds:F1}s, with two stalled-consumer bursts.");
+            Console.WriteLine($"PASS: {peerCount} concurrent real UDP peers, {peerCount * checkpoints:N0} reliable round trips in {elapsed.Elapsed.TotalSeconds:F1}s, with recurring stalled-consumer bursts.");
             proxy?.Verify();
         }
         finally

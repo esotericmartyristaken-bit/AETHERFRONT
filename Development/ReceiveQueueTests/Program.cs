@@ -57,8 +57,23 @@ else
     Check(transport.Bytes == 0, "Batch read leaked byte accounting");
     transport.Enqueue(updated, 301);
     Check(transport.DrainBatch() == 1, "Batch read failed to release the sender's budget");
+    for (int index = 0; index < 4; index++)
+    {
+        var heavy = transport.Connection(21000 + index);
+        for (int sequence = 0; sequence < 1024; sequence++)
+            transport.Enqueue(heavy, sequence);
+    }
+    for (int index = 0; index < 20; index++)
+    {
+        var light = transport.Connection(22000 + index);
+        transport.Enqueue(light, 0);
+        Check(!transport.Disconnecting(light), "Concurrent heavy senders forced a healthy peer out");
+    }
+    Check(transport.DrainBatch() == 3072 + 64 + 20, "High-pressure queue lost its healthy-peer reserve");
+    Check(transport.Bytes == 0, "High-pressure queue leaked byte accounting");
     Console.WriteLine("PASS: reliable offender isolated, unrelated connection served, accounting recovered after drain.");
     Console.WriteLine("PASS: 6,000 unreliable updates preserve reliable headroom and leave batch accounting balanced.");
+    Console.WriteLine("PASS: four overlapping reliable floods preserve headroom for 20 newly active peers.");
 }
 
 static void Check(bool expected, string message)

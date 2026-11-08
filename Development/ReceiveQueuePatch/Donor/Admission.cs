@@ -28,6 +28,12 @@ internal sealed class NetPeer
         // from this sender, including a legal large fragmented payload.
         if (unreliable && (pendingCount >= 2048 || m_pendingIncomingBytes + bytes > 16 * 1024 * 1024))
             return true;
+        // As the shared queue approaches its hard limit, retain headroom for
+        // lightly queued peers even when several heavy senders overlap.
+        if (dedicatedServer &&
+            ((pendingCount >= 3072 && sender.m_queuedIncomingCount >= 64) ||
+             (m_pendingIncomingBytes + bytes > 48 * 1024 * 1024 && sender.m_queuedIncomingBytes >= 1024 * 1024)))
+            return true;
         int countLimit = dedicatedServer ? (unreliable ? 256 : 1024) : (unreliable ? 512 : 4096);
         int byteLimit = dedicatedServer ? (unreliable ? 4 : 32) * 1024 * 1024 : (unreliable ? 8 : 64) * 1024 * 1024;
         if (sender.m_queuedIncomingCount >= countLimit || sender.m_queuedIncomingBytes + bytes > byteLimit)
