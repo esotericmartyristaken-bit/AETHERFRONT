@@ -209,6 +209,35 @@ internal static class MissionTimeProgram
         {
             var c = Client(); byte[] previous = File.ReadAllBytes(ClockPath); WarpContext.Subspaces.TryRemove(c.Subspace, out _); PersonalClockServer.Checkpoint(c); FailedSafely(c, previous);
         });
+        if (Environment.GetEnvironmentVariable("APF_VERIFY_STALE_SUBSPACE") is string warpGuard)
+        Case("stale-subspace-selection", () =>
+        {
+            var c = Client();
+            int current = c.Subspace;
+            double offset = WarpContext.Subspaces[current].Time;
+            int stale = current + 1;
+            WarpContext.Subspaces.TryAdd(stale, new Subspace(stale, offset - 8.627248d, c.PlayerName));
+            var receiver = new Server.System.WarpSystemReceiver();
+            var request = ServerContext.ServerMessageFactory.CreateNewMessageData<WarpChangeSubspaceMsgData>();
+            request.PlayerName = c.PlayerName;
+            request.Subspace = stale;
+            double saved = Durable(c);
+            receiver.HandleChangeSubspace(c, request);
+            if (warpGuard == "reproduce")
+            {
+                Check(c.Subspace == stale && Disconnected(c), "Legacy server did not reproduce migration followed by rollback disconnect");
+                return;
+            }
+            Equal(current, c.Subspace, "Stale request cannot move the player");
+            Check(!Disconnected(c) && Sessions.Contains(c) && PersonalClockServer.MayPersistPosition(c), "Stale request interrupted the authenticated session");
+            Check(Durable(c) >= saved, "Stale request moved the durable clock backwards");
+            int forward = stale + 1;
+            WarpContext.Subspaces.TryAdd(forward, new Subspace(forward, offset + 30d, c.PlayerName));
+            request.Subspace = forward;
+            receiver.HandleChangeSubspace(c, request);
+            Equal(forward, c.Subspace, "Forward selection still moves the player");
+            Check(!Disconnected(c) && Durable(c) >= saved + 30d, "Forward selection did not advance the saved clock");
+        });
         Case("mid-warp-checkpoint-retains-stable-time", () =>
         {
             var c = Client(); PersonalClockServer.Checkpoint(c); double saved = Durable(c); c.Subspace = -1;
