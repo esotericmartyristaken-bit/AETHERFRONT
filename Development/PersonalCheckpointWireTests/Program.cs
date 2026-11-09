@@ -12,6 +12,7 @@ using LmpCommon.Message.Client;
 using LmpCommon.Message.Data.Aetherfront;
 using LmpCommon.Message.Data.Apf;
 using LmpCommon.Message.Data.Handshake;
+using LmpCommon.Message.Data.Scenario;
 using LmpCommon.Message.Data.Vessel;
 using LmpCommon.Message.Data.Warp;
 using LmpCommon.Message.Interface;
@@ -77,6 +78,7 @@ sealed class Peer : IDisposable
     readonly ServerMessageFactory incoming = new();
     readonly string name;
     bool disposed;
+    long worldRevision = -1;
     string previous = "";
     public Peer(IPEndPoint endpoint, string name, RSA key)
     {
@@ -88,6 +90,7 @@ sealed class Peer : IDisposable
         string pub = IdentityProof.ExportPublicKey(key), account = IdentityProof.AccountId(pub);
         var request = outgoing.CreateNewMessageData<HandshakeRequestMsgData>();
         request.PlayerName = name; request.IdentityPublicKey = pub; request.UniqueIdentifier = account; request.KspVersion = "1.12.5";
+        request.DeepFreezeProtocolVersion = 1;
         request.ApfEnabled = true; request.ApfClientVersion = request.ApfPackVersion = "kesas-rc53"; request.ApfPackId = "kesas";
         Send(outgoing.CreateNew<HandshakeCliMsg>(request));
         var challenge = Receive<HandshakeIdentityChallengeMsgData>();
@@ -110,6 +113,8 @@ sealed class Peer : IDisposable
             string json = (message as AetherfrontSnapshotMsgData)?.PayloadJson ?? (message as AetherfrontCommandReplyMsgData)?.PayloadJson;
             return json != null && AetherfrontProtocol.DeserializeReply(json).Operation == AetherfrontWireOperation.SnapshotReply;
         });
+        Send(outgoing.CreateNew<ScenarioCliMsg>(outgoing.CreateNewMessageData<ScenarioRequestMsgData>()));
+        Receive<ScenarioDataMsgData>();
     }
     void Drain() { NetIncomingMessage packet; while ((packet = connection.ReadMessage()) != null) connection.Recycle(packet); }
     void Send(IMessageBase message)
@@ -130,6 +135,8 @@ sealed class Peer : IDisposable
                 { if ((NetConnectionStatus)packet.ReadByte() == NetConnectionStatus.Disconnected) throw new IOException("Disconnected: " + packet.ReadString()); continue; }
                 if (packet.MessageType != NetIncomingMessageType.Data) continue;
                 var message = incoming.Deserialize(packet, DateTime.UtcNow.Ticks) as IServerMessageBase;
+                if (message?.Data is DeepFreezeCheckpointMsgData frozen)
+                    worldRevision = Math.Max(worldRevision, DeepFreezeCheckpointEnvelope.Decode(frozen.Payload).Revision);
                 if (message?.Data is T data && accept(data)) return data;
                 message?.Recycle();
             }
@@ -161,7 +168,7 @@ sealed class Peer : IDisposable
     {
         uint partId = BitConverter.ToUInt32(vessel.ToByteArray(), 0) | 1u;
         string text = $"pid = {vessel:N}\nname = RC53 checkpoint acceptance\ntype = Ship\nsit = ORBITING\nlastUT = {ut.ToString("R", System.Globalization.CultureInfo.InvariantCulture)}\nORBIT\n{{\nSMA = 700000\nECC = 0\nREF = 1\nbody = Kerbin\n}}\nPART\n{{\nname = mk1pod\nuid = {partId}\nRESOURCE\n{{\nname = Supplies\namount = {supplies}\nmaxAmount = 10\nflowState = True\n}}\n}}\nACTIONGROUPS\n{{\n}}\nDISCOVERY\n{{\n}}\nFLIGHTPLAN\n{{\n}}\nCTRLSTATE\n{{\n}}\nVESSELMODULES\n{{\n}}\n";
-        var data = outgoing.CreateNewMessageData<VesselProtoMsgData>(); data.VesselId = vessel; data.Reason = reason; data.Data = Encoding.UTF8.GetBytes(text); data.NumBytes = data.Data.Length;
+        var data = outgoing.CreateNewMessageData<VesselProtoMsgData>(); data.VesselId = vessel; data.Reason = reason; data.Data = Encoding.UTF8.GetBytes(text); data.NumBytes = data.Data.Length; data.SharedWorldRevision = worldRevision;
         Send(outgoing.CreateNew<VesselCliMsg>(data));
     }
     public bool WaitForRestoreDisconnect()
@@ -178,7 +185,7 @@ sealed class Peer : IDisposable
     }
     public void Remove(Guid vessel)
     {
-        var data = outgoing.CreateNewMessageData<VesselRemoveMsgData>(); data.VesselId = vessel; data.AddToKillList = true; data.Reason = "Completed RC53 acceptance test";
+        var data = outgoing.CreateNewMessageData<VesselRemoveMsgData>(); data.VesselId = vessel; data.AddToKillList = true; data.Reason = "Completed RC53 acceptance test"; data.SharedWorldRevision = worldRevision;
         Send(outgoing.CreateNew<VesselCliMsg>(data)); Thread.Sleep(500);
     }
     public void Dispose() { if (disposed) return; disposed = true; connection.Shutdown("Checkpoint acceptance complete"); Thread.Sleep(200); }
