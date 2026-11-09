@@ -197,9 +197,9 @@ namespace Aetherfront.Personal.Server
             finally { Interlocked.Exchange(ref automaticBusy, 0); }
         }
 
-        public static void ObserveProto(ClientStructure client, VesselBaseMsgData message)
+        public static void ObserveProto(ClientStructure client, VesselBaseMsgData message, bool newlyCreated)
         {
-            if (!(message is VesselProtoMsgData proto) || string.IsNullOrEmpty(proto.Reason) ||
+            if (!newlyCreated || !(message is VesselProtoMsgData proto) || string.IsNullOrEmpty(proto.Reason) ||
                 !proto.Reason.EndsWith("Launch", StringComparison.OrdinalIgnoreCase) || !client.Authenticated || client.DisconnectClient) return;
             lock (FlightCheckpointRuntime.Gate)
             {

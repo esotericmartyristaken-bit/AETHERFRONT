@@ -85,9 +85,21 @@ else if (mode == "clock" || mode == "server")
     {
         var proto = module.GetType("Server.Message.VesselMsgReader").Methods.Single(method => method.Name == "HandleVesselProto");
         var relay = proto.Body.Instructions.Single(instruction => instruction.Operand is MethodReference method && method.Name == "RelayVesselMessage");
+        var freshCheck = proto.Body.Instructions.Last(instruction => instruction.Operand is MethodReference method && method.Name == "VesselExists");
+        if (freshCheck.Next?.OpCode != OpCodes.Ldc_I4_0 || freshCheck.Next.Next?.OpCode != OpCodes.Ceq)
+            throw new InvalidDataException("The pinned native fresh-vessel guard changed.");
+        var storeFresh = freshCheck.Next.Next.Next;
+        VariableDefinition fresh = storeFresh.OpCode.Code switch
+        {
+            Code.Stloc_0 => proto.Body.Variables[0], Code.Stloc_1 => proto.Body.Variables[1],
+            Code.Stloc_2 => proto.Body.Variables[2], Code.Stloc_3 => proto.Body.Variables[3],
+            Code.Stloc or Code.Stloc_S => (VariableDefinition)storeFresh.Operand,
+            _ => throw new InvalidDataException("Expected the native fresh-vessel boolean local.")
+        };
+        if (fresh.VariableType.FullName != "System.Boolean") throw new InvalidDataException("Invalid native launch flag type.");
         Insert(proto, relay, new[]
         {
-            Instruction.Create(OpCodes.Ldarg_0), Instruction.Create(OpCodes.Ldarg_1),
+            Instruction.Create(OpCodes.Ldarg_0), Instruction.Create(OpCodes.Ldarg_1), Instruction.Create(OpCodes.Ldloc, fresh),
             Instruction.Create(OpCodes.Call, module.ImportReference(service.Methods.Single(method => method.Name == "ObserveProto")))
         });
         changed.Add(proto.FullName);

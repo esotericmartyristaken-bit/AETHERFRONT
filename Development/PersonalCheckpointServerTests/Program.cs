@@ -167,10 +167,15 @@ foreach (string phase in new[] { "normal", "world", "registry", "clock", "receip
         }
         var launch = new ClientMessageFactory().CreateNewMessageData<VesselProtoMsgData>();
         launch.VesselId = a1; launch.Reason = "VAB Launch";
-        FlightCheckpointServer.ObserveProto(alice, launch);
+        FlightCheckpointServer.ObserveProto(alice, launch, true);
         var launchInfo = Request(alice, 81);
         Check(launchInfo.GetProperty("FlightCheckpoint").GetProperty("Points").EnumerateArray().Any(point => point.GetProperty("Label").GetString() == "Latest launch"),
             "Accepted launch captures a fleet checkpoint");
+        string launchId = launchInfo.GetProperty("FlightCheckpoint").GetProperty("Points").EnumerateArray().Single(point => point.GetProperty("Label").GetString() == "Latest launch").GetProperty("CheckpointId").GetString();
+        launch.VesselId = a2;
+        FlightCheckpointServer.ObserveProto(alice, launch, false);
+        Check(Request(alice, 81).GetProperty("FlightCheckpoint").GetProperty("Points").EnumerateArray().Single(point => point.GetProperty("Label").GetString() == "Latest launch").GetProperty("CheckpointId").GetString() == launchId,
+            "Returning to an existing craft cannot replace the launch checkpoint");
         var saved = Request(alice, 80);
         Check(saved.ValueKind != JsonValueKind.Undefined && saved.GetProperty("Accepted").GetBoolean(), "Whole fleet save acknowledged " + saved);
         string checkpoint = saved.GetProperty("FlightCheckpoint").GetProperty("CheckpointId").GetString();

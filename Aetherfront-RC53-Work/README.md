@@ -8,6 +8,8 @@ need a process restart.
 
 Automatic choices target approximately 1, 5 and 30 real minutes ago, plus the
 latest accepted VAB/SPH launch. Manual quicksave is a fifth independent choice.
+The native new-vessel flag distinguishes a real launch from returning to an old
+craft whose stock flight-ready reason still says VAB/SPH launch.
 The actual saved date/time, mission time and craft count are displayed. Sampling
 starts after authenticated clock synchronization and runs once per minute while
 personal time is stable; time spent warping or offline can leave older samples or

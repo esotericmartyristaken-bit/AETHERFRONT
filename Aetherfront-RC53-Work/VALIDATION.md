@@ -7,7 +7,7 @@ acceptance must be recorded separately; this document does not assert they ran.
   validation, rolling 1/5/30-minute selection, pinned launch, 32-sample rotation,
   the 128 MiB compressed quota, abandoned staging cleanup and completed restore
   journal/pinned-image cleanup.
-- 255 integration assertions passed across normal restore, interrupted world,
+- 269 integration assertions passed across normal restore, interrupted world,
   registry, clock and receipt writes, owned frozen crew recovery and preservation
   of another player's newer cryopod state. Tests load the actual patched RC52
   assemblies, call the native checkpoint command dispatch and clock resume hooks,
@@ -23,9 +23,10 @@ acceptance must be recorded separately; this document does not assert they ran.
   local arena test DLL caused unrelated compatibility warnings; that unshipped
   DLL and the test-only rendering probe were removed afterward. This was a
   disabled render fixture, not authenticated Unity flight acceptance.
-- Ten network assertions passed with two RSA-authenticated synthetic clients
+- Eleven network assertions passed with two RSA-authenticated synthetic clients
   against the actual .NET 8.0.29 server process bound to loopback. The native
-  proto reader pinned a launch checkpoint, manual save persisted, resources were
+  proto reader pinned a launch checkpoint, revisiting an older craft with stale
+  launch metadata preserved it, manual save persisted, resources were
   changed, and restore disconnected only the loading pilot. Reconnecting restored
   that pilot's saved time and resources, published one restore receipt, and left
   the observer connected with time advancing. The completed test vessel was

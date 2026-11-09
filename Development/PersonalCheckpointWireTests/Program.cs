@@ -34,18 +34,25 @@ using var observer = new Peer(target, name + "B", observerKey);
 observer.Resume();
 double observerTime = observer.Checkpoint(80).GetProperty("FlightCheckpoint").GetProperty("MissionTime").GetDouble();
 double startTime = peer.Resume();
-Guid vessel = Guid.NewGuid();
+Guid vessel = Guid.NewGuid(), secondVessel = Guid.NewGuid();
 peer.Proto(vessel, "VAB Launch", startTime, 5);
+Thread.Sleep(300);
+peer.Proto(secondVessel, "SPH Launch", startTime, 5);
 Thread.Sleep(1200);
 var launch = peer.Checkpoint(81);
 Check(launch.GetProperty("Accepted").GetBoolean(), "Metadata received from authenticated server");
 Check(launch.GetProperty("FlightCheckpoint").GetProperty("Points").EnumerateArray().Any(point => point.GetProperty("Label").GetString() == "Latest launch"), "Native accepted launch pins a whole-fleet checkpoint");
+string launchId = launch.GetProperty("FlightCheckpoint").GetProperty("Points").EnumerateArray().Single(point => point.GetProperty("Label").GetString() == "Latest launch").GetProperty("CheckpointId").GetString();
 var saved = peer.Checkpoint(80);
 Check(saved.GetProperty("Accepted").GetBoolean(), "Manual fleet checkpoint acknowledged over UDP");
 var info = saved.GetProperty("FlightCheckpoint");
 string checkpoint = info.GetProperty("CheckpointId").GetString();
-Check(info.GetProperty("VesselCount").GetInt32() == 1, "New test account checkpoint contains its own vessel");
-peer.Proto(vessel, "Checkpoint resource update", startTime + 2, 1);
+Check(info.GetProperty("VesselCount").GetInt32() == 2, "New test account checkpoint contains both of its own vessels");
+peer.Proto(vessel, "VAB Launch", startTime + 2, 1);
+Thread.Sleep(500);
+var revisited = peer.Checkpoint(81);
+Check(revisited.GetProperty("FlightCheckpoint").GetProperty("Points").EnumerateArray().Single(point => point.GetProperty("Label").GetString() == "Latest launch").GetProperty("CheckpointId").GetString() == launchId,
+    "Returning to an older craft with stale launch metadata cannot overwrite the launch checkpoint");
 Thread.Sleep(8000);
 peer.Checkpoint(82, checkpoint, info.GetProperty("Generation").GetInt64(), true);
 Check(peer.WaitForRestoreDisconnect(), "Restore completes through the native reconnect path");
@@ -64,6 +71,7 @@ Check(observer.Checkpoint(81).GetProperty("Accepted").GetBoolean(), "Second play
 Check(observer.Checkpoint(80).GetProperty("FlightCheckpoint").GetProperty("MissionTime").GetDouble() >= observerTime + 8,
     "Second player's personal clock advances throughout the other player's rewind");
 resumed.Remove(vessel);
+resumed.Remove(secondVessel);
 File.WriteAllText(Path.Combine(evidence, "RESULTS.json"), JsonSerializer.Serialize(new {
     checks, passed = true, endpoint = target.ToString(), release = "kesas-rc53", capturedUtc = DateTimeOffset.UtcNow,
     protocolClients = true, unityGameplayVerified = false, transientCraftRemoved = true,
