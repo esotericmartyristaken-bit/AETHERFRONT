@@ -1,8 +1,14 @@
 using System.Security.Cryptography;
+using System.Text;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-if (args.Length != 3) throw new ArgumentException("Expected shipping Lidgren.Core.dll, donor DLL and fresh output path");
+if (args is ["stamp-client", var inputClient, var outputClient])
+{
+    StampClient(inputClient, outputClient);
+    return;
+}
+if (args.Length != 3) throw new ArgumentException("Expected a shipping transport DLL, donor DLL and fresh output path, or stamp-client INPUT OUTPUT");
 const string shippingHash = "99288eb5872e7a9608dc830295eb353b15db9b5fa26b33ceab94846201e329fa";
 const string shippingClientHash = "b8fa4194d427843007cfc40c8e64fa9e5c084910a4bfa9e55d16315faeba40b3";
 string inputHash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(args[0]))).ToLowerInvariant();
@@ -195,3 +201,53 @@ static void InsertAfter(ILProcessor processor, Instruction anchor, params Instru
 static Dictionary<string, string> Inventory(ModuleDefinition module) => module.GetTypes()
     .SelectMany(type => type.Methods).Where(method => method.HasBody)
     .ToDictionary(method => method.FullName, method => string.Join("\n", method.Body.Instructions));
+
+static void StampClient(string input, string output)
+{
+    const string baseline = "kesas-rc50";
+    const string release = "kesas-rc51";
+    const string settings = "LmpClient.Apf.ApfClientSettings";
+    const string identity = "LmpClient.Apf.ApfClientBuildVersion";
+    const string expectedHash = "26DE3F09CFB61DE58049D86C6D82F3602E6CD1C28ECA29F8D838431F3DDFD64B";
+    var bytes = File.ReadAllBytes(input);
+    if (Convert.ToHexString(SHA256.HashData(bytes)) != expectedHash)
+        throw new InvalidDataException("Unexpected RC50 LmpClient.dll SHA-256");
+    using var client = AssemblyDefinition.ReadAssembly(new MemoryStream(bytes));
+    var before = Inventory(client.MainModule);
+    var getter = client.MainModule.GetType(settings).Methods.Single(method => method.Name == "get_ClientVersion");
+    var versionText = getter.Body.Instructions.Single(instruction => instruction.OpCode == OpCodes.Ldstr);
+    var versionConstant = client.MainModule.GetType(identity).Fields.Single(field => field.Name == "Value");
+    if (!versionConstant.IsLiteral || !Equals(versionText.Operand, baseline) || !Equals(versionConstant.Constant, baseline))
+        throw new InvalidDataException("Unexpected RC50 client build identity");
+    // Replace the same-width UTF-16 values in the pinned image. This preserves
+    // the PE layout and avoids resolving Unity types to rewrite metadata.
+    var oldValue = Encoding.Unicode.GetBytes(baseline);
+    var newValue = Encoding.Unicode.GetBytes(release);
+    var updated = (byte[])bytes.Clone();
+    int matches = 0;
+    for (int offset = 0; offset < bytes.Length;)
+    {
+        int match = bytes.AsSpan(offset).IndexOf(oldValue);
+        if (match < 0) break;
+        offset += match;
+        newValue.CopyTo(updated, offset);
+        offset += oldValue.Length;
+        matches++;
+    }
+    if (matches != 2)
+        throw new InvalidDataException("Expected one client version constant and one getter string");
+    using var review = AssemblyDefinition.ReadAssembly(new MemoryStream(updated));
+    var after = Inventory(review.MainModule);
+    if (review.Name.FullName != client.Name.FullName ||
+        !review.MainModule.AssemblyReferences.Select(reference => reference.FullName)
+            .SequenceEqual(client.MainModule.AssemblyReferences.Select(reference => reference.FullName)) ||
+        !Equals(review.MainModule.GetType(identity).Fields.Single(field => field.Name == "Value").Constant, release) ||
+        !Equals(review.MainModule.GetType(settings).Methods.Single(method => method.Name == "get_ClientVersion")
+            .Body.Instructions.Single(instruction => instruction.OpCode == OpCodes.Ldstr).Operand, release) ||
+        after.Count != before.Count ||
+        before.Any(pair => !after.TryGetValue(pair.Key, out string? body) || (pair.Value != body) != (pair.Key == getter.FullName)))
+        throw new InvalidDataException("Unexpected changes while stamping the RC51 client identity");
+    Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(output))!);
+    using var file = new FileStream(output, FileMode.CreateNew);
+    file.Write(updated);
+}

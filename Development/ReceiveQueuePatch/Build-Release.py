@@ -11,6 +11,7 @@ REPLACEMENTS = (
     ("ServerPayload/Server.dll", "127eeaa83eadfade41912d78dc5fb55f3f725cf4a551a599128a67c285473cf9"),
     ("ServerPayload/Lidgren.Core.dll", "99288eb5872e7a9608dc830295eb353b15db9b5fa26b33ceab94846201e329fa"),
     ("GameData/LunaMultiplayer/Plugins/Lidgren.Network.dll", "b8fa4194d427843007cfc40c8e64fa9e5c084910a4bfa9e55d16315faeba40b3"),
+    ("GameData/LunaMultiplayer/Plugins/LmpClient.dll", "26de3f09cfb61de58049d86c6d82f3602e6cd1c28eca29f8d838431f3ddfd64b"),
 )
 
 
@@ -22,6 +23,7 @@ def main():
     parser.add_argument("--server-sha", required=True)
     parser.add_argument("--transport-sha", required=True)
     parser.add_argument("--client-transport-sha", required=True)
+    parser.add_argument("--client-sha", required=True)
     args = parser.parse_args()
 
     prior = Path(__file__).resolve().parents[2] / "Aetherfront-RC50-Work" / "Build-Release.py"
@@ -37,7 +39,7 @@ def main():
     assert set(native) == {item["path"] for item in manifest["files"]}
     assert all(digest(native[item["path"]]) == item["sha256"] for item in manifest["files"])
     client = unpack(native["ClientTemplate.zip"])
-    versions = (args.server_sha, args.transport_sha, args.client_transport_sha)
+    versions = (args.server_sha, args.transport_sha, args.client_transport_sha, args.client_sha)
     for (path, baseline), candidate in zip(REPLACEMENTS, versions, strict=True):
         files = client if path.startswith("GameData/") else native
         replace(files, path, baseline, args.code / Path(path).name, candidate)

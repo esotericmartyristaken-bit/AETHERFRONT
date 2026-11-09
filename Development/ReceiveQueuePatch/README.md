@@ -27,10 +27,15 @@ to assemble the release.
    `APF_VERIFY_STALE_SUBSPACE=verify` for the candidate. Confirm the stale
    request is rejected, the good clock persists, and forward switching,
    read-lock retry, corruption detection and offline resume still work.
-5. Assemble with `Build-Release.py` using the original archive, all three
-   reviewed output binaries and their recorded SHA-256 values. Run isolated
+5. Run `Graft` with `stamp-client INPUT OUTPUT` on the pinned RC50
+   `LmpClient.dll` from the native client template. This updates both the
+   embedded build constant checked by the signing tool and the runtime version.
+6. Assemble with `Build-Release.py` using the original archive, all four
+   reviewed output binaries and their recorded SHA-256 values. Run the
+   update tool's root-overlay signing and verification in scratch with a
+   disposable key before requesting guarded deployment. Run isolated
    authenticated LMP testing with `Development/PersonalUdpTests` in its
-   `--connection-soak 16 180` mode and use the guarded release operator.
+   `--connection-soak 16 180` mode.
 
 The queue changes keep the original aggregate limits, reserve headroom for
 reliable traffic, isolate a reliable sender with excessive backlog on the
