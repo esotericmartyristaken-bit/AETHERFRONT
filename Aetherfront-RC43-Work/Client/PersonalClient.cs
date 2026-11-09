@@ -100,6 +100,7 @@ namespace Aetherfront.Personal.Client
             // Also bootstrap through the already-running mirror: a missing
             // addon registration must never silently disable durable science.
             ScienceEvents.EnsureStarted();
+            FlightCheckpointClient.EnsureStarted();
             bool identityChanged = server != AetherfrontClientSystem.State.ServerId || account != player.AccountId;
             bool treeChanged = identityChanged || game != HighLogic.CurrentGame || research != ResearchAndDevelopment.Instance || scene != HighLogic.LoadedScene;
             decimal visibleScience;
@@ -211,7 +212,7 @@ namespace Aetherfront.Personal.Client
                 return text + "\n\nAny science or funds on your side come from your personal balance. Confirming makes you the payment sponsor for this trade.";
             return text;
         }
-        public static bool CaptureScienceReceipt(string payload) => ScienceOutbox.Capture(payload);
+        public static bool CaptureScienceReceipt(string payload) => FlightCheckpointClient.Capture(payload) || ScienceOutbox.Capture(payload);
     }
 }
 

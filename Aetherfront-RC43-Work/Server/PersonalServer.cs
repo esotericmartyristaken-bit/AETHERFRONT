@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Aetherfront.Continuity.Server;
 using Aetherfront.Core;
 using Aetherfront.Personal.Transport;
 using LmpCommon.Message.Data.Aetherfront;
@@ -24,6 +25,7 @@ namespace Aetherfront.Personal.Server
         public const int ScienceClaimCommand = 40;
         public const int TransferCommand = 41;
         public const int GameplayScienceCommand = 42;
+        private const int SaveFlightCheckpointCommand = 80;
         private static readonly object CatalogGate = new object();
         private static Dictionary<string, decimal> caps;
         private static Dictionary<string, ScienceExperimentRule> experiments;
@@ -45,6 +47,7 @@ namespace Aetherfront.Personal.Server
                 }
                 if (request.Operation != AetherfrontWireOperation.CommandRequest) return false;
                 int command = (int)request.CommandType;
+                if (FlightCheckpointServer.TryHandle(client, request)) return true;
                 if (command == ScienceClaimCommand || command == GameplayScienceCommand || command == TransferCommand || request.CommandType == AetherfrontCommandType.UnlockTechnology)
                 {
                     EnsurePlayer(actor);
