@@ -86,30 +86,50 @@ try{Protect-PublisherSecret (Join-Path $secrets 'discord.dpapi') 'discord' ([Tex
 # Seal executable inputs without touching universe, logs, identities, preferences
 # or any file bytes. Directory names are pinned during each later deployment.
 $aclBackup=[Collections.Generic.List[object]]::new()
+$recordedAcl=[Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+function Save-OriginalAcl([string]$Path) {
+    if($recordedAcl.Add($Path)){
+        $record=@{path=$Path;sddl=(Get-Acl -LiteralPath $Path).Sddl};$aclBackup.Add($record)
+        [IO.File]::AppendAllText((Join-Path $root 'acl-before-v3.jsonl'),(($record|ConvertTo-Json -Compress)+[Environment]::NewLine),[Text.UTF8Encoding]::new($false))
+    }
+}
+function Preserve-ChildDataAccess([string]$Directory) {
+    # Removing inherited write access from an execution parent must not revoke
+    # the limited bot's existing state/log permissions or alter universe access.
+    foreach($child in Get-ChildItem -LiteralPath $Directory -Force){
+        if($child.Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Execution tree contains a reparse point'}
+        Save-OriginalAcl $child.FullName
+        $acl=Get-Acl -LiteralPath $child.FullName
+        $acl.SetAccessRuleProtection($true,$true)
+        Set-Acl -LiteralPath $child.FullName -AclObject $acl
+    }
+}
 function Protect-ExecutionTree([string]$Directory) {
     $item=Get-Item -LiteralPath $Directory -Force
     if($item.Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Execution directory contains a reparse point'}
-    $aclBackup.Add(@{path=$Directory;sddl=(Get-Acl -LiteralPath $Directory).Sddl})
+    Save-OriginalAcl $Directory
+    Preserve-ChildDataAccess $Directory
     Set-PublisherDirectory $Directory @($ExpectedOperatorSid) -RootOnlyReaders
     foreach($child in Get-ChildItem -LiteralPath $Directory -Force){
         if($child.Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Execution tree contains a reparse point'}
         if($child.PSIsContainer){
             if($child.Name -notin @('Universe','Aetherfront','Logs','APFDiscordBridge','secrets','Identity','Backups','Cache','node_modules')){Protect-ExecutionTree $child.FullName}
         } elseif($child.Extension -in @('.dll','.exe','.ps1','.mjs','.js','.json','.config','.xml','.pdb')){
-            $aclBackup.Add(@{path=$child.FullName;sddl=(Get-Acl -LiteralPath $child.FullName).Sddl})
+            Save-OriginalAcl $child.FullName
             $readers=if($child.Name -match '(?i)private|secret|credential|password'){@()}else{@($ExpectedOperatorSid)}
             Set-PublisherFile $child.FullName $readers
         }
     }
 }
 foreach($directory in @($live,$bot)){
-    $aclBackup.Add(@{path=$directory;sddl=(Get-Acl -LiteralPath $directory).Sddl})
+    Save-OriginalAcl $directory
+    Preserve-ChildDataAccess $directory
     Set-PublisherDirectory $directory @($ExpectedOperatorSid) -RootOnlyReaders
 }
 $executionRoots=@('Server','PackHost','CertificateTool','UpdateTool')|ForEach-Object{Join-Path $live $_}
 foreach($directory in $executionRoots){Protect-ExecutionTree $directory}
 $configPaths=@($hostConfiguration,(Join-Path $bot 'config.json'),(Join-Path $live 'deployment.json'))
-foreach($path in $configPaths){$aclBackup.Add(@{path=$path;sddl=(Get-Acl -LiteralPath $path).Sddl});Set-PublisherFile $path @($ExpectedOperatorSid)}
+foreach($path in $configPaths){Save-OriginalAcl $path;Set-PublisherFile $path @($ExpectedOperatorSid)}
 Write-PublisherJson (Join-Path $root 'acl-before-v3.json') $aclBackup
 $config=[ordered]@{
     schemaVersion=3;host='vmi3254434';root=$root;writerSid=$ExpectedOperatorSid

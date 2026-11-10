@@ -43,8 +43,8 @@ try {
             $seen=[Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
             foreach($entry in $zip.Entries){
                 if($entry.FullName -cnotmatch '^[A-Za-z][A-Za-z0-9.-]+\.(?:ps1|mjs|cs|json)$' -or -not $seen.Add($entry.FullName) -or $entry.Length -gt 1MB){throw 'Unexpected setup entry'}
-                $input=$entry.Open();$output=[IO.FileStream]::new((Join-Path $directory $entry.FullName),'CreateNew','Write','None')
-                try{$input.CopyTo($output)}finally{$output.Dispose();$input.Dispose()}
+                $entryInput=$entry.Open();$output=[IO.FileStream]::new((Join-Path $directory $entry.FullName),'CreateNew','Write','None')
+                try{$entryInput.CopyTo($output)}finally{$output.Dispose();$entryInput.Dispose()}
             }
         } finally {$zip.Dispose()}
     } finally {$stream.Dispose()}
