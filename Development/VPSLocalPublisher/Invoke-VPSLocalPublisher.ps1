@@ -29,9 +29,10 @@ try {
     }
     $directories=@($config.pinnedDirectories)
     $pins=[AetherfrontPublisherSessionAccess]::PinAncestors($directories)
-    foreach($path in @($config.pinnedDirectories)){Assert-PublisherPath $path $path}
+    $controlStatusDirectory='C:\ProgramData\Aetherfront-Control'
+    foreach($path in @($config.pinnedDirectories)){Assert-PublisherPath $path $path -CreateOnlyDirectory $controlStatusDirectory -CreatorSid $config.writerSid}
     foreach($row in $config.configurationPins){
-        Assert-PublisherPath $row.path ([IO.Path]::GetDirectoryName($row.path))
+        Assert-PublisherPath $row.path ([IO.Path]::GetDirectoryName($row.path)) -CreateOnlyDirectory $controlStatusDirectory -CreatorSid $config.writerSid
         $stream=[IO.FileStream]::new($row.path,'Open','Read','Read');$streams.Add($stream)
         if([Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($stream)).ToLowerInvariant() -cne $row.sha256){throw 'Publisher execution configuration changed; signed maintenance is required'}
     }

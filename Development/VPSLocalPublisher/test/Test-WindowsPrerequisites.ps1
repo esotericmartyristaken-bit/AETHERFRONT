@@ -23,4 +23,19 @@ $scheduler=New-Object -ComObject Schedule.Service;$scheduler.Connect();$folder=$
 if($null -ne (Get-PublisherTaskIfPresent $folder ('Aetherfront-NoSuchTest-'+[Guid]::NewGuid().ToString('N')))){throw 'Absent task was not recognized'}
 $settings=New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) -MultipleInstances IgnoreNew
 if($settings.ExecutionTimeLimit -cne 'PT0S'){throw 'Scheduled task lifetime differs'}
-[pscustomobject]@{status='passed';checks=7;logonSid=$sid;sessionId=[Diagnostics.Process]::GetCurrentProcess().SessionId;productionModified=$false;uacRequests=0}
+$operator='S-1-5-21-1-2-3-1001';$control='C:\ProgramData\Aetherfront-Control'
+foreach($case in @(
+    @{rights='CreateFiles';directory=$true;path=$control;inherit='None';propagate='None';unsafe=$false},
+    @{rights='CreateFiles,CreateDirectories';directory=$true;path=$control;inherit='None';propagate='None';unsafe=$true},
+    @{rights='DeleteSubdirectoriesAndFiles';directory=$true;path=$control;inherit='None';propagate='None';unsafe=$true},
+    @{rights='ChangePermissions';directory=$true;path=$control;inherit='None';propagate='None';unsafe=$true},
+    @{rights='Modify';directory=$true;path=$control;inherit='ObjectInherit';propagate='InheritOnly';unsafe=$false},
+    @{rights='Modify';directory=$false;path=($control+'\host.json');inherit='None';propagate='None';unsafe=$true},
+    @{rights='CreateFiles';directory=$true;path='C:\Other';inherit='None';propagate='None';unsafe=$true},
+    @{rights='WriteData';directory=$false;path=($control+'\host.json');inherit='None';propagate='None';unsafe=$true},
+    @{rights='ReadAndExecute';directory=$true;path=$control;inherit='None';propagate='None';unsafe=$false}
+)){
+    $rule=[Security.AccessControl.FileSystemAccessRule]::new([Security.Principal.SecurityIdentifier]::new($operator),$case.rights,$case.inherit,$case.propagate,'Allow')
+    if((Test-PublisherUnsafeRule $rule $case.directory $case.path $control $operator) -ne $case.unsafe){throw ('ACL classification failed: '+$case.rights+' '+$case.path)}
+}
+[pscustomobject]@{status='passed';checks=16;logonSid=$sid;sessionId=[Diagnostics.Process]::GetCurrentProcess().SessionId;productionModified=$false;uacRequests=0}

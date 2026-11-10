@@ -36,19 +36,33 @@ function Set-PublisherFile([string]$Path,[string[]]$Readers=@()) {
     Set-Acl -LiteralPath $Path -AclObject $acl
 }
 
-function Assert-PublisherPath([string]$Path,[string]$Root,[switch]$WritableInbox) {
+function Test-PublisherUnsafeRule($Rule,[bool]$IsDirectory,[string]$ItemPath,[string]$CreateOnlyDirectory='',[string]$CreatorSid='') {
+    if($Rule.AccessControlType -ne 'Allow' -or $Rule.IdentityReference.Value -in $script:TrustedSids){return $false}
+    # InheritOnly applies to future child objects, not to this object. Every
+    # critical child file is checked separately, including inherited grants.
+    if($Rule.PropagationFlags -band [Security.AccessControl.PropagationFlags]::InheritOnly){return $false}
+    $write=[Security.AccessControl.FileSystemRights]'WriteData,AppendData,WriteAttributes,WriteExtendedAttributes,Delete,DeleteSubdirectoriesAndFiles,ChangePermissions,TakeOwnership'
+    $effective=$Rule.FileSystemRights -band $write
+    if(-not $effective){return $false}
+    # The legacy control root deliberately allows new status files. CreateFiles
+    # alone cannot replace a protected existing file, delete children, rename a
+    # directory, or create a replacement bootstrap directory.
+    if($IsDirectory -and $CreateOnlyDirectory -and $ItemPath -ieq $CreateOnlyDirectory -and
+        $Rule.IdentityReference.Value -ceq $CreatorSid -and $effective -eq [Security.AccessControl.FileSystemRights]::CreateFiles){return $false}
+    return $true
+}
+
+function Assert-PublisherPath([string]$Path,[string]$Root,[switch]$WritableInbox,[string]$CreateOnlyDirectory='',[string]$CreatorSid='') {
     $full=[IO.Path]::GetFullPath($Path);$base=[IO.Path]::GetFullPath($Root).TrimEnd('\')
     if($full -ine $base -and -not $full.StartsWith($base+'\',[StringComparison]::OrdinalIgnoreCase)){throw 'Publisher path escaped protected root'}
-    $write=[Security.AccessControl.FileSystemRights]'WriteData,AppendData,WriteAttributes,WriteExtendedAttributes,Delete,DeleteSubdirectoriesAndFiles,ChangePermissions,TakeOwnership'
     $item=Get-Item -LiteralPath $full -Force
     while($item){
         if($item.Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Publisher path is a reparse point'}
         $acl=Get-Acl -LiteralPath $item.FullName
         if($acl.GetOwner([Security.Principal.SecurityIdentifier]).Value -notin $script:TrustedSids){throw 'Publisher path owner differs'}
         foreach($rule in $acl.GetAccessRules($true,$true,[Security.Principal.SecurityIdentifier])){
-            if($rule.AccessControlType -ne 'Allow' -or $rule.IdentityReference.Value -in $script:TrustedSids){continue}
             if($WritableInbox -and $item.FullName -ieq $full){continue}
-            if($rule.FileSystemRights -band $write){throw 'Publisher execution/configuration path is writable by another principal'}
+            if(Test-PublisherUnsafeRule $rule ($item -is [IO.DirectoryInfo]) $item.FullName $CreateOnlyDirectory $CreatorSid){throw 'Publisher execution/configuration path is writable by another principal'}
         }
         if($item.FullName -ieq $base){break}
         $item=if($item -is [IO.FileInfo]){$item.Directory}else{$item.Parent}

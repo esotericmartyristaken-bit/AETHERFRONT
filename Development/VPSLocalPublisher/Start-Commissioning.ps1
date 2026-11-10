@@ -6,14 +6,15 @@ param([Parameter(Mandatory)][string]$Bundle,
     [Parameter(Mandatory)][ValidatePattern('^[a-f0-9]{64}$')][string]$NativeSha256,
     [Parameter(Mandatory)][ValidatePattern('^[a-f0-9]{40}$')][string]$ReleaseCommit,
     [Parameter(Mandatory)][ValidatePattern('^S-1-5-21-[0-9-]+$')][string]$OperatorSid,
-    [switch]$PrepareOnly)
+    [switch]$PrepareOnly,[switch]$Repair)
 $ErrorActionPreference='Stop'
 $powerShell='C:\Program Files\PowerShell\7\pwsh.exe'
 $bundlePath=(Resolve-Path -LiteralPath $Bundle).Path
 $archivePath=(Resolve-Path -LiteralPath $NativeArchive).Path
 if((Get-FileHash -LiteralPath $bundlePath).Hash.ToLowerInvariant() -cne $BundleSha256){throw 'Commissioning bundle differs from reviewed hash'}
 if((Get-FileHash -LiteralPath $archivePath).Hash.ToLowerInvariant() -cne $NativeSha256){throw 'Native release differs from reviewed hash'}
-$values=@{bundle=$bundlePath;bundleHash=$BundleSha256;archive=$archivePath;archiveHash=$NativeSha256;commit=$ReleaseCommit;sid=$OperatorSid}
+$entry=if($Repair){'Repair-VPSLocalPublisher.ps1'}else{'Install-VPSLocalPublisher.ps1'}
+$values=@{bundle=$bundlePath;bundleHash=$BundleSha256;archive=$archivePath;archiveHash=$NativeSha256;commit=$ReleaseCommit;sid=$OperatorSid;entry=$entry}
 $data=[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes(($values|ConvertTo-Json -Compress)))
 $body=@'
 $ErrorActionPreference='Stop'
@@ -53,7 +54,8 @@ try {
     foreach($file in $manifest.files){
         if(-not $seen.Contains($file.name) -or (Get-FileHash -LiteralPath (Join-Path $directory $file.name)).Hash.ToLowerInvariant() -cne $file.sha256){throw 'Setup source hash differs'}
     }
-    & (Join-Path $directory 'Install-VPSLocalPublisher.ps1') -NativeArchive $v.archive -ExpectedNativeHash $v.archiveHash -ReleaseCommit $v.commit -ExpectedOperatorSid $v.sid
+    if($v.entry -cnotin @('Install-VPSLocalPublisher.ps1','Repair-VPSLocalPublisher.ps1')){throw 'Unexpected commissioning operation'}
+    & (Join-Path $directory $v.entry) -NativeArchive $v.archive -ExpectedNativeHash $v.archiveHash -ReleaseCommit $v.commit -ExpectedOperatorSid $v.sid
 } catch {
     $errorPath=Join-Path $parent 'Status-v3/commissioning-error.json'
     if([IO.Directory]::Exists([IO.Path]::GetDirectoryName($errorPath))){[IO.File]::WriteAllText($errorPath,(@{status='failed';code=$_.Exception.GetType().Name;message=$_.Exception.Message;privateLog=$log;observedAtUtc=[DateTime]::UtcNow.ToString('o')}|ConvertTo-Json))}

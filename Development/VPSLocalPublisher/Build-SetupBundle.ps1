@@ -2,7 +2,7 @@
 param([Parameter(Mandatory)][string]$OutputPath)
 $ErrorActionPreference='Stop'
 $sourceRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
-$names=@('Install-VPSLocalPublisher.ps1','Worker.mjs','LocalReleaseRequest.mjs','Invoke-VPSLocalPublisher.ps1','Publisher.Common.ps1','Read-JobCredential.ps1','Assert-LocalRelease.ps1','SessionAccess.cs','Approve-LocalRelease.ps1','Sign-LocalReleaseRequest.mjs','Get-PublisherStatus.ps1')
+$names=@('Install-VPSLocalPublisher.ps1','Repair-VPSLocalPublisher.ps1','Worker.mjs','LocalReleaseRequest.mjs','Invoke-VPSLocalPublisher.ps1','Publisher.Common.ps1','Read-JobCredential.ps1','Assert-LocalRelease.ps1','SessionAccess.cs','Approve-LocalRelease.ps1','Sign-LocalReleaseRequest.mjs','Get-PublisherStatus.ps1')
 $manifest=@{schemaVersion=3;files=@()}
 $full=[IO.Path]::GetFullPath($OutputPath)
 $null=[IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($full))
