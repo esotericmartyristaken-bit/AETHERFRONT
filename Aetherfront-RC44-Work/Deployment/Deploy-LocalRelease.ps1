@@ -13,6 +13,8 @@ param(
 )
 $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
+. (Join-Path $PSScriptRoot 'Initialize-LocalPublishEnvironment.ps1')
+$git=Initialize-LocalPublishEnvironment
 $sourceRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 $control=Join-Path ([Environment]::GetFolderPath('CommonApplicationData')) 'Aetherfront-Control'
 $hostSettings=Get-Content -LiteralPath (Join-Path $control 'host.json') -Raw|ConvertFrom-Json
@@ -56,8 +58,8 @@ try{
     if(-not $reportFull.StartsWith($reportsRoot,[StringComparison]::OrdinalIgnoreCase) -or [IO.File]::Exists($reportFull)){throw 'Use a new report file inside workspace UpdateBuilds'}
     $reportAuthorized=$true
     if((Get-FileHash -LiteralPath $archivePath).Hash.ToLowerInvariant() -cne $ArchiveSha256){throw 'Release archive hash differs'}
-    if((& git -C $sourceRoot rev-parse HEAD).Trim() -cne $SourceCommit){throw 'Reviewed source commit differs'}
-    & git -C $sourceRoot diff --quiet HEAD -- KESAS-VPS-Server APFDiscordBot/src APFDiscordBot/scripts ControlPlane Aetherfront-RC44-Work/Deployment
+    if((& $git -C $sourceRoot rev-parse HEAD).Trim() -cne $SourceCommit){throw 'Reviewed source commit differs'}
+    & $git -C $sourceRoot diff --quiet HEAD -- KESAS-VPS-Server APFDiscordBot/src APFDiscordBot/scripts ControlPlane Aetherfront-RC44-Work/Deployment
     if($LASTEXITCODE -ne 0){throw 'Reviewed deployment code is dirty'}
     $configuration=Get-Content -LiteralPath $BotConfig -Raw|ConvertFrom-Json
     if($configuration.updates.githubDeployment.enabled -ne $false){throw 'Disable Git-triggered host deployment before local publication'}
@@ -95,9 +97,9 @@ try{
     $files=@(foreach($relative in $selected){
         $source=Join-Path $sourceRoot $relative;$destination=Join-Path $bundle $relative
         if((Get-Item -LiteralPath $source -Force).Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Reviewed source contains a reparse point'}
-        $committed=@(& git -C $sourceRoot rev-parse --verify "${SourceCommit}:$($relative.Replace('\','/'))")
+        $committed=@(& $git -C $sourceRoot rev-parse --verify "${SourceCommit}:$($relative.Replace('\','/'))")
         if($LASTEXITCODE -ne 0 -or $committed.Count -ne 1){throw 'Frozen source is not tracked in reviewed commit'}
-        $working=@(& git -C $sourceRoot hash-object --path=$relative $source)
+        $working=@(& $git -C $sourceRoot hash-object --path=$relative $source)
         if($LASTEXITCODE -ne 0 -or $working.Count -ne 1 -or $working[0] -cne $committed[0]){throw 'Frozen source differs from reviewed commit blob'}
         $sha=(Get-FileHash -LiteralPath $source).Hash.ToLowerInvariant()
         $null=[IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($destination));Copy-Item -LiteralPath $source -Destination $destination
