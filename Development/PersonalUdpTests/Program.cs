@@ -142,6 +142,7 @@ static class Program
             Check(client.ConnectionStatus==NetConnectionStatus.Connected,"UDP connection");
             var handshake=outgoing.CreateNewMessageData<HandshakeRequestMsgData>();
             handshake.PlayerName=Name;handshake.IdentityPublicKey=publicKey;handshake.UniqueIdentifier=Account;handshake.KspVersion="1.12.5";
+            handshake.DeepFreezeProtocolVersion=1;
             handshake.ApfEnabled=true;handshake.ApfClientVersion=clientVersion;handshake.ApfPackId="kesas";handshake.ApfPackVersion=clientVersion;
             Send(outgoing.CreateNew<HandshakeCliMsg>(handshake));
             var challenge=Receive<HandshakeIdentityChallengeMsgData>();
