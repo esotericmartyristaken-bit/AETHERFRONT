@@ -78,7 +78,12 @@ var observed = new ConcurrentQueue<string>(); var threads = new ConcurrentDictio
 var reader = new FixtureReader((_, message) =>
 {
  threads[Environment.CurrentManagedThreadId] = true;
- if (ReferenceEquals(message, first)) { blocked.Set(); if (!release.Wait(5000)) throw new Exception("Fixture release timeout"); }
+ if (ReferenceEquals(message, first))
+ {
+    blocked.Set();
+    if (!release.Wait(5000)) throw new Exception("Fixture release timeout");
+    Thread.Sleep(270); message.Recycle();
+ }
  else { observed.Enqueue(message.Data.GetType().Name); if (observed.Count >= 2) done.Set(); }
 });
 ReceivePump.Enqueue(reader, actor, (IClientMessageBase)first);
@@ -91,6 +96,7 @@ release.Set(); Check(done.Wait(5000), "Queued control and latest position drain 
 Check(observed.TryDequeue(out string name) && name == "WarpNewSubspaceMsgData", "Clock boundary takes priority over coalesced positions in real receive pump");
 Check(threads.Count == 1, "All native gameplay callbacks remain serial on one worker");
 Check(ReceivePump.Coalesced >= 499, "Incoming superseded positions removed before native lock/disk work");
+Check(ReceivePump.SlowHandlers > 0, "Slow handler diagnostics survive a native handler recycling its message");
 Console.WriteLine("PASS " + count + " shipping-graft scheduling/recovery assertions");
 
 sealed class FixtureReader(Action<ClientStructure, IClientMessageBase> action) : ReaderBase

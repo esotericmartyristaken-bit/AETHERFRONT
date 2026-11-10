@@ -85,18 +85,34 @@ void Resume(ClientStructure client)
 }
 JsonElement Request(ClientStructure client, int command, string entity = "", long generation = 0, string nonce = null)
 {
-    while (client.SendMessageQueue.TryDequeue(out var old)) old.Recycle();
+    foreach (var old in TestReplies(client)) old.Recycle();
     var request = new AetherfrontWireRequest { Operation = AetherfrontWireOperation.CommandRequest,
         CommandType = (AetherfrontCommandType)command, CommandId = nonce ?? Guid.NewGuid().ToString("N"), EntityId = entity, Amount = generation };
     Check(PersonalServer.TryHandle(client, request), "Native personal dispatch handled checkpoint");
     JsonElement result = default;
-    while (client.SendMessageQueue.TryDequeue(out var message))
+    foreach (var message in TestReplies(client))
     {
         if (message.Data is AetherfrontCommandReplyMsgData reply && reply.PayloadJson.Contains("\"FlightCheckpoint\""))
             result = JsonDocument.Parse(reply.PayloadJson).RootElement.Clone();
         message.Recycle();
     }
     return result;
+}
+IEnumerable<IMessageBase> TestReplies(ClientStructure client)
+{
+    // This in-process fixture has no UDP connection. Read the application
+    // scheduler directly when present; the separate wire suite tests delivery.
+    var traffic = typeof(ClientStructure).Assembly.GetType("Aetherfront.Stability.Server.ServerTraffic");
+    var states = traffic?.GetField("States", Private)?.GetValue(null);
+    object[] state = { client, null };
+    if (states != null && (bool)states.GetType().GetMethod("TryGetValue").Invoke(states, state))
+    {
+        var scheduler = state[1].GetType().GetField("Queue", Instance).GetValue(state[1]);
+        var take = scheduler.GetType().GetMethod("TryTake");
+        object[] items = { (Func<IMessageBase, int, bool>)((_, _) => true), null };
+        while ((bool)take.Invoke(scheduler, items)) yield return (IMessageBase)items[1];
+    }
+    while (client.SendMessageQueue.TryDequeue(out var message)) yield return message;
 }
 string Proto(Guid id, uint part, string name, string crew = "") =>
     $"pid = {id:N}\nname = {name}\ntype = Ship\nsit = ORBITING\nlastUT = 1000\nORBIT\n{{\nSMA = 700000\nECC = 0\nREF = 1\nbody = Kerbin\n}}\n" +

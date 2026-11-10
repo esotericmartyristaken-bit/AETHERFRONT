@@ -98,6 +98,9 @@ namespace Aetherfront.Stability.Server
                     continue;
                 }
                 if (message == null) { Wake.WaitOne(2); continue; }
+                // Native handlers may recycle the message and clear Data.
+                // Capture diagnostics while this worker still owns the payload.
+                string messageType = message.Data?.GetType().Name ?? "unavailable";
                 long began = Stopwatch.GetTimestamp();
                 try
                 {
@@ -105,12 +108,17 @@ namespace Aetherfront.Stability.Server
                         reader.HandleMessage(state.Client, (IClientMessageBase)message);
                     Interlocked.Increment(ref Handled);
                 }
-                catch (Exception error) { LunaLog.Error("[Stability] Gameplay handler failed; type=" + message.Data.GetType().Name + "; error=" + error); }
+                catch (Exception error) { LunaLog.Error("[Stability] Gameplay handler failed; type=" + messageType + "; error=" + error); }
                 finally
                 {
                     double milliseconds = (Stopwatch.GetTimestamp() - began) * 1000d / Stopwatch.Frequency;
                     if (milliseconds >= 250)
-                    { Interlocked.Increment(ref SlowHandlers); LunaLog.Normal("[Stability] Slow gameplay handler; type=" + message.Data.GetType().Name + "; milliseconds=" + milliseconds.ToString("F1") + "; pending=" + state.Queue.Count); }
+                    {
+                        int pending;
+                        lock (state.Gate) pending = state.Queue.Count;
+                        Interlocked.Increment(ref SlowHandlers);
+                        LunaLog.Normal("[Stability] Slow gameplay handler; type=" + messageType + "; milliseconds=" + milliseconds.ToString("F1") + "; pending=" + pending);
+                    }
                 }
             }
         }
