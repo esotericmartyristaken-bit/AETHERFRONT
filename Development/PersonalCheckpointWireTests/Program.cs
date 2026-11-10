@@ -72,8 +72,30 @@ Check(observer.Checkpoint(80).GetProperty("FlightCheckpoint").GetProperty("Missi
     "Second player's personal clock advances throughout the other player's rewind");
 resumed.Remove(vessel);
 resumed.Remove(secondVessel);
+if (Peer.ClientVersion == "kesas-rc55")
+{
+    using var warpKey = RSA.Create(2048); string warpName = "WR55" + Guid.NewGuid().ToString("N").Substring(0, 7);
+    double beforeWarp;
+    using (var warper = new Peer(target, warpName, warpKey))
+    {
+        double initialOffset = warper.Resume();
+        beforeWarp = warper.Checkpoint(80).GetProperty("FlightCheckpoint").GetProperty("MissionTime").GetDouble();
+        int boundary = warper.Warp(initialOffset + 10000);
+        Check(warper.Warp(initialOffset + 10000) == boundary, "Repeated identical warp proposal reuses the acknowledged subspace");
+        Thread.Sleep(5100);
+        var afterWarp = warper.Checkpoint(80);
+        Check(afterWarp.GetProperty("Accepted").GetBoolean() && afterWarp.GetProperty("FlightCheckpoint").GetProperty("MissionTime").GetDouble() >= beforeWarp + 9999,
+            "Server associates the validated warp before a separate client change message");
+        warper.WarpWithoutReceiving(initialOffset + 20000);
+    }
+    Thread.Sleep(500);
+    using var recoveredWarp = new Peer(target, warpName, warpKey); recoveredWarp.Resume(); recoveredWarp.Checkpoint(81);
+    Thread.Sleep(5100); // Respect the real native save cooldown, including across reconnect.
+    Check(recoveredWarp.Checkpoint(80).GetProperty("FlightCheckpoint").GetProperty("MissionTime").GetDouble() >= beforeWarp + 19999,
+        "Disconnect without reading warp ACK reconnects at the accepted new epoch");
+}
 File.WriteAllText(Path.Combine(evidence, "RESULTS.json"), JsonSerializer.Serialize(new {
-    checks, passed = true, endpoint = target.ToString(), release = "kesas-rc54", capturedUtc = DateTimeOffset.UtcNow,
+    checks, passed = true, endpoint = target.ToString(), release = Peer.ClientVersion, capturedUtc = DateTimeOffset.UtcNow,
     protocolClients = true, unityGameplayVerified = false, transientCraftRemoved = true,
     identityPrivateKeysPersisted = false, personalClockRestored = true, nativeLaunchHook = true
 }, new JsonSerializerOptions { WriteIndented = true }));
@@ -81,6 +103,7 @@ Console.WriteLine("PASS " + checks + " actual network checkpoint assertions; no 
 
 sealed class Peer : IDisposable
 {
+    internal static readonly string ClientVersion = Environment.GetEnvironmentVariable("APF_CHECKPOINT_TEST_VERSION") == "kesas-rc55" ? "kesas-rc55" : "kesas-rc54";
     readonly NetClient connection = new(new NetPeerConfiguration("LMP"));
     readonly ClientMessageFactory outgoing = new();
     readonly ServerMessageFactory incoming = new();
@@ -99,7 +122,7 @@ sealed class Peer : IDisposable
         var request = outgoing.CreateNewMessageData<HandshakeRequestMsgData>();
         request.PlayerName = name; request.IdentityPublicKey = pub; request.UniqueIdentifier = account; request.KspVersion = "1.12.5";
         request.DeepFreezeProtocolVersion = 1;
-        request.ApfEnabled = true; request.ApfClientVersion = request.ApfPackVersion = "kesas-rc54"; request.ApfPackId = "kesas";
+        request.ApfEnabled = true; request.ApfClientVersion = request.ApfPackVersion = ClientVersion; request.ApfPackId = "kesas";
         Send(outgoing.CreateNew<HandshakeCliMsg>(request));
         var challenge = Receive<HandshakeIdentityChallengeMsgData>();
         var proof = outgoing.CreateNewMessageData<HandshakeIdentityProofMsgData>(); proof.Signature = IdentityProof.Sign(key, challenge.Nonce, account, name);
@@ -158,6 +181,16 @@ sealed class Peer : IDisposable
         var reply = Receive<WarpSubspacesReplyMsgData>();
         var space = reply.Subspaces.Take(reply.SubspaceCount).Single(s => s.Players.Take(s.PlayerCount).Contains(name));
         return space.SubspaceTime;
+    }
+    public int Warp(double offset)
+    {
+        var request = outgoing.CreateNewMessageData<WarpNewSubspaceMsgData>(); request.PlayerCreator = name; request.ServerTimeDifference = offset;
+        Send(outgoing.CreateNew<WarpCliMsg>(request)); return ReceiveWhere<WarpNewSubspaceMsgData>(data => data.PlayerCreator == name).SubspaceKey;
+    }
+    public void WarpWithoutReceiving(double offset)
+    {
+        var request = outgoing.CreateNewMessageData<WarpNewSubspaceMsgData>(); request.PlayerCreator = name; request.ServerTimeDifference = offset;
+        Send(outgoing.CreateNew<WarpCliMsg>(request)); Thread.Sleep(700);
     }
     public JsonElement Checkpoint(int command, string entity = "", long generation = 0, bool disconnect = false)
     {

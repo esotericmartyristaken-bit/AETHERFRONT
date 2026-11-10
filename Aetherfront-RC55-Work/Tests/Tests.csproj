@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+ <ItemGroup><Compile Include="../Shared/WarpRecoveryPolicy.cs" /></ItemGroup>
+ <ItemGroup>
+  <Reference Include="Server"><HintPath>$(Candidate)/Server.dll</HintPath></Reference>
+  <Reference Include="ApfCore"><HintPath>$(Runtime)/ApfCore.dll</HintPath></Reference>
+  <Reference Include="Lidgren.Core"><HintPath>$(Runtime)/Lidgren.Core.dll</HintPath></Reference>
+ </ItemGroup>
+</Project>

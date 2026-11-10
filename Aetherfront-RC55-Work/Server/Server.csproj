@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><TargetFramework>net8.0</TargetFramework><LangVersion>latest</LangVersion><AssemblyName>StabilityDonor</AssemblyName></PropertyGroup>
+ <ItemGroup><Compile Include="../Shared/*.cs" /></ItemGroup>
+ <ItemGroup>
+  <Reference Include="Server"><HintPath>$(Runtime)/Server.dll</HintPath><Private>false</Private></Reference>
+  <Reference Include="ApfCore"><HintPath>$(Runtime)/ApfCore.dll</HintPath><Private>false</Private></Reference>
+  <Reference Include="Lidgren.Core"><HintPath>$(Runtime)/Lidgren.Core.dll</HintPath><Private>false</Private></Reference>
+ </ItemGroup>
+</Project>

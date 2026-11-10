@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><TargetFramework>net472</TargetFramework><OutputType>Exe</OutputType><LangVersion>latest</LangVersion></PropertyGroup>
+ <ItemGroup>
+  <Reference Include="AetherfrontStabilityClient"><HintPath>../Client/bin/Debug/net472/AetherfrontStabilityClient.dll</HintPath><Private>false</Private></Reference>
+  <Reference Include="0Harmony"><HintPath>$(HarmonyPath)</HintPath><Private>false</Private></Reference>
+  <Reference Include="UnityEngine.CoreModule"><HintPath>$(KspManaged)/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+ </ItemGroup>
+</Project>

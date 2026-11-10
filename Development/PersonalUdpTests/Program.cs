@@ -24,6 +24,7 @@ static class Program
 {
     static int checks;
     static string clientVersion;
+    static int serverPort;
     static void Check(bool value,string name){if(!value)throw new Exception(name);Interlocked.Increment(ref checks);Console.WriteLine("PASS "+name);}
     static void Main(string[] args)
     {
@@ -38,6 +39,7 @@ static class Program
             return File.Exists(path)?context.LoadFromAssemblyPath(path):null;
         };
         clientVersion=(string)JObject.Parse(File.ReadAllText(Path.Combine(root,"Config","APFPack.json")))["requiredClientVersion"];
+        serverPort=int.Parse(System.Xml.Linq.XDocument.Load(Path.Combine(root,"Config","ConnectionSettings.xml")).Root.Element("Port").Value);
         if (args.Length == 4)
         {
             int peers = int.Parse(args[2]);
@@ -134,7 +136,7 @@ static class Program
         public Peer(string name,RSA key)
         {
             Name=name;string publicKey=IdentityProof.ExportPublicKey(key);Account=IdentityProof.AccountId(publicKey);
-            client.Start();var hail=client.CreateMessage(16);hail.Write("");client.Connect(new IPEndPoint(IPAddress.Loopback,28865),hail);
+            client.Start();var hail=client.CreateMessage(16);hail.Write("");client.Connect(new IPEndPoint(IPAddress.Loopback,serverPort),hail);
             var watch=Stopwatch.StartNew();
             while(client.ConnectionStatus!=NetConnectionStatus.Connected && watch.ElapsedMilliseconds<10000){DrainStatus();Thread.Sleep(10);}
             Check(client.ConnectionStatus==NetConnectionStatus.Connected,"UDP connection");
