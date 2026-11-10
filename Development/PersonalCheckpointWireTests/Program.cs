@@ -26,7 +26,7 @@ if (Directory.Exists(evidence)) throw new IOException("Use new evidence; preserv
 Directory.CreateDirectory(evidence);
 using var key = RSA.Create(2048);
 using var observerKey = RSA.Create(2048);
-string name = "CP53" + Guid.NewGuid().ToString("N").Substring(0, 7);
+string name = "CP54" + Guid.NewGuid().ToString("N").Substring(0, 7);
 int checks = 0;
 void Check(bool value, string what) { checks++; if (!value) throw new InvalidOperationException(what); Console.WriteLine("PASS " + what); }
 using var peer = new Peer(target, name, key);
@@ -73,7 +73,7 @@ Check(observer.Checkpoint(80).GetProperty("FlightCheckpoint").GetProperty("Missi
 resumed.Remove(vessel);
 resumed.Remove(secondVessel);
 File.WriteAllText(Path.Combine(evidence, "RESULTS.json"), JsonSerializer.Serialize(new {
-    checks, passed = true, endpoint = target.ToString(), release = "kesas-rc53", capturedUtc = DateTimeOffset.UtcNow,
+    checks, passed = true, endpoint = target.ToString(), release = "kesas-rc54", capturedUtc = DateTimeOffset.UtcNow,
     protocolClients = true, unityGameplayVerified = false, transientCraftRemoved = true,
     identityPrivateKeysPersisted = false, personalClockRestored = true, nativeLaunchHook = true
 }, new JsonSerializerOptions { WriteIndented = true }));
@@ -99,7 +99,7 @@ sealed class Peer : IDisposable
         var request = outgoing.CreateNewMessageData<HandshakeRequestMsgData>();
         request.PlayerName = name; request.IdentityPublicKey = pub; request.UniqueIdentifier = account; request.KspVersion = "1.12.5";
         request.DeepFreezeProtocolVersion = 1;
-        request.ApfEnabled = true; request.ApfClientVersion = request.ApfPackVersion = "kesas-rc53"; request.ApfPackId = "kesas";
+        request.ApfEnabled = true; request.ApfClientVersion = request.ApfPackVersion = "kesas-rc54"; request.ApfPackId = "kesas";
         Send(outgoing.CreateNew<HandshakeCliMsg>(request));
         var challenge = Receive<HandshakeIdentityChallengeMsgData>();
         var proof = outgoing.CreateNewMessageData<HandshakeIdentityProofMsgData>(); proof.Signature = IdentityProof.Sign(key, challenge.Nonce, account, name);

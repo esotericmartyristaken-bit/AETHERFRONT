@@ -1,4 +1,7 @@
-# RC53 personal flight checkpoints
+# RC54 personal flight checkpoints
+
+The failed RC53 candidate reserved immutable signed preparation. RC54 carries the
+corrected build; the failed draft/preparation and diagnostic evidence remain intact.
 
 F5 saves the pilot's entire personally owned fleet. F9 opens a confirmation
 window; the same controls are available under **Personal checkpoints** in flight,
@@ -57,7 +60,7 @@ to server mode or the published pack invalidates earlier checkpoints.
 
 `Patch` pins the five RC52 input assembly hashes and preserves shipping identity,
 resources and unrelated method bodies. It adds only checkpoint types and narrow
-dispatch/launch/clock/client and startup-recovery hooks, and stamps the client RC53. A method/field
+dispatch/launch/clock/client and startup-recovery hooks, and stamps the client RC54. A method/field
 audit is emitted per assembly. Existing transport and updater implementations
 are retained. The build does not deploy unfinished arena features.
 
@@ -74,6 +77,11 @@ retained by content hash under `Universe/DeepFreeze/Recovery`; the native journa
 commits only the scenario, leaving vessel files, roster and progression intact.
 Unknown or active missing craft and any frozen-crew reference still block startup.
 Candidate failures report the exact relative logfile and line for diagnosis.
+The host publisher reuses an unchanged authenticated bot only after verifying
+the limited task, process generation/owner, protected runtime and exact code,
+package-lock and launcher contents. Genuine bot changes retain guarded restart
+and a bounded five-minute cold-start wait; game updates need no bot restart when
+those verified inputs are unchanged.
 
 ## Verification
 

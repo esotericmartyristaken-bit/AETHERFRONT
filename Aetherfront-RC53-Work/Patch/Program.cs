@@ -119,7 +119,7 @@ else if (mode == "client")
     var literal = getter.Body.Instructions.Single(instruction => instruction.OpCode == OpCodes.Ldstr);
     var constant = module.GetType("LmpClient.Apf.ApfClientBuildVersion").Fields.Single(field => field.Name == "Value");
     if (!Equals(literal.Operand, "kesas-rc52") || !Equals(constant.Constant, "kesas-rc52")) throw new InvalidDataException("Unexpected client build identity.");
-    literal.Operand = "kesas-rc53"; constant.Constant = "kesas-rc53";
+    literal.Operand = "kesas-rc54"; constant.Constant = "kesas-rc54";
     changed.Add(getter.FullName);
 }
 
@@ -150,7 +150,7 @@ var allowedReferences = new HashSet<string>(StringComparer.Ordinal)
 };
 if (newReferences.Any(reference => !allowedReferences.Contains(reference.Split(',')[0])))
     throw new InvalidDataException("Unreviewed graft dependency: " + string.Join("; ", newReferences));
-var audit = new { version = "kesas-rc53", mode, inputSha256 = Hash(input), outputSha256 = Hash(output),
+var audit = new { version = "kesas-rc54", mode, inputSha256 = Hash(input), outputSha256 = Hash(output),
     identityPreserved = true, unrelatedMethodsPreserved = true, changed = differences, fieldChanges, addedTypes = added, newReferences };
 File.WriteAllText(output + ".audit.json", JsonSerializer.Serialize(audit, new JsonSerializerOptions { WriteIndented = true }));
 Console.WriteLine(JsonSerializer.Serialize(audit));

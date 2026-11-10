@@ -20,6 +20,9 @@ function Install-LocalBot([string]$Bundle,$Settings,[string]$BotConfig) {
     $account=$definition.Principal.UserId
     $sid=if($account -match '^S-1-'){[Security.Principal.SecurityIdentifier]::new($account)}else{[Security.Principal.NTAccount]::new($account).Translate([Security.Principal.SecurityIdentifier])}
     if($sid.Value -in @('S-1-5-18','S-1-5-32-544')){throw 'Do not run the Discord bot as administrator or SYSTEM'}
+    Assert-LocalBotIdle $Settings $configuration
+    $existing=Get-ReusableLocalBot $Bundle $Settings $bot $remote $sid.Value
+    if($existing){Assert-LocalBotIdle $Settings $configuration;return $existing}
     $runtime=Join-Path $Bundle 'BotRuntime'
     if(Test-Path -LiteralPath $runtime){throw 'Use a new immutable local bot runtime'}
     $null=[IO.Directory]::CreateDirectory($runtime)
@@ -61,7 +64,9 @@ function Install-LocalBot([string]$Bundle,$Settings,[string]$BotConfig) {
     $null=$folder.RegisterTaskDefinition('APF Discord Bot',$definition,6,$account,$null,2)
     $bot=$folder.GetTask('APF Discord Bot');$launched=[DateTime]::UtcNow;$null=$bot.Run($null)
     $timer=[Diagnostics.Stopwatch]::StartNew();$ready=$false;$expectedEntry=(Join-Path $runtime 'APFDiscordBot/src/index.js').Replace('/','\')
-    while($timer.Elapsed.TotalSeconds -lt 120){
+    # Cold module scanning on a small host can exceed two minutes. Keep the
+    # same authenticated readiness requirements with a bounded five-minute wait.
+    while($timer.Elapsed.TotalSeconds -lt 300){
         $lockPath=Join-Path $Settings.botRoot 'state/bot-instance.lock'
         if([IO.File]::Exists($lockPath)){
             $holder=Read-LocalBotReadinessRecord $lockPath
@@ -71,9 +76,7 @@ function Install-LocalBot([string]$Bundle,$Settings,[string]$BotConfig) {
                     $launch=Get-LocalBotLaunchRecord $Settings $process
                     $stateRoot=[IO.Path]::GetFullPath((Join-Path $Settings.botRoot 'state')).TrimEnd('\')+'\'
                     if($launch -and $launch.pid -eq $holder.pid -and $launch.runtime -ieq $runtime -and [Math]::Abs(($process.CreationDate.ToUniversalTime()-([DateTimeOffset]$launch.startedAt).UtcDateTime).TotalSeconds) -lt 2 -and [IO.Path]::GetFullPath($launch.stdout).StartsWith($stateRoot,[StringComparison]::OrdinalIgnoreCase) -and [IO.Path]::GetFileName($launch.stdout) -cmatch '^local-bot-[0-9TZ]+-[0-9]+\.stdout\.log$'){
-                        $stream=[IO.FileStream]::new($launch.stdout,[IO.FileMode]::Open,[IO.FileAccess]::Read,([IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete))
-                        try{$reader=[IO.StreamReader]::new($stream);try{$text=$reader.ReadToEnd()}finally{$reader.Dispose()}}finally{$stream.Dispose()}
-                        if($text.Contains('APF Discord Bot running from ')){$ready=$true}
+                        if(Test-LocalBotStartupBanner $launch.stdout){$ready=$true}
                     }
                 }
             }

@@ -1,11 +1,11 @@
-"""Assemble personal checkpoint RC53 from the exact deployed RC52 bundle."""
+"""Assemble personal checkpoint RC54 from the exact deployed RC52 bundle."""
 import argparse
 from pathlib import Path
 import runpy
 
 helpers = runpy.run_path(str(Path(__file__).resolve().parents[1] / "Aetherfront-RC50-Work/Build-Release.py"))
 digest, pack, unpack, read, write = (helpers[name] for name in ("digest", "pack", "unpack", "read_json", "write_json"))
-BASELINE, RELEASE = "kesas-rc52", "kesas-rc53"
+BASELINE, RELEASE = "kesas-rc52", "kesas-rc54"
 BASE_SHA = "aab842b62a6e7c20ac2485589f49b7927879f6cf90fa07b54040e688a3e53517"
 PREFIX = "GameData/LunaMultiplayer/"
 

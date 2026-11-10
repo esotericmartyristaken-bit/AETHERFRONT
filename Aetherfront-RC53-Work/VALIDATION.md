@@ -1,4 +1,4 @@
-# RC53 verification record
+# RC54 personal checkpoint verification record
 
 Observed 2026-11-09 on the local controller. Deployment and live production
 acceptance must be recorded separately; this document does not assert they ran.
@@ -23,6 +23,12 @@ acceptance must be recorded separately; this document does not assert they ran.
   temporary root, including exact relative logfile/line reporting for fatal
   startup. An earlier overly long test-fixture path failed certificate creation;
   the short-root rerun passed and no product change was inferred from that issue.
+- Publisher bot reuse passes 34 existing identity/syntax checks and 15 additional
+  content, bounded shared-log and orchestration checks. Reuse requires identical
+  frozen code/package locks/launcher, a protected release, the existing limited
+  task, matching process owner and generation, authenticated startup banner and
+  a final generation recheck. Changed code takes the normal guarded reinstall
+  path; cold startup retains authentication checks with a five-minute bound.
 - 91 checks passed under KSP's actual embedded Mono runtime: shipping client
   checkpoint methods JIT, stock quicksave target signatures exist, valid metadata
   parses without Unity-thread access, and the receipt queue stays bounded.

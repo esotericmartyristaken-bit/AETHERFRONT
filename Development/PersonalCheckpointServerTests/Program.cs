@@ -68,7 +68,7 @@ ClientStructure Client(string name, RSA key)
     var request = new ClientMessageFactory().CreateNewMessageData<HandshakeRequestMsgData>();
     request.IdentityPublicKey = IdentityProof.ExportPublicKey(key);
     request.UniqueIdentifier = IdentityProof.AccountId(request.IdentityPublicKey);
-    request.PlayerName = name; request.KspVersion = "1.12.5"; request.ApfEnabled = true; request.ApfClientVersion = "kesas-rc53";
+    request.PlayerName = name; request.KspVersion = "1.12.5"; request.ApfEnabled = true; request.ApfClientVersion = "kesas-rc54";
     client.PlayerName = name; client.UniqueIdentifier = request.UniqueIdentifier;
     Check(IdentityAuthentication.Begin(client, request, out var nonce, out var reason), "Identity begin " + reason);
     Check(IdentityAuthentication.Complete(client, IdentityProof.Sign(key, nonce, request.UniqueIdentifier, name), out _, out reason), "Identity complete " + reason);

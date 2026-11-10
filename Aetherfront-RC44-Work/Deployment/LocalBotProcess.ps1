@@ -17,6 +17,87 @@ function Read-LocalBotReadinessRecord([string]$Path) {
     return $value
 }
 
+function Test-LocalBotRuntimeContent([string]$Bundle,[string]$Runtime) {
+    foreach($relative in @('APFDiscordBot/src','APFDiscordBot/scripts','ControlPlane')){
+        $source=Join-Path $Bundle $relative;$target=Join-Path $Runtime $relative
+        if(-not [IO.Directory]::Exists($source) -or -not [IO.Directory]::Exists($target)){return $false}
+        foreach($directory in @($source,$target)){
+            if((Get-Item -LiteralPath $directory -Force).Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Bot code directory is a reparse point'}
+            if(@(Get-ChildItem -LiteralPath $directory -Directory -Force).Count){return $false}
+        }
+        $expected=@(Get-ChildItem -LiteralPath $source -File -Force|Sort-Object Name)
+        $actual=@(Get-ChildItem -LiteralPath $target -File -Force|Sort-Object Name)
+        if($expected.Count -ne $actual.Count){return $false}
+        for($index=0;$index -lt $expected.Count;$index++){
+            if($expected[$index].Name -cne $actual[$index].Name){return $false}
+            foreach($file in @($expected[$index],$actual[$index])){if($file.Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Bot code file is a reparse point'}}
+            if((Get-FileHash -LiteralPath $expected[$index].FullName).Hash -cne (Get-FileHash -LiteralPath $actual[$index].FullName).Hash){return $false}
+        }
+    }
+    foreach($pair in @(
+        @('APFDiscordBot/package.json','APFDiscordBot/package.json'),
+        @('APFDiscordBot/package-lock.json','APFDiscordBot/package-lock.json'),
+        @('Aetherfront-RC44-Work/Deployment/Start-LocalBot.ps1','Start-LocalBot.ps1')
+    )){
+        $source=Join-Path $Bundle $pair[0];$target=Join-Path $Runtime $pair[1]
+        if(-not [IO.File]::Exists($source) -or -not [IO.File]::Exists($target)){return $false}
+        foreach($file in @($source,$target)){if((Get-Item -LiteralPath $file -Force).Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Bot launch/package file is a reparse point'}}
+        if((Get-FileHash -LiteralPath $source).Hash -cne (Get-FileHash -LiteralPath $target).Hash){return $false}
+    }
+    return $true
+}
+
+function Test-LocalBotStartupBanner([string]$Path) {
+    $stream=[IO.FileStream]::new($Path,[IO.FileMode]::Open,[IO.FileAccess]::Read,([IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete))
+    try{
+        $reader=[IO.StreamReader]::new($stream)
+        try{$buffer=[char[]]::new(65536);$count=$reader.ReadBlock($buffer,0,$buffer.Length);$text=[string]::new($buffer,0,$count)}finally{$reader.Dispose()}
+    }finally{$stream.Dispose()}
+    return $text.Contains('APF Discord Bot running from ')
+}
+
+function Assert-LocalBotTrustedRelease([string]$Runtime) {
+    $bundle=[IO.Path]::GetDirectoryName($Runtime)
+    $acl=Get-Acl -LiteralPath $bundle
+    if(-not $acl.AreAccessRulesProtected -or $acl.GetOwner([Security.Principal.SecurityIdentifier]).Value -notin @('S-1-5-18','S-1-5-32-544')){throw 'Bot release is not trusted-owned and protected'}
+    foreach($rule in $acl.GetAccessRules($true,$true,[Security.Principal.SecurityIdentifier])){
+        if($rule.AccessControlType -eq 'Allow' -and $rule.IdentityReference.Value -notin @('S-1-5-18','S-1-5-32-544')){throw 'Bot release parent is not private'}
+    }
+}
+
+function Get-ReusableLocalBot([string]$Bundle,$Settings,$Bot,$Remote,[string]$ExpectedSid) {
+    if($Bot.State -ne 4 -or $Remote.Enabled -or $Remote.State -eq 4){return $null}
+    $holder=Read-LocalBotReadinessRecord (Join-Path $Settings.botRoot 'state/bot-instance.lock')
+    if(-not $holder){return $null}
+    $process=Get-CimInstance Win32_Process -Filter "ProcessId=$($holder.pid)" -ErrorAction Stop
+    if(-not $process){return $null}
+    $launch=Get-LocalBotLaunchRecord $Settings $process
+    if(-not $launch){return $null}
+    $owner=Invoke-CimMethod -InputObject $process -MethodName GetOwnerSid -ErrorAction Stop
+    if($owner.ReturnValue -ne 0){throw 'Cannot verify existing bot process owner'}
+    $null=Assert-LocalBotChildIdentity $Settings $ExpectedSid $holder $launch $process $owner.Sid
+    $runtime=[IO.Path]::GetFullPath([string]$launch.runtime)
+    Assert-LocalBotTrustedRelease $runtime
+    $definition=$Bot.Definition
+    if($definition.Actions.Count -ne 1){return $null}
+    $action=$definition.Actions.Item(1)
+    $expectedArguments="-NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$runtime/Start-LocalBot.ps1`" -Settings `"$($Settings.root)/host.json`""
+    if($action.Path -ine (Join-Path $env:SystemRoot 'System32/WindowsPowerShell/v1.0/powershell.exe') -or $action.Arguments -cne $expectedArguments -or $action.WorkingDirectory -ine $Settings.botRoot){return $null}
+    if(-not (Test-LocalBotRuntimeContent $Bundle $runtime)){return $null}
+    $stateRoot=[IO.Path]::GetFullPath((Join-Path $Settings.botRoot 'state')).TrimEnd('\')+'\'
+    if(-not [IO.Path]::GetFullPath($launch.stdout).StartsWith($stateRoot,[StringComparison]::OrdinalIgnoreCase) -or [IO.Path]::GetFileName($launch.stdout) -cnotmatch '^local-bot-[0-9TZ]+-[0-9]+\.stdout\.log$'){throw 'Existing bot readiness log is outside its state directory'}
+    if(-not (Test-LocalBotStartupBanner $launch.stdout)){return $null}
+    # Re-read the singleton after content checks to reject a generation switch.
+    $current=Read-LocalBotReadinessRecord (Join-Path $Settings.botRoot 'state/bot-instance.lock')
+    if(-not $current -or $current.pid -ne $holder.pid -or ([DateTimeOffset]$current.startedAt) -ne ([DateTimeOffset]$holder.startedAt)){throw 'Existing bot generation changed during reuse verification'}
+    $latest=Get-CimInstance Win32_Process -Filter "ProcessId=$($holder.pid)" -ErrorAction Stop
+    if(-not $latest){throw 'Existing bot exited during reuse verification'}
+    $latestOwner=Invoke-CimMethod -InputObject $latest -MethodName GetOwnerSid -ErrorAction Stop
+    if($latestOwner.ReturnValue -ne 0){throw 'Cannot recheck existing bot process owner'}
+    $null=Assert-LocalBotChildIdentity $Settings $ExpectedSid $current $launch $latest $latestOwner.Sid
+    return [pscustomobject]@{runtime=$runtime;limitedIdentity=$ExpectedSid;remoteTaskDisabled=$true;serverTaskChanged=$false;authenticatedStartup=$true;botPid=$holder.pid;reused=$true}
+}
+
 function Get-LocalBotLaunchRecord($Settings,$Process) {
     $directory=Join-Path $Settings.botRoot 'state'
     $number=[int]$Process.ProcessId
@@ -69,12 +150,7 @@ function Stop-LocalBotChild($Settings,[string]$ExpectedSid) {
     $owner=Invoke-CimMethod -InputObject $process -MethodName GetOwnerSid -ErrorAction Stop
     if($owner.ReturnValue -ne 0){throw 'Cannot verify bot process owner'}
     $created=Assert-LocalBotChildIdentity $Settings $ExpectedSid $holder $launch $process $owner.Sid
-    $bundle=[IO.Path]::GetDirectoryName([string]$launch.runtime)
-    $acl=Get-Acl -LiteralPath $bundle
-    if(-not $acl.AreAccessRulesProtected -or $acl.GetOwner([Security.Principal.SecurityIdentifier]).Value -notin @('S-1-5-18','S-1-5-32-544')){throw 'Bot release is not trusted-owned and protected'}
-    foreach($rule in $acl.GetAccessRules($true,$true,[Security.Principal.SecurityIdentifier])){
-        if($rule.AccessControlType -eq 'Allow' -and $rule.IdentityReference.Value -notin @('S-1-5-18','S-1-5-32-544')){throw 'Bot release parent is not private'}
-    }
+    Assert-LocalBotTrustedRelease ([string]$launch.runtime)
     $owned=[Diagnostics.Process]::GetProcessById([int]$holder.pid)
     try{
         # Hold this process generation's handle; never kill a reused PID or tree.
