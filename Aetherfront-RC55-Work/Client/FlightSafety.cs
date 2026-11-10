@@ -31,7 +31,7 @@ namespace Aetherfront.Stability.Client
         static readonly PropertyInfo GenerationProperty = AccessTools.Property(typeof(NetworkConnection), "ConnectionGeneration");
         static volatile bool disconnectRequested;
         static bool held, previouslyPaused, aligning, installed;
-        static double stableOffset;
+        static double stableOffset, forwardBudget;
         static bool hasStableOffset;
         static float previousThrottle;
         static bool recoveryNotice;
@@ -111,9 +111,11 @@ namespace Aetherfront.Stability.Client
                 var warp = WarpSystem.Singleton;
                 if (warp.CurrentSubspace >= 0 && warp.Subspaces.TryGetValue(warp.CurrentSubspace, out var currentOffset))
                 { stableOffset = currentOffset; hasStableOffset = true; }
-                double proposal = Planetarium.GetUniversalTime() - TimeSyncSystem.ServerClockSec;
+                double naturalProposal = Planetarium.GetUniversalTime() - TimeSyncSystem.ServerClockSec;
+                double proposal = naturalProposal;
                 if (hasStableOffset) proposal = Math.Max(proposal, stableOffset);
                 Recovery.Begin(CurrentGeneration, proposal, Now);
+                forwardBudget = WarpRecoveryPolicy.ForwardBudget(naturalProposal, proposal, SafeToCatchUp());
                 recoveryNotice = false;
                 SaveRecovery("warp-boundary");
                 Hold();
@@ -121,6 +123,15 @@ namespace Aetherfront.Stability.Client
                 Debug.Log("[Aetherfront Stability] Warp recovery started; generation=" + CurrentGeneration + "; offset=" + proposal.ToString("R"));
             }
             SendIfDue(); return false;
+        }
+        static bool SafeToCatchUp()
+        {
+            var vessel = HighLogic.LoadedSceneIsFlight ? FlightGlobals.ActiveVessel : null;
+            if (vessel == null || VesselCommon.IsSpectating) return false;
+            if (vessel.situation == Vessel.Situations.PRELAUNCH || vessel.situation == Vessel.Situations.LANDED ||
+                vessel.situation == Vessel.Situations.SPLASHED) return true;
+            return vessel.situation == Vessel.Situations.ORBITING && vessel.orbit != null && vessel.mainBody != null &&
+                vessel.orbit.PeA > Math.Max(10000, vessel.mainBody.atmosphereDepth);
         }
         static void SendIfDue()
         {
@@ -240,7 +251,7 @@ namespace Aetherfront.Stability.Client
             {
                 if (!Recovery.CanAccept(ack.Generation, ack.Id, ack.Offset) || TimeWarp.CurrentRateIndex != 0) continue;
                 double target = TimeSyncSystem.ServerClockSec + ack.Offset, now = Planetarium.GetUniversalTime();
-                if (!WarpRecoveryPolicy.Finite(target) || target < now - 0.05 || target - now > WarpRecoveryPolicy.TimeoutSeconds + 5)
+                if (!WarpRecoveryPolicy.Finite(target) || target < now - 0.05 || target - now > forwardBudget)
                 { Fail("Warp acknowledgement does not match the protected flight clock. Reconnect to recover."); break; }
                 aligning = true;
                 try

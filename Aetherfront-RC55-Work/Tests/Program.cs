@@ -26,6 +26,13 @@ Check(!policy.CanAccept(5, 20, double.NaN), "Nonfinite acknowledgement rejected"
 Check(policy.CanAccept(5, 20, 1003.5), "Bounded server clock normalization accepted");
 Check(policy.ShouldSend(52) && !policy.Expired(64.999) && policy.Expired(65), "Delayed ACK reaches finite 15 second deadline");
 Check(!policy.ShouldSend(65), "No retry after recovery timeout");
+Check(WarpRecoveryPolicy.ForwardBudget(59508, 59528, true) == 40,
+    "Scene loading debt can be recovered against the existing personal clock floor");
+Check(WarpRecoveryPolicy.ForwardBudget(59508, 59528, false) == 20,
+    "No scene debt allowance for an actively flying or unsafe vessel");
+Check(WarpRecoveryPolicy.ForwardBudget(1, 9000, true) == 80 &&
+    WarpRecoveryPolicy.ForwardBudget(100, 99, true) == 20,
+    "Clock debt allowance is bounded and cannot be negative");
 policy.Accepted(20); policy.Begin(5, 1100, 70);
 Check(!policy.CanAccept(5, 19, 1100), "Retired subspace cannot replace a newer boundary");
 policy.Reset(); Check(!policy.Pending && !policy.CanAccept(5, 30, 1100), "Session reset retires outstanding acknowledgements");
