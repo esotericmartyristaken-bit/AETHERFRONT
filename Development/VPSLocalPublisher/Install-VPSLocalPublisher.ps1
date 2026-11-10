@@ -55,6 +55,7 @@ Set-PublisherDirectory $inbox @() $ExpectedOperatorSid
 foreach($name in $inputs){[IO.File]::Copy((Join-Path $PSScriptRoot $name),(Join-Path $runner $name),$false)}
 [IO.File]::Copy($verifier,(Join-Path $runner 'Verify-KesasRelease.ps1'),$false)
 Add-Type -Path (Join-Path $runner 'SessionAccess.cs') -OutputAssembly (Join-Path $runner 'SessionAccess.dll')
+Add-Type -Path (Join-Path $runner 'SessionAccess.dll')
 
 # Fresh key: the old shared-user approval key is retained as historical evidence
 # but is never accepted by this worker. It never leaves protected storage.

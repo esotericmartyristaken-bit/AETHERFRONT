@@ -46,7 +46,7 @@ try {
     & $config.nodePath (Join-Path $PSScriptRoot 'Worker.mjs')
     if($LASTEXITCODE -ne 0){throw 'Persistent worker failed; inspect sanitized status'}
 } catch {
-    if($config -and $config.statusRoot){Write-PublisherJson (Join-Path $config.statusRoot 'runner-error.json') @{status='failed';stage='runner';code=$_.Exception.GetType().Name;observedAtUtc=[DateTime]::UtcNow.ToString('o')}}
+    if($config -and $config.statusRoot){Write-PublisherJson (Join-Path $config.statusRoot 'runner-error.json') @{status='failed';stage='runner';code=$_.Exception.GetType().Name;message=$_.Exception.Message;observedAtUtc=[DateTime]::UtcNow.ToString('o')}}
     throw
 } finally {
     $env:GH_TOKEN=$null;$env:APF_DISCORD_TOKEN=$null;$env:APF_PUBLISHER_SYSTEM_VERIFIED=$null
