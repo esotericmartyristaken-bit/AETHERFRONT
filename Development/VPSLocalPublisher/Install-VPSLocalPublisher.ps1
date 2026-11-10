@@ -44,7 +44,7 @@ if($gameTask.Definition.Principal.UserId -notin @('SYSTEM','NT AUTHORITY\SYSTEM'
 $botTask=$folder.GetTask('APF Discord Bot')
 if($botTask.Definition.Principal.LogonType -ne 2 -or $botTask.Definition.Principal.RunLevel -ne 0){throw 'Bot must retain its limited S4U service token'}
 foreach($name in @($taskName,'Aetherfront VPS Local Publisher Smoke','Aetherfront Protected Publisher','Aetherfront Protected Publisher Smoke','Aetherfront Native Publisher')){
-    $old=$null;try{$old=$folder.GetTask($name)}catch [Runtime.InteropServices.COMException]{}
+    $old=Get-PublisherTaskIfPresent $folder $name
     if($old){$old.Enabled=$false;if($old.State -eq 4){throw 'An earlier privileged publisher is still running; wait for its normal completion'}}
 }
 Set-PublisherDirectory $root @($ExpectedOperatorSid) -RootOnlyReaders

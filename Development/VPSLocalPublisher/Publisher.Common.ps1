@@ -3,6 +3,15 @@ $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
 $script:TrustedSids=@('S-1-5-18','S-1-5-32-544')
 
+function Get-PublisherTaskIfPresent($Folder,[string]$Name) {
+    try{return $Folder.GetTask($Name)}
+    catch [IO.FileNotFoundException]{return $null}
+    catch [Runtime.InteropServices.COMException]{
+        if($_.Exception.HResult -eq -2147024894){return $null}
+        throw
+    }
+}
+
 function Set-PublisherDirectory([string]$Path,[string[]]$Readers=@(),[string]$InboxWriter='',[switch]$RootOnlyReaders) {
     if([IO.Directory]::Exists($Path) -and ((Get-Item -LiteralPath $Path -Force).Attributes -band [IO.FileAttributes]::ReparsePoint)){throw 'Publisher directory is a reparse point'}
     $null=[IO.Directory]::CreateDirectory($Path)
