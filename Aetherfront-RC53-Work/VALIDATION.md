@@ -7,13 +7,22 @@ acceptance must be recorded separately; this document does not assert they ran.
   validation, rolling 1/5/30-minute selection, pinned launch, 32-sample rotation,
   the 128 MiB compressed quota, abandoned staging cleanup and completed restore
   journal/pinned-image cleanup.
-- 269 integration assertions passed across normal restore, interrupted world,
+- 318 integration assertions passed across normal restore, interrupted world,
   registry, clock and receipt writes, owned frozen crew recovery and preservation
   of another player's newer cryopod state. Tests load the actual patched RC52
   assemblies, call the native checkpoint command dispatch and clock resume hooks,
   and retain banked personal/shared science. Unavailable optional history returns
   a useful error while keeping the player connected. Two personally owned craft are
   restored while another player's craft and clock stay current.
+  This includes ten native DeepFreeze startup cases: archived absent non-frozen
+  pod metadata is reconciled once with original evidence retained; ordinary and
+  frozen crew rosters and live ships remain unchanged. Missing active/unknown
+  ships, frozen counts, KerbalInfo and crew alarms retain strict startup failure;
+  mixed safe/unsafe orphan sets make no partial change.
+- All 30 prepared-candidate gate regression tests passed with a short isolated
+  temporary root, including exact relative logfile/line reporting for fatal
+  startup. An earlier overly long test-fixture path failed certificate creation;
+  the short-root rerun passed and no product change was inferred from that issue.
 - 91 checks passed under KSP's actual embedded Mono runtime: shipping client
   checkpoint methods JIT, stock quicksave target signatures exist, valid metadata
   parses without Unity-thread access, and the receipt queue stays bounded.

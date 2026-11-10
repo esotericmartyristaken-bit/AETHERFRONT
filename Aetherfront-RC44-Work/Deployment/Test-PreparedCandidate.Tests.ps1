@@ -546,7 +546,7 @@ try {
     Test-Fixture 'fatal startup rejected despite all-systems marker' {
         $f=New-Fixture; $null=[IO.Directory]::CreateDirectory("$($f.Base)/Logs")
         [IO.File]::WriteAllText("$($f.Base)/Logs/startup.log","All systems up and running.`nFATAL startup exploded")
-        Expect-Failure { Read-PCStartup @{Scratch=$f.Base;Candidate="$($f.Base)/Candidate"} } '*startup log*'
+        Expect-Failure { Read-PCStartup @{Scratch=$f.Base;Candidate="$($f.Base)/Candidate"} } '*startup log at Logs/startup.log:2*'
     }
     Test-Fixture 'native launch plan excludes inherited task/hook routes and uses fixed loopback arguments' {
         $f=New-Fixture; $context=@{Candidate=$f.Root;Scratch=$f.Base;Version='kesas-rc999';PackPort=28866}

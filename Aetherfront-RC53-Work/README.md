@@ -57,7 +57,7 @@ to server mode or the published pack invalidates earlier checkpoints.
 
 `Patch` pins the five RC52 input assembly hashes and preserves shipping identity,
 resources and unrelated method bodies. It adds only checkpoint types and narrow
-dispatch/launch/clock/client hooks, and stamps the client RC53. A method/field
+dispatch/launch/clock/client and startup-recovery hooks, and stamps the client RC53. A method/field
 audit is emitted per assembly. Existing transport and updater implementations
 are retained. The build does not deploy unfinished arena features.
 
@@ -65,6 +65,15 @@ are retained. The build does not deploy unfinished arena features.
 checks each graft audit, rebuilds client/catalog/release receipts and verifies
 that only the five assemblies and required version metadata changed. Existing
 media archives and native dependency files remain byte-for-byte unchanged.
+
+Startup also reconciles obsolete DeepFreeze pod metadata only when the native
+craft registry already marks the absent vessel archived and there are no frozen
+crew counts, frozen KerbalInfo records or crew-bearing alarms. Cached ordinary
+crew lists do not alter the authoritative roster. The original scenario is
+retained by content hash under `Universe/DeepFreeze/Recovery`; the native journal
+commits only the scenario, leaving vessel files, roster and progression intact.
+Unknown or active missing craft and any frozen-crew reference still block startup.
+Candidate failures report the exact relative logfile and line for diagnosis.
 
 ## Verification
 

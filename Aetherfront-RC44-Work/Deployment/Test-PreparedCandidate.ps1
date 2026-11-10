@@ -549,13 +549,24 @@ function Assert-PCListeners($Context, [switch]$Require) {
 }
 
 function Read-PCStartup($Context) {
-    $text = ''
+    $chunks = [Collections.Generic.List[string]]::new()
+    $failurePattern = '(?im)\bFATAL\b|Unhandled (process )?exception|Error in main server thread|\[APF\].*configuration invalid|\[APF Discord\].*(Startup failed|poll failed)|Failed to (load|initialize|start)'
     foreach ($directory in @("$($Context.Scratch)/Logs","$($Context.Candidate)/Server/Logs")) {
         if (-not [IO.Directory]::Exists($directory)) { continue }
-        foreach ($file in Get-PCFiles $directory) { $text += Read-PCText $file 64MB }
+        foreach ($file in Get-PCFiles $directory) {
+            $text = Read-PCText $file 64MB
+            $match = [regex]::Match($text, $failurePattern)
+            if ($match.Success) {
+                $line = 1 + [regex]::Matches($text.Substring(0, $match.Index), "`n").Count
+                $relative = [IO.Path]::GetRelativePath($Context.Scratch, $file).Replace('\','/')
+                # Report the location, not raw exception text which may contain
+                # private world/account/configuration values. Keep the gate strict.
+                throw "Fatal/invalid candidate startup log at ${relative}:$line; inspect that retained log entry"
+            }
+            $chunks.Add($text)
+        }
     }
-    if ($text -match '(?im)\bFATAL\b|Unhandled (process )?exception|Error in main server thread|\[APF\].*configuration invalid|\[APF Discord\].*(Startup failed|poll failed)|Failed to (load|initialize|start)') { throw 'Fatal/invalid candidate startup log' }
-    return $text.Contains('All systems up and running.')
+    return ($chunks -join "`n").Contains('All systems up and running.')
 }
 
 function Read-PCBridge($Context) {

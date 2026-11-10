@@ -34,7 +34,7 @@ if (mode == "server-helper" || mode == "client-helper")
     using var donor = AssemblyDefinition.ReadAssembly(args[2], new ReaderParameters { InMemory = true, AssemblyResolver = resolver });
     var roots = mode == "server-helper" ? new[]
     {
-        "Server.Aetherfront.PersonalFlightCheckpoints", "Aetherfront.Personal.Server.FlightCheckpointRuntime", "Aetherfront.Personal.Server.FlightCheckpointServer"
+        "Server.Aetherfront.PersonalFlightCheckpoints", "Aetherfront.Personal.Server.FlightCheckpointRuntime", "Aetherfront.Personal.Server.FlightCheckpointServer", "Aetherfront.Personal.Server.DeepFreezeRecovery"
     } : new[] { "Aetherfront.Personal.Client.FlightCheckpointClient" };
     new ShippingTypeImporter(module, donor.MainModule).Copy(roots);
     added.AddRange(roots);
@@ -83,6 +83,14 @@ else if (mode == "clock" || mode == "server")
     }
     else
     {
+        var recovery = helper.MainModule.GetType("Aetherfront.Personal.Server.DeepFreezeRecovery");
+        var validate = module.GetType("Server.Aetherfront.AetherfrontDeepFreezeCheckpointCoordinator").Methods.Single(method => method.Name == "ValidateRecoveredWorld");
+        Insert(validate, validate.Body.Instructions[0], new[]
+        {
+            Instruction.Create(OpCodes.Ldarg_0),
+            Instruction.Create(OpCodes.Call, module.ImportReference(recovery.Methods.Single(method => method.Name == "PrepareRecoveredWorld")))
+        });
+        changed.Add(validate.FullName);
         var proto = module.GetType("Server.Message.VesselMsgReader").Methods.Single(method => method.Name == "HandleVesselProto");
         var relay = proto.Body.Instructions.Single(instruction => instruction.Operand is MethodReference method && method.Name == "RelayVesselMessage");
         var freshCheck = proto.Body.Instructions.Last(instruction => instruction.Operand is MethodReference method && method.Name == "VesselExists");
@@ -138,7 +146,7 @@ var allowedReferences = new HashSet<string>(StringComparer.Ordinal)
     "AetherfrontPersonalServer", "AetherfrontContinuityServer", "UnityEngine.InputLegacyModule", "LunaConfigNode", "System.Net.Primitives",
     "System.Text.Json", "System.IO.Compression", "System.IO.Compression.Brotli", "System.Threading.Timer",
     "System.Threading", "System.Reflection", "System.Runtime", "System.Runtime.Extensions", "System.Linq",
-    "System.Collections", "System.Security.Cryptography", "System.Memory", "System.Text.Encoding.Extensions"
+    "System.Collections", "System.Security.Cryptography", "System.Memory", "System.Text.Encoding.Extensions", "ApfCore"
 };
 if (newReferences.Any(reference => !allowedReferences.Contains(reference.Split(',')[0])))
     throw new InvalidDataException("Unreviewed graft dependency: " + string.Join("; ", newReferences));

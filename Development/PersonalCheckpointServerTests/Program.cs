@@ -273,6 +273,79 @@ foreach (string phase in new[] { "normal", "world", "registry", "clock", "receip
     }
 }
 StopTimer();
+foreach (string variant in new[] { "empty-archived", "active", "unknown", "frozen-count", "part-frozen", "occupied-count", "part-crew", "kerbal-record", "alarm-crew", "mixed-unsafe" })
+{
+    string phase = "deepfreeze-recovery-" + variant;
+    string caseRoot = Path.Combine(root, (caseIndex++).ToString("D2") + "-" + phase);
+    Directory.CreateDirectory(caseRoot);
+    try
+    {
+        ServerContext.Clients.Clear();
+        ServerContext.UniverseDirectory = Path.Combine(caseRoot, "Universe"); Directory.CreateDirectory(ServerContext.UniverseDirectory);
+        VesselStoreSystem.VesselsPath = Path.Combine(ServerContext.UniverseDirectory, "Vessels"); Directory.CreateDirectory(VesselStoreSystem.VesselsPath);
+        Directory.CreateDirectory(KerbalSystem.KerbalsPath);
+        VesselStoreSystem.CurrentVessels.Clear();
+        typeof(AetherfrontServerSystem).GetMethod("Initialize", Private, null, new[] { typeof(string), typeof(string) }, null)
+            .Invoke(null, new object[] { caseRoot, "checkpoint-fixture" });
+        byte[] fixture = File.ReadAllBytes(Path.Combine(args[1], "Scenario.txt"));
+        var live = DeepFreezeScenarioCodec.Parse(fixture, fixture.Length);
+        Guid liveId = live.Vessels.Keys.Single(), orphan = Guid.NewGuid();
+        string liveProto = File.ReadAllText(Path.Combine(args[1], "vessel-" + liveId + ".txt"));
+        File.WriteAllText(Path.Combine(VesselStoreSystem.VesselsPath, liveId + ".txt"), liveProto);
+        File.WriteAllText(Path.Combine(KerbalSystem.KerbalsPath, "Jebediah Kerman.txt"), File.ReadAllText(Path.Combine(args[1], "crew-Jebediah.txt")));
+        var record = new DeepFreezeScenarioCodec.VesselRecord { VesselGuid = orphan, VesselName = "Removed empty pod", VesselType = "Ship",
+            NumFrozenCrew = variant == "frozen-count" ? 1 : 0, NumOccupiedParts = variant == "occupied-count" ? 1 : 0 };
+        var part = new DeepFreezeScenarioCodec.PartRecord { FlightId = 1234567, VesselGuid = orphan, PartName = "CRY-0300Freezer", TemperatureStatus = "OK", NumCrew = variant == "part-crew" ? 1 : 0, NumFrozenCrew = variant == "part-frozen" ? 1 : 0,
+            CrewMembers = variant == "part-crew" ? new[] { "Still onboard" } : Array.Empty<string>(), CrewMemberTraits = Array.Empty<string>() };
+        string ordinaryRoster = Path.Combine(KerbalSystem.KerbalsPath, "Still onboard.txt");
+        const string ordinaryCrew = "name = Still onboard\ntype = Crew\nstate = Assigned\ntrait = Engineer\n";
+        File.WriteAllText(ordinaryRoster, ordinaryCrew);
+        var kerbals = live.Kerbals.Values.ToList();
+        if (variant == "kerbal-record") kerbals.Add(new DeepFreezeScenarioCodec.KerbalRecord { KerbalName = "Missing frozen pilot", VesselGuid = orphan,
+            PartId = part.FlightId, Status = "Dead", Type = "Unowned", SeatIndex = -1, VesselName = "", SeatName = "", ExperienceTraitName = "" });
+        var alarms = live.Alarms.Values.ToList();
+        if (variant == "alarm-crew") alarms.Add(new DeepFreezeScenarioCodec.AlarmRecord { AlarmId = "orphan-alarm", VesselGuid = orphan,
+            AlarmType = "Raw", Name = "", Notes = "", FrozenKerbals = new[] { "Missing frozen pilot" }, ThawedKerbals = Array.Empty<string>() });
+        var vessels = live.Vessels.Values.Concat(new[] { record }).ToList();
+        Guid unknown = Guid.NewGuid();
+        if (variant == "mixed-unsafe") vessels.Add(new DeepFreezeScenarioCodec.VesselRecord { VesselGuid = unknown, VesselName = "Unknown pod", VesselType = "Ship" });
+        var scenario = new DeepFreezeScenarioCodec.Snapshot(live.ScenarioName, live.Scenes, live.Enabled, kerbals, vessels,
+            live.Parts.Values.Concat(new[] { part }), alarms);
+        byte[] before = DeepFreezeScenarioCodec.Serialize(scenario);
+        var store = new AetherfrontDeepFreezeCheckpointStore(ServerContext.UniverseDirectory);
+        var saved = store.Commit(store.Recover().Revision, before, new Dictionary<Guid, byte[]>(), new Dictionary<string, byte[]>(), Array.Empty<Guid>());
+        if (variant != "unknown") AetherfrontServerSystem.Execute(state =>
+        {
+            state.Crafts.Add(new CraftRecord { Id = orphan.ToString(), Archived = variant != "active" });
+            return AetherfrontResult.Success(state.Revision);
+        });
+        var freeze = typeof(AetherfrontServerSystem).Assembly.GetType("Server.Aetherfront.AetherfrontDeepFreezeSystem");
+        bool succeeded = false;
+        try { freeze.GetMethod("Initialize", Private).Invoke(null, new object[] { ServerContext.UniverseDirectory, true }); succeeded = true; }
+        catch (TargetInvocationException error) when (error.InnerException is InvalidDataException) { }
+        Check(succeeded == (variant is "empty-archived" or "occupied-count" or "part-crew"), "Only proven archived non-frozen orphan can recover");
+        var after = store.Recover();
+        if (succeeded)
+        {
+            var parsed = DeepFreezeScenarioCodec.Parse(after.ScenarioData, after.ScenarioData.Length);
+            Check(after.Revision == saved.Revision + 1 && parsed.Vessels.Count == 1 && !parsed.Parts.ContainsKey(part.FlightId), "Native journal removes only obsolete non-frozen metadata");
+            Check(DeepFreezeScenarioCodec.Serialize(parsed).SequenceEqual(DeepFreezeScenarioCodec.Serialize(live)), "Live frozen vessel and crew remain identical");
+            string backup = Directory.EnumerateFiles(Path.Combine(ServerContext.UniverseDirectory, "DeepFreeze", "Recovery"), "*.txt").Single();
+            Check(File.ReadAllBytes(backup).SequenceEqual(before), "Original scenario preserved before recovery");
+            freeze.GetMethod("Initialize", Private).Invoke(null, new object[] { ServerContext.UniverseDirectory, true });
+            Check(store.Recover().Revision == after.Revision && Directory.GetFiles(Path.GetDirectoryName(backup)).Length == 1, "Repeated startup is idempotent");
+        }
+        else Check(after.Revision == saved.Revision && after.ScenarioData.SequenceEqual(before), "Uncertain or frozen-crew orphan remains unchanged");
+        Check(File.ReadAllText(ordinaryRoster) == ordinaryCrew, "Ordinary crew roster preserved even when cached names are present");
+        Check(File.ReadAllText(Path.Combine(VesselStoreSystem.VesselsPath, liveId + ".txt")) == liveProto, "Existing vessel file never modified");
+        results.Add(new { phase, passed = true }); Console.WriteLine("PASS " + phase);
+    }
+    catch (Exception error)
+    {
+        failures.Add(phase + ": " + error); results.Add(new { phase, passed = false, error = error.ToString() });
+        Console.WriteLine("FAIL " + phase + ": " + error.GetBaseException().Message);
+    }
+}
 File.WriteAllText(Path.Combine(root, "RESULTS.json"), JsonSerializer.Serialize(new { checks, cases = results }, new JsonSerializerOptions { WriteIndented = true }));
 Console.WriteLine($"{checks} assertions, {failures.Count} failed cases");
 if (failures.Count > 0) throw new InvalidOperationException(string.Join("\n", failures));
