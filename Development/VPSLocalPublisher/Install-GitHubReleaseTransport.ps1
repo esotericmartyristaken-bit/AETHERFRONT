@@ -77,7 +77,7 @@ try {
     }
     try {
         $names=$prior+$additional
-        $rows=@($manifest.files | Where-Object name -CNotIn $names)
+        $rows=@($manifest.files | Where-Object name -CNotIn ($names+@('runner.json')))
         foreach($name in $names){
             $destination=Join-Path $runner $name
             Install-File (Join-Path $PSScriptRoot $name) $destination
@@ -85,6 +85,12 @@ try {
         }
         Write-PublisherJson $configPath $config
         Set-PublisherFile $configPath
+        $rows+=@{name='runner.json';sha256=(Get-FileHash -LiteralPath $configPath).Hash.ToLowerInvariant()}
+        foreach($row in $rows){
+            if((Get-FileHash -LiteralPath (Join-Path $runner $row.name)).Hash.ToLowerInvariant() -cne $row.sha256){
+                throw 'Runner manifest does not match installed files'
+            }
+        }
         Write-PublisherJson $manifestPath @{files=$rows}
         Set-PublisherFile $manifestPath
     } catch {
