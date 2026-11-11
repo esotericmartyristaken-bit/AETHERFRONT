@@ -48,7 +48,13 @@ function Assert-UpdateTree([string]$Path) {
     $pending.Push($full)
     while($pending.Count){
         foreach($item in [IO.Directory]::EnumerateFileSystemEntries($pending.Pop())){
-            $attributes=[IO.File]::GetAttributes($item)
+            # A running server atomically replaces bridge/status files. Its
+            # short-lived replacement may disappear after enumeration. This is
+            # a path-safety walk, not a required-input inventory; later reads,
+            # payload hashes and copy operations still require their inputs.
+            try{$attributes=[IO.File]::GetAttributes($item)}
+            catch [IO.FileNotFoundException]{continue}
+            catch [IO.DirectoryNotFoundException]{continue}
             if($attributes -band [IO.FileAttributes]::ReparsePoint){throw "Refusing reparse point: $item"}
             if($attributes -band [IO.FileAttributes]::Directory){$pending.Push($item)}
         }

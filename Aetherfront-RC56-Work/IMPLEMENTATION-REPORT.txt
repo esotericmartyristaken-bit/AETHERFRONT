@@ -3,6 +3,22 @@ RC56 synchronization and personal-checkpoint candidate
 
 Supplemental VPS deployment preparation, 2026-11-11
 --------------------------------------------------
+The first guarded publication request, a5e7f0ec395741e0b2eb88c66fcd0131,
+stopped before production activation at 2026-11-11T22:23:20.224Z. Its fresh
+sanitized evidence identified a disappearing APFDiscordBridge/status.json~RF*.TMP
+file between directory enumeration and GetAttributes in Assert-UpdateTree.
+RC55 process 8232 and its Server.dll remained unchanged. The tree safety walk now
+ignores only FileNotFoundException and DirectoryNotFoundException for an already
+enumerated entry. Existing entries still undergo the reparse-point rejection;
+all other failures propagate, required-input reads/copies and hash checks remain
+mandatory, and no approval, runner, identity, firewall or ACL policy was changed.
+Diagnostics/Test-UpdateTreeRace.ps1 stresses this exact live-file replacement race
+and verifies that reparse points and missing required inputs remain rejected.
+The final isolated stress fixture passed 1,000 atomic replacements during 1,208
+tree walks at 2026-11-11T22:29:58.9386488Z; both rejection checks passed. Earlier
+fixture-only writer contention and an intentionally stopped longer stress run
+are retained as historical scratch evidence, not successful test results.
+
 The sections below retain the initial development record. Subsequent operator
 authorization requested one guarded RC56 deployment and deferred rendered flight
 acceptance until the server is up. The VPS Git author was recovered from the last
