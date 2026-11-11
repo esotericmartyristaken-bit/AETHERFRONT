@@ -56,6 +56,15 @@ export async function prepareSource(config,request,env,execute=command){
  try{cached=JSON.parse(await readFile(ready,'utf8')).commit===request.sourceCommit;}catch(e){if(e.code!=='ENOENT')throw e;}
  if(!cached){git(['init','--quiet',source]);git(['-C',source,'fetch','--no-tags','--depth=1',repository,request.sourceCommit]);git(['-C',source,'-c','core.symlinks=false','checkout','--quiet','--detach',request.sourceCommit]);}
  if(git(['-C',source,'rev-parse','HEAD']).trim()!==request.sourceCommit||git(['-C',source,'status','--porcelain=v1','--untracked-files=all']).trim())throw Error('Private source verification failed');
+ if(config.remoteSourceTrees){
+  const trustedPaths=['KESAS-VPS-Server','APFDiscordBot','ControlPlane','Aetherfront-RC44-Work/Deployment'];
+  for(const path of trustedPaths){
+   const expected=config.remoteSourceTrees[path];
+   if(!/^[a-f0-9]{40}$/.test(expected)||git(['-C',source,'rev-parse','--verify',request.sourceCommit+':'+path]).trim()!==expected){
+    throw Error('Release changes protected publisher source and needs host review');
+   }
+  }
+ }
  if(!cached)await writeFile(ready,JSON.stringify({commit:request.sourceCommit}),{flag:'wx',mode:0o600});
  const reports=join(base,'UpdateBuilds');await mkdir(reports,{recursive:true,mode:0o700});
  return {source,reports,publisher:join(source,publisherRelative)};

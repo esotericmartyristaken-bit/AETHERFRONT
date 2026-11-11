@@ -23,7 +23,9 @@ try {
     Add-Type -Path (Join-Path $PSScriptRoot 'SessionAccess.dll')
     $sessions=Set-PublisherInteractiveKeyAccess $config
     Write-PublisherJson (Join-Path $config.statusRoot 'heartbeat.json') @{schemaVersion=3;userSid='S-1-5-18';ready=$true;interactiveOperatorSessions=$sessions;observedAtUtc=[DateTime]::UtcNow.ToString('o')}
-    if(-not [IO.File]::Exists((Join-Path $config.inbox 'pending.json'))){exit 0}
+    $localPending=[IO.File]::Exists((Join-Path $config.inbox 'pending.json'))
+    $githubIntake=$config.PSObject.Properties['githubIntake']
+    if(!$localPending -and !$githubIntake){exit 0}
     foreach($pair in @(@('nodePath','nodeSha256'),@('gitPath','gitSha256'),@('powerShell','powerShellSha256'),@('githubCliPath','githubCliSha256'))){
         if((Get-FileHash -LiteralPath $config.($pair[0])).Hash.ToLowerInvariant() -cne $config.($pair[1])){throw 'Approved publisher executable changed'}
     }
@@ -38,13 +40,20 @@ try {
     }
     foreach($path in @($config.publicKeyPath,$config.githubTokenPath,$config.tokenPath,$config.privateJobs,$config.claims,$config.repoRoot)) {Assert-PublisherPath $path $root}
     Assert-PublisherPath $config.inbox $root -WritableInbox
+    if($githubIntake){
+        $remote=$githubIntake.Value
+        foreach($path in @($remote.publicKeyPath,$remote.inboxes,$remote.attempts,$remote.outbox)){
+            Assert-PublisherPath $path $root
+        }
+    }
     Add-Type -AssemblyName System.Security.Cryptography.ProtectedData
     foreach($name in @('NODE_OPTIONS','NODE_PATH','NODE_EXTRA_CA_CERTS','NODE_TLS_REJECT_UNAUTHORIZED','HTTPS_PROXY','HTTP_PROXY','ALL_PROXY','GITHUB_TOKEN')){[Environment]::SetEnvironmentVariable($name,$null,'Process')}
     try{$env:GH_TOKEN=Read-PublisherSecret $config.githubTokenPath 'github'}catch{$env:GH_TOKEN=$null}
     try{$env:APF_DISCORD_TOKEN=Read-PublisherSecret $config.tokenPath 'discord'}catch{$env:APF_DISCORD_TOKEN=$null}
     $env:APF_PUBLISHER_SYSTEM_VERIFIED='1'
     $env:PATH=(@((Split-Path $config.powerShell),(Split-Path $config.nodePath),(Split-Path $config.gitPath),(Split-Path $config.githubCliPath),"$env:SystemRoot\System32") -join ';')
-    & $config.nodePath (Join-Path $PSScriptRoot 'Worker.mjs')
+    $entry=if($localPending){'Worker.mjs'}else{'GitHubReleaseWorker.mjs'}
+    & $config.nodePath (Join-Path $PSScriptRoot $entry)
     if($LASTEXITCODE -ne 0){throw 'Persistent worker failed; inspect sanitized status'}
 } catch {
     if($config -and $config.statusRoot){Write-PublisherJson (Join-Path $config.statusRoot 'runner-error.json') @{status='failed';stage='runner';code=$_.Exception.GetType().Name;message=$_.Exception.Message;observedAtUtc=[DateTime]::UtcNow.ToString('o')}}

@@ -36,3 +36,27 @@ release publication authority, not unrestricted remote administration.
 Validation: `node --test Development/VPSLocalPublisher/test/publisher.test.mjs`.
 Build a code-only commissioning archive with `Build-SetupBundle.ps1`; run its
 plan on the VPS before the single `Start-Commissioning.ps1` consent request.
+
+## GitHub submission and receipts
+
+On the controller, run `Initialize-GitHubReleaseSigner.ps1` once. Transfer only
+the printed public key file and verify its SHA-256 on the VPS. In the elevated
+VPS operator session, run the reviewed `Install-GitHubReleaseTransport.ps1`
+with that public key and `-ExpectedPublicKeySha256`. It extends the already
+installed v3 task and keeps a protected backup of the runner. Installation does
+not trigger a release. The task uses its existing host credentials.
+
+Submit a `verify` job with `Submit-GitHubRelease.ps1 -Archive ... -Version ...
+-SourceCommit ... -Action verify`. Use the returned request ID with
+`Get-GitHubReleaseReceipt.ps1`. A `verified` receipt exercises the VPS request,
+archive and source checks without activation. Submit a fresh `publish` job for
+an authorized release and confirm a `healthy` receipt against the pinned HTTPS
+health and release feed. GitHub receipts are visible to authorized repository
+users and carry status and a bounded failure code, with full diagnostics
+retained in the protected VPS status/evidence directories.
+
+The transport uses only the pinned private draft, host-bound signatures and a
+durable request ID. It retries receipt delivery without replaying the release.
+Remote releases must preserve the reviewed deployment and bot source trees.
+Changing that protected code or rotating the controller key requires host
+maintenance. The ordinary VPS-local operator path remains available.
