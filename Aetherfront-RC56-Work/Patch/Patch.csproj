@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
+ <ItemGroup>
+  <Compile Include="../../Aetherfront-RC53-Work/Patch/ShippingTypeImporter.cs" Link="ShippingTypeImporter.cs" />
+  <PackageReference Include="Mono.Cecil" Version="0.11.4" />
+ </ItemGroup>
+</Project>

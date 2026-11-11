@@ -1,0 +1,246 @@
+RC56 synchronization and personal-checkpoint candidate
+====================================================
+
+Supplemental VPS deployment preparation, 2026-11-11
+--------------------------------------------------
+The sections below retain the initial development record. Subsequent operator
+authorization requested one guarded RC56 deployment and deferred rendered flight
+acceptance until the server is up. The VPS Git author was recovered from the last
+six commits and matched the authenticated repository account; only repository-local
+identity settings were restored. No new author identity was invented.
+
+Read-only inspection of all 155 current vessel records found nine stale CREW
+survival snapshots in seven vessels. Five exactly matched the recorded native
+duplicate-seat cleanup at RC55 startup. The remaining four referred to a crew
+member uniquely seated elsewhere or to an Available crew member no longer aboard.
+Frozen crew were checked separately against the DeepFreeze scenario.
+
+SurvivalRosterRepair now runs after native crew migration and before vessel memory
+is loaded or players are accepted. It removes a foreign survival CREW association
+only when canonical unique-seat/roster evidence proves that association stale.
+Frozen, missing, ambiguous and unknown-state records remain strict and unresolved.
+The exact original vessel bytes are durably archived under Universe/Survival-Recovery
+before any replacement. The repair does not move seats, change crew status, rewrite
+mission epochs, reset supplies, grant science, or alter progression or identities.
+Regression tests replay the copied production universe, compare every unaffected
+file byte-for-byte, check complete original recovery archives, verify every other
+vessel field is unchanged, verify idempotence and exercise frozen-record protection.
+
+Current combined candidate and regression evidence:
+C:\Users\Administrator\Desktop\APF\UpdateBuilds\RC56-Sync-Fixture\Crew-Verified-20261111-C
+Release assembly uses Build-Release.py and the exact RC55 archive. It replaces only
+the reviewed matching server/client binaries and necessary version/hash metadata;
+mod media, native dependencies and production configuration remain unchanged.
+The protected v3 approval task and existing guarded local publisher remain the
+publication route. No runner/approval relaxation or direct draft publication is used.
+
+See the separate RC56 deployment report under workspace UpdateBuilds for final
+commit/archive identities, signatures, admission, startup, rollback and live health.
+
+Status
+------
+Implemented in the isolated fix/rc56-sync-latency worktree. This is not a
+deployed release. RC55 production files, configuration, world, identities,
+keys, player progress, publisher tasks and arena settings were not changed.
+Production Server.exe remained PID 8232; a fresh read at 2026-11-11T21:35:17Z
+matched the reviewed RC55 Server.dll SHA-256 below.
+
+Source root:
+C:\Users\Administrator\Desktop\APF\UpdateBuilds\RC56-Sync-Work\Aetherfront-RC56-Work
+Base source commit: 7f466ddb93aee768e854bde53632be5ca88ca384
+The candidate changes are staged, not committed. The commit attempt was rejected
+because this VPS has no configured Git author identity. No identity settings were
+invented or changed. A clean candidate commit is still required for publication.
+
+Current implementation
+----------------------
+1. ReadSnapshot captures the committed immutable JSON under the store gate,
+   then deserializes outside it. It no longer serializes the entire state just
+   to make another snapshot. Bootstrap still captures uncommitted initialization
+   state correctly. Native copy-on-write commits and durable acknowledgement
+   ordering were not replaced by asynchronous or best-effort writes.
+
+2. Native snapshot requests enqueue a coalesced background encoder. Native
+   visibility and personal-progression filtering are retained. Permission,
+   account, suspension, revision and subspace checks run again before sending.
+   Encoding and envelope serialization no longer occupy the gameplay dispatcher
+   or fleet gate. One pending request per connection is retained while encoding.
+
+3. Client polls advertise a revision and delta capability. The server retains
+   two authorized projections per connection. Changed sections and changed craft
+   records are sent with an exact base revision; deletions use a validated order
+   list. Unchanged polls omit the state body but still refresh vessel interest.
+   A missing/invalid base requests a full snapshot. A delta larger than a full
+   snapshot falls back to a full snapshot. Actual visibility changes are compared
+   even at an unchanged ledger revision, because permission leases can expire.
+   Canonical JSON slices avoid thousands of per-craft serializer constructions.
+
+4. Backup capture serializes a stable vessel under the fleet gate. Large staging
+   writes and Flush(true) execute outside fleet/backup gates. Final atomic
+   publication validates capture order, vessel identity and deletion tombstones
+   under the original lock order. Native removal and restoration transactions
+   remain authoritative. A flushed stale backup cannot resurrect a deleted
+   vessel or overwrite a later capture. This remains a snapshot at capture time;
+   it does not promise that a backup contains later unacknowledged live updates.
+
+5. Timings distinguish queue wait, handler duration, fleet/store/backup lock
+   waits and holds, state and vessel serialization, disk write and durable flush.
+   Native commit operations remain synchronous. Metrics, not weakened durability,
+   are the basis for deciding whether further commit-path changes are justified.
+
+6. Warp requests and replies carry explicit 64-bit session and request IDs.
+   Exact retries replay only a committed transition. The actual packet-intake
+   boundary captures reply arrival time before Unity's queue, copies values and
+   recycles the message exactly once. Matching queued replies are considered
+   before timeout. Previous sessions, retired requests, changed retries, invalid
+   clock corrections and replies arriving after the deadline remain rejected.
+
+7. Synchronization waits until the scene/vessel is ready. Scene changes,
+   termination and connection loss retire pending requests. Physics remains
+   protected while leaving flight. A native-pause compatibility hook allows the
+   guard's pause to work despite LMP's normal pause veto. Owned pause/time scale
+   and throttle are tracked separately; cancellation never restarts an engine,
+   and a replacement vessel never inherits throttle. An unscaled safe-disconnect
+   button remains available. No blanket removal of other mods' input locks occurs.
+   KSP event callbacks use non-null instance targets.
+
+8. Identical outstanding fleet requests, unchanged vessel definitions and exact
+   snapshot queries are deduplicated. Reliable mutations are barriers: A,B,A
+   definitions preserve the final A. Queued discarded messages are recycled.
+   Bulk application pacing increases from 512 KiB/s to 4 MiB/s, with a 1 MiB
+   burst; the native memory/fragment windows remain unchanged. Control traffic
+   can bypass a capacity-blocked bulk lane. Science/resource mutations are not
+   discarded or coalesced as if they were cosmetic updates.
+
+9. Personal-checkpoint loading keeps the existing server transaction and normal
+   disconnect. A matching locally requested restore disconnect now schedules
+   native exit to MAINMENU before automatic reconnect. Reconnect waits for native
+   reset, uses the normal approved endpoint/identity/pack checks, and is limited
+   to three attempts with cancellation and an expiry. No password is written to
+   a file or log. Ordinary timeouts cannot trigger this checkpoint reconnect.
+   Native connection calls execute outside the reconnect helper's gate to avoid
+   inversion with the native session gate.
+
+10. Warp control is admitted before local recovery capture, and normal boundary
+    capture includes only the active owned vessel. One faulty vessel module no
+    longer aborts capture of other healthy vessels: a partial file has explicit
+    SKIPPED_VESSEL records and a different name. It cannot overwrite the last
+    complete recovery. No life-support epoch or crew record is silently reset.
+
+Incident evidence (historical, before this candidate)
+---------------------------------------------------
+Production log:
+C:\Users\Administrator\Desktop\APF\KESAS-VPS-Server\Server\logs\lmpserver_2026-11-11_10-43-16.log
+Server timestamps below are UTC.
+
+- 17:49:47: VesselRemoveMsgData handler 338192.6 ms; timeout at 17:49:53.
+- 18:48:14: VesselUpdateMsgData handler 240511.2 ms; timeout at 18:48:17.
+- 19:16:30: approximately 60,954,856 queued outbound bytes.
+- 21:05:31: checkpoint disconnect; 21:05:38: native checkpoint restoration
+  completed. The enclosing handler took 8851.5 ms. This incident does not prove
+  that applying the server checkpoint itself took multiple minutes.
+
+Supplied client logs were copied read-only to:
+C:\Users\Administrator\Desktop\APF\UpdateBuilds\RC56-Sync-Fixture\IncidentLogs
+
+KSPLogCheckpoint.log, 96,165,942 bytes:
+- Original client timestamp 13:05:31.856 records the explicit checkpoint
+  disconnect asking the player to connect again.
+- Recovery capture/pausing immediately precedes that disconnect. Native flight
+  disconnect does not set ForceQuit, and RC55's guard keeps disconnected flight
+  held. This explains the missing automatic return/reconnect path in the code.
+- 122,512 lines contain the crew-survival mismatch exception.
+
+KSP4.log, 29,876,202 bytes:
+- Original client timestamp 21:44:59.908 starts a boundary; it completes in
+  2.188 seconds. A second completes in 3.163 seconds.
+- 21:45:17.576 starts another boundary; 21:45:32.551 reports the 15-second
+  timeout. The recovery save also fails inside SurvivalClock.Prepare.
+- 223 lines contain the same crew-survival mismatch exception.
+
+The original client timestamps are retained rather than applying one assumed
+timezone to logs from different machines. The checkpoint disconnect can be
+correlated with the server's 21:05:31 UTC event.
+
+Validation and reproducibility
+------------------------------
+Run under PowerShell 7.4 or later, without elevation:
+  & 'C:\Users\Administrator\Desktop\APF\UpdateBuilds\RC56-Sync-Work\Aetherfront-RC56-Work\Build-And-Test.ps1'
+
+The script requires the pinned fixture baselines, uses a fresh directory, checks
+every build/test exit code, grafts only onto the shipping RC55 assemblies, and
+audits unchanged assembly identities, resources and unrelated method bodies.
+It does not launch the publisher, alter tasks, sign a release or touch production.
+
+Authoritative final run:
+C:\Users\Administrator\Desktop\APF\UpdateBuilds\RC56-Sync-Fixture\Verified-20261111-E
+  Regression\results.json: native-server assertions, measurements and phases.
+  Client\mono-results.txt: actual KSP embedded-Mono JIT/Harmony/wire checks.
+  Server\Server.dll.audit.json
+  Server\AetherfrontContinuityServer.dll.audit.json
+  Client\LmpClient.dll.audit.json
+
+Earlier passing run B recorded 85 assertions and 7 Mono checks. It includes a
+1,001-craft native snapshot admission/encode/delta/privacy pipeline, real disposable
+authentication and clock transitions, commit-denial tests, tombstones and backup
+interleavings. It does not use production player accounts or a production port.
+The final run's files, not the earlier record, govern the final artifact identity.
+
+Final run E passed 87 native/policy regression assertions at
+2026-11-11T21:44:56.1232222Z and 7 KSP embedded-Mono checks at
+2026-11-11T21:45:33.2973575Z. The latter prepared 190 helper methods and installed
+all Harmony targets against the shipping game assemblies. Every build reported
+zero warnings and zero errors. The extra regression verifies suppression of an
+unacknowledged snapshot even while the authoritative world revision advances.
+
+Final tested artifact SHA-256 identities:
+Server\Server.dll (804,864 bytes):
+5ef3b6dcba120a44f8863aa02667dac3ab2fd6168a1b82c0f4cc241077816cff
+Server\AetherfrontContinuityServer.dll (33,792 bytes):
+acbdb141064f6d8b91eab88503703cfd1d063b41d7c35cf23bc3159053b33f0c
+Client\LmpClient.dll (1,062,400 bytes):
+dfbeff82ce4d07376bf30b1c8c241087683d6001f752510c39223ce1fc43964e
+Client\AetherfrontStabilityClient.dll (57,344 bytes):
+2ac12aab2abf6405382a4a5ac639c00a9a4cf56cb80f420811525ac18860bce2
+
+Earlier measured bytes:
+- 2,000-craft synthetic full state: 772,850; delta: 25,827 (96.7% smaller).
+- 1,001-craft native projection: 474,894; delta: 39,675 (91.6% smaller).
+- Synthetic admitted bulk payload in the first second: 5,177,344 bytes, including
+  the initial burst. This is not a measured Internet throughput claim.
+- Timing varies with host load. These byte reductions do not establish an
+  equivalent end-to-end speedup in a modded flight scene.
+
+Shipping baseline identities
+---------------------------
+Release archive SHA-256:
+74b3be5f3bb507d420d595ad73b5ecfff302fbb8f46905e5d4d7fc97f1498b03
+Server.dll SHA-256:
+08f8de5de2b4d50fa3e8314e35e821c347bb2d0a7f7f323526519cd8c538db36
+LmpClient.dll SHA-256:
+58dcfafb7a930cf1d1fcfe19be4780037becf2b277341e7d586307be5ff4f659
+AetherfrontContinuityServer.dll SHA-256:
+f940d7aebd4769582c16b546378cfb91e0f9047af6ffe57768929f6f7a94c5e1
+
+Remaining limitations and acceptance gate
+-----------------------------------------
+- No authenticated rendered Unity flight was run for this candidate. Real launch,
+  termination during synchronization, a scene stalled for over 15 seconds,
+  synchronization during an engine burn, menu usability and checkpoint automatic
+  reconnect must still be exercised in an isolated client/server scene.
+- Tests model delayed replies and multi-minute stalls with explicit monotonic
+  time; they do not pretend a rendered flight was stalled for several minutes.
+- The crew-survival mismatch is real and severe, but the logs do not identify
+  which saved CREW record conflicts with which actual vessel roster. Its originating
+  corruption/topology event is not repaired here. Silently dropping that record
+  or resetting life support would risk player progress. Partial local recovery
+  isolation addresses the independent all-vessels-capture failure only.
+- Native state commits, personal-clock durability and checkpoint restoration still
+  serialize where required for transaction safety. This candidate cannot guarantee
+  survival of an arbitrary OS/disk stall or promise every disconnect is eliminated.
+- Wire framing changed. Both client and server must be packaged together, with
+  a mandatory RC56 pack/version gate, fresh signed manifest/feed and normal guarded
+  publisher validation. No release archive or signature was produced in this work.
+- Before deployment, finish the isolated flight acceptance above, preserve normal
+  backup/rollback/health checks, and warn online players for 15 minutes. Keep arenas
+  disabled. Do not copy these loose candidate DLLs directly into production.
