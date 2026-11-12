@@ -55,7 +55,60 @@ internal static class Program
  }
  [MethodImpl(MethodImplOptions.NoInlining)] static void Run()
  {
-  Policy(); Reconnect(); Ownership(); Deltas(); Wire(); Scheduling(); Dispatcher(); NativeFixture(); CrewRepair();
+  Policy(); Reconnect(); Ownership(); CrewRetries(); Deltas(); Wire(); Scheduling(); Dispatcher(); NativeFixture(); FleetMembership(); CrewRepair();
+ }
+ static void CrewRetries()
+ {
+  var live = Guid.NewGuid(); var retired = Guid.NewGuid(); var scope = new[] { retired, live }; bool preserved = false;
+  var result = CrewRetryScope.Reconcile(scope, false, id => id == live, (lost, kept) =>
+  { Check(lost.SequenceEqual(new[] { retired }) && kept.SequenceEqual(new[] { live }), "Crew recovery preserves exact retired and retained retry identities"); preserved = true; });
+  Check(preserved && result.SequenceEqual(new[] { live }) && scope.SequenceEqual(new[] { retired, live }), "Scene/control handoff removes only stale retry work after recovery, without mutating original scope");
+  Check(ReferenceEquals(scope, CrewRetryScope.Reconcile(scope, true, _ => false, (_, _) => throw new Exception("Unexpected recovery"))), "In-flight crew transaction is never cancelled or rewritten");
+  Check(ReferenceEquals(scope, CrewRetryScope.Reconcile(scope, false, _ => true, (_, _) => throw new Exception("Unexpected recovery"))), "Still-authorized retry scope does not allocate a recovery or restart a save");
+  Reject(() => CrewRetryScope.Reconcile(scope, false, _ => false, (_, _) => throw new IOException("Denied recovery")), "Failed durable crew recovery cannot retire retry state");
+  Check(CrewRetryScope.Reconcile(scope, false, _ => false, (lost, kept) => Check(lost.Length == 2 && kept.Length == 0, "Editor/termination recovery retains all departed scope identities")).Length == 0,
+   "An all-retired retry scope can rebuild from current authorized fleet without an ownership bypass");
+ }
+ static void FleetMembership()
+ {
+  var originalRoot = ServerContext.UniverseDirectory; var originalPath = VesselStoreSystem.VesselsPath;
+  string directory = Path.Combine(root, "FleetMembership"); Directory.CreateDirectory(Path.Combine(directory, "Vessels"));
+  Directory.CreateDirectory(Path.Combine(directory, "DeepFreeze"));
+  File.Copy(Path.Combine(crewSeed, "DeepFreeze", "Scenario.txt"), Path.Combine(directory, "DeepFreeze", "Scenario.txt"));
+  ServerContext.UniverseDirectory = directory; VesselStoreSystem.VesselsPath = Path.Combine(directory, "Vessels");
+  var live = Guid.NewGuid(); var history = Guid.NewGuid(); var diskOnly = Guid.NewGuid();
+  var state = new AetherfrontState { ServerId = "membership-fixture", Revision = 1 };
+  state.Crafts.Add(new CraftRecord { Id = live.ToString(), Name = "Live", OwnerAccountId = "owner", Revision = 1 });
+  state.Crafts.Add(new CraftRecord { Id = history.ToString(), Name = "Registry history", OwnerAccountId = "owner", Revision = 2 });
+  state.Crafts.Add(new CraftRecord { Id = Guid.NewGuid().ToString(), Name = "Foreign", OwnerAccountId = "other" });
+  string before = AetherfrontJson.Serialize(state);
+  VesselStoreSystem.CurrentVessels[live] = (Server.System.Vessel.Classes.Vessel)RuntimeHelpers.GetUninitializedObject(typeof(Server.System.Vessel.Classes.Vessel));
+  try
+  {
+   var selected = CheckpointFleet.Owned(state, "owner");
+   Check(selected.Count == 1 && selected[0].Id == live.ToString(), "Checkpoint scope follows the native live universe, not unrelated design/history registrations");
+   Check(AetherfrontJson.Serialize(state) == before, "Fleet membership reconciliation never archives, deletes, transfers or resets registry/progress records");
+   var archive = Directory.GetFiles(Path.Combine(directory, "FlightCheckpoints", "RegistryHistory"), "*.json").Single();
+   Check(AetherfrontJson.Deserialize<List<CraftRecord>>(File.ReadAllText(archive)).Single().Id == history.ToString(), "Excluded registry metadata is durably retained exactly before a checkpoint proceeds");
+   Check(CheckpointFleet.Status("Ready.", "owner").Contains("1 registry-only"), "Checkpoint UI explicitly discloses non-live registrations outside its restored fleet");
+   state.Crafts.Add(new CraftRecord { Id = diskOnly.ToString(), OwnerAccountId = "owner" });
+   File.WriteAllText(Path.Combine(VesselStoreSystem.VesselsPath, diskOnly + ".txt"), "unloaded active data");
+   Reject(() => CheckpointFleet.Owned(state, "owner"), "Canonical active file missing from memory fails closed instead of silently producing an incomplete save");
+   File.Delete(Path.Combine(VesselStoreSystem.VesselsPath, diskOnly + ".txt"));
+   VesselContext.RemovedVessels[diskOnly] = 0;
+   Check(CheckpointFleet.Owned(state, "owner").Count == 1, "A removed vessel cannot be resurrected into a new checkpoint");
+   var adapter = Assembly.LoadFrom(Path.Combine(AppContext.BaseDirectory, "AetherfrontPersonalServer.dll")).GetType("Aetherfront.Personal.Server.FlightCheckpointServer", true)!;
+   var native = (List<CraftRecord>)adapter.GetMethod("Owned", PrivateStatic)!.Invoke(null, new object[] { state, "owner" })!;
+   Check(native.Count == 1 && native[0].Id == live.ToString(), "Actual shipped personal-checkpoint adapter routes through the corrected membership policy");
+   var frozenBytes = File.ReadAllBytes(Path.Combine(directory, "DeepFreeze", "Scenario.txt"));
+   var frozen = DeepFreezeScenarioCodec.Parse(frozenBytes, frozenBytes.Length);
+   if (frozen.Vessels.Count > 0)
+   {
+    state.Crafts.Add(new CraftRecord { Id = frozen.Vessels.Keys.First().ToString(), OwnerAccountId = "owner" });
+    Reject(() => CheckpointFleet.Owned(state, "owner"), "Missing vessel referenced by shared frozen-crew state cannot be silently omitted");
+   }
+  }
+  finally { VesselStoreSystem.CurrentVessels.TryRemove(live, out _); VesselContext.RemovedVessels.TryRemove(diskOnly, out _); ServerContext.UniverseDirectory = originalRoot; VesselStoreSystem.VesselsPath = originalPath; }
  }
  static string crewSeed = "";
  static void CrewRepair()
@@ -347,7 +400,7 @@ internal static class Program
   var client = (ClientStructure)RuntimeHelpers.GetUninitializedObject(typeof(ClientStructure)); client.Subspace = int.MinValue; client.ConnectionStatus = ConnectionStatus.Connected;
   using var key = RSA.Create(2048); var request = new ClientMessageFactory().CreateNewMessageData<HandshakeRequestMsgData>();
   request.IdentityPublicKey = IdentityProof.ExportPublicKey(key); request.UniqueIdentifier = IdentityProof.AccountId(request.IdentityPublicKey);
-  request.PlayerName = name; request.KspVersion = "1.12.5"; request.ApfEnabled = true; request.ApfClientVersion = "kesas-rc59";
+  request.PlayerName = name; request.KspVersion = "1.12.5"; request.ApfEnabled = true; request.ApfClientVersion = "kesas-rc60";
   client.UniqueIdentifier = request.UniqueIdentifier; client.PlayerName = name;
   Check(Server.System.IdentityAuthentication.Begin(client, request, out var nonce, out var reason), "Disposable native authentication challenge: " + reason);
   Check(Server.System.IdentityAuthentication.Complete(client, IdentityProof.Sign(key, nonce, request.UniqueIdentifier, name), out _, out reason), "Disposable native authentication proof: " + reason);

@@ -1,4 +1,4 @@
-"""Assemble matching RC59 client/server bytes from the pinned shipping RC55 archive."""
+"""Assemble matching RC60 client/server bytes from the pinned shipping RC55 archive."""
 import argparse
 import json
 from pathlib import Path
@@ -6,7 +6,7 @@ import runpy
 
 helpers = runpy.run_path(str(Path(__file__).resolve().parents[1] / "Aetherfront-RC50-Work/Build-Release.py"))
 digest, pack, unpack, read, write = (helpers[name] for name in ("digest", "pack", "unpack", "read_json", "write_json"))
-BASE, VERSION = "kesas-rc55", "kesas-rc59"
+BASE, VERSION = "kesas-rc55", "kesas-rc60"
 BASE_SHA = "74b3be5f3bb507d420d595ad73b5ecfff302fbb8f46905e5d4d7fc97f1498b03"
 STABILITY_SHA = "c865243cc05ff3762a4997f027809ee0c0bb9e7488e12911c766b8bcea2ff437"
 PREFIX = "GameData/LunaMultiplayer/"
@@ -23,7 +23,7 @@ def build(baseline, candidate):
     assert "AccountReset.json" not in native
     client = unpack(native["ClientTemplate.zip"])
     original_client = dict(client)
-    for side, names in (("Server", ("Server.dll", "AetherfrontContinuityServer.dll")), ("Client", ("LmpClient.dll",))):
+    for side, names in (("Server", ("Server.dll", "AetherfrontContinuityServer.dll", "AetherfrontPersonalServer.dll")), ("Client", ("LmpClient.dll",))):
         for name in names:
             files = native if side == "Server" else client
             path = ("ServerPayload/" if side == "Server" else PREFIX + "Plugins/") + name
@@ -58,7 +58,7 @@ def build(baseline, candidate):
     assert client_changes == {PREFIX + "Plugins/LmpClient.dll", stability, catalog_path, settings_path, patch_path}
     native_changes = {path for path in native if native[path] != original[path]}
     assert native_changes == {"ClientTemplate.zip", "APFPack-template.json", "MediaReferences.json", "RELEASE.json",
-                              "ServerPayload/Server.dll", "ServerPayload/AetherfrontContinuityServer.dll"}
+                              "ServerPayload/Server.dll", "ServerPayload/AetherfrontContinuityServer.dll", "ServerPayload/AetherfrontPersonalServer.dll"}
     assert set(native) == set(original)
     return pack(native), {"version": VERSION, "baselineSha256": BASE_SHA, "clientChanged": sorted(client_changes),
                           "nativeChanged": sorted(native_changes), "unchangedAssetsPreserved": True, "accountReset": False}

@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+ <ItemGroup>
+  <Reference Include="Server"><HintPath>$(Candidate)/Server.dll</HintPath><Private>false</Private></Reference>
+  <Reference Include="AetherfrontCore"><HintPath>$(Candidate)/AetherfrontCore.dll</HintPath><Private>false</Private></Reference>
+  <Reference Include="ApfCore"><HintPath>$(Candidate)/ApfCore.dll</HintPath><Private>false</Private></Reference>
+ </ItemGroup>
+</Project>

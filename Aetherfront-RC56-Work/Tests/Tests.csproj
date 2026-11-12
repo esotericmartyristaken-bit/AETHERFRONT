@@ -3,6 +3,7 @@
  <ItemGroup><Compile Include="../Shared/CheckpointReconnectPolicy.cs" /></ItemGroup>
  <ItemGroup>
   <Reference Include="Server"><HintPath>$(Candidate)/Server.dll</HintPath></Reference>
+  <Reference Include="AetherfrontPersonalServer"><HintPath>$(Candidate)/AetherfrontPersonalServer.dll</HintPath></Reference>
   <Reference Include="ApfCore"><HintPath>$(Runtime)/ApfCore.dll</HintPath></Reference>
   <Reference Include="AetherfrontCore"><HintPath>$(Runtime)/AetherfrontCore.dll</HintPath></Reference>
   <Reference Include="Lidgren.Core"><HintPath>$(Runtime)/Lidgren.Core.dll</HintPath></Reference>

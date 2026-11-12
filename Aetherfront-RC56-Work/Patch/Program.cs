@@ -10,7 +10,8 @@ var pins = new Dictionary<string, string>
 {
  ["server"] = "08f8de5de2b4d50fa3e8314e35e821c347bb2d0a7f7f323526519cd8c538db36",
  ["client"] = "58dcfafb7a930cf1d1fcfe19be4780037becf2b277341e7d586307be5ff4f659",
- ["clock"] = "f940d7aebd4769582c16b546378cfb91e0f9047af6ffe57768929f6f7a94c5e1"
+ ["clock"] = "f940d7aebd4769582c16b546378cfb91e0f9047af6ffe57768929f6f7a94c5e1",
+ ["personal"] = "0bd420c4f08fc337f1083c67009796cfb1a070a02f102d65670fd5ba21f4cb84"
 };
 if (!pins.TryGetValue(mode, out var pin) || Hash(input) != pin || File.Exists(output) || output == input)
  throw new InvalidDataException("The pinned RC55 input and a fresh output are required.");
@@ -32,7 +33,7 @@ if (mode == "client")
  var literal = getter.Body.Instructions.Single(i => i.OpCode == OpCodes.Ldstr);
  var constant = module.GetType("LmpClient.Apf.ApfClientBuildVersion").Fields.Single(f => f.Name == "Value");
  if (!Equals(literal.Operand, "kesas-rc55") || !Equals(constant.Constant, "kesas-rc55")) throw new InvalidDataException("Client identity changed.");
- literal.Operand = constant.Constant = "kesas-rc59"; changed.Add(getter.FullName);
+ literal.Operand = constant.Constant = "kesas-rc60"; changed.Add(getter.FullName);
  // Bake ordered admission into the pinned native sender, rather than depending
  // on a Harmony prefix after Mono may already have inlined the task wrapper.
  var sender = module.GetType("LmpClient.Systems.Warp.WarpMessageSender");
@@ -47,12 +48,15 @@ if (mode == "client")
  admission.Append(Instruction.Create(OpCodes.Call, Method("LmpClient.Network.NetworkConnection", "get_ConnectionGeneration")));
  admission.Append(Instruction.Create(OpCodes.Call, module.GetType("LmpClient.Network.NetworkSender").Methods.Single(m => m.Name == "QueueOutgoingMessage" && m.Parameters.Count == 2)));
  admission.Append(Instruction.Create(OpCodes.Ret)); changed.Add(send.FullName);
+ var scenarios = Method("LmpClient.Systems.Scenario.ScenarioSystem", "SendScenarioModules");
+ foreach (var instruction in scenarios.Body.Instructions.Where(i => i.OpCode == OpCodes.Ldstr && i.Operand is string text && text.Contains("SpaceDust checkpoint failed")))
+ { instruction.Operand = ((string)instruction.Operand).Replace("SpaceDust checkpoint failed", "Shared scenario checkpoint failed (SpaceDust/crew)"); changed.Add(scenarios.FullName); }
 }
 else if (mode == "server")
 {
  using var donor = AssemblyDefinition.ReadAssembly(args[2], new ReaderParameters { AssemblyResolver = resolver, InMemory = true });
  string[] roots = { "TrafficScheduler", "TransportCapacity", "WarpRecoveryPolicy", "HoldRelease", "HoldLease", "BoundaryWire", "StateSection", "StateDelta", "JsonSlices",
-  "Server.SyncTimings", "Server.SnapshotStore", "Server.SnapshotTransport", "Server.VesselBackup", "Server.BoundaryServer", "Server.ReceivePump", "Server.ServerTraffic", "Server.SurvivalRosterRepair" };
+  "CrewRetryScope", "Server.CheckpointFleet", "Server.SyncTimings", "Server.SnapshotStore", "Server.SnapshotTransport", "Server.VesselBackup", "Server.BoundaryServer", "Server.ReceivePump", "Server.ServerTraffic", "Server.SurvivalRosterRepair" };
  roots = roots.Select(n => "Aetherfront.Synchronization." + n).ToArray();
  new ShippingTypeImporter(module, donor.MainModule).Copy(roots); addedTypes.AddRange(roots);
  var traffic = module.GetType("Aetherfront.Synchronization.Server.ServerTraffic");
@@ -84,6 +88,19 @@ else if (mode == "server")
  changed.Add(startup.FullName);
  Instrument(module.GetType("Aetherfront.Synchronization.Server.SyncTimings"));
 }
+else if (mode == "personal")
+{
+ using var server = AssemblyDefinition.ReadAssembly(args[2], new ReaderParameters { InMemory = true, AssemblyResolver = resolver });
+ var helper = server.MainModule.GetType("Aetherfront.Synchronization.Server.CheckpointFleet");
+ var owned = Method("Aetherfront.Personal.Server.FlightCheckpointServer", "Owned");
+ owned.Body = new MethodBody(owned); var il = owned.Body.GetILProcessor();
+ il.Append(Instruction.Create(OpCodes.Ldarg_0)); il.Append(Instruction.Create(OpCodes.Ldarg_1));
+ il.Append(Instruction.Create(OpCodes.Call, module.ImportReference(helper.Methods.Single(m => m.Name == "Owned")))); il.Append(Instruction.Create(OpCodes.Ret)); changed.Add(owned.FullName);
+ var reply = Method("Aetherfront.Personal.Server.FlightCheckpointServer", "ReplyStored");
+ var setter = reply.Body.Instructions.Single(i => i.Operand is MethodReference call && call.Name == "set_AutomaticStatus");
+ reply.Body.GetILProcessor().InsertBefore(setter, Instruction.Create(OpCodes.Ldarg_1));
+ reply.Body.GetILProcessor().InsertBefore(setter, Instruction.Create(OpCodes.Call, module.ImportReference(helper.Methods.Single(m => m.Name == "Status")))); changed.Add(reply.FullName);
+}
 else
 {
  using var server = AssemblyDefinition.ReadAssembly(args[2], new ReaderParameters { InMemory = true, AssemblyResolver = resolver });
@@ -99,7 +116,7 @@ if (!before.Keys.Where(k => actual[k] != before[k]).ToHashSet().SetEquals(change
  !resources.SequenceEqual(verify.MainModule.Resources.Select(ResourceImage))) throw new InvalidDataException("Shipping method/resource identity audit failed.");
 var afterFields = verify.MainModule.Types.SelectMany(ShippingTypeImporter.All).SelectMany(t => t.Fields).ToDictionary(f => f.FullName, f => f.Attributes + ":" + f.Constant);
 if (fields.Any(p => afterFields[p.Key] != p.Value && !(mode == "client" && p.Key.EndsWith("ApfClientBuildVersion::Value")))) throw new InvalidDataException("Unrelated field changed.");
-var audit = new { version = "kesas-rc59", mode, inputSha256 = Hash(input), outputSha256 = Hash(output), identityPreserved = true, unrelatedMethodsPreserved = true, changed, addedFields, addedTypes };
+var audit = new { version = "kesas-rc60", mode, inputSha256 = Hash(input), outputSha256 = Hash(output), identityPreserved = true, unrelatedMethodsPreserved = true, changed, addedFields, addedTypes };
 File.WriteAllText(output + ".audit.json", JsonSerializer.Serialize(audit, new JsonSerializerOptions { WriteIndented = true })); Console.WriteLine(JsonSerializer.Serialize(audit));
 
 void Wire()

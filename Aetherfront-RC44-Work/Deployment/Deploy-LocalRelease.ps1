@@ -158,8 +158,11 @@ try{
     $pack=Get-Content -LiteralPath "$deployment/Server/Config/APFPack.json" -Raw|ConvertFrom-Json
     $feed=Get-Content -LiteralPath "$deployment/Updates/APFClientUpdate.json" -Raw|ConvertFrom-Json
     if($pack.packVersion -cne $feed.version -or $pack.requiredClientVersion -cne $feed.version){throw 'Completed pack/feed versions differ'}
-    & "$deployment/CertificateTool/ApfCertificateTool.exe" --probe-server 'https://127.0.0.1:18866/health' '34b4bf414b4923fdf8150d0c56a541d393a45bf76dd50ae10e93afc5d1358d09'
-    if($LASTEXITCODE -ne 0){throw 'Completed pinned HTTPS health failed'}
+    # Reuse the reviewed loopback-only, exact-pin HTTP verifier. Do not depend
+    # on a second self-contained runtime launching after successful activation.
+    Initialize-PCNative
+    . (Join-Path $PSScriptRoot 'CompletedHealth.ps1')
+    $report.completedHttps=Assert-CompletedLocalHttps $evidence
     $completion=Join-Path $bundle 'completion.json'
     [IO.File]::WriteAllText($completion,(@{version=$feed.version;notes=$Notes}|ConvertTo-Json),[Text.UTF8Encoding]::new($false))
     & $node (Join-Path $bundle 'Aetherfront-RC44-Work/Deployment/LocalBridge.mjs') complete $BotConfig $completion

@@ -41,8 +41,9 @@ $patch = Join-Path $run 'Patch\Patch.dll'
 $server = Join-Path $run 'Server'
 Invoke-Dotnet @($patch, 'server', (Join-Path $baseline 'Server.dll'), (Join-Path $run 'Donor\SynchronizationDonor.dll'), (Join-Path $server 'Server.dll')) | Out-Null
 Invoke-Dotnet @($patch, 'clock', (Join-Path $baseline 'AetherfrontContinuityServer.dll'), (Join-Path $server 'Server.dll'), (Join-Path $server 'AetherfrontContinuityServer.dll')) | Out-Null
+Invoke-Dotnet @($patch, 'personal', (Join-Path $baseline 'AetherfrontPersonalServer.dll'), (Join-Path $server 'Server.dll'), (Join-Path $server 'AetherfrontPersonalServer.dll')) | Out-Null
 Get-ChildItem -LiteralPath $baseline -Filter '*.dll' -File |
-    Where-Object Name -NotIn @('Server.dll', 'AetherfrontContinuityServer.dll', 'System.Private.CoreLib.dll') |
+    Where-Object Name -NotIn @('Server.dll', 'AetherfrontContinuityServer.dll', 'AetherfrontPersonalServer.dll', 'System.Private.CoreLib.dll') |
     Copy-Item -Destination $server
 $client = Join-Path $run 'Client'
 $null = New-Item -ItemType Directory -Path $client

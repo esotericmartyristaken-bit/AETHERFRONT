@@ -75,7 +75,7 @@ namespace Aetherfront.Stability.Client
                 GameEvents.onVesselTerminated.Add(Listener.VesselTerminated);
                 observedScene = HighLogic.LoadedScene;
                 installed = true;
-                Debug.Log("[Aetherfront Stability] RC59 ordered synchronization and safe-exit lifecycle installed.");
+                Debug.Log("[Aetherfront Stability] RC60 ordered synchronization, crew retry recovery and safe-exit lifecycle installed.");
             }
             catch (Exception error)
             {
@@ -112,6 +112,7 @@ namespace Aetherfront.Stability.Client
                 ClientTraffic.Install(harmony);
                 SnapshotClient.Install(harmony);
                 CheckpointReconnect.Install(harmony);
+                CrewSaveRecovery.Install(harmony);
         }
         static void Patch(Harmony harmony, MethodBase target, string prefix)
         {
