@@ -21,6 +21,11 @@ namespace Aetherfront.Synchronization
                 "Loading your personal checkpoint. Connect again to resume your saved fleet and mission time.") return false;
             Armed = false; Active = true; expires = now + 180; next = now + 3; return true;
         }
+        public void BeginLocalRecovery(int generation, double now)
+        {
+            Arm(generation, "local-flight-recovery", now);
+            Armed = false; Active = true; next = now + 3;
+        }
         public bool Tick(double now, bool mainMenu, bool disconnected, bool resetPending, bool running)
         {
             // Running can still describe the departing session for one Unity

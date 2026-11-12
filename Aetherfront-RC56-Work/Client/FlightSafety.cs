@@ -19,6 +19,7 @@ using LmpClient.VesselUtilities;
 using LmpCommon.Enums;
 using LmpCommon.Message.Data.Warp;
 using LmpCommon.Message.Interface;
+using LmpCommon.Message.Client;
 using UnityEngine;
 
 namespace Aetherfront.Stability.Client
@@ -31,6 +32,7 @@ namespace Aetherfront.Stability.Client
         static readonly ConcurrentQueue<Ack> Acknowledgements = new ConcurrentQueue<Ack>();
         static readonly WarpRecoveryPolicy Recovery = new WarpRecoveryPolicy();
         static readonly PropertyInfo GenerationProperty = AccessTools.Property(typeof(NetworkConnection), "ConnectionGeneration");
+        static readonly MethodInfo QueueOutgoing = AccessTools.Method(typeof(NetworkSender), "QueueOutgoingMessage", new[] { typeof(IMessageBase), typeof(int) });
         static volatile bool disconnectRequested;
         static bool held, aligning, installed, applyingHold;
         static readonly HoldLease Lease = new HoldLease();
@@ -73,7 +75,7 @@ namespace Aetherfront.Stability.Client
                 GameEvents.onVesselTerminated.Add(Listener.VesselTerminated);
                 observedScene = HighLogic.LoadedScene;
                 installed = true;
-                Debug.Log("[Aetherfront Stability] RC58 identified synchronization and safe-exit lifecycle installed.");
+                Debug.Log("[Aetherfront Stability] RC59 ordered synchronization and safe-exit lifecycle installed.");
             }
             catch (Exception error)
             {
@@ -90,6 +92,7 @@ namespace Aetherfront.Stability.Client
                 Patch(harmony, AccessTools.Method(AccessTools.TypeByName("LmpClient.Network.NetworkReceiver"), "QueueMessageToSystem",
                     new[] { typeof(IServerMessageBase), typeof(int) }), nameof(CaptureReceivedAck));
                 Patch(harmony, AccessTools.Method(typeof(WarpMessageSender), "SendNewSubspace"), nameof(SendBoundary));
+                if (QueueOutgoing == null) throw new MissingMethodException("Generation-bound outgoing queue unavailable.");
                 Patch(harmony, AccessTools.Method(typeof(WarpSystem), "CheckStuckAtWarp"), nameof(ReplaceStuckCheck));
                 Patch(harmony, AccessTools.Method(typeof(WarpSystem), "CheckWarpStopped"), nameof(ReplaceStuckCheck));
                 Patch(harmony, AccessTools.Method(typeof(TimeSyncSystem), "CheckGameTime"), nameof(AllowClockTick));
@@ -117,6 +120,17 @@ namespace Aetherfront.Stability.Client
         }
         static bool RejectConnection() { MainSystem.Singleton.Status = failure; return false; }
         static bool ReplaceStuckCheck() => !Running;
+        // Native WarpMessageSender schedules an independent Task per message.
+        // That can reorder leave/create/join and waits behind unrelated pool work.
+        // Admit synchronously to the SAME generation-checked native network queue;
+        // serialization, transport pacing and sending remain on the send thread.
+        static bool QueueWarp(IMessageData msg)
+        {
+            int current = CurrentGeneration;
+            var envelope = NetworkMain.CliMsgFactory.CreateNew<WarpCliMsg>(msg);
+            QueueOutgoing.Invoke(null, new object[] { envelope, current });
+            return false;
+        }
         static bool AllowClockTick() => !held;
         static bool CaptureAck(IServerMessageBase msg)
         {
@@ -192,7 +206,8 @@ namespace Aetherfront.Stability.Client
             message.PlayerCreator = SettingsSystem.CurrentSettings.PlayerName;
             message.ServerTimeDifference = Recovery.Proposal;
             BoundaryWire.Set(message, Recovery.Session, Recovery.Request);
-            WarpSystem.Singleton.MessageSender.SendMessage(message);
+            QueueWarp(message);
+            Debug.Log("[Aetherfront Stability] Warp boundary queued; generation=" + CurrentGeneration + "; request=" + Recovery.Request);
         }
         static bool AllowPosition(VesselPositionUpdate __instance)
         {
@@ -305,6 +320,7 @@ namespace Aetherfront.Stability.Client
             if (failure != null) return;
             failure = reason; Hold(); SaveRecovery("sync-failure"); CancelBoundary();
             Debug.LogError("[Aetherfront Stability] " + reason);
+            CheckpointReconnect.SafeExit(true);
             NetworkConnection.Disconnect(reason);
         }
         static void SaveRecovery(string reason)
@@ -395,7 +411,11 @@ namespace Aetherfront.Stability.Client
             { stableOffset = offset; hasStableOffset = true; }
             while (Acknowledgements.TryDequeue(out var ack))
             {
-                if (!Recovery.CanAccept(ack.Generation, ack.Session, ack.Request, ack.Id, ack.Offset, ack.Received) || TimeWarp.CurrentRateIndex != 0) continue;
+                if (!Recovery.CanAccept(ack.Generation, ack.Session, ack.Request, ack.Id, ack.Offset, ack.Received) || TimeWarp.CurrentRateIndex != 0)
+                {
+                    Debug.LogWarning("[Aetherfront Stability] Stale or invalid boundary acknowledgement ignored; generation=" + ack.Generation + "; request=" + ack.Request + "; pending=" + Recovery.Pending);
+                    continue;
+                }
                 double target = TimeSyncSystem.ServerClockSec + ack.Offset, now = Planetarium.GetUniversalTime();
                 if (!WarpRecoveryPolicy.Finite(target) || target < now - 0.05 || target - now > forwardBudget)
                 { Fail("Warp acknowledgement does not match the protected flight clock. Reconnect to recover."); break; }
@@ -440,8 +460,8 @@ namespace Aetherfront.Stability.Client
             if (GUI.Button(new Rect(12, 90, 310, 32), "Synchronizing: disconnect safely"))
             {
                 Hold(); SaveRecovery("manual-safe-exit"); CancelBoundary();
+                CheckpointReconnect.SafeExit(false);
                 NetworkConnection.Disconnect("Player chose safe exit from synchronization; local recovery preserved.");
-                MainSystem.Singleton.ForceQuit = true;
             }
         }
     }

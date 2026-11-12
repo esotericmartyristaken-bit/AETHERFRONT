@@ -20,6 +20,26 @@ namespace Aetherfront.Stability.Client
         static string address; static int port;
         static volatile bool leaveFlight;
         static bool notice;
+        static double nextSafetyReconnect;
+        public static void SafeExit(bool reconnect)
+        {
+            // Only called for our own local safety failure or explicit safe-exit
+            // button. Ordinary disconnects/kicks do not authorize reconnect.
+            lock (Gate)
+            {
+                Policy.Cancel(); notice = false; address = null;
+                if (reconnect && Now >= nextSafetyReconnect)
+                {
+                    address = NetworkConnection.LastConnectAddress; port = NetworkConnection.LastConnectPort;
+                    if (!string.IsNullOrEmpty(address) && port > 0 && port <= 65535)
+                    {
+                        Policy.BeginLocalRecovery((int)Generation.GetValue(null, null), Now);
+                        nextSafetyReconnect = Now + 300; // Never create a repeated launch/reconnect loop.
+                    }
+                }
+                leaveFlight = true;
+            }
+        }
         static double Now => (double)System.Diagnostics.Stopwatch.GetTimestamp() / System.Diagnostics.Stopwatch.Frequency;
         public static void Install(Harmony harmony)
         {
@@ -57,7 +77,8 @@ namespace Aetherfront.Stability.Client
         {
             if (leaveFlight)
             {
-                leaveFlight = false; notice = true;
+                leaveFlight = false;
+                lock (Gate) notice = Policy.Active;
                 // Native StopGame exits flight and resets its systems. Do not thaw
                 // a disconnected vessel or join the new timeline in the old scene.
                 MainSystem.Singleton.ForceQuit = true;
@@ -70,7 +91,7 @@ namespace Aetherfront.Stability.Client
                         MainSystem.NetworkState = ClientState.Disconnected;
                     StopGame.Invoke(null, null);
                     MainSystem.Singleton.ForceQuit = false;
-                    Debug.Log("[Aetherfront Stability] Checkpoint disconnect confirmed; native main-menu exit requested before reconnect.");
+                    Debug.Log("[Aetherfront Stability] Safe disconnect confirmed; native main-menu exit requested.");
                 }
                 catch (Exception error)
                 {
@@ -97,21 +118,21 @@ namespace Aetherfront.Stability.Client
             // gate. Never invert that order by connecting while owning our gate.
             if (connect)
             {
-                MainSystem.Singleton.Status = "Reconnecting after personal checkpoint restore (attempt " + attempt + "/3).";
-                Debug.Log("[Aetherfront Stability] Reconnecting after personal checkpoint restore; attempt=" + attempt);
+                MainSystem.Singleton.Status = "Reconnecting to your saved session (attempt " + attempt + "/3).";
+                Debug.Log("[Aetherfront Stability] Reconnecting to saved session; attempt=" + attempt);
                 // Reuse the normal approved endpoint/identity/pack admission.
                 // Password remains only in the existing native memory field.
                 NetworkConnection.ConnectToServer(target, targetPort, NetworkConnection.LastConnectPassword);
             }
             else if (stopped && MainSystem.NetworkState != ClientState.Running)
-                MainSystem.Singleton.Status = "Automatic checkpoint reconnect stopped. Connect normally to resume your saved fleet.";
+                MainSystem.Singleton.Status = "Automatic reconnect stopped. Connect normally to resume your saved fleet.";
         }
         public static void Draw()
         {
             lock (Gate)
             {
                 if (!notice || !Policy.Active) return;
-                GUI.Label(new Rect(12, 126, 540, 25), "Checkpoint restored: returning to menu and reconnecting automatically.");
+                GUI.Label(new Rect(12, 126, 540, 25), "Returning to menu and reconnecting to your saved session.");
                 if (GUI.Button(new Rect(12, 153, 280, 30), "Cancel automatic reconnect"))
                 { Policy.Cancel(); notice = false; address = null; }
             }

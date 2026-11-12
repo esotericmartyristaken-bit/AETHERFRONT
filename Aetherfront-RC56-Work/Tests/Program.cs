@@ -127,6 +127,10 @@ internal static class Program
    "Only a successful new connection completes checkpoint reconnect");
   Reject(() => p.Arm(1, "", 0), "Missing restore request cannot authorize automatic reconnect");
   Reject(() => p.Arm(1, "invalid-time", double.NaN), "Nonfinite restore clock cannot authorize reconnect");
+  p.BeginLocalRecovery(3, 10);
+  Check(p.Active && !p.Armed && !p.Tick(12, true, true, false, false) && p.Tick(13, true, true, false, false),
+   "Explicit local safety recovery waits for menu and paces automatic reconnect");
+  p.Cancel(); Check(!p.Tick(30, true, true, false, false), "Cancelling local safety recovery prevents automatic reconnect");
  }
  static void Policy()
  {
@@ -343,7 +347,7 @@ internal static class Program
   var client = (ClientStructure)RuntimeHelpers.GetUninitializedObject(typeof(ClientStructure)); client.Subspace = int.MinValue; client.ConnectionStatus = ConnectionStatus.Connected;
   using var key = RSA.Create(2048); var request = new ClientMessageFactory().CreateNewMessageData<HandshakeRequestMsgData>();
   request.IdentityPublicKey = IdentityProof.ExportPublicKey(key); request.UniqueIdentifier = IdentityProof.AccountId(request.IdentityPublicKey);
-  request.PlayerName = name; request.KspVersion = "1.12.5"; request.ApfEnabled = true; request.ApfClientVersion = "kesas-rc58";
+  request.PlayerName = name; request.KspVersion = "1.12.5"; request.ApfEnabled = true; request.ApfClientVersion = "kesas-rc59";
   client.UniqueIdentifier = request.UniqueIdentifier; client.PlayerName = name;
   Check(Server.System.IdentityAuthentication.Begin(client, request, out var nonce, out var reason), "Disposable native authentication challenge: " + reason);
   Check(Server.System.IdentityAuthentication.Complete(client, IdentityProof.Sign(key, nonce, request.UniqueIdentifier, name), out _, out reason), "Disposable native authentication proof: " + reason);

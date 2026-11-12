@@ -10,10 +10,25 @@ using HarmonyLib;
 using Lidgren.Network;
 using LmpCommon.Message;
 using LmpCommon.Message.Data.Warp;
+using LmpCommon.Message.Client;
+using LmpCommon.Message.Interface;
+using LmpClient.Network;
+using LmpClient.Systems.Warp;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 class Program
 {
  static string game, fixture; static int checks;
+ static readonly List<IMessageBase> queued = new List<IMessageBase>();
+ static bool CaptureOutgoing(IMessageBase __0, int __1) { queued.Add(__0); return false; }
+ sealed class StalledScheduler : TaskScheduler
+ {
+  public int Pending;
+  protected override void QueueTask(Task task) { Pending++; }
+  protected override bool TryExecuteTaskInline(Task task, bool previouslyQueued) { return TryExecuteTask(task); }
+  protected override IEnumerable<Task> GetScheduledTasks() { return new Task[0]; }
+ }
  static Assembly Resolve(object sender, ResolveEventArgs args)
  {
   string name = new AssemblyName(args.Name).Name + ".dll";
@@ -39,6 +54,31 @@ class Program
    "KSP lifecycle callbacks retain non-null instance targets");
   FlightSafety.InstallHooks(new Harmony("aetherfront.rc56.isolated-mono-validation"));
   Check(true, "complete Harmony hook installation against shipping KSP and patched LMP");
+  var capture = new Harmony("aetherfront.rc59.capture-native-queue");
+  var queueMethod = AccessTools.Method(typeof(NetworkSender), "QueueOutgoingMessage", new[] { typeof(IMessageBase), typeof(int) });
+  capture.Patch(queueMethod, prefix: new HarmonyMethod(typeof(Program), nameof(CaptureOutgoing)) { priority = Priority.First });
+  var stalled = new StalledScheduler();
+  var sender = new WarpMessageSender();
+  var leave = new ClientMessageFactory().CreateNewMessageData<WarpChangeSubspaceMsgData>(); leave.Subspace = -1;
+  var create = new ClientMessageFactory().CreateNewMessageData<WarpNewSubspaceMsgData>(); create.PlayerCreator = "MonoFixture";
+  BoundaryWire.Set(create, 54321, 123);
+  var operation = new Task(() => { sender.SendMessage(leave); sender.SendMessage(create); });
+  operation.RunSynchronously(stalled);
+  Console.WriteLine("Warp sender fixture: deferredTasks=" + stalled.Pending + "; queued=" + queued.Count);
+  Check(stalled.Pending == 0 && queued.Count == 2 && ReferenceEquals(queued[0].Data, leave) && ReferenceEquals(queued[1].Data, create),
+   "actual shipping warp sender admits leave/create in order without TaskScheduler progress");
+  var envelope = queued[1];
+  var packet = (NetOutgoingMessage)Activator.CreateInstance(typeof(NetOutgoingMessage), true);
+  var packetData = typeof(NetBuffer).GetField("m_data", BindingFlags.Instance | BindingFlags.NonPublic);
+  packetData.SetValue(packet, new byte[4096]); envelope.Serialize(packet);
+  var incoming = (NetIncomingMessage)Activator.CreateInstance(typeof(NetIncomingMessage), true);
+  packetData.SetValue(incoming, (byte[])packet.Data.Clone()); incoming.LengthBits = packet.LengthBits;
+  var decodedEnvelope = new ClientMessageFactory().Deserialize(incoming, DateTime.UtcNow.Ticks);
+  Check(decodedEnvelope.Data is WarpNewSubspaceMsgData decodedBoundary && BoundaryWire.Session(decodedBoundary) == 54321 &&
+   BoundaryWire.Request(decodedBoundary) == 123 && incoming.Position == packet.LengthBits,
+   "full native outgoing envelope preserves identified warp request, not only raw payload");
+  decodedEnvelope.Recycle(); foreach (var item in queued) item.Recycle(); queued.Clear();
+  capture.UnpatchAll("aetherfront.rc59.capture-native-queue");
   var factory = new ClientMessageFactory();
   var source = factory.CreateNewMessageData<WarpNewSubspaceMsgData>(); source.PlayerCreator = "MonoFixture"; source.SubspaceKey = 12; source.ServerTimeDifference = 500;
   BoundaryWire.Set(source, 12345, 98765);

@@ -6,6 +6,7 @@ using LmpCommon.Message.Server;
 using Server.Client;
 using Server.Context;
 using Server.Server;
+using Server.Log;
 
 namespace Aetherfront.Synchronization.Server
 {
@@ -36,6 +37,7 @@ namespace Aetherfront.Synchronization.Server
                 return true;
             }
             boundary.Session = session; boundary.Request = number; boundary.Proposed = request.ServerTimeDifference; boundary.Id = -1; boundary.Committed = false;
+            LunaLog.Normal("[Synchronization] Identified boundary accepted; request=" + number);
             return false;
         }
         public static void Publish(IMessageData data, ClientStructure client, WarpNewSubspaceMsgData request)
@@ -52,7 +54,10 @@ namespace Aetherfront.Synchronization.Server
             change.PlayerName = client.PlayerName; change.Subspace = created.SubspaceKey;
             new global::Server.System.WarpSystemReceiver().HandleChangeSubspace(client, change);
             if (!client.DisconnectClient && client.Subspace == created.SubspaceKey)
-            { boundary.Committed = true; MessageQueuer.SendToClient<WarpSrvMsg>(client, created); }
+            {
+                boundary.Committed = true; MessageQueuer.SendToClient<WarpSrvMsg>(client, created);
+                LunaLog.Normal("[Synchronization] Boundary committed and acknowledgement queued; request=" + boundary.Request + "; subspace=" + boundary.Id);
+            }
         }
     }
 }

@@ -32,7 +32,21 @@ if (mode == "client")
  var literal = getter.Body.Instructions.Single(i => i.OpCode == OpCodes.Ldstr);
  var constant = module.GetType("LmpClient.Apf.ApfClientBuildVersion").Fields.Single(f => f.Name == "Value");
  if (!Equals(literal.Operand, "kesas-rc55") || !Equals(constant.Constant, "kesas-rc55")) throw new InvalidDataException("Client identity changed.");
- literal.Operand = constant.Constant = "kesas-rc58"; changed.Add(getter.FullName);
+ literal.Operand = constant.Constant = "kesas-rc59"; changed.Add(getter.FullName);
+ // Bake ordered admission into the pinned native sender, rather than depending
+ // on a Harmony prefix after Mono may already have inlined the task wrapper.
+ var sender = module.GetType("LmpClient.Systems.Warp.WarpMessageSender");
+ var send = sender.Methods.Single(m => m.Name == "SendMessage" && m.Parameters.Count == 1);
+ var closure = sender.NestedTypes.SelectMany(t => t.Methods).Single(m => m.Name == "<SendMessage>b__0");
+ var factory = (MethodReference)closure.Body.Instructions.Single(i => i.Operand is MethodReference c && c.Name == "get_MessageFactory").Operand;
+ var create = (MethodReference)closure.Body.Instructions.Single(i => i.Operand is GenericInstanceMethod c && c.Name == "CreateNew").Operand;
+ send.Body = new MethodBody(send); var admission = send.Body.GetILProcessor();
+ admission.Append(Instruction.Create(OpCodes.Call, factory));
+ admission.Append(Instruction.Create(OpCodes.Ldarg_1));
+ admission.Append(Instruction.Create(OpCodes.Callvirt, create));
+ admission.Append(Instruction.Create(OpCodes.Call, Method("LmpClient.Network.NetworkConnection", "get_ConnectionGeneration")));
+ admission.Append(Instruction.Create(OpCodes.Call, module.GetType("LmpClient.Network.NetworkSender").Methods.Single(m => m.Name == "QueueOutgoingMessage" && m.Parameters.Count == 2)));
+ admission.Append(Instruction.Create(OpCodes.Ret)); changed.Add(send.FullName);
 }
 else if (mode == "server")
 {
@@ -85,7 +99,7 @@ if (!before.Keys.Where(k => actual[k] != before[k]).ToHashSet().SetEquals(change
  !resources.SequenceEqual(verify.MainModule.Resources.Select(ResourceImage))) throw new InvalidDataException("Shipping method/resource identity audit failed.");
 var afterFields = verify.MainModule.Types.SelectMany(ShippingTypeImporter.All).SelectMany(t => t.Fields).ToDictionary(f => f.FullName, f => f.Attributes + ":" + f.Constant);
 if (fields.Any(p => afterFields[p.Key] != p.Value && !(mode == "client" && p.Key.EndsWith("ApfClientBuildVersion::Value")))) throw new InvalidDataException("Unrelated field changed.");
-var audit = new { version = "kesas-rc58", mode, inputSha256 = Hash(input), outputSha256 = Hash(output), identityPreserved = true, unrelatedMethodsPreserved = true, changed, addedFields, addedTypes };
+var audit = new { version = "kesas-rc59", mode, inputSha256 = Hash(input), outputSha256 = Hash(output), identityPreserved = true, unrelatedMethodsPreserved = true, changed, addedFields, addedTypes };
 File.WriteAllText(output + ".audit.json", JsonSerializer.Serialize(audit, new JsonSerializerOptions { WriteIndented = true })); Console.WriteLine(JsonSerializer.Serialize(audit));
 
 void Wire()
