@@ -238,7 +238,10 @@ function Add-ReleaseMedia([string]$ReleaseRoot,[string]$ConfigRoot,$Release,$Cat
             if([IO.Directory]::Exists($target)){throw 'Existing media is immutable; conflicting content will not be overwritten.'}
             if([IO.File]::Exists($target)){
                 if(([IO.FileInfo]$target).Length -ne $asset.sizeBytes -or (Get-GhpSha256 $target) -cne $asset.sha256){throw 'Existing media is immutable; conflicting content will not be overwritten.'}
-                Assert-GhpPublicZip $target -MaximumExpandedBytes 8GB
+                # Already-public, content-addressed media need not be inflated
+                # on every application release. GitHub digest readback below
+                # proves matching remote bytes; Sync-GhpAssets safety-scans
+                # missing media BEFORE their first upload. Full SHA stays here.
                 continue
             }
             $source=Get-UpdateChildPath $PrivateStage $asset.name
@@ -526,10 +529,13 @@ try{
             $bootstrapSource="$prepared/KESAS-Client-Bootstrap.zip"
         }
         Assert-PublisherPrepared $prepared $fingerprint $version
-        $githubPlan=New-GitHubPublicationPlan -Repository $githubSettings.Value.repository -MediaTag $githubSettings.Value.mediaTag -PublishedDirectory "$prepared/Published" -BootstrapZip "$prepared/Aetherfront-Starter-$version.zip" -CatalogPath "$prepared/install-catalog.json" -MediaDirectory "$root/Server/Config"
-        if((Get-FileHash -LiteralPath $releasePath -Algorithm SHA256).Hash -ine $releaseSha){throw 'Source release changed during preparation; no GitHub mutation requested.'}
-        Write-PublisherStage 'media-publication'
-        Prepare-GitHubPublication -Plan $githubPlan
+        $githubPlan=Invoke-GhpValidationScope {
+            $plan=New-GitHubPublicationPlan -Repository $githubSettings.Value.repository -MediaTag $githubSettings.Value.mediaTag -PublishedDirectory "$prepared/Published" -BootstrapZip "$prepared/Aetherfront-Starter-$version.zip" -CatalogPath "$prepared/install-catalog.json" -MediaDirectory "$root/Server/Config"
+            if((Get-FileHash -LiteralPath $releasePath -Algorithm SHA256).Hash -ine $releaseSha){throw 'Source release changed during preparation; no GitHub mutation requested.'}
+            Write-PublisherStage 'media-publication'
+            $null=Prepare-GitHubPublication -Plan $plan
+            $plan
+        }
     }
     $targets=@(
         @{source="$stage/Release/ClientTemplate.zip";relative='ClientTemplate.zip'},

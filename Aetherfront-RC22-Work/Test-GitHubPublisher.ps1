@@ -1,8 +1,8 @@
 [CmdletBinding()]
-param()
+param([string]$PublisherPath=(Join-Path $PSScriptRoot 'GitHub.Publish.ps1'))
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-. (Join-Path $PSScriptRoot 'GitHub.Publish.ps1')
+. $PublisherPath
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 Add-Type -AssemblyName System.IO.Compression
 $script:Passed = 0
@@ -165,6 +165,36 @@ function Add-FakeStable([string]$Tag) {
 }
 
 try {
+    if(Get-Command Invoke-GhpValidationScope -ErrorAction SilentlyContinue){
+        Test-Case 'verification cache holds immutable bytes and releases every handle' {
+            $f=New-Fixture
+            $before=Get-GhpSha256 $f.Bootstrap
+            Invoke-GhpValidationScope {
+                Assert-Test ((Get-GhpSha256 $f.Bootstrap) -ceq $before) 'Initial full digest.'
+                Assert-GhpPublicZip $f.Bootstrap
+                Assert-GhpPublicZip $f.Bootstrap
+                $entry=Get-GhpValidationFile $f.Bootstrap
+                Assert-Test ($entry.Sha256 -ceq $before -and $entry.Scanned.Count -eq 1) 'Only scoped completed verification reused.'
+                Assert-Throws {[IO.File]::AppendAllText($f.Bootstrap,'mutate')} 'used by another process|sharing|access'
+                Assert-Test ((Get-GhpSha256 $f.Bootstrap) -ceq $before) 'Same immutable bytes.'
+            }
+            [IO.File]::AppendAllText($f.Bootstrap,'after-scope')
+            Assert-Test ((Get-GhpSha256 $f.Bootstrap) -cne $before) 'No persistent stale hash cache.'
+            Assert-Throws {Invoke-GhpValidationScope {$null=Get-GhpSha256 $f.Bootstrap;throw 'deliberate failure'}} 'deliberate failure'
+            [IO.File]::AppendAllText($f.Bootstrap,'after-failure')
+        }
+        Test-Case 'new remote media safety scanned before upload; existing bytes need no repeated inflate' {
+            $f=New-Fixture;$p=New-TestPlan $f;Reset-Fake
+            $null=Prepare-GitHubPublication $p
+            $uploads=$script:Fake.Uploads
+            $null=Prepare-GitHubPublication $p
+            Assert-Test ($script:Fake.Uploads -eq $uploads) 'Existing exact digests are not uploaded again.'
+            Write-TestZip (Join-Path $f.Media 'unreviewed.zip') @{'credentials.txt'='not-public'}
+            $bad=Get-GhpAsset (Join-Path $f.Media 'unreviewed.zip') 'media' 'pack-media' 'test/public'
+            Assert-Throws {Sync-GhpAssets 'test/public' (Get-FakeRelease 'pack-media') @($bad)} 'safety guard'
+            Assert-Test ($script:Fake.Uploads -eq $uploads) 'Private content never uploaded.'
+        }
+    }
     Test-Case 'plan exact metadata, Full/Potato/clientOnly union, spaces, unrelated files excluded' {
         $f = New-Fixture
         [IO.File]::WriteAllText((Join-Path $f.Media 'universe.zip'), 'never publish')

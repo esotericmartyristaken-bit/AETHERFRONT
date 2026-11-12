@@ -4,8 +4,13 @@ Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $UpdateUtf8=New-Object Text.UTF8Encoding($false)
 $UpdateCodeRoot=$PSScriptRoot
+if($PSVersionTable.PSEdition -eq 'Core'){
+    . (Join-Path $PSScriptRoot 'Update.Fast.ps1')
+    Initialize-UpdateFast
+}
 
 function Assert-ReleaseJsonUnique([string]$Json) {
+    if('Aetherfront.Deployment.FastChecks' -as [type]){[Aetherfront.Deployment.FastChecks]::UniqueJson($Json);return}
     $null=ConvertFrom-Json -InputObject $Json -ErrorAction Stop
     $stack=New-Object 'Collections.Generic.Stack[object]'
     foreach($token in [regex]::Matches($Json,'"(?:\\.|[^"\\])*"|[{}\[\]:,]')){
@@ -25,6 +30,7 @@ function Assert-ReleaseJsonUnique([string]$Json) {
 }
 
 function Assert-UpdatePath([string]$Path) {
+    if('Aetherfront.Deployment.FastChecks' -as [type]){return [Aetherfront.Deployment.FastChecks]::PathChecked($Path)}
     $full=[IO.Path]::GetFullPath($Path)
     # Absolute caller-supplied paths need the same Win32 name checks as ZIP
     # entries. GetFullPath alone accepts alternate data streams and device names.
@@ -74,6 +80,7 @@ function Read-UpdateText([string]$Path,[long]$MaximumBytes=16777216) {
     }finally{$textInput.Dispose()}
 }
 function Get-UpdateRelativePath([string]$Name) {
+    if('Aetherfront.Deployment.FastChecks' -as [type]){return [Aetherfront.Deployment.FastChecks]::Relative($Name)}
     if([string]::IsNullOrWhiteSpace($Name) -or $Name.Contains('\') -or $Name.StartsWith('/')){throw "Unsafe archive/release path: $Name"}
     foreach($segment in $Name.Split('/')){
         if(!$segment -or $segment -eq '.' -or $segment -eq '..' -or $segment -match '[<>:"|?*\x00-\x1f]' -or $segment -match '[. ]$' -or $segment -match '^(?i:CON|PRN|AUX|NUL|CONIN\$|CONOUT\$|COM[1-9\u00b9\u00b2\u00b3]|LPT[1-9\u00b9\u00b2\u00b3])(?:\.|$)'){throw "Unsafe archive/release path: $Name"}

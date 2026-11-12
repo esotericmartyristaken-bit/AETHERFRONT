@@ -24,7 +24,7 @@ $deployment=[IO.Path]::GetFullPath($DeploymentRoot)
 $archivePath=[IO.Path]::GetFullPath($Archive)
 $reportAuthorized=$false
 $report=[ordered]@{at=[DateTime]::UtcNow.ToString('o');stage='preflight';healthy=$false;sourceCommit=$SourceCommit;archiveSha256=$ArchiveSha256;remoteHostDeployment=$false;error=$null}
-$operatorLock=$null;$publicationProbe=$null
+$operatorLock=$null;$publicationProbe=$null;$publisherProcess=$null;$priorPriority=$null
 $phaseState=@{Clock=[Diagnostics.Stopwatch]::StartNew();Name='preflight'};$report.phaseTimings=@()
 $priorTask=$env:APF_SERVER_TASK;$priorControl=$env:APF_CONTROL_ROOT
 function Report-Local([string]$Stage){
@@ -58,6 +58,11 @@ function New-LocalPrivateDirectory([string]$Path){
 try{
     $identity=[Security.Principal.WindowsIdentity]::GetCurrent()
     if(-not ([Security.Principal.WindowsPrincipal]::new($identity)).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)){throw 'Run the reviewed local deployment with normal Windows UAC approval'}
+    # The SYSTEM task uses BelowNormal. Only this transient publisher and its
+    # validation children need ordinary interactive scheduling, never High.
+    $publisherProcess=[Diagnostics.Process]::GetCurrentProcess();$priorPriority=$publisherProcess.PriorityClass
+    if($priorPriority -eq [Diagnostics.ProcessPriorityClass]::BelowNormal -or $priorPriority -eq [Diagnostics.ProcessPriorityClass]::Idle){$publisherProcess.PriorityClass='Normal'}
+    $report.publisherPriority=[string]$publisherProcess.PriorityClass
     if($deployment -ine [IO.Path]::GetFullPath($hostSettings.nativeRoot)){throw 'Unexpected live deployment root'}
     $reportFull=[IO.Path]::GetFullPath($ReportPath)
     $reportsRoot=[IO.Path]::GetFullPath((Join-Path $sourceRoot '../UpdateBuilds')).TrimEnd('\')+'\'
@@ -67,6 +72,8 @@ try{
     if((& $git -C $sourceRoot rev-parse HEAD).Trim() -cne $SourceCommit){throw 'Reviewed source commit differs'}
     & $git -C $sourceRoot diff --quiet HEAD -- KESAS-VPS-Server APFDiscordBot/src APFDiscordBot/scripts ControlPlane Aetherfront-RC44-Work/Deployment
     if($LASTEXITCODE -ne 0){throw 'Reviewed deployment code is dirty'}
+    $null=& $git -C $sourceRoot ls-files --error-unmatch -- Aetherfront-RC44-Work/Deployment/Freeze-LocalSource.ps1
+    if($LASTEXITCODE -ne 0){throw 'Reviewed source freezer must be tracked before import'}
     $configuration=Get-Content -LiteralPath $BotConfig -Raw|ConvertFrom-Json
     if($configuration.updates.githubDeployment.enabled -ne $false){throw 'Disable Git-triggered host deployment before local publication'}
     if($configuration.updates.hostDeploymentMode -cne 'local-only'){throw 'Require local-only host deployment mode'}
@@ -100,18 +107,8 @@ try{
     }
     $selected.Add('APFDiscordBot/package.json')
     $selected.Add('APFDiscordBot/package-lock.json')
-    $files=@(foreach($relative in $selected){
-        $source=Join-Path $sourceRoot $relative;$destination=Join-Path $bundle $relative
-        if((Get-Item -LiteralPath $source -Force).Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Reviewed source contains a reparse point'}
-        $committed=@(& $git -C $sourceRoot rev-parse --verify "${SourceCommit}:$($relative.Replace('\','/'))")
-        if($LASTEXITCODE -ne 0 -or $committed.Count -ne 1){throw 'Frozen source is not tracked in reviewed commit'}
-        $working=@(& $git -C $sourceRoot hash-object --path=$relative $source)
-        if($LASTEXITCODE -ne 0 -or $working.Count -ne 1 -or $working[0] -cne $committed[0]){throw 'Frozen source differs from reviewed commit blob'}
-        $sha=(Get-FileHash -LiteralPath $source).Hash.ToLowerInvariant()
-        $null=[IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($destination));Copy-Item -LiteralPath $source -Destination $destination
-        if((Get-FileHash -LiteralPath $destination).Hash.ToLowerInvariant() -cne $sha){throw 'Frozen local deployment source differs'}
-        @{path=$relative;sha256=$sha}
-    })
+    . (Join-Path $PSScriptRoot 'Freeze-LocalSource.ps1')
+    $files=@(Copy-ReviewedLocalSource -Git $git -SourceRoot $sourceRoot -Destination $bundle -Commit $SourceCommit -Files $selected.ToArray())
     [IO.File]::WriteAllText((Join-Path $bundle 'SOURCE.json'),(@{commit=$SourceCommit;files=$files}|ConvertTo-Json -Depth 5),[Text.UTF8Encoding]::new($false))
     $frozenArchive=Join-Path $bundle 'Release.zip';Copy-Item -LiteralPath $archivePath -Destination $frozenArchive
     if((Get-FileHash -LiteralPath $frozenArchive).Hash.ToLowerInvariant() -cne $ArchiveSha256){throw 'Frozen archive differs from reviewed release'}
@@ -128,16 +125,11 @@ try{
     Initialize-PreactivationRecovery
     Assert-RecoveryTaskBinding @{ControlRoot=$control;NativeRoot=$deployment}
     $report.gameTaskBindingVerified=$true
-    # Exercise real Windows firewall syntax before bot changes, long media work,
-    # or native startup. Only a NEW private, never-executed copy is targeted.
-    Report-Local 'verifying-candidate-firewall'
+    # The actual candidate gate installs and verifies its own isolation before
+    # executing anything. A second disposable firewall probe added no assurance.
     . (Join-Path $bundle 'KESAS-VPS-Server/Update.Common.ps1')
     . (Join-Path $bundle 'Aetherfront-RC44-Work/Deployment/Test-PreparedCandidate.ps1')
-    $probeRoot=New-PCPrivateDirectory (Join-Path $bundle 'FirewallProbe')
-    $null=Copy-PCFile (Join-Path $deployment 'Server/Server.exe') (Join-Path $probeRoot 'Probe.exe')
-    $probeContext=@{Candidate=$probeRoot;GamePort=28865;PackPort=28866;Receipt=@{};Firewall=[Collections.Generic.List[string]]::new();Owned=[Collections.Generic.List[object]]::new()}
-    try{Enable-PCIsolation $probeContext}finally{Disable-PCIsolation $probeContext}
-    $report.firewallApiVerified=$true;Report-Local 'local-mode-reload'
+    Report-Local 'local-mode-reload'
     # The live bridge atomically replaces this file. Use the same bounded,
     # freshness-checked reader as admission, not PowerShell's restrictive share.
     . (Join-Path $bundle 'Aetherfront-RC44-Work/Deployment/LocalAdmission.ps1')
@@ -174,4 +166,5 @@ try{
     if($publicationProbe){$publicationProbe.Dispose()}
     if($operatorLock){$operatorLock.Dispose()}
     $env:APF_SERVER_TASK=$priorTask;$env:APF_CONTROL_ROOT=$priorControl
+    if($publisherProcess -and $null -ne $priorPriority){try{$publisherProcess.PriorityClass=$priorPriority}finally{$publisherProcess.Dispose()}}
 }

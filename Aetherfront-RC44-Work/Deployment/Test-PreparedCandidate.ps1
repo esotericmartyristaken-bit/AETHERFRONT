@@ -253,6 +253,7 @@ function Read-PCText([string]$Path, [long]$Limit = 16MB) {
 
 function Get-PCHash([string]$Path) {
     $null = Assert-UpdatePath $Path
+    if('Aetherfront.Deployment.FastChecks' -as [type]){return [Aetherfront.Deployment.FastChecks]::HashShared($Path)}
     $stream = [IO.File]::Open($Path, 'Open', 'Read', ([IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete))
     try { return [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($stream)).ToLowerInvariant() }
     finally { $stream.Dispose() }
@@ -818,9 +819,9 @@ function Invoke-PreparedCandidate {
     $ErrorActionPreference='Stop'; Set-StrictMode -Version Latest
     Assert-PCPlatform
     if ($ExpectedVersion -cnotmatch '^kesas-rc[1-9][0-9]{0,14}$') { throw 'Invalid candidate expected version' }
-    # Check ancestors before importing the installed fixed helper file; do not
-    # execute a helper reached through a junction/symlink. No executable option.
-    $helper=[IO.Path]::Combine([IO.Path]::GetFullPath($DeploymentRoot),'Update.Common.ps1')
+    # Use the reviewed/frozen helper, not an older installed deployment copy.
+    # Check ancestors before importing code; no caller-selected helper option.
+    $helper=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../KESAS-VPS-Server/Update.Common.ps1'))
     $cursor=$helper
     while ($cursor) {
         if ([IO.File]::GetAttributes($cursor) -band [IO.FileAttributes]::ReparsePoint) { throw 'Reparse point in deployment helper path' }

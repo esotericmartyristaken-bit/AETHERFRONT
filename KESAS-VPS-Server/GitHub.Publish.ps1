@@ -1,6 +1,29 @@
 # Dot-source only. The native caller MUST verify the feed signature before planning.
 # Only gh's existing local authentication is used. Public download URLs need no token.
 
+function Invoke-GhpValidationScope([scriptblock]$Action) {
+    # Reuse verification ONLY while read-only handles prevent byte replacement.
+    # Never persist hashes or trust size/mtime as evidence of unchanged content.
+    $previous=Get-Variable -Name GhpValidationFiles -Scope Script -ErrorAction SilentlyContinue
+    if($previous -and $null -ne $previous.Value){return (& $Action)}
+    $script:GhpValidationFiles=@{}
+    try { & $Action }
+    finally {
+        foreach($entry in $script:GhpValidationFiles.Values){$entry.Stream.Dispose()}
+        $script:GhpValidationFiles=$null
+    }
+}
+
+function Get-GhpValidationFile([string]$Path) {
+    $scope=Get-Variable -Name GhpValidationFiles -Scope Script -ErrorAction SilentlyContinue
+    if(-not $scope -or $null -eq $scope.Value){return $null}
+    $full=Assert-GhpPath $Path
+    if(-not $scope.Value.ContainsKey($full)){
+        $scope.Value[$full]=@{Stream=[IO.FileStream]::new($full,'Open','Read','Read',1MB,[IO.FileOptions]::SequentialScan);Sha256=$null;Scanned=@{}}
+    }
+    return $scope.Value[$full]
+}
+
 function Invoke-GitHubCli {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string[]]$Arguments, [Parameter(Mandatory)][string]$Context, [switch]$AllowNotFound)
@@ -64,11 +87,17 @@ function Get-GhpUrlName {
 
 function Get-GhpSha256 {
     param([string]$Path)
+    $held=Get-GhpValidationFile $Path
+    if($held -and $held.Sha256){return $held.Sha256}
     # Large sequential reads avoid thousands of 4 KiB operations per second on
     # IOPS-limited hosts. Every byte is still SHA256-verified; no metadata cache.
     $inputStream=[IO.FileStream]::new($Path,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read,1MB,[IO.FileOptions]::SequentialScan)
     $sha=[Security.Cryptography.SHA256]::Create()
-    try { return [BitConverter]::ToString($sha.ComputeHash($inputStream)).Replace('-','').ToLowerInvariant() }
+    try {
+        $result=[BitConverter]::ToString($sha.ComputeHash($inputStream)).Replace('-','').ToLowerInvariant()
+        if($held){$held.Sha256=$result}
+        return $result
+    }
     finally { $sha.Dispose();$inputStream.Dispose() }
 }
 
@@ -98,6 +127,9 @@ function Assert-GhpDeclaredAsset {
 
 function Assert-GhpPublicZip {
     param([string]$Path, [ValidateRange(1L,8589934592L)][long]$MaximumExpandedBytes = 512MB)
+    $held=Get-GhpValidationFile $Path
+    $scanKey=[string]$MaximumExpandedBytes
+    if($held -and $held.Scanned.ContainsKey($scanKey)){return}
     Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction Stop
     $zip = $null; $checking=''
     try {
@@ -157,6 +189,7 @@ function Assert-GhpPublicZip {
                 if ($seen.ContainsKey($parent) -and -not $seen[$parent]) { throw 'Unsafe ZIP entry.' }
             }
         }
+        if($held){$held.Scanned[$scanKey]=$true}
     } catch {
         $reason=$_.Exception.Message
         if($reason -notin @('Invalid entry count.','Unsafe ZIP entry.','Ambiguous Windows ZIP entry.','Private ZIP entry.','Public ZIP exceeds the 512 MiB expanded safety bound.','Public ZIP exceeds the media expanded safety bound.','ZIP entry length mismatch.','Secret content in public ZIP.')){$reason='Invalid ZIP.'}
@@ -593,6 +626,7 @@ function Sync-GhpAssets {
     foreach ($asset in $missing) {
         $current = Get-GhpAsset $asset.Path $asset.Kind $asset.ReleaseTag $Repository
         if ($current.Size -ne $asset.Size -or $current.Sha256 -cne $asset.Sha256) { throw 'Local publication asset changed before upload; rebuild the plan.' }
+        if($asset.Kind -ceq 'media'){Assert-GhpPublicZip $asset.Path -MaximumExpandedBytes 8GB}
         # One exact path per command. No globbing, batching, labels, clobber, or token arguments.
         try { $null = Invoke-GitHubCli -Arguments @('release', 'upload', $Release.tag_name, $asset.Path, '--repo', "github.com/$Repository") -Context 'sequential release asset upload' }
         catch { } # Resolve unknown upload outcome by digest readback.

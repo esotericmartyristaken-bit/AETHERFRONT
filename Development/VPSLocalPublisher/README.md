@@ -14,6 +14,31 @@ credential hash and ten-minute expiry. Source is fetched into a private clean
 checkout. The ordinary native publisher retains its player warning, candidate
 checks, rollback backup, signatures and final health checks.
 
+Deployment speed defaults: use the fixed v3 approval above, not new UAC wrappers,
+remote relays or manual service stops. Publish once with the exact tested clean
+source commit and archive hash. Do not repeat complete fixture suites or build
+unchanged clients during publication; run affected tests while preparing source.
+The transient deployment process promotes inherited Idle/BelowNormal scheduling
+to Normal and restores it on exit. No task settings or production priorities change.
+
+Reviewed-source freezing uses two batched Git calls with immutable file handles,
+Git attribute-aware blob comparison and copied-byte SHA256 verification. PowerShell
+7 uses managed JSON/path checks; Windows PowerShell retains the legacy checks.
+There is no persistent hash cache. Repeated GitHub hash/scan results are reused
+only within a scope holding files against mutation. Existing content-addressed
+media retain full SHA256 and remote digest verification, without inflating the
+same public ZIPs each release; missing/new remote media are safety-scanned before
+upload. The real isolated candidate still boots and passes signature/health
+checks before player admission and any production stop. Its redundant preliminary
+firewall probe is removed, not the candidate's actual firewall isolation.
+
+Keep the 15-minute warning when players are online; that intentional wait cannot
+fit inside a total 15-minute deadline. Log phase timings, follow fresh receipts,
+and investigate a stalled phase instead of repeatedly submitting deployments.
+Pipeline-only verification uses `-Action verify`; it does not execute the actual
+candidate pipeline or benchmark a production deployment. Never restart a healthy
+game solely to measure publisher performance.
+
 The fresh approval key is CurrentUser-DPAPI protected and readable only by actual
 interactive Windows logon SIDs discovered by SYSTEM. The limited session-zero
 Discord bot does not receive it despite using the same account SID. Signing keys
