@@ -158,6 +158,7 @@ function Write-RecoveryReport($Context,[string]$Status,[string]$Reason) {
     $path=Get-RecoveryChild $Context.Directory 'report.json'
     if([IO.File]::Exists($path)){Assert-RecoveryProtection $path -Private}
     $report=[ordered]@{schemaVersion=1;id=$Context.Plan.id;planSha256=$Context.PlanSha256;status=$Status;reason=$Reason;armedAt=$Context.ArmedAt;updatedAt=[DateTimeOffset]::UtcNow.ToString('o');expiresAt=$Context.ExpiresAt.ToString('o')}
+    foreach($name in @('ValidationStartedAt','ValidationMilliseconds')){if($Context.PSObject.Properties[$name]){$report[$name]=$Context.$name}}
     $temporary=Get-RecoveryChild $Context.Directory ('report-'+[Guid]::NewGuid().ToString('N')+'.tmp')
     try{
         $stream=[IO.FileStream]::new($temporary,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
@@ -387,7 +388,11 @@ function Invoke-PreactivationRecovery($Context) {
             $Context.ArmedAt=$prior.armedAt
         }
         if(-not $Context.ArmedAt){
+            $Context|Add-Member NoteProperty ValidationStartedAt ([DateTimeOffset]::UtcNow.ToString('o')) -Force
+            $validationClock=[Diagnostics.Stopwatch]::StartNew()
+            $null=Write-RecoveryReport $Context 'pending' 'validating-prior-release'
             $null=Assert-RecoveryUnchanged $Context
+            $Context|Add-Member NoteProperty ValidationMilliseconds $validationClock.Elapsed.TotalMilliseconds -Force
             if(-not (Test-RecoveryProcessAlive $Context.Plan.publisher)){throw 'Publisher exited before recovery was armed'}
             foreach($identity in $Context.Plan.originalProcesses){
                 $original=Get-RecoveryProcess $identity.pid

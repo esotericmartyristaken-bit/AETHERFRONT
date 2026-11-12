@@ -11,7 +11,7 @@ $script:control=Join-Path $fixture 'control'
 $script:native=Join-Path $fixture 'native'
 $script:selected=Join-Path $control 'bootstrap/native'
 $script:stamp=[DateTime]::UtcNow.AddMinutes(-5)
-$script:kills=0;$script:spawns=0;$script:reuse=$false;$script:badReport=$false
+$script:kills=0;$script:spawns=0;$script:reuse=$false;$script:badReport=$false;$script:delayedArm=$false;$script:refreshes=0
 function Assert-Test([bool]$Value,[string]$Message){if(-not $Value){throw $Message}}
 function Reject-Test([scriptblock]$Action,[string]$Contains){$caught=$null;try{& $Action|Out-Null}catch{$caught=$_};Assert-Test ($null -ne $caught -and $caught.Exception.Message.Contains($Contains)) "Expected $Contains; got $caught"}
 function Write-TestFile([string]$Path,[string]$Text){Assert-Test ([IO.Path]::GetFullPath($Path).StartsWith($fixture+'\',[StringComparison]::OrdinalIgnoreCase)) 'Fixture write escape';$null=[IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($Path));[IO.File]::WriteAllText($Path,$Text)}
@@ -43,9 +43,13 @@ function Start-Process {
     $copy=$ArgumentList[6].Trim('"')
     $context=New-RecoveryContext $path $copy
     $context.ArmedAt=[DateTimeOffset]::UtcNow.ToString('o')
-    if($script:badReport){$null=Write-RecoveryReport $context 'needs-review' 'fixture refusing arm'}else{$null=Write-RecoveryReport $context 'pending' 'armed'}
+    if($script:badReport){$null=Write-RecoveryReport $context 'needs-review' 'fixture refusing arm'}elseif($script:delayedArm){$context.ArmedAt=$null;$null=Write-RecoveryReport $context 'pending' 'validating-prior-release'}else{$null=Write-RecoveryReport $context 'pending' 'armed'}
     $child=[pscustomobject]@{Id=230001;StartTime=$script:stamp;HasExited=$false}
-    $child|Add-Member ScriptMethod Refresh {}
+    $child|Add-Member NoteProperty FixtureContext $context
+    $child|Add-Member ScriptMethod Refresh {
+        $script:refreshes++
+        if($script:delayedArm -and $script:refreshes -ge 4){$this.FixtureContext.ArmedAt=[DateTimeOffset]::UtcNow.ToString('o');$null=Write-RecoveryReport $this.FixtureContext 'pending' 'armed'}
+    }
     $child|Add-Member ScriptMethod Kill {$script:kills++;$this.HasExited=$true}
     $child|Add-Member ScriptMethod WaitForExit {param($Timeout)return $true}
     return $child
@@ -86,7 +90,15 @@ try{
     Reject-Test {Start-PreactivationRecovery -Root $native -SelectedRoot $selected -OldVersion 'kesas-rc43' -CandidateVersion 'kesas-rc45' -ExpectedGamePid 999} 'not uniquely active'
     Assert-Test ($script:spawns -eq 2) 'Mismatched game spawned a watcher'
     'PASS expected game mismatch fails before child launch'
-    'PASS 4 arm-helper groups; no real process, task, ACL change or production operation'
+    $script:badReport=$false;$script:delayedArm=$true;$script:refreshes=0
+    $delayed=Start-PreactivationRecovery -Root $native -SelectedRoot $selected -OldVersion 'kesas-rc43' -CandidateVersion 'kesas-rc45' -ExpectedGamePid 101
+    Assert-Test ($script:refreshes -ge 4 -and $delayed.Status.reason -ceq 'armed') 'Initialization progress was mistaken for armed acknowledgement'
+    $delayed.Context.ArmedAt=$null;$delayed.Status=$null;$script:delayedArm=$false
+    $null=Write-RecoveryReport $delayed.Context 'pending' 'validating-prior-release'
+    Reject-Test {Wait-PreactivationArmed $delayed -TimeoutSeconds 0.01} 'no stop is authorized'
+    Assert-Test ($null -eq $delayed.Status -and $script:kills -eq 1) 'Timed-out initialization authorized a stop or killed the retained watcher'
+    'PASS delayed initialization requires exact armed report; bounded timeout retains child and authorizes no stop'
+    'PASS 5 arm-helper groups; no real process, task, ACL change or production operation'
 }finally{
     $resolved=[IO.Path]::GetFullPath($fixture)
     $temporary=[IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\')+'\'

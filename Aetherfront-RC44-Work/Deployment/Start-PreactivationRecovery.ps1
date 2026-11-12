@@ -118,8 +118,13 @@ function Start-PreactivationRecovery {
     $child.Refresh()
     $owned=[pscustomobject]@{Id=$id;Process=$child;ProcessId=$child.Id;StartedAt=$child.StartTime.ToUniversalTime();Engine=$engine;ParentId=$PID;ParentStartedAt=$parent.StartedAt;Context=$context;Plan=$plan;Status=$null;Disarmed=$false}
     $script:PreactivationOwnedChildren.Add($id,[pscustomobject]@{Handle=$owned;Process=$child;ProcessId=$owned.ProcessId;StartedAt=$owned.StartedAt;Engine=$engine;ParentId=$PID;ParentStartedAt=$parent.StartedAt})
-    $clock=[Diagnostics.Stopwatch]::StartNew()
-    while($clock.Elapsed.TotalSeconds -lt 60){
+    return (Wait-PreactivationArmed $owned)
+}
+
+function Wait-PreactivationArmed($Owned,[ValidateRange(0.01,180)][double]$TimeoutSeconds=180) {
+    $child=$Owned.Process;$context=$Owned.Context;$directory=$context.Directory;$id=$Owned.Id
+    $clock=[Diagnostics.Stopwatch]::StartNew();$lastReason='no report'
+    while($clock.Elapsed.TotalSeconds -lt $TimeoutSeconds){
         $child.Refresh()
         if($child.HasExited){throw "Recovery watchdog exited before arming; preserve $directory"}
         $reportPath=Get-RecoveryChild $directory 'report.json'
@@ -127,16 +132,17 @@ function Start-PreactivationRecovery {
             Assert-RecoveryProtection $reportPath -Private
             $report=Read-RecoveryJson $reportPath 8192
             if($report.id -cne $id -or $report.planSha256 -cne $context.PlanSha256){throw "Recovery arm report identity mismatch; preserve $directory"}
+            $lastReason=[string]$report.reason
             if($report.status -ceq 'needs-review'){throw "Recovery refused to arm: $($report.reason); preserve $directory"}
             if($report.status -ceq 'pending' -and $report.reason -ceq 'armed' -and $report.armedAt){
                 $child.Refresh()
                 if($child.HasExited){throw "Recovery watchdog exited during acknowledgement; preserve $directory"}
-                $owned.Status=$report;return $owned
+                $Owned.Status=$report;return $Owned
             }
         }
         Start-Sleep -Milliseconds 200
     }
-    throw "Recovery did not acknowledge arming within 60 seconds; no stop is authorized. Watchdog retained at $directory"
+    throw "Recovery did not acknowledge arming within $TimeoutSeconds seconds (last progress: $lastReason); no stop is authorized. Watchdog retained at $directory"
 }
 
 function Stop-PreactivationRecovery {
