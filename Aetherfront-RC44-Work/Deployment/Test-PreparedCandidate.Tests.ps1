@@ -587,6 +587,41 @@ try {
         Write-PCJson "$directory/status.json" @{serverPid=70001;updatedAt=$now.ToString('o');playerCount=0;connectedCount=0}
         Assert-Fixture (-not [string]::IsNullOrEmpty((Read-PCBridge $context)))
     }
+    Test-Fixture 'valid stale bridge retries without accepting stale identity or weakening freshness' {
+        $f=New-Fixture; $directory="$($f.Base)/Candidate/Server/APFDiscordBridge"; $null=[IO.Directory]::CreateDirectory($directory)
+        $now=[DateTime]::UtcNow;$started=$now.AddMinutes(-2)
+        $context=@{Candidate="$($f.Base)/Candidate";Game=@{Process=@{Id=70001};StartedUtc=$started};Receipt=@{}}
+        Write-PCJson "$directory/ready.json" @{pid=70001;startedAt=$started.ToString('o')}
+        Write-PCJson "$directory/status.json" @{serverPid=70001;updatedAt=$now.AddSeconds(-30).ToString('o');playerCount=0;connectedCount=0}
+        Assert-Fixture ($null -eq (Read-PCBridge $context)) 'Stale heartbeat was accepted'
+        Assert-Fixture ($context.Receipt.bridgeObservation.ageSeconds -gt 5)
+        Write-PCJson "$directory/status.json" @{serverPid=70001;updatedAt=[DateTime]::UtcNow.ToString('o');playerCount=0;connectedCount=0}
+        Assert-Fixture (-not [string]::IsNullOrEmpty((Read-PCBridge $context)))
+        Write-PCJson "$directory/status.json" @{serverPid=101;updatedAt=$now.AddSeconds(-30).ToString('o');playerCount=0;connectedCount=0}
+        Expect-Failure { Read-PCBridge $context } '*identity*'
+        Write-PCJson "$directory/status.json" @{serverPid=70001;updatedAt=$now.AddMinutes(2).ToString('o');playerCount=0;connectedCount=0}
+        Expect-Failure { Read-PCBridge $context } '*heartbeat*'
+        Write-PCJson "$directory/status.json" @{serverPid=70001;updatedAt=$now.ToString('o');playerCount=1;connectedCount=1}
+        Expect-Failure { Read-PCBridge $context } '*bridge*'
+    }
+    Test-Fixture 'post-HTTPS stale bridge repeats complete probes within the same readiness deadline' {
+        $owned=[pscustomobject]@{Process=@{Id=70001;HasExited=$false};OutputTask=@{IsFaulted=$false};ErrorTask=@{IsFaulted=$false}}
+        $owned|Add-Member ScriptMethod AssertOwned {}
+        $context=@{Game=$owned;Pack=$owned;Receipt=@{}}
+        $script:probeCalls=0;$script:heartbeatCalls=0
+        Set-FixtureMock Assert-PCProduction {param($Context)}
+        Set-FixtureMock Read-PCStartup {param($Context) return $true}
+        Set-FixtureMock Assert-PCListeners {param($Context,[switch]$Require) return $true}
+        Set-FixtureMock Read-PCBridge {
+            param($Context) $script:heartbeatCalls++
+            if($script:heartbeatCalls -eq 3){return $null}
+            return ([DateTime]::UtcNow.AddMilliseconds($script:heartbeatCalls).ToString('o'))
+        }
+        Set-FixtureMock Invoke-PCHttps {param($Context) $script:probeCalls++}
+        & $original['Wait-PCReady'] $context
+        Assert-Fixture ($script:probeCalls -eq 2 -and $script:heartbeatCalls -eq 5)
+        Assert-Fixture ($null -ne $context.Receipt.bridge -and $script:productionStops -eq 0)
+    }
     Test-Fixture 'fatal startup rejected despite all-systems marker' {
         $f=New-Fixture; $null=[IO.Directory]::CreateDirectory("$($f.Base)/Logs")
         [IO.File]::WriteAllText("$($f.Base)/Logs/startup.log","All systems up and running.`nFATAL startup exploded")

@@ -666,9 +666,16 @@ function Read-PCBridge($Context) {
     catch [IO.IOException] { if (($_.Exception.GetBaseException().HResult -band 65535) -in @(2,3,32,33)) { return $null }; throw }
     $start=[DateTimeOffset]$ready.startedAt; $updated=[DateTimeOffset]$status.updatedAt
     $now=[DateTimeOffset]::UtcNow; $age=($now-$updated).TotalSeconds
+    if($Context.ContainsKey('Receipt')){
+        $Context.Receipt.bridgeObservation=@{observedAtUtc=$now.ToString('o');readyPid=$ready.pid;statusPid=$status.serverPid;expectedPid=$Context.Game.Process.Id;startedAtUtc=$start.ToUniversalTime().ToString('o');updatedAtUtc=$updated.ToUniversalTime().ToString('o');ageSeconds=$age;playerCount=$status.playerCount;connectedCount=$status.connectedCount}
+    }
     if ($ready.pid -ne $Context.Game.Process.Id -or $status.serverPid -ne $Context.Game.Process.Id -or
         $start.UtcDateTime -lt $Context.Game.StartedUtc.AddSeconds(-1) -or $start -gt $now.AddSeconds(2) -or
-        $updated -lt $start -or $age -lt -2 -or $age -gt 5 -or $status.playerCount -ne 0 -or $status.connectedCount -ne 0) { throw 'Candidate bridge identity/heartbeat invalid' }
+        $updated -lt $start -or $age -lt -2 -or $status.playerCount -ne 0 -or $status.connectedCount -ne 0) { throw 'Candidate bridge identity/heartbeat invalid; inspect bridgeObservation in retained receipt' }
+    # Scheduling and atomic-file reads can temporarily outrun a heartbeat.
+    # Never admit a stale sample, but retry it within the existing readiness
+    # deadline rather than misclassifying it as an identity violation.
+    if($age -gt 5){return $null}
     return $updated.ToUniversalTime().ToString('o')
 }
 
@@ -710,9 +717,9 @@ function Wait-PCReady($Context) {
                 # check; do not admit it or discard earlier probe evidence.
                 $listeningAfterProbe=Assert-PCListeners $Context
                 $null=Read-PCStartup $Context
-                if (-not (Read-PCBridge $Context)) { throw 'Candidate bridge vanished during HTTPS checks' }
-                if($listeningAfterProbe){
-                    $Context.Receipt.bridge=@{pid=$Context.Game.Process.Id;firstHeartbeat=$heartbeat;secondHeartbeat=$fresh}
+                $freshAfterProbe=Read-PCBridge $Context
+                if($listeningAfterProbe -and $freshAfterProbe -and $freshAfterProbe -cne $heartbeat){
+                    $Context.Receipt.bridge=@{pid=$Context.Game.Process.Id;firstHeartbeat=$heartbeat;secondHeartbeat=$freshAfterProbe}
                     return
                 }
             }
@@ -836,7 +843,7 @@ function Invoke-PreparedCandidate {
         gateSha256=Get-PCHash $PSCommandPath;startPassed=$false;shutdownPassed=$false;productionUnchanged=$false;productionPidUnchanged=$false;success=$false;
         releaseManifestSha256=$null;releaseFiles=@();releasePayloadHashes=@();liveBaselineHashes=@();publishedFiles=@();signedFeedSha256=$null;signedArchiveSha256=$null;production=$null;
         baselineChecks=@();productionSamples=0;worldSnapshot=@();candidateFiles=@();candidatePackSha256=$null;packIdentity=$null;
-        isolation=$null;https=$null;bridge=$null;shutdown=$null;failureStage=$null;failureDetail=$null;phaseTimings=@()
+        isolation=$null;https=$null;bridge=$null;bridgeObservation=$null;shutdown=$null;failureStage=$null;failureDetail=$null;phaseTimings=@()
     }
     $context=@{Root=$root;Release=$release;Published=$published;Version=$ExpectedVersion;Scratch=$scratch;Candidate="$scratch/Native";
         Config=$null;Production=$null;Baseline=@();PublishedFiles=@();Receipt=$receipt;GamePort=0;PackPort=0;Game=$null;Pack=$null;
