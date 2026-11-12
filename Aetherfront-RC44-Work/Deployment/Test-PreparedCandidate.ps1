@@ -129,6 +129,77 @@ function Assert-PCPlatform {
     }
 }
 
+function Get-PCNetworkSnapshot {
+    if (-not ('PreparedCandidate.NativeSockets' -as [type])) {
+        Add-Type -TypeDefinition @'
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Runtime.InteropServices;
+namespace PreparedCandidate {
+ public sealed class SocketRow {
+  public string LocalAddress, RemoteAddress, State;
+  public int LocalPort, RemotePort, OwningProcess;
+ }
+ public static class NativeSockets {
+  [DllImport("iphlpapi.dll")]
+  [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+  static extern uint GetExtendedTcpTable(IntPtr table, ref int size, bool sorted, int family, int tableClass, uint reserved);
+  [DllImport("iphlpapi.dll")]
+  [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+  static extern uint GetExtendedUdpTable(IntPtr table, ref int size, bool sorted, int family, int tableClass, uint reserved);
+  static uint Fetch(bool tcp,IntPtr data,ref int size,int family) {
+   return tcp ? GetExtendedTcpTable(data,ref size,false,family,5,0) : GetExtendedUdpTable(data,ref size,false,family,1,0);
+  }
+  static int Port(IntPtr row,int offset) { return (Marshal.ReadByte(row,offset)<<8)|Marshal.ReadByte(row,offset+1); }
+  static string Address(IntPtr row,int offset,bool ipv6) {
+   var bytes=new byte[ipv6?16:4];Marshal.Copy(IntPtr.Add(row,offset),bytes,0,bytes.Length);
+   return ipv6 ? new IPAddress(bytes,(uint)Marshal.ReadInt32(row,offset+16)).ToString() : new IPAddress(bytes).ToString();
+  }
+  static void Read(List<SocketRow> rows,bool tcp,int family) {
+   bool ipv6=family==23;int stride=tcp?(ipv6?56:24):(ipv6?28:12);
+   for(int attempt=0;attempt<5;attempt++) {
+    int size=0;uint error=Fetch(tcp,IntPtr.Zero,ref size,family);
+    if(error==50||error==232)return; // Unsupported address family or genuinely empty table.
+    if(error!=0&&error!=122)throw new Win32Exception((int)error);
+    if(size<4||size>64*1024*1024)throw new IOException("Invalid native socket table size");
+    int allocated=size;IntPtr memory=Marshal.AllocHGlobal(allocated);
+    try {
+     error=Fetch(tcp,memory,ref size,family);if(error==122)continue;
+     if(error!=0)throw new Win32Exception((int)error);
+     uint count=(uint)Marshal.ReadInt32(memory);
+     if(size>allocated||count>(allocated-4)/stride)throw new IOException("Invalid native socket table bounds");
+     for(int index=0;index<count;index++) {
+      IntPtr row=IntPtr.Add(memory,4+index*stride);var item=new SocketRow();
+      if(tcp) {
+       item.LocalAddress=Address(row,ipv6?0:4,ipv6);item.LocalPort=Port(row,ipv6?20:8);
+       item.RemoteAddress=Address(row,ipv6?24:12,ipv6);item.RemotePort=Port(row,ipv6?44:16);
+       item.State=((TcpState)Marshal.ReadInt32(row,ipv6?48:0)).ToString();item.OwningProcess=Marshal.ReadInt32(row,ipv6?52:20);
+      } else {
+       item.LocalAddress=Address(row,0,ipv6);item.LocalPort=Port(row,ipv6?20:4);item.OwningProcess=Marshal.ReadInt32(row,ipv6?24:8);
+       item.RemoteAddress="";item.State="";
+      }
+      rows.Add(item);
+     }
+     return;
+    } finally {Marshal.FreeHGlobal(memory);}
+   }
+   throw new IOException("Native socket table changed too frequently");
+  }
+  public static SocketRow[] Udp(){var rows=new List<SocketRow>();Read(rows,false,2);Read(rows,false,23);return rows.ToArray();}
+  public static SocketRow[] Tcp(){var rows=new List<SocketRow>();Read(rows,true,2);Read(rows,true,23);return rows.ToArray();}
+ }
+}
+'@
+    }
+    # Fresh OS ownership observations, not a cached listener assertion. Avoid
+    # repeatedly starting WMI/CIM providers in subsecond readiness/exit loops.
+    [pscustomobject]@{Udp=@([PreparedCandidate.NativeSockets]::Udp());Tcp=@([PreparedCandidate.NativeSockets]::Tcp());observedAtUtc=[DateTime]::UtcNow.ToString('o')}
+}
+
 function Assert-PCPrivate([string]$Path) {
     $null = Assert-UpdatePath $Path
     $acl = Get-Acl -LiteralPath $Path
@@ -220,7 +291,10 @@ function Copy-PCFile([string]$Source, [string]$Destination, [long]$Limit = 512MB
                 $total += $count; if ($total -gt $Limit) { throw 'Candidate copy grew beyond its limit' }
                 $outputStream.Write($buffer, 0, $count)
             }
-            $outputStream.Flush($true)
+            # Only disposable, independently hashed candidate/probe copies use
+            # this helper. Canonical saves, signed receipts and rollback backups
+            # retain their separate durable flushes. No hardlinks are created.
+            $outputStream.Flush()
         } finally { $outputStream.Dispose() }
         # An open handle tolerates atomic production replacements. Detect in-place
         # writes while copying; no handle ever denies production File.Replace.
@@ -286,12 +360,25 @@ function Assert-PCSame($Expected, $Actual, [string]$Message) {
 
 function Get-PCProduction($Context) {
     $root = $Context.Root; $config = $Context.Config
-    $processes = @(Get-UpdateServiceProcesses $root $config | Sort-Object Id)
+    $network=Get-PCNetworkSnapshot
+    $gamePath=[IO.Path]::GetFullPath("$root/Server/Server.exe");$packPath=[IO.Path]::GetFullPath("$root/PackHost/ApfPackHost.exe")
+    $ids=[Collections.Generic.HashSet[int]]::new();$found=[Collections.Generic.List[object]]::new()
+    foreach($endpoint in @($network.Udp|Where-Object LocalPort -EQ $config.gamePort)+@($network.Tcp|Where-Object {$_.LocalPort -eq $config.packPort -and $_.State -eq 'Listen'})) {
+        $process=Get-Process -Id $endpoint.OwningProcess -ErrorAction Stop
+        if($process.Path -ine $gamePath -and $process.Path -ine $packPath){throw 'Production port owned by unrelated process'}
+        if($ids.Add($process.Id)){$found.Add($process)}
+    }
+    foreach($process in @(Get-Process -Name Server,ApfPackHost -ErrorAction SilentlyContinue)) {
+        $process.Refresh();if($process.HasExited){continue}
+        if(-not $process.Path){throw 'Cannot verify production service identity'}
+        if(($process.Path -ieq $gamePath -or $process.Path -ieq $packPath) -and $ids.Add($process.Id)){$found.Add($process)}
+    }
+    $processes = @($found | Sort-Object Id)
     $game = @($processes | Where-Object Path -IEQ "$root\Server\Server.exe")
     $pack = @($processes | Where-Object Path -IEQ "$root\PackHost\ApfPackHost.exe")
     if ($game.Count -ne 1 -or $pack.Count -ne 1) { throw 'Preparation requires exactly one live native game and pack host' }
-    $udp = @(Get-NetUDPEndpoint -LocalPort $config.gamePort -ErrorAction Stop)
-    $tcp = @(Get-NetTCPConnection -LocalPort $config.packPort -State Listen -ErrorAction Stop)
+    $udp = @($network.Udp|Where-Object LocalPort -EQ $config.gamePort)
+    $tcp = @($network.Tcp|Where-Object {$_.LocalPort -eq $config.packPort -and $_.State -eq 'Listen'})
     if (-not $udp.Count -or -not $tcp.Count) { throw 'Production listener missing' }
     foreach ($row in $udp) { if ($row.OwningProcess -ne $game[0].Id) { throw 'Production game ownership changed' } }
     foreach ($row in $tcp) { if ($row.OwningProcess -ne $pack[0].Id) { throw 'Production HTTPS ownership changed' } }
@@ -429,10 +516,11 @@ function Set-PCConfiguration($Context, $Release) {
 
 function Get-PCPorts($Context) {
     # Ephemeral per-run choices near 28865/28866; never production ports.
+    $network=Get-PCNetworkSnapshot
     foreach ($offset in (0..199 | Sort-Object { Get-Random })) {
         $gamePort = 28865 + 2 * $offset; $packPort = $gamePort + 1
         if ($gamePort -in @($Context.Config.gamePort,$Context.Config.packPort) -or $packPort -in @($Context.Config.gamePort,$Context.Config.packPort)) { continue }
-        if (@(Get-NetUDPEndpoint -LocalPort $gamePort -ErrorAction SilentlyContinue).Count -or @(Get-NetTCPConnection -LocalPort $packPort -State Listen -ErrorAction SilentlyContinue).Count) { continue }
+        if (@($network.Udp|Where-Object LocalPort -EQ $gamePort).Count -or @($network.Tcp|Where-Object {$_.LocalPort -eq $packPort -and $_.State -eq 'Listen'}).Count) { continue }
         $Context.GamePort = $gamePort; $Context.PackPort = $packPort; return
     }
     throw 'No isolated candidate ports available'
@@ -524,8 +612,9 @@ function Invoke-PCVerifySigned($Context) {
 function Assert-PCListeners($Context, [switch]$Require) {
     if (-not $Context.Game -or -not $Context.Pack) { return $false }
     $gameId=$Context.Game.Process.Id; $packId=$Context.Pack.Process.Id
-    $udp=@(Get-NetUDPEndpoint -ErrorAction Stop | Where-Object { $_.OwningProcess -in @($gameId,$packId) -or $_.LocalPort -eq $Context.GamePort })
-    $tcp=@(Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.OwningProcess -in @($gameId,$packId) -or $_.LocalPort -eq $Context.PackPort })
+    $network=Get-PCNetworkSnapshot
+    $udp=@($network.Udp | Where-Object { $_.OwningProcess -in @($gameId,$packId) -or $_.LocalPort -eq $Context.GamePort })
+    $tcp=@($network.Tcp | Where-Object { $_.State -eq 'Listen' -and ($_.OwningProcess -in @($gameId,$packId) -or $_.LocalPort -eq $Context.PackPort) })
     $pendingUdp=$false
     foreach ($row in $udp) {
         $detail="pid=$($row.OwningProcess) address=$($row.LocalAddress) port=$($row.LocalPort); expected gamePid=$gameId port=$($Context.GamePort)"
@@ -537,7 +626,7 @@ function Assert-PCListeners($Context, [switch]$Require) {
         }
     }
     foreach ($row in $tcp) { if ($row.OwningProcess -ne $packId -or $row.LocalAddress -cne '127.0.0.1' -or $row.LocalPort -ne $Context.PackPort) { throw 'Candidate HTTPS not exclusively owned/loopback' } }
-    $connections=@(Get-NetTCPConnection -ErrorAction Stop | Where-Object { $_.OwningProcess -in @($gameId,$packId) -and $_.State -ne 'Listen' -and $_.RemotePort -gt 0 })
+    $connections=@($network.Tcp | Where-Object { $_.OwningProcess -in @($gameId,$packId) -and $_.State -ne 'Listen' -and $_.RemotePort -gt 0 })
     foreach ($row in $connections) {
         # Accepted HTTPS sockets have the probe client's ephemeral RemotePort,
         # including CloseWait after a GET. They are inbound, not outbound.
@@ -702,13 +791,23 @@ function Disable-PCIsolation($Context) {
     }
 }
 
+function Write-PCPhase($Context,[string]$Phase) {
+    if($Context.ContainsKey('PhaseClock')){
+        $Context.Receipt.phaseTimings+=@{stage=$Context.PhaseName;milliseconds=$Context.PhaseClock.Elapsed.TotalMilliseconds;finishedAtUtc=[DateTime]::UtcNow.ToString('o')}
+        $Context.PhaseClock.Restart()
+    }else{$Context.PhaseClock=[Diagnostics.Stopwatch]::StartNew()}
+    $Context.PhaseName=$Phase
+    if($Context.OnCandidateProgress){try{& $Context.OnCandidateProgress $Phase}catch{$Context.Receipt.progressCallbackFailed=$true}}
+}
+
 function Invoke-PreparedCandidate {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$DeploymentRoot,
           [Parameter(Mandatory)][string]$ReleaseDirectory,
           [Parameter(Mandatory)][string]$PublishedDirectory,
           [Parameter(Mandatory)][string]$ExpectedVersion,
-          [Parameter(Mandatory)][string]$ResultPath)
+          [Parameter(Mandatory)][string]$ResultPath,
+          [scriptblock]$OnCandidateProgress=$null)
     $ErrorActionPreference='Stop'; Set-StrictMode -Version Latest
     Assert-PCPlatform
     if ($ExpectedVersion -cnotmatch '^kesas-rc[1-9][0-9]{0,14}$') { throw 'Invalid candidate expected version' }
@@ -737,13 +836,14 @@ function Invoke-PreparedCandidate {
         gateSha256=Get-PCHash $PSCommandPath;startPassed=$false;shutdownPassed=$false;productionUnchanged=$false;productionPidUnchanged=$false;success=$false;
         releaseManifestSha256=$null;releaseFiles=@();releasePayloadHashes=@();liveBaselineHashes=@();publishedFiles=@();signedFeedSha256=$null;signedArchiveSha256=$null;production=$null;
         baselineChecks=@();productionSamples=0;worldSnapshot=@();candidateFiles=@();candidatePackSha256=$null;packIdentity=$null;
-        isolation=$null;https=$null;bridge=$null;shutdown=$null;failureStage=$null;failureDetail=$null
+        isolation=$null;https=$null;bridge=$null;shutdown=$null;failureStage=$null;failureDetail=$null;phaseTimings=@()
     }
     $context=@{Root=$root;Release=$release;Published=$published;Version=$ExpectedVersion;Scratch=$scratch;Candidate="$scratch/Native";
         Config=$null;Production=$null;Baseline=@();PublishedFiles=@();Receipt=$receipt;GamePort=0;PackPort=0;Game=$null;Pack=$null;
-        Owned=[Collections.Generic.List[object]]::new();Firewall=[Collections.Generic.List[string]]::new()}
+        Owned=[Collections.Generic.List[object]]::new();Firewall=[Collections.Generic.List[string]]::new();OnCandidateProgress=$OnCandidateProgress}
     $stage='inputs'; $failure=$false; $cleanupFailed=$false
     try {
+        Write-PCPhase $context 'inputs'
         $context.Config=Get-UpdateDeployment $root
         $releaseDocument=Get-PCRelease $release $ExpectedVersion
         $receipt.releaseManifestSha256=Get-PCHash "$release/RELEASE.json"
@@ -755,6 +855,7 @@ function Invoke-PreparedCandidate {
         $context.Baseline=@(Get-PCInventory $root @(Get-PCStaticFiles $root)); $receipt.liveBaselineHashes=$context.Baseline
         $context.Production=Get-PCProduction $context; $receipt.production=$context.Production
         $stage='snapshot'
+        Write-PCPhase $context $stage
         foreach ($directory in @($context.Candidate,"$scratch/Logs","$scratch/Profile")) { $null=[IO.Directory]::CreateDirectory($directory) }
         foreach ($row in $context.Baseline) {
             # Exactly one private PFX is needed by PackHost. Never copy signing
@@ -765,6 +866,7 @@ function Invoke-PreparedCandidate {
         }
         Copy-PCWorld $context
         $stage='overlay'
+        Write-PCPhase $context $stage
         $families=@{ServerPayload='Server';PackHostPayload='PackHost';CertificateToolPayload='CertificateTool';UpdateToolPayload='UpdateTool'}
         foreach ($row in $releaseDocument.files) {
             $prefix=$row.path.Split('/')[0]
@@ -788,10 +890,11 @@ function Invoke-PreparedCandidate {
         } finally { $certificate.Dispose() }
         $receipt.candidateFiles=@(Get-PCInventory $context.Candidate @(Get-PCFiles $context.Candidate | Where-Object { $_ -notmatch '[\\/]Server[\\/](Universe|Aetherfront)[\\/]' }))
         Assert-PCProduction $context -Full
-        $stage='isolation'; Enable-PCIsolation $context
-        $stage='signature'; Invoke-PCVerifySigned $context
+        $stage='isolation'; Write-PCPhase $context $stage; Enable-PCIsolation $context
+        $stage='signature'; Write-PCPhase $context $stage; Invoke-PCVerifySigned $context
         Assert-PCNativeBytes $context
         $stage='startup'
+        Write-PCPhase $context $stage
         $context.Pack=Start-PCOwned $context Pack; $context.Owned.Add($context.Pack)
         $context.Game=Start-PCOwned $context Game; $context.Owned.Add($context.Game)
         Wait-PCReady $context
@@ -800,12 +903,15 @@ function Invoke-PreparedCandidate {
         $receipt.startPassed=$true
     } catch { $failure=$true; $receipt.failureStage=$stage; $receipt.failureDetail=$_.Exception.Message }
     finally {
+        Write-PCPhase $context 'shutdown'
         try {
             Stop-PCOwned $context; $receipt.shutdownPassed=$true
             if ($receipt.startPassed -and -not (Read-PCStartup $context)) { throw 'Candidate startup evidence missing after shutdown' }
             if ($receipt.startPassed) { Assert-PCNativeBytes $context }
         } catch { $cleanupFailed=$true; if (-not $receipt.failureStage) { $receipt.failureStage='shutdown'; $receipt.failureDetail=$_.Exception.Message } }
+        Write-PCPhase $context 'isolation-cleanup'
         try { Disable-PCIsolation $context } catch { $cleanupFailed=$true; if (-not $receipt.failureStage) { $receipt.failureStage='isolation-cleanup' } }
+        Write-PCPhase $context 'final-validation'
         try {
             if ($context.Production) {
                 Assert-PCSame $context.Production (Get-PCProduction $context) 'Production process/ports changed'
@@ -822,6 +928,7 @@ function Invoke-PreparedCandidate {
         $receipt.finishedAt=[DateTime]::UtcNow.ToString('o')
         $receipt.createdAt=$receipt.finishedAt
         $receipt.success=(-not $failure -and -not $cleanupFailed -and $receipt.startPassed -and $receipt.shutdownPassed -and $receipt.productionUnchanged -and $receipt.productionPidUnchanged)
+        Write-PCPhase $context 'finished'
         Assert-PCPrivate $parent
         # CreateNew: a previous receipt is never overwritten, even on failure.
         $stream=[IO.File]::Open($result,'CreateNew','Write','None')

@@ -25,10 +25,16 @@ $archivePath=[IO.Path]::GetFullPath($Archive)
 $reportAuthorized=$false
 $report=[ordered]@{at=[DateTime]::UtcNow.ToString('o');stage='preflight';healthy=$false;sourceCommit=$SourceCommit;archiveSha256=$ArchiveSha256;remoteHostDeployment=$false;error=$null}
 $operatorLock=$null;$publicationProbe=$null
+$phaseState=@{Clock=[Diagnostics.Stopwatch]::StartNew();Name='preflight'};$report.phaseTimings=@()
 $priorTask=$env:APF_SERVER_TASK;$priorControl=$env:APF_CONTROL_ROOT
 function Report-Local([string]$Stage){
     if(-not $reportAuthorized){return}
+    if($Stage -cne $phaseState.Name){
+        $report.phaseTimings+=@{stage=$phaseState.Name;milliseconds=$phaseState.Clock.Elapsed.TotalMilliseconds;finishedAtUtc=[DateTime]::UtcNow.ToString('o')}
+        $phaseState.Name=$Stage;$phaseState.Clock.Restart()
+    }
     $report.stage=$Stage;$report.updatedAt=[DateTime]::UtcNow.ToString('o')
+    $report.phaseElapsedMilliseconds=$phaseState.Clock.Elapsed.TotalMilliseconds
     [IO.File]::WriteAllText([IO.Path]::GetFullPath($ReportPath),($report|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
 }
 function New-LocalPrivateDirectory([string]$Path){
@@ -147,7 +153,7 @@ try{
     $publisher=Join-Path $bundle 'KESAS-VPS-Server/Publish-Release.ps1'
     Report-Local 'preparing-and-verifying-candidate'
     $evidence=Join-Path $bundle 'Evidence';New-LocalPrivateDirectory $evidence
-    & $publisher -ReleaseZip $frozenArchive -Notes $Notes -DeploymentRoot $deployment -LocalDeployment -LocalBotConfig $BotConfig -LocalNode $node -LocalEvidenceRoot $evidence -ScienceCompensationPlan $frozenCompensation -ScienceCompensationSha256 $ScienceCompensationSha256
+    & $publisher -ReleaseZip $frozenArchive -Notes $Notes -DeploymentRoot $deployment -LocalDeployment -LocalBotConfig $BotConfig -LocalNode $node -LocalEvidenceRoot $evidence -ScienceCompensationPlan $frozenCompensation -ScienceCompensationSha256 $ScienceCompensationSha256 -OnPublisherProgress {param($phase) Report-Local ('publisher-'+$phase)}
     if(-not $?){throw 'Local publisher did not complete'}
     $pack=Get-Content -LiteralPath "$deployment/Server/Config/APFPack.json" -Raw|ConvertFrom-Json
     $feed=Get-Content -LiteralPath "$deployment/Updates/APFClientUpdate.json" -Raw|ConvertFrom-Json

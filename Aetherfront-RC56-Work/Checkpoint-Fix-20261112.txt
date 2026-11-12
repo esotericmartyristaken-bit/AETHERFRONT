@@ -1,0 +1,68 @@
+RC58 checkpoint restoration and local publisher correction
+
+Evidence
+The supplied KSP.log has SHA-256 847c2bd54faf4fd656e908357b5f8d13391f8e29c8560932c66f337888653d2e.
+It identifies the installed stability client as RC55. At client-log local time
+19:22:49.215 the checkpoint disconnect occurs. Subsequent performance records
+remain in FLIGHT through 19:25:15; there is no main-menu transition or automatic
+reconnection. Unity continues drawing frames, so this is a protected, paused
+flight left behind after disconnect, not proof of a stopped Unity main thread.
+The log also contains repeated stale crew-survival membership exceptions.
+
+The native connection deliberately does not force a main-menu exit in flight.
+The checkpoint server deliberately closes the personal clock session before
+replacing the fleet and its saved time. Removing that disconnect without a new
+transactional handover protocol would allow the old flight to publish stale
+craft state into the restored world.
+
+Correction
+Retain the durable, journaled fleet transaction and normal identity, science,
+research, ownership and clock checks. For an explicitly requested checkpoint
+restore in the matching connection generation, invoke the native StopGame path
+on Unity's unscaled Update thread. Do not wait behind SystemsHandler.Update to
+consume ForceQuit. Keep the native ForceQuit fallback armed if that exit throws.
+Never resume the departing flight or reconnect before reaching the main menu
+and finishing the network reset. Reuse normal connection admission and identity;
+limit automatic retries to three, with an unscaled expiry and cancel control.
+An old Running state observed immediately after the receive-thread disconnect
+cannot prematurely cancel the reconnect operation. Unsolicited disconnects,
+other sessions, missing request IDs and nonfinite clocks cannot authorize it.
+
+RC58 includes the previously tested synchronization, backup and startup crew
+membership corrections from the unactivated RC57 candidate. Original repaired
+vessel bytes are archived; epochs, resources and player progression are not reset.
+Old checkpoint snapshots themselves are not rewritten by the startup repair.
+
+The first reported attempt has no separately identified request/receipt in the
+supplied client log; its exact rejection or delay remains unconfirmed. The
+all-zero display is not independently established as a clock fault: native
+personal MissionTime intentionally returns zero for a PRELAUNCH vessel. No
+personal clock is reset or fabricated to address this report.
+
+Publisher correction
+Retain candidate isolation, signature checks, durable receipts, rollback backup,
+the 15-minute online-player warning, watchdog arming and public health gates.
+Use fresh native IPv4/IPv6 socket ownership snapshots instead of repeated CIM
+queries in candidate/recovery loops. Read the same fixed Task Scheduler task
+through its COM interface, preserving exact principal/action/path/argument and
+full XML hash binding. Do not weaken the 60-second arming requirement.
+Avoid a forced physical disk flush for disposable candidate copies, while
+preserving hash checks and durable canonical writes, rollback and receipts.
+Do not recursively rescan unrelated historical backup/staging generations.
+Record phase timings and progress without making callbacks admission authority.
+
+Validation before publication
+126 isolated runtime assertions passed, including the checkpoint disconnect
+race, exact expiry, bounded retry/cancel behavior, delayed acknowledgements,
+transactional backup safety and copied-world crew repair.
+7 checks passed in KSP's actual Mono, with 190 helper methods prepared and the
+complete Harmony hook set installed against the shipping KSP assemblies.
+33 candidate-publisher fixtures passed; 26 recovery fixtures and 4 recovery-arm
+groups passed. Changed publisher scripts parse and git diff --check is clean.
+These tests are not a rendered flight/checkpoint restore or a production restart.
+The guarded publisher must still boot/shut down the exact signed candidate and
+verify live health. Rendered checkpoint and reconnect behavior require play test.
+
+Prepared archive
+Aetherfront-Release-kesas-rc58.zip: 6,014,343 bytes.
+SHA-256 b20e820d0718a237bbdd3ab6628baab60669188df332cea0f7355743052992f8.

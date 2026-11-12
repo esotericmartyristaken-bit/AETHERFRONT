@@ -119,6 +119,14 @@ internal static class Program
   p.Arm(1, "other", 0); p.Disconnect(1, reason, 1); p.Cancel();
   Check(!p.Tick(10, true, true, false, false), "Player cancellation prevents future automatic reconnect");
   p.Arm(1, "stale", 0); Check(!p.Disconnect(1, reason, 181), "Expired restore authorization cannot reconnect later");
+  p.Arm(1, "deadline", 0); Check(!p.Disconnect(1, reason, 180), "Restore authorization expires at its exact deadline");
+  p.Arm(1, "receive-thread-race", 0); p.Disconnect(1, reason, 1);
+  Check(!p.Tick(1.01, false, false, false, true) && p.Active,
+   "Old Running state after receive-thread disconnect cannot cancel pending menu exit");
+  Check(p.Tick(5, true, true, false, false) && !p.Tick(6, false, false, false, true) && !p.Active,
+   "Only a successful new connection completes checkpoint reconnect");
+  Reject(() => p.Arm(1, "", 0), "Missing restore request cannot authorize automatic reconnect");
+  Reject(() => p.Arm(1, "invalid-time", double.NaN), "Nonfinite restore clock cannot authorize reconnect");
  }
  static void Policy()
  {
@@ -335,7 +343,7 @@ internal static class Program
   var client = (ClientStructure)RuntimeHelpers.GetUninitializedObject(typeof(ClientStructure)); client.Subspace = int.MinValue; client.ConnectionStatus = ConnectionStatus.Connected;
   using var key = RSA.Create(2048); var request = new ClientMessageFactory().CreateNewMessageData<HandshakeRequestMsgData>();
   request.IdentityPublicKey = IdentityProof.ExportPublicKey(key); request.UniqueIdentifier = IdentityProof.AccountId(request.IdentityPublicKey);
-  request.PlayerName = name; request.KspVersion = "1.12.5"; request.ApfEnabled = true; request.ApfClientVersion = "kesas-rc57";
+  request.PlayerName = name; request.KspVersion = "1.12.5"; request.ApfEnabled = true; request.ApfClientVersion = "kesas-rc58";
   client.UniqueIdentifier = request.UniqueIdentifier; client.PlayerName = name;
   Check(Server.System.IdentityAuthentication.Begin(client, request, out var nonce, out var reason), "Disposable native authentication challenge: " + reason);
   Check(Server.System.IdentityAuthentication.Complete(client, IdentityProof.Sign(key, nonce, request.UniqueIdentifier, name), out _, out reason), "Disposable native authentication proof: " + reason);

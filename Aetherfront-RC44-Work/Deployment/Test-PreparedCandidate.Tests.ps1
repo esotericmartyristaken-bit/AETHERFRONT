@@ -434,6 +434,7 @@ try {
         Assert-Fixture ((Read-PCText $source) -ceq 'source-content')
     }
     Test-Fixture 'nonloopback/wrong owner candidate listener fails closed' {
+        function Get-PCNetworkSnapshot { [pscustomobject]@{Udp=@(Get-NetUDPEndpoint);Tcp=@(Get-NetTCPConnection -State Listen)+@(Get-NetTCPConnection|Where-Object State -NE 'Listen')} }
         $context=@{Game=@{Process=@{Id=70001}};Pack=@{Process=@{Id=70002}};GamePort=28865;PackPort=28866}
         function Get-NetUDPEndpoint { [pscustomobject]@{OwningProcess=70001;LocalAddress='0.0.0.0';LocalPort=28865} }
         function Get-NetTCPConnection { @() }
@@ -442,6 +443,7 @@ try {
         Expect-Failure { Assert-PCListeners $context -Require } '*UDP*'
     }
     Test-Fixture 'owned auxiliary UDP must settle before readiness; main and foreign listeners stay fatal' {
+        function Get-PCNetworkSnapshot { [pscustomobject]@{Udp=@(Get-NetUDPEndpoint);Tcp=@(Get-NetTCPConnection -State Listen)+@(Get-NetTCPConnection|Where-Object State -NE 'Listen')} }
         $context=@{Game=@{Process=@{Id=70001}};Pack=@{Process=@{Id=70002}};GamePort=28865;PackPort=28866;Receipt=@{}}
         $script:auxiliaryUdp=$true
         function Get-NetUDPEndpoint {
@@ -450,7 +452,7 @@ try {
         }
         function Get-NetTCPConnection {
             [CmdletBinding()]param($State)
-            if($State -eq 'Listen'){[pscustomobject]@{OwningProcess=70002;LocalAddress='127.0.0.1';LocalPort=28866}}
+            if($State -eq 'Listen'){[pscustomobject]@{OwningProcess=70002;LocalAddress='127.0.0.1';LocalPort=28866;State='Listen'}}
         }
         Assert-Fixture (-not (Assert-PCListeners $context))
         Assert-Fixture ($context.Receipt.lastPendingUdp.port -eq 55123)
@@ -478,6 +480,7 @@ try {
         Assert-Fixture ($null -ne $context.Receipt.bridge -and $script:productionStops -eq 0)
     }
     Test-Fixture 'accepted loopback HTTPS ephemeral remote ports including CloseWait are inbound' {
+        function Get-PCNetworkSnapshot { [pscustomobject]@{Udp=@(Get-NetUDPEndpoint);Tcp=@(Get-NetTCPConnection -State Listen)+@(Get-NetTCPConnection|Where-Object State -NE 'Listen')} }
         $context=@{Game=@{Process=@{Id=70001}};Pack=@{Process=@{Id=70002}};GamePort=28865;PackPort=28866}
         $script:fixtureForbiddenOutbound=$false
         function Get-NetUDPEndpoint { [pscustomobject]@{OwningProcess=70001;LocalAddress='127.0.0.1';LocalPort=28865} }
@@ -496,6 +499,47 @@ try {
         Assert-Fixture (Assert-PCListeners $context -Require)
         $script:fixtureForbiddenOutbound=$true
         Expect-Failure { Assert-PCListeners $context -Require } '*forbidden outbound*'
+    }
+    Test-Fixture 'phase reporting records elapsed work without changing admission authority' {
+        $events=[Collections.Generic.List[string]]::new()
+        $context=@{Receipt=@{phaseTimings=@();success=$false};OnCandidateProgress={param($phase) $events.Add($phase)}}
+        Write-PCPhase $context 'inputs';Start-Sleep -Milliseconds 2;Write-PCPhase $context 'snapshot'
+        Assert-Fixture ($events.Count -eq 2 -and $events[0] -ceq 'inputs' -and $events[1] -ceq 'snapshot')
+        Assert-Fixture ($context.Receipt.phaseTimings.Count -eq 1 -and $context.Receipt.phaseTimings[0].stage -ceq 'inputs' -and $context.Receipt.phaseTimings[0].milliseconds -gt 0)
+        $context.OnCandidateProgress={param($phase) throw 'fixture progress failure'}
+        Write-PCPhase $context 'overlay'
+        Assert-Fixture ($context.Receipt.progressCallbackFailed -and -not $context.Receipt.success)
+    }
+    Test-Fixture 'ephemeral copy does not force disk barriers; receipts and canonical writes remain durable' {
+        Assert-Fixture (-not (Get-Item Function:Copy-PCFile).ScriptBlock.ToString().Contains('.Flush($true)'))
+        Assert-Fixture ((Get-Item Function:Write-UpdateAtomic).ScriptBlock.ToString().Contains('.Flush($true)'))
+        Assert-Fixture ((Get-Item Function:Invoke-PreparedCandidate).ScriptBlock.ToString().Contains('$stream.Flush($true)'))
+    }
+    Test-Fixture 'native socket ownership uses real IPv4 and IPv6 listeners without WMI' {
+        $tcp=[Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback,0);$tcp.Start()
+        $udp=[Net.Sockets.UdpClient]::new([Net.IPEndPoint]::new([Net.IPAddress]::Loopback,0))
+        $tcp6=$null;$udp6=$null;$client=$null;$accepted=$null
+        try {
+            if([Net.Sockets.Socket]::OSSupportsIPv6){
+                $tcp6=[Net.Sockets.TcpListener]::new([Net.IPAddress]::IPv6Loopback,0);$tcp6.Start()
+                $udp6=[Net.Sockets.UdpClient]::new([Net.IPEndPoint]::new([Net.IPAddress]::IPv6Loopback,0))
+            }
+            $client=[Net.Sockets.TcpClient]::new();$client.Connect([Net.IPAddress]::Loopback,$tcp.LocalEndpoint.Port);$accepted=$tcp.AcceptTcpClient()
+            $network=Get-PCNetworkSnapshot
+            Assert-Fixture (@($network.Tcp|Where-Object {$_.OwningProcess -eq $PID -and $_.LocalPort -eq $tcp.LocalEndpoint.Port -and $_.LocalAddress -ceq '127.0.0.1' -and $_.State -ceq 'Listen'}).Count -eq 1)
+            Assert-Fixture (@($network.Tcp|Where-Object {$_.OwningProcess -eq $PID -and $_.LocalPort -eq $tcp.LocalEndpoint.Port -and $_.RemotePort -eq $client.Client.LocalEndPoint.Port -and $_.RemoteAddress -ceq '127.0.0.1' -and $_.State -ceq 'Established'}).Count -eq 1)
+            Assert-Fixture (@($network.Udp|Where-Object {$_.OwningProcess -eq $PID -and $_.LocalPort -eq $udp.Client.LocalEndPoint.Port -and $_.LocalAddress -ceq '127.0.0.1'}).Count -eq 1)
+            if($tcp6){
+                Assert-Fixture (@($network.Tcp|Where-Object {$_.OwningProcess -eq $PID -and $_.LocalPort -eq $tcp6.LocalEndpoint.Port -and $_.LocalAddress -ceq '::1' -and $_.State -ceq 'Listen'}).Count -eq 1)
+                Assert-Fixture (@($network.Udp|Where-Object {$_.OwningProcess -eq $PID -and $_.LocalPort -eq $udp6.Client.LocalEndPoint.Port -and $_.LocalAddress -ceq '::1'}).Count -eq 1)
+            }
+            $watch=[Diagnostics.Stopwatch]::StartNew();for($sample=0;$sample -lt 20;$sample++){$null=Get-PCNetworkSnapshot};$watch.Stop()
+            Write-Output ('MEASURE native ownership snapshots=20; totalMilliseconds='+$watch.Elapsed.TotalMilliseconds)
+            Assert-Fixture ($watch.Elapsed.TotalSeconds -lt 5) 'Native ownership probes exceeded five-second fixture budget'
+        } finally {
+            if($accepted){$accepted.Dispose()};if($client){$client.Dispose()};$tcp.Stop();$udp.Dispose()
+            if($tcp6){$tcp6.Stop()};if($udp6){$udp6.Dispose()}
+        }
     }
     Test-Fixture 'firewall plan blocks nonloopback and other loopback ports for candidate executables only' {
         $f=New-Fixture; $script:firewallSpecifications=@{}

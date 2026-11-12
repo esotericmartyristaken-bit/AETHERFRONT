@@ -19,8 +19,8 @@ function Initialize-PreactivationRecovery {}
 function Assert-RecoveryProtection {param($Path,[switch]$Private,[switch]$ControlRoot)}
 function Set-PreactivationPrivateAcl {param($Path,[switch]$Directory)}
 function Get-RecoveryControlRoot {$script:control}
-function Export-ScheduledTask {param($TaskName,$TaskPath,$ErrorAction)'<Task>arm fixture</Task>'}
-function Get-ScheduledTask {
+function Get-RecoveryTaskXml {param($TaskName,$TaskPath,$ErrorAction)'<Task>arm fixture</Task>'}
+function Get-RecoveryScheduledTask {
     param($TaskName,$TaskPath,$ErrorAction)
     [pscustomobject]@{State='Running';Principal=[pscustomobject]@{UserId='SYSTEM'};Actions=@([pscustomobject]@{Execute=(Join-Path ([Environment]::GetFolderPath('Windows')) 'System32/WindowsPowerShell/v1.0/powershell.exe');Arguments="-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$control/bootstrap/Start-NativeServer.ps1`" -Settings `"$control/host.json`"";WorkingDirectory=$native})}
 }

@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param([Parameter(Mandatory=$true)][string]$ReleaseZip,[string]$Notes='KESAS update',[switch]$AllowActivePlayers,[string]$DeploymentRoot=$env:APF_NATIVE_ROOT,
     [switch]$LocalDeployment,[string]$LocalBotConfig,[string]$LocalNode,[string]$LocalEvidenceRoot,
-    [string]$ScienceCompensationPlan='',[string]$ScienceCompensationSha256='')
+    [string]$ScienceCompensationPlan='',[string]$ScienceCompensationSha256='',
+    [scriptblock]$OnPublisherProgress=$null)
 . "$PSScriptRoot/Update.Common.ps1"
 if(-not $LocalDeployment){throw 'Git-triggered host publication is retired. Use the reviewed Deploy-LocalRelease.ps1 operator command.'}
 if($AllowActivePlayers){throw 'External active-player override is disabled. Local admission must deliver the fifteen-minute warning.'}
@@ -9,6 +10,7 @@ if(-not $LocalBotConfig -or -not $LocalNode -or -not $LocalEvidenceRoot){throw '
 
 function Write-PublisherStage([string]$Stage) {
     Write-Information -MessageData $Stage -Tags 'Aetherfront-PublisherStage' -InformationAction Continue
+    if($OnPublisherProgress){try{& $OnPublisherProgress $Stage}catch{Write-Warning 'Publisher phase-report callback failed; activation checks remain enforced'}}
 }
 
 function Get-PublisherAccountResetIntent([string]$Text,[string]$Version) {
@@ -373,7 +375,13 @@ function Assert-PublisherEmpty($Root,$Config) {
 
 $root=Assert-UpdatePath $(if($DeploymentRoot){$DeploymentRoot}else{$PSScriptRoot})
 $cfg=Get-UpdateDeployment $root
-foreach($name in @('Server','PackHost','CertificateTool','Updates','Backups','.release-staging','.github-prepared','secrets','UpdateTool')){Assert-UpdateTree (Get-UpdateChildPath $root $name)}
+foreach($name in @('Server','PackHost','CertificateTool','Updates','Backups','.release-staging','.github-prepared','secrets','UpdateTool')){
+    $inputPath=Get-UpdateChildPath $root $name
+    # Historical backups and failed staging generations are not current inputs.
+    # Validate their root/ancestors here, then validate each selected subtree
+    # when it is actually used. Never rescan the entire accumulated history.
+    if($name -notin @('Backups','.release-staging','.github-prepared')){Assert-UpdateTree $inputPath}
+}
 $releaseLock=New-Object IO.FileStream((Get-UpdateChildPath $root '.publish.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
 $stage=Get-UpdateChildPath $root ('.release-staging/'+[Guid]::NewGuid().ToString('N'))
 $journal=Get-UpdateChildPath $root '.update-transaction.json'
@@ -555,7 +563,7 @@ try{
     $localNotification=Start-LocalDeploymentNotification $LocalBotConfig $version
     $candidateReceipt=Join-Path $LocalEvidenceRoot ('candidate-'+[Guid]::NewGuid().ToString('N')+'.json')
     Write-PublisherStage 'candidate-preflight'
-    $candidate=Invoke-PreparedCandidate -DeploymentRoot $root -ReleaseDirectory "$stage/Release" -PublishedDirectory "$stage/Published" -ExpectedVersion $version -ResultPath $candidateReceipt
+    $candidate=Invoke-PreparedCandidate -DeploymentRoot $root -ReleaseDirectory "$stage/Release" -PublishedDirectory "$stage/Published" -ExpectedVersion $version -ResultPath $candidateReceipt -OnCandidateProgress {param($phase) Write-PublisherStage ('candidate-'+$phase)}
     Assert-LocalPreparedReceipt $candidateReceipt $candidate.ReceiptSha256 $root "$stage/Release" "$stage/Published" $version $candidateGate
     Write-PublisherStage 'local-player-warning'
     $admission=Wait-LocalDeploymentAdmission $LocalNode $localCode $LocalBotConfig $LocalEvidenceRoot $version $Notes

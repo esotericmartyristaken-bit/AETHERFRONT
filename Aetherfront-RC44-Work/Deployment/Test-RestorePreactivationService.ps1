@@ -33,8 +33,8 @@ function Get-FixtureTextHash([string]$Text){
 }
 function Get-RecoveryControlRoot {$script:fixtureControl}
 function Assert-RecoveryProtection {param($Path,[switch]$Private,[switch]$ControlRoot) if($script:rejectProtection){throw 'Recovery permissions are not protected'}}
-function Export-ScheduledTask {param($TaskName,$TaskPath,$ErrorAction) '<Task>fixed fixture router</Task>'}
-function Get-ScheduledTask {
+function Get-RecoveryTaskXml {param($TaskName,$TaskPath,$ErrorAction) '<Task>fixed fixture router</Task>'}
+function Get-RecoveryScheduledTask {
     param($TaskName,$TaskPath,$ErrorAction)
     if($script:taskOverride){return $script:taskOverride}
     $control=$script:fixtureControl
@@ -83,14 +83,14 @@ try{
     Assert-Fixture ($configuration.gamePort -eq 18865) 'Valid old release rejected'
     Pass-Fixture 'protected-plan schema, exact roots, old hashes/feed and fixed task binding'
 
-    $script:taskOverride=Get-ScheduledTask -TaskName 'KESAS Server'
+    $script:taskOverride=Get-RecoveryScheduledTask -TaskName 'KESAS Server'
     $script:taskOverride.Actions[0].Execute=$script:taskOverride.Actions[0].Execute.Replace('\','/')
     $script:taskOverride.Actions[0].WorkingDirectory=$script:taskOverride.Actions[0].WorkingDirectory.Replace('\','/')
     $null=Assert-RecoveryUnchanged $context
     Pass-Fixture 'fixed router accepts canonical equivalent task executable and working directory'
     $script:taskOverride=$null
     foreach($change in @('principal','execute','arguments','directory','extra-action')){
-        $task=Get-ScheduledTask -TaskName 'KESAS Server';$script:taskOverride=$task
+        $task=Get-RecoveryScheduledTask -TaskName 'KESAS Server';$script:taskOverride=$task
         switch($change){
             'principal' {$task.Principal.UserId='untrusted-user'}
             'execute' {$task.Actions[0].Execute=Join-Path $fixture 'wrong.exe'}

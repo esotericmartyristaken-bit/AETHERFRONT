@@ -99,7 +99,7 @@ function Start-PreactivationRecovery {
     [IO.File]::Copy($script:PreactivationRecoverySource,$copy,$false)
     Set-PreactivationPrivateAcl $copy
     $sha=[Security.Cryptography.SHA256]::Create()
-    try{$taskHash=[BitConverter]::ToString($sha.ComputeHash([Text.UTF8Encoding]::new($false).GetBytes([string](Export-ScheduledTask -TaskName 'KESAS Server' -TaskPath '\' -ErrorAction Stop)))).Replace('-','').ToLowerInvariant()}finally{$sha.Dispose()}
+    try{$taskHash=[BitConverter]::ToString($sha.ComputeHash([Text.UTF8Encoding]::new($false).GetBytes((Get-RecoveryTaskXml)))).Replace('-','').ToLowerInvariant()}finally{$sha.Dispose()}
     $created=[DateTimeOffset]::UtcNow
     $plan=[pscustomobject]@{
         schemaVersion=1;purpose='restore-preactivation-service';id=$id;createdAt=$created.ToString('o');expiresAt=$created.AddMinutes(30).ToString('o')

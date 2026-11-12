@@ -16,6 +16,7 @@ namespace Aetherfront.Stability.Client
         static readonly CheckpointReconnectPolicy Policy = new CheckpointReconnectPolicy();
         static readonly PropertyInfo Generation = AccessTools.Property(typeof(NetworkConnection), "ConnectionGeneration");
         static FieldInfo Pending, Status;
+        static MethodInfo StopGame;
         static string address; static int port;
         static volatile bool leaveFlight;
         static bool notice;
@@ -27,6 +28,8 @@ namespace Aetherfront.Stability.Client
             if (type == null) throw new TypeLoadException("Shipping personal checkpoint controls missing.");
             Pending = AccessTools.Field(type, "pending"); Status = AccessTools.Field(type, "status");
             if (Pending == null || Status == null) throw new MissingFieldException("Personal checkpoint request state changed.");
+            StopGame = AccessTools.Method(typeof(MainSystem), "StopGame", Type.EmptyTypes);
+            if (StopGame == null || !StopGame.IsStatic) throw new MissingMethodException("Native main-menu exit is unavailable.");
             harmony.Patch(AccessTools.Method(type, "SendPending"), postfix: new HarmonyMethod(typeof(CheckpointReconnect), nameof(Sent)));
             harmony.Patch(AccessTools.Method(typeof(NetworkConnection), "Disconnect", new[] { typeof(string) }),
                 prefix: new HarmonyMethod(typeof(CheckpointReconnect), nameof(Disconnecting)) { priority = Priority.First });
@@ -42,6 +45,7 @@ namespace Aetherfront.Stability.Client
                 if (string.IsNullOrEmpty(address) || port < 1 || port > 65535) return;
                 Policy.Arm((int)Generation.GetValue(null, null), request.CommandId, Now);
                 Status.SetValue(__instance, "Loading your checkpoint. Returning to the menu and reconnecting automatically after the server finishes.");
+                Debug.Log("[Aetherfront Stability] Checkpoint restore requested; request=" + request.CommandId + "; generation=" + Policy.Generation);
             }
         }
         static void Disconnecting(string reason)
@@ -57,7 +61,23 @@ namespace Aetherfront.Stability.Client
                 // Native StopGame exits flight and resets its systems. Do not thaw
                 // a disconnected vessel or join the new timeline in the old scene.
                 MainSystem.Singleton.ForceQuit = true;
-                Debug.Log("[Aetherfront Stability] Checkpoint restore disconnect confirmed; leaving flight before automatic reconnect.");
+                try
+                {
+                    // Do not wait behind SystemsHandler.Update: a failing scene
+                    // system can throw before MainSystem reaches its ForceQuit
+                    // branch. This addon runs on Unity's unscaled Update thread.
+                    if (MainSystem.NetworkState != ClientState.Disconnected)
+                        MainSystem.NetworkState = ClientState.Disconnected;
+                    StopGame.Invoke(null, null);
+                    MainSystem.Singleton.ForceQuit = false;
+                    Debug.Log("[Aetherfront Stability] Checkpoint disconnect confirmed; native main-menu exit requested before reconnect.");
+                }
+                catch (Exception error)
+                {
+                    // Keep the native exit request armed. Never resume the old
+                    // flight, bypass a failed reset, or connect in that scene.
+                    Debug.LogError("[Aetherfront Stability] Checkpoint menu exit failed; native safe exit remains requested: " + (error.InnerException ?? error));
+                }
             }
             bool connect, stopped; string target; int targetPort, attempt;
             lock (Gate)

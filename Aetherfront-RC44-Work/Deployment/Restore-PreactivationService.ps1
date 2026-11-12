@@ -195,8 +195,36 @@ function Open-RecoveryLock([string]$Path) {
     catch [IO.IOException]{if(($_.Exception.GetBaseException().HResult -band 65535) -notin @(32,33)){throw};return $null}
 }
 
+function Get-RecoveryScheduledTask {
+    # Read the same Task Scheduler authority directly, without loading the CIM
+    # provider during the bounded watchdog arming handshake.
+    $service=$folder=$task=$definition=$null
+    try {
+        $service=New-Object -ComObject 'Schedule.Service'
+        $service.Connect()
+        $folder=$service.GetFolder('\')
+        $task=$folder.GetTask('KESAS Server')
+        $definition=$task.Definition
+        $actions=@(for($index=1;$index -le $definition.Actions.Count;$index++) {
+            $action=$definition.Actions.Item($index)
+            if($action.Type -ne 0){throw 'Fixed KESAS Server task has a non-executable action'}
+            [pscustomobject]@{Execute=[string]$action.Path;Arguments=[string]$action.Arguments;WorkingDirectory=[string]$action.WorkingDirectory}
+        })
+        $states=@('Unknown','Disabled','Queued','Ready','Running')
+        $state=[int]$task.State
+        if($state -lt 0 -or $state -ge $states.Count){throw 'Unknown KESAS task state'}
+        return [pscustomobject]@{State=$states[$state];Principal=[pscustomobject]@{UserId=[string]$definition.Principal.UserId};Actions=$actions;Xml=[string]$task.Xml}
+    } finally {
+        foreach($value in @($definition,$task,$folder,$service)) {
+            if($null -ne $value -and [Runtime.InteropServices.Marshal]::IsComObject($value)){$null=[Runtime.InteropServices.Marshal]::ReleaseComObject($value)}
+        }
+    }
+}
+
+function Get-RecoveryTaskXml { [string](Get-RecoveryScheduledTask).Xml }
+
 function Assert-RecoveryTaskBinding($Context) {
-    $task=Get-ScheduledTask -TaskName 'KESAS Server' -TaskPath '\' -ErrorAction Stop
+    $task=Get-RecoveryScheduledTask
     if(@($task.Actions).Count -ne 1 -or $task.Principal.UserId -notin @('SYSTEM','NT AUTHORITY\SYSTEM','S-1-5-18')){throw 'Fixed KESAS Server task no longer matches its protected router (principal/actions)'}
     $execute=Assert-RecoveryLocalPath (Join-Path ([Environment]::GetFolderPath('Windows')) 'System32/WindowsPowerShell/v1.0/powershell.exe')
     $router=Get-RecoveryChild $Context.ControlRoot 'bootstrap/Start-NativeServer.ps1'
@@ -240,9 +268,80 @@ function Assert-RecoveryUnchanged($Context) {
     if($configuration.gamePort -lt 1024 -or $configuration.gamePort -gt 65535 -or $configuration.packPort -lt 1024 -or $configuration.packPort -gt 65535 -or $configuration.gamePort -eq $configuration.packPort -or $configuration.certificateSha256 -cnotmatch '^[a-fA-F0-9]{64}$'){throw 'Invalid pinned native deployment settings'}
     Assert-RecoveryTaskBinding $Context
     $sha=[Security.Cryptography.SHA256]::Create()
-    try{$taskHash=[BitConverter]::ToString($sha.ComputeHash([Text.UTF8Encoding]::new($false).GetBytes([string](Export-ScheduledTask -TaskName 'KESAS Server' -TaskPath '\' -ErrorAction Stop)))).Replace('-','').ToLowerInvariant()}finally{$sha.Dispose()}
+    try{$taskHash=[BitConverter]::ToString($sha.ComputeHash([Text.UTF8Encoding]::new($false).GetBytes((Get-RecoveryTaskXml)))).Replace('-','').ToLowerInvariant()}finally{$sha.Dispose()}
     if($taskHash -cne $plan.taskXmlSha256){throw 'Fixed KESAS Server task definition changed'}
     return $configuration
+}
+
+function Get-PCNetworkSnapshot {
+    if (-not ('PreparedCandidate.NativeSockets' -as [type])) {
+        Add-Type -TypeDefinition @'
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Runtime.InteropServices;
+namespace PreparedCandidate {
+ public sealed class SocketRow {
+  public string LocalAddress, RemoteAddress, State;
+  public int LocalPort, RemotePort, OwningProcess;
+ }
+ public static class NativeSockets {
+  [DllImport("iphlpapi.dll")]
+  [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+  static extern uint GetExtendedTcpTable(IntPtr table, ref int size, bool sorted, int family, int tableClass, uint reserved);
+  [DllImport("iphlpapi.dll")]
+  [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+  static extern uint GetExtendedUdpTable(IntPtr table, ref int size, bool sorted, int family, int tableClass, uint reserved);
+  static uint Fetch(bool tcp,IntPtr data,ref int size,int family) {
+   return tcp ? GetExtendedTcpTable(data,ref size,false,family,5,0) : GetExtendedUdpTable(data,ref size,false,family,1,0);
+  }
+  static int Port(IntPtr row,int offset) { return (Marshal.ReadByte(row,offset)<<8)|Marshal.ReadByte(row,offset+1); }
+  static string Address(IntPtr row,int offset,bool ipv6) {
+   var bytes=new byte[ipv6?16:4];Marshal.Copy(IntPtr.Add(row,offset),bytes,0,bytes.Length);
+   return ipv6 ? new IPAddress(bytes,(uint)Marshal.ReadInt32(row,offset+16)).ToString() : new IPAddress(bytes).ToString();
+  }
+  static void Read(List<SocketRow> rows,bool tcp,int family) {
+   bool ipv6=family==23;int stride=tcp?(ipv6?56:24):(ipv6?28:12);
+   for(int attempt=0;attempt<5;attempt++) {
+    int size=0;uint error=Fetch(tcp,IntPtr.Zero,ref size,family);
+    if(error==50||error==232)return; // Unsupported address family or genuinely empty table.
+    if(error!=0&&error!=122)throw new Win32Exception((int)error);
+    if(size<4||size>64*1024*1024)throw new IOException("Invalid native socket table size");
+    int allocated=size;IntPtr memory=Marshal.AllocHGlobal(allocated);
+    try {
+     error=Fetch(tcp,memory,ref size,family);if(error==122)continue;
+     if(error!=0)throw new Win32Exception((int)error);
+     uint count=(uint)Marshal.ReadInt32(memory);
+     if(size>allocated||count>(allocated-4)/stride)throw new IOException("Invalid native socket table bounds");
+     for(int index=0;index<count;index++) {
+      IntPtr row=IntPtr.Add(memory,4+index*stride);var item=new SocketRow();
+      if(tcp) {
+       item.LocalAddress=Address(row,ipv6?0:4,ipv6);item.LocalPort=Port(row,ipv6?20:8);
+       item.RemoteAddress=Address(row,ipv6?24:12,ipv6);item.RemotePort=Port(row,ipv6?44:16);
+       item.State=((TcpState)Marshal.ReadInt32(row,ipv6?48:0)).ToString();item.OwningProcess=Marshal.ReadInt32(row,ipv6?52:20);
+      } else {
+       item.LocalAddress=Address(row,0,ipv6);item.LocalPort=Port(row,ipv6?20:4);item.OwningProcess=Marshal.ReadInt32(row,ipv6?24:8);
+       item.RemoteAddress="";item.State="";
+      }
+      rows.Add(item);
+     }
+     return;
+    } finally {Marshal.FreeHGlobal(memory);}
+   }
+   throw new IOException("Native socket table changed too frequently");
+  }
+  public static SocketRow[] Udp(){var rows=new List<SocketRow>();Read(rows,false,2);Read(rows,false,23);return rows.ToArray();}
+  public static SocketRow[] Tcp(){var rows=new List<SocketRow>();Read(rows,true,2);Read(rows,true,23);return rows.ToArray();}
+ }
+}
+'@
+    }
+    # Fresh OS ownership observations, not a cached listener assertion. Avoid
+    # repeatedly starting WMI/CIM providers in subsecond readiness/exit loops.
+    [pscustomobject]@{Udp=@([PreparedCandidate.NativeSockets]::Udp());Tcp=@([PreparedCandidate.NativeSockets]::Tcp());observedAtUtc=[DateTime]::UtcNow.ToString('o')}
 }
 
 function Get-RecoveryServices($Context,$Configuration) {
@@ -253,9 +352,10 @@ function Get-RecoveryServices($Context,$Configuration) {
         $identity=Get-RecoveryProcess $process.Id
         if($null -ne $identity -and ($identity.Path -ieq (Get-RecoveryChild $Context.NativeRoot 'Server/Server.exe') -or $identity.Path -ieq (Get-RecoveryChild $Context.NativeRoot 'PackHost/ApfPackHost.exe'))){$identity}
     })
-    $udp=@(Get-NetUDPEndpoint -ErrorAction Stop|Where-Object LocalPort -eq $Configuration.gamePort)
-    $tcp=@(Get-NetTCPConnection -ErrorAction Stop|Where-Object {$_.LocalPort -eq $Configuration.packPort -and $_.State -eq 'Listen'})
-    return [pscustomobject]@{Processes=$processes;Udp=$udp;Tcp=$tcp;TaskState=[string](Get-ScheduledTask -TaskName 'KESAS Server' -TaskPath '\' -ErrorAction Stop).State}
+    $network=Get-PCNetworkSnapshot
+    $udp=@($network.Udp|Where-Object LocalPort -eq $Configuration.gamePort)
+    $tcp=@($network.Tcp|Where-Object {$_.LocalPort -eq $Configuration.packPort -and $_.State -eq 'Listen'})
+    return [pscustomobject]@{Processes=$processes;Udp=$udp;Tcp=$tcp;TaskState=[string](Get-RecoveryScheduledTask).State}
 }
 
 function Test-RecoveryHealthy($Context,$Configuration,$Services) {
