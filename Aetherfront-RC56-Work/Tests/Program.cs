@@ -335,7 +335,7 @@ internal static class Program
   var client = (ClientStructure)RuntimeHelpers.GetUninitializedObject(typeof(ClientStructure)); client.Subspace = int.MinValue; client.ConnectionStatus = ConnectionStatus.Connected;
   using var key = RSA.Create(2048); var request = new ClientMessageFactory().CreateNewMessageData<HandshakeRequestMsgData>();
   request.IdentityPublicKey = IdentityProof.ExportPublicKey(key); request.UniqueIdentifier = IdentityProof.AccountId(request.IdentityPublicKey);
-  request.PlayerName = name; request.KspVersion = "1.12.5"; request.ApfEnabled = true; request.ApfClientVersion = "kesas-rc56";
+  request.PlayerName = name; request.KspVersion = "1.12.5"; request.ApfEnabled = true; request.ApfClientVersion = "kesas-rc57";
   client.UniqueIdentifier = request.UniqueIdentifier; client.PlayerName = name;
   Check(Server.System.IdentityAuthentication.Begin(client, request, out var nonce, out var reason), "Disposable native authentication challenge: " + reason);
   Check(Server.System.IdentityAuthentication.Complete(client, IdentityProof.Sign(key, nonce, request.UniqueIdentifier, name), out _, out reason), "Disposable native authentication proof: " + reason);
@@ -382,6 +382,36 @@ internal static class Program
   Check((bool)CallBackup("Publish", newer)! && !(bool)CallBackup("Publish", old)!, "A later capture prevents out-of-order disk publication");
   CallBackup("Discard", old); CallBackup("Discard", newer);
   Check(Directory.GetFiles(directory, "*.pending").Length == 0, "Completed and cancelled staging files are cleaned up");
+  string canonical = Path.Combine(directory, id + ".txt");
+  byte[] committed = File.ReadAllBytes(canonical); DateTime written = File.GetLastWriteTimeUtc(canonical);
+  long durableStages = VesselBackup.DurableStages, skipped = VesselBackup.UnchangedSkipped;
+  Check(VesselBackup.Save(id) && VesselBackup.DurableStages == durableStages && VesselBackup.UnchangedSkipped == skipped + 1,
+   "Identical canonical vessel skips temporary write and durable flush");
+  Check(File.GetLastWriteTimeUtc(canonical) == written && File.ReadAllBytes(canonical).SequenceEqual(committed),
+   "No-op backup leaves canonical bytes and write timestamp untouched");
+  var unchangedPlan = CallBackup("Capture", id)!; CallBackup("Stage", unchangedPlan);
+  string replacement = canonical + ".replacement"; File.WriteAllBytes(replacement, committed);
+  File.SetCreationTimeUtc(replacement, File.GetCreationTimeUtc(canonical)); File.SetLastWriteTimeUtc(replacement, written);
+  File.Move(replacement, canonical, true);
+  Check(!(bool)CallBackup("Publish", unchangedPlan)!, "Same bytes and timestamps cannot hide replacement of a checked canonical file identity");
+  CallBackup("Discard", unchangedPlan);
+  File.WriteAllText(canonical, "changed canonical contents");
+  Check(VesselBackup.Save(id) && VesselBackup.DurableStages == durableStages + 1 && File.ReadAllBytes(canonical).SequenceEqual(committed),
+   "Changed canonical contents still require a fully flushed atomic backup");
+  unchangedPlan = CallBackup("Capture", id)!; CallBackup("Stage", unchangedPlan);
+  VesselContext.RemovedVessels[id] = 0;
+  Check(!(bool)CallBackup("Publish", unchangedPlan)!, "Unchanged-backup optimization preserves deletion tombstones");
+  VesselContext.RemovedVessels.TryRemove(id, out _); CallBackup("Discard", unchangedPlan);
+  unchangedPlan = CallBackup("Capture", id)!; CallBackup("Stage", unchangedPlan);
+  object pathLock = typeof(FileHandler).GetMethod("GetLockSemaphore", PrivateStatic | BindingFlags.Public)!.Invoke(null, new object[] { canonical })!;
+  locked.Reset(); release.Reset();
+  thread = new Thread(() => { lock (pathLock) { locked.Set(); release.Wait(5000); } }); thread.Start();
+  Check(locked.Wait(5000), "Native per-path writer lock contention is exercised");
+  var publish = Task.Run(() => CallBackup("Publish", unchangedPlan)); bool returned = publish.Wait(1000);
+  release.Set(); thread.Join();
+  Check(returned && !(bool)publish.Result!, "Backup never waits for per-path I/O while holding gameplay locks");
+  CallBackup("Discard", unchangedPlan);
+  Check(VesselBackup.Save(id), "A fresh capture retries safely after per-path contention");
  }
  sealed class FixtureReader(Action<ClientStructure, IClientMessageBase> action) : ReaderBase
  { public override void HandleMessage(ClientStructure client, IClientMessageBase message) => action(client, message); }

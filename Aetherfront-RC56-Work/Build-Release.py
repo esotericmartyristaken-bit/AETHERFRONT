@@ -1,4 +1,4 @@
-"""Assemble matching RC56 client/server bytes from the pinned shipping RC55 archive."""
+"""Assemble matching RC57 client/server bytes from the pinned shipping RC55 archive."""
 import argparse
 import json
 from pathlib import Path
@@ -6,7 +6,7 @@ import runpy
 
 helpers = runpy.run_path(str(Path(__file__).resolve().parents[1] / "Aetherfront-RC50-Work/Build-Release.py"))
 digest, pack, unpack, read, write = (helpers[name] for name in ("digest", "pack", "unpack", "read_json", "write_json"))
-BASE, VERSION = "kesas-rc55", "kesas-rc56"
+BASE, VERSION = "kesas-rc55", "kesas-rc57"
 BASE_SHA = "74b3be5f3bb507d420d595ad73b5ecfff302fbb8f46905e5d4d7fc97f1498b03"
 STABILITY_SHA = "c865243cc05ff3762a4997f027809ee0c0bb9e7488e12911c766b8bcea2ff437"
 PREFIX = "GameData/LunaMultiplayer/"

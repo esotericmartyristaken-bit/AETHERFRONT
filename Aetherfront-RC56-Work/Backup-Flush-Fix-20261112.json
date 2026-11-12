@@ -1,0 +1,46 @@
+{
+  "schema": "apf-backup-flush-regression/v1",
+  "release": "kesas-rc57",
+  "supersedesUnactivatedDraft": "kesas-rc56",
+  "observedAtUtc": "2026-11-12T02:15:37.0072603Z",
+  "failureEvidence": {
+    "requestId": "98c9f58cf20a48e0b3ab621add8d049f",
+    "productionActivated": false,
+    "candidateShutdownObservedAtUtc": "2026-11-12T02:01:41.8138283Z",
+    "stackCapturedAtUtc": "2026-11-12T02:02:17.0014989Z",
+    "managedCallChain": [
+      "Server.MainServer.Exit",
+      "Server.Events.ExitEvent.Exit",
+      "Server.System.BackupSystem.RunBackup",
+      "Server.System.VesselStoreSystem.BackupVessels",
+      "Aetherfront.Synchronization.Server.VesselBackup.Run",
+      "Aetherfront.Synchronization.Server.VesselBackup.Save",
+      "Aetherfront.Synchronization.Server.VesselBackup.Stage",
+      "Aetherfront.Synchronization.Server.SyncTimings.Flush",
+      "Interop.Kernel32.FlushFileBuffers"
+    ],
+    "finding": "The new staged backup path omitted the shipping writer's identical-content fast path and performed durable temporary writes for every unchanged vessel. A real gated shutdown was sampled waiting in the kernel durable flush. This explains a concrete source of unnecessary shutdown I/O; individual storage stall duration and underlying host storage cause are not established."
+  },
+  "correction": {
+    "unchangedRecords": "Compare exact canonical bytes outside shared gameplay locks. Revalidate Windows volume/file identity, size, creation/write times and attributes under native path-writer exclusion before accepting a no-op.",
+    "changedRecords": "Retain the fully flushed private temporary file and atomic canonical publication.",
+    "ordering": "Retain capture sequence, object identity and deletion tombstone fences. Drift or native path-lock contention fails closed for a fresh periodic capture; never wait for path I/O while holding shared gameplay locks.",
+    "nativeInterop": "Resolve the Windows file-information function only through System32 and keep the checked canonical handle shared for atomic replacement.",
+    "unchangedGuards": "No shutdown timeout, approval policy, runner hardening, rollback requirement or production admission gate was weakened."
+  },
+  "validation": {
+    "regressionChecksPassed": 121,
+    "actualKspMonoChecksPassed": 7,
+    "helperMethodsPrepared": 190,
+    "copiedWorldVessels": 155,
+    "firstBackupSeconds": 1.4553988,
+    "firstDurableVesselStages": 0,
+    "firstUnchangedSkipped": 155,
+    "repeatBackupSeconds": 0.8664369,
+    "repeatDurableVesselStages": 0,
+    "repeatUnchangedSkipped": 155,
+    "productionChangedByTests": false,
+    "renderedFlightTested": false
+  },
+  "deploymentRequirement": "Build matching signed RC57 client/server from this reviewed clean source; keep RC55 online until a new complete guarded native candidate gate passes, then perform occupancy admission and preserve the stopped-server rollback backup."
+}

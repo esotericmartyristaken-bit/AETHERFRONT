@@ -32,7 +32,7 @@ if (mode == "client")
  var literal = getter.Body.Instructions.Single(i => i.OpCode == OpCodes.Ldstr);
  var constant = module.GetType("LmpClient.Apf.ApfClientBuildVersion").Fields.Single(f => f.Name == "Value");
  if (!Equals(literal.Operand, "kesas-rc55") || !Equals(constant.Constant, "kesas-rc55")) throw new InvalidDataException("Client identity changed.");
- literal.Operand = constant.Constant = "kesas-rc56"; changed.Add(getter.FullName);
+ literal.Operand = constant.Constant = "kesas-rc57"; changed.Add(getter.FullName);
 }
 else if (mode == "server")
 {
@@ -85,7 +85,7 @@ if (!before.Keys.Where(k => actual[k] != before[k]).ToHashSet().SetEquals(change
  !resources.SequenceEqual(verify.MainModule.Resources.Select(ResourceImage))) throw new InvalidDataException("Shipping method/resource identity audit failed.");
 var afterFields = verify.MainModule.Types.SelectMany(ShippingTypeImporter.All).SelectMany(t => t.Fields).ToDictionary(f => f.FullName, f => f.Attributes + ":" + f.Constant);
 if (fields.Any(p => afterFields[p.Key] != p.Value && !(mode == "client" && p.Key.EndsWith("ApfClientBuildVersion::Value")))) throw new InvalidDataException("Unrelated field changed.");
-var audit = new { version = "kesas-rc56", mode, inputSha256 = Hash(input), outputSha256 = Hash(output), identityPreserved = true, unrelatedMethodsPreserved = true, changed, addedFields, addedTypes };
+var audit = new { version = "kesas-rc57", mode, inputSha256 = Hash(input), outputSha256 = Hash(output), identityPreserved = true, unrelatedMethodsPreserved = true, changed, addedFields, addedTypes };
 File.WriteAllText(output + ".audit.json", JsonSerializer.Serialize(audit, new JsonSerializerOptions { WriteIndented = true })); Console.WriteLine(JsonSerializer.Serialize(audit));
 
 void Wire()

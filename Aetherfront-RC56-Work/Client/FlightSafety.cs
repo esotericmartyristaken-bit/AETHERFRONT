@@ -73,7 +73,7 @@ namespace Aetherfront.Stability.Client
                 GameEvents.onVesselTerminated.Add(Listener.VesselTerminated);
                 observedScene = HighLogic.LoadedScene;
                 installed = true;
-                Debug.Log("[Aetherfront Stability] RC56 identified synchronization and safe-exit lifecycle installed.");
+                Debug.Log("[Aetherfront Stability] RC57 identified synchronization and safe-exit lifecycle installed.");
             }
             catch (Exception error)
             {
