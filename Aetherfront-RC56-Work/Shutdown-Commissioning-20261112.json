@@ -1,0 +1,38 @@
+{
+  "schema": "apf-rc56-shutdown-review/v1",
+  "reviewedSourceParent": "70999db208f2f5870b41825fe0052101dab37312",
+  "archiveSha256": "3b45e46522e49c189dd63f0826045d41dba2f5709823fcfe2f5741edd312b78a",
+  "archiveSizeBytes": 6013000,
+  "serverDllSha256": "01227c7bf264c5fd6a0a26c2645fa2b5ee700b7626b220b1d5c8840848fc00e3",
+  "signedClientArchiveSha256": "093dee050b842438d3eecec62fdf59d961ad7218e0561167a3ad1da0d04cae73",
+  "productionActivatedDuringReview": false,
+  "historicalGateFailure": {
+    "requestId": "cdc44e03eabf405bbcc550d6ca14bd84",
+    "observedAtUtc": "2026-11-11T23:21:39.683Z",
+    "startupPassed": true,
+    "cleanShutdownPassed": false,
+    "productionUnchanged": true
+  },
+  "unmodifiedIsolatedTests": [
+    {
+      "diagnosticsEnabled": true,
+      "readyAtUtc": "2026-11-12T00:06:31Z",
+      "cleanExitCode": 0,
+      "exitWithinSeconds": 20,
+      "evidenceFile": "ShutdownStacksResult.json"
+    },
+    {
+      "diagnosticsEnabled": false,
+      "readyAtUtc": "2026-11-12T01:17:24.0582706Z",
+      "shutdownRequestedAtUtc": "2026-11-12T01:17:24.0868729Z",
+      "cleanupStartedAtUtc": "2026-11-12T01:17:28.5978593Z",
+      "finishedAtUtc": "2026-11-12T01:19:00.8850289Z",
+      "cleanExitCode": 0,
+      "exitWithinSeconds": 20,
+      "evidenceFile": "ShutdownStacksNativeResult.json"
+    }
+  ],
+  "interpretation": "The earlier shutdown hang was not reproduced by either unmodified isolated test. Its exact cause remains unproven. These tests do not substitute for the full guarded native startup, pinned HTTPS, signed-update and clean-shutdown gate.",
+  "retryPolicy": "Preserve every previous protected bundle and receipt. Use a new reviewed source commit for a fresh immutable deployment bundle, retaining the exact previously verified release archive and prepared signed bytes. Do not change runtime binaries, runner settings, shutdown timeout, approval policy, production state or prior evidence to admit the release.",
+  "acceptance": "The existing guarded publisher must pass its complete candidate gate, fresh occupancy admission with a 15-minute warning when occupied, rollback backup, signed update and public health checks before declaring success. Rendered KSP flight testing remains pending."
+}
