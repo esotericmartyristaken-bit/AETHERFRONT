@@ -1,0 +1,9 @@
+RC62 combines the RC61 docking/warp safety fixes and the previously validated automatic incremental updater.
+
+PersistentThrust safety prevents stale docking targets from breaking vessel saves, rejects stale burn intent, pauses thrust while synchronization owns the flight hold, and bounds actual orbital integration before resources are consumed. Valid intentional background burns remain supported. The reported first explosion was not fully reconstructed; rendered flight validation remains outstanding.
+
+The optional native updater UI is packaged as inert Launcher/AetherfrontInstallUI.bin. The current automatic APFApplyUpdate.ps1 helper continues calling NativeInstall directly; no WinForms DLL is introduced into KSP's DLL discovery and no new confirmation is added. Connect automation and changed-file installation remain included.
+
+The publisher uses an in-process, certificate-pinned activation health check rather than launching the protected legacy CoreCLR certificate executable. A narrowly scoped failed-RC61 transaction review archives the existing journal only after proving restoration of its files, both world trees, RC60 feeds and fresh service health. All evidence and backups remain retained. Unrelated or ambiguous transactions still block publication.
+
+No server DLL changes, account reset, science compensation, arena activation or media replacement are included. Normal candidate isolation, signed client updates, durable backup, player warning and rollback remain enforced.

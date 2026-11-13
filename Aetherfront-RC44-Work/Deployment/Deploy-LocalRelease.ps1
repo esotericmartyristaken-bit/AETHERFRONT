@@ -85,7 +85,8 @@ try{
     $publicationProbe=[IO.FileStream]::new((Join-Path $deployment '.publish.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
     $updateState=Get-Content -LiteralPath (Join-Path $hostSettings.botRoot $configuration.updates.stateFile) -Raw|ConvertFrom-Json
     if($updateState.schemaVersion -ne 1 -or $updateState.status -notin @('idle','failed')){throw 'Another bot update operation requires review; no service stopped'}
-    if(Test-Path -LiteralPath "$deployment/.update-transaction.json"){throw 'An existing native activation/completion journal requires review first'}
+    # A pending transaction is reviewed below from the exact frozen source,
+    # under both publisher locks, before any deployment mutation is admitted.
     foreach($file in Get-ChildItem -LiteralPath "$control/native-cache/results" -Filter '*.json' -File){
         $value=Get-Content -LiteralPath $file.FullName -Raw|ConvertFrom-Json
         if($value.phase -notin @('healthy','blocked')){throw 'A native request remains active or ambiguous'}
@@ -128,6 +129,12 @@ try{
     # The actual candidate gate installs and verifies its own isolation before
     # executing anything. A second disposable firewall probe added no assurance.
     . (Join-Path $bundle 'KESAS-VPS-Server/Update.Common.ps1')
+    . (Join-Path $bundle 'Aetherfront-RC44-Work/Deployment/Review-NativeRollback.ps1')
+    if([IO.File]::Exists((Join-Path $deployment '.update-transaction.json'))){
+        Report-Local 'reviewing-native-rollback'
+        $recoveryRecord=Join-Path 'C:\ProgramData\Aetherfront-VPSLocalPublisher\Status-v3' ([IO.Path]::GetFileNameWithoutExtension($ReportPath)+'.native-recovery.json')
+        $report.nativeRecovery=Complete-ReviewedNativeRollback $deployment $recoveryRecord
+    }
     . (Join-Path $bundle 'Aetherfront-RC44-Work/Deployment/Test-PreparedCandidate.ps1')
     Report-Local 'local-mode-reload'
     # The live bridge atomically replaces this file. Use the same bounded,

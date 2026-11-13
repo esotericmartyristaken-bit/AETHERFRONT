@@ -328,8 +328,13 @@ function Start-UpdatedServer([string]$Root,$Config) {
         Start-Sleep -Milliseconds 500
     }
     $null=@(Get-UpdateServiceProcesses $Root $Config)
-    & "$Root/CertificateTool/ApfCertificateTool.exe" --probe-server "https://127.0.0.1:$($Config.packPort)/health" $Config.certificateSha256
-    if($LASTEXITCODE -ne 0){throw 'Updated HTTPS service failed its pinned health check'}
+    if($PSVersionTable.PSVersion.Major -ge 7){
+        . (Join-Path $UpdateCodeRoot 'Update.ManagedHealth.ps1')
+        $null=Assert-UpdatedHealth ([int]$Config.packPort) ([string]$Config.certificateSha256)
+    }else{
+        & "$Root/CertificateTool/ApfCertificateTool.exe" --probe-server "https://127.0.0.1:$($Config.packPort)/health" $Config.certificateSha256
+        if($LASTEXITCODE -ne 0){throw 'Updated HTTPS service failed its pinned health check'}
+    }
 }
 function Assert-UpdateKeyPair([string]$Root) {
     $privatePath=Get-UpdateChildPath $Root 'secrets/update-signing-private.xml'
