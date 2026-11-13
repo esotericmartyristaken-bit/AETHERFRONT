@@ -132,7 +132,7 @@ try{
     . (Join-Path $bundle 'Aetherfront-RC44-Work/Deployment/Review-NativeRollback.ps1')
     if([IO.File]::Exists((Join-Path $deployment '.update-transaction.json'))){
         Report-Local 'reviewing-native-rollback'
-        $recoveryRecord=Join-Path 'C:\ProgramData\Aetherfront-VPSLocalPublisher\Status-v3' ([IO.Path]::GetFileNameWithoutExtension($ReportPath)+'.native-recovery.json')
+        $recoveryRecord=Join-Path 'C:\ProgramData\Aetherfront-VPSLocalPublisher\Status-v3' ($ArchiveSha256+'.native-recovery.json')
         $report.nativeRecovery=Complete-ReviewedNativeRollback $deployment $recoveryRecord
     }
     . (Join-Path $bundle 'Aetherfront-RC44-Work/Deployment/Test-PreparedCandidate.ps1')
@@ -162,6 +162,10 @@ try{
     Initialize-PCNative
     . (Join-Path $PSScriptRoot 'CompletedHealth.ps1')
     $report.completedHttps=Assert-CompletedLocalHttps $evidence
+    . (Join-Path $bundle 'Aetherfront-RC44-Work/Deployment/Measure-ReleasePreservation.ps1')
+    $preservationRecord=Join-Path 'C:\ProgramData\Aetherfront-VPSLocalPublisher\Status-v3' ($ArchiveSha256+'.preservation.json')
+    $report.preservation=Measure-ReleasePreservation $deployment $feed.version $preservationRecord
+    if(-not $report.preservation.checksPassed){throw 'Release is serving; player-state preservation evidence needs review. No automatic progress reset was attempted.'}
     $completion=Join-Path $bundle 'completion.json'
     [IO.File]::WriteAllText($completion,(@{version=$feed.version;notes=$Notes}|ConvertTo-Json),[Text.UTF8Encoding]::new($false))
     & $node (Join-Path $bundle 'Aetherfront-RC44-Work/Deployment/LocalBridge.mjs') complete $BotConfig $completion
