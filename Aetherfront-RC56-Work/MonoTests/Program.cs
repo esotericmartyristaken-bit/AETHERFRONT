@@ -88,22 +88,31 @@ class Program
   capture.UnpatchAll("aetherfront.rc59.capture-native-queue");
   var factory = new ClientMessageFactory();
   var source = factory.CreateNewMessageData<WarpNewSubspaceMsgData>(); source.PlayerCreator = "MonoFixture"; source.SubspaceKey = 12; source.ServerTimeDifference = 500;
-  BoundaryWire.Set(source, 12345, 98765);
+  BoundaryWire.Set(source, 12345, 98765,700);
   var write = (NetOutgoingMessage)Activator.CreateInstance(typeof(NetOutgoingMessage), true);
   var data = typeof(NetBuffer).GetField("m_data", BindingFlags.Instance | BindingFlags.NonPublic); data.SetValue(write, new byte[256]);
   typeof(WarpNewSubspaceMsgData).GetMethod("InternalSerialize", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(source, new object[] { write });
   var read = (NetIncomingMessage)Activator.CreateInstance(typeof(NetIncomingMessage), true); data.SetValue(read, (byte[])write.Data.Clone()); read.LengthBits = write.LengthBits;
   var target = factory.CreateNewMessageData<WarpNewSubspaceMsgData>();
   typeof(WarpNewSubspaceMsgData).GetMethod("InternalDeserialize", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(target, new object[] { read });
-  Check(BoundaryWire.Session(target) == 12345 && BoundaryWire.Request(target) == 98765 && target.SubspaceKey == 12, "identified warp wire framing round trip");
+  Check(BoundaryWire.Session(target) == 12345 && BoundaryWire.Request(target) == 98765 && target.SubspaceKey == 12&&BoundaryWire.MissionTime(target)==700, "identified warp wire and protected mission-time anchor round trip");
   var before = new AetherfrontState { ServerId = "mono-fixture", Revision = 1 };
   before.Crafts.Add(new CraftRecord { Id = "craft", Name = "Before", Revision = 1 });
   var after = AetherfrontJson.Deserialize<AetherfrontState>(AetherfrontJson.Serialize(before)); after.Revision = 2; after.Crafts[0].Name = "After"; after.Crafts[0].Revision++;
   var delta = StateDelta.Between(before, after); var decoded = AetherfrontJson.Deserialize<StateDelta>(AetherfrontJson.Serialize(delta));
   Check(AetherfrontJson.Serialize(decoded.Apply(before)) == AetherfrontJson.Serialize(after), "client JsonFx delta decoding reconstructs exact state");
   var policy = new WarpRecoveryPolicy(); policy.Begin(1, 2, 3, 100, 0);
-  Check(policy.Expired(30) && policy.CanAccept(1, 2, 3, 1, 100, 1), "timely ACK survives a delayed Unity frame");
+  Check(policy.Expired(200) && policy.CanAccept(1, 2, 3, 1, 100, 1), "timely ACK survives a delayed Unity frame");
+  policy.Begin(1,2,3,100,0,700);
+  Check(policy.CanAcceptMission(1,2,3,1,-25,700,125)&&!policy.CanAcceptMission(1,2,3,1,-25,2700,125),"multi-minute stall does not advance protected mission time or admit warp overshoot");
+  Check(!WarpRecoveryPolicy.RealTimeReady(0,100000,false)&&!WarpRecoveryPolicy.RealTimeReady(0,7.1,false)&&WarpRecoveryPolicy.RealTimeReady(0,1,false),"warp index-zero deceleration cannot begin synchronization early");
   policy.Cancel(); Check(!policy.Expired(300), "cancelled scene/termination boundary cannot expire later");
+  var epochType=AppDomain.CurrentDomain.GetAssemblies().SelectMany(a=>a.GetTypes()).First(t=>t.FullName=="Aetherfront.Continuity.SurvivalEpoch");
+  var oldEpoch=Activator.CreateInstance(epochType,new object[]{"MonoFixture",3.5,500d});
+  var nowMethod=epochType.GetMethod("Now");double survival=(double)nowMethod.Invoke(oldEpoch,new object[]{"MonoFixture",3.5});
+  var rebased=Activator.CreateInstance(epochType,new object[]{"MonoFixture",700000000d,survival});
+  Check((double)nowMethod.Invoke(rebased,new object[]{"MonoFixture",700000000d})==500d&&
+   (double)nowMethod.Invoke(rebased,new object[]{"MonoFixture",700000005d})==505d,"initial authenticated clock-origin rebase preserves virtual crew age, then advances only actual simulated seconds");
   File.WriteAllText(Path.Combine(fixture, "mono-results.txt"), DateTime.UtcNow.ToString("O") + " checks=" + checks + "; preparedMethods=" + methods + "; no Unity flight scene was launched\n");
   Console.WriteLine("PASS " + checks + " actual KSP Mono checks; " + methods + " methods prepared. This is not a rendered flight test.");
  }

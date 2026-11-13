@@ -28,7 +28,7 @@ namespace Aetherfront.Stability.Client
     [DefaultExecutionOrder(-20000)]
     public sealed class FlightSafety : MonoBehaviour
     {
-        sealed class Ack { internal int Generation, Id; internal long Session, Request; internal double Offset, Received; }
+        sealed class Ack { internal int Generation, Id; internal long Session, Request; internal double Offset, Received, MissionTime; }
         static readonly ConcurrentQueue<Ack> Acknowledgements = new ConcurrentQueue<Ack>();
         static readonly WarpRecoveryPolicy Recovery = new WarpRecoveryPolicy();
         static readonly PropertyInfo GenerationProperty = AccessTools.Property(typeof(NetworkConnection), "ConnectionGeneration");
@@ -48,6 +48,10 @@ namespace Aetherfront.Stability.Client
         static string failure;
         float nextSnapshot;
         static double topologyRecoveryAt;
+        static bool initializingFlight;
+        static double sceneClockAnchor=double.NaN;
+        static readonly MethodInfo CancelAutoWarp=AccessTools.Method(typeof(TimeWarp),"CancelAutoWarp",Type.EmptyTypes);
+        public static bool ClockReady => !initializingFlight;
         sealed class Lifecycle
         {
             internal void SceneRequested(GameScenes scene) => FlightSafety.SceneRequested(scene);
@@ -58,13 +62,14 @@ namespace Aetherfront.Stability.Client
         static readonly Lifecycle Listener = new Lifecycle();
         static bool Running => MainSystem.NetworkState == ClientState.Running;
         public static bool Holding => held;
-        public static bool SimulationProtected => held || aligning || transitioning || disconnectRequested || Recovery.Pending;
+        public static bool SimulationProtected => held || aligning || transitioning || initializingFlight || disconnectRequested || Recovery.Pending;
         public static int ProtectionGeneration => CurrentGeneration;
         public static void CaptureTopologyRecovery(string reason) { SaveRecovery(reason); }
         public static void RequestTopologyRecovery() { topologyRecoveryAt = Now + 0.5; }
         public static string Failure => failure;
         static int CurrentGeneration => (int)GenerationProperty.GetValue(null, null);
         static double Now => (double)System.Diagnostics.Stopwatch.GetTimestamp() / System.Diagnostics.Stopwatch.Frequency;
+        static bool WarpSettled => WarpRecoveryPolicy.RealTimeReady(TimeWarp.CurrentRateIndex,TimeWarp.CurrentRate,FlightDriver.Pause);
 
         public void Awake()
         {
@@ -102,6 +107,7 @@ namespace Aetherfront.Stability.Client
                 Patch(harmony, AccessTools.Method(typeof(WarpSystem), "CheckWarpStopped"), nameof(ReplaceStuckCheck));
                 Patch(harmony, AccessTools.Method(typeof(TimeSyncSystem), "CheckGameTime"), nameof(AllowClockTick));
                 Patch(harmony, AccessTools.Method(typeof(TimeSyncSystem), "SetGameTime"), nameof(AllowSetTime));
+                harmony.Patch(AccessTools.Method(typeof(TimeSyncSystem),"SetGameTime"),finalizer:new HarmonyMethod(typeof(FlightSafety),nameof(AfterSetTime)));
                 Patch(harmony, AccessTools.Method(typeof(TimeWarp), "SetRate", new[] { typeof(int), typeof(bool), typeof(bool) }), nameof(AllowWarpRate));
                 harmony.Patch(AccessTools.Method(typeof(WarpEvents), "OnTimeWarpChanged"), postfix: new HarmonyMethod(typeof(FlightSafety), nameof(AfterWarpRate)));
                 Patch(harmony, AccessTools.Method(typeof(FlightDriver), "SetPause", new[] { typeof(bool), typeof(bool) }), nameof(AllowPause));
@@ -110,6 +116,7 @@ namespace Aetherfront.Stability.Client
                 Patch(harmony, AccessTools.Method(typeof(VesselPositionUpdate), "UpdateVesselWithPositionData"), nameof(AllowPosition));
                 Patch(harmony, AccessTools.Method(typeof(NetworkConnection), "Disconnect", new[] { typeof(string) }), nameof(BeforeDisconnect));
                 Patch(harmony, AccessTools.Method(typeof(MainSystem), "StopGame"), nameof(BeforeStopGame));
+                harmony.Patch(AccessTools.Method(typeof(MainSystem),"StopGame"),finalizer:new HarmonyMethod(typeof(FlightSafety),nameof(AfterStopGame)));
                 var oldAlignment = AccessTools.TypeByName("Aetherfront.Continuity.Client.ClockTransitionCompatibility");
                 if (oldAlignment == null) throw new TypeLoadException("Shipping clock compatibility missing.");
                 Patch(harmony, AccessTools.Method(oldAlignment, "Update"), nameof(ReplaceStuckCheck));
@@ -118,6 +125,7 @@ namespace Aetherfront.Stability.Client
                 SnapshotClient.Install(harmony);
                 CheckpointReconnect.Install(harmony);
                 CrewSaveRecovery.Install(harmony);
+                VesselPersistence.Install(harmony);
                 // A starter client may not have installed the pack yet. Do not
                 // JIT a third-party type until KSP has loaded that assembly;
                 // installation still restarts KSP before multiplayer admission.
@@ -145,14 +153,27 @@ namespace Aetherfront.Stability.Client
             QueueOutgoing.Invoke(null, new object[] { envelope, current });
             return false;
         }
-        static bool AllowClockTick() => !held;
+        static bool OwnFlight => Running&&HighLogic.LoadedSceneIsFlight&&FlightGlobals.ActiveVessel!=null&&!VesselCommon.IsSpectating;
+        static bool AllowClockTick()
+        {
+            if(held)return false;
+            if(OwnFlight&&!initializingFlight)
+            {
+                // Personal mission time follows the actual physics simulation,
+                // not server wall time. Never jump a burning/slow ship forward
+                // just because its physics cannot maintain wall-clock speed.
+                if(!FlightDriver.Pause&&Time.timeScale>=0.85f&&Time.timeScale<=1.2f)Time.timeScale=1;
+                return false;
+            }
+            return true;
+        }
         static bool CaptureAck(IServerMessageBase msg)
         {
             if (!Running || !(msg?.Data is WarpNewSubspaceMsgData data) || data.PlayerCreator != SettingsSystem.CurrentSettings.PlayerName) return true;
             // Copy values now: the network handler recycles its message after this call.
             if (Acknowledgements.Count < 64)
                 Acknowledgements.Enqueue(new Ack { Generation = CurrentGeneration, Id = data.SubspaceKey, Offset = data.ServerTimeDifference,
-                    Session = BoundaryWire.Session(data), Request = BoundaryWire.Request(data), Received = Now });
+                    Session = BoundaryWire.Session(data), Request = BoundaryWire.Request(data), MissionTime=BoundaryWire.MissionTime(data),Received = Now });
             else disconnectRequested = true;
             return false;
         }
@@ -167,7 +188,7 @@ namespace Aetherfront.Stability.Client
                 {
                     if (Acknowledgements.Count < 64)
                         Acknowledgements.Enqueue(new Ack { Generation = __1, Id = data.SubspaceKey, Offset = data.ServerTimeDifference,
-                            Session = BoundaryWire.Session(data), Request = BoundaryWire.Request(data), Received = Now });
+                            Session = BoundaryWire.Session(data), Request = BoundaryWire.Request(data), MissionTime=BoundaryWire.MissionTime(data),Received = Now });
                     else disconnectRequested = true;
                 }
             }
@@ -177,7 +198,7 @@ namespace Aetherfront.Stability.Client
         static bool SendBoundary()
         {
             if (!Running) return true;
-            if (transitioning || !ReadyForBoundary()) return false;
+            if (transitioning || initializingFlight || !ReadyForBoundary() || !WarpSettled) return false;
             if (!MainSystem.IsUnityThread) { disconnectRequested = true; return false; }
             if (!Recovery.Pending)
             {
@@ -187,9 +208,8 @@ namespace Aetherfront.Stability.Client
                 { stableOffset = currentOffset; hasStableOffset = true; }
                 double naturalProposal = Planetarium.GetUniversalTime() - TimeSyncSystem.ServerClockSec;
                 double proposal = naturalProposal;
-                if (hasStableOffset) proposal = Math.Max(proposal, stableOffset);
                 EnsureSession();
-                Recovery.Begin(CurrentGeneration, session, checked(++nextRequest), proposal, Now);
+                Recovery.Begin(CurrentGeneration, session, checked(++nextRequest), proposal, Now,Planetarium.GetUniversalTime());
                 forwardBudget = WarpRecoveryPolicy.ForwardBudget(naturalProposal, proposal, SafeToCatchUp());
                 recoveryNotice = false;
                 Hold();
@@ -219,7 +239,7 @@ namespace Aetherfront.Stability.Client
             var message = NetworkMain.CliMsgFactory.CreateNewMessageData<WarpNewSubspaceMsgData>();
             message.PlayerCreator = SettingsSystem.CurrentSettings.PlayerName;
             message.ServerTimeDifference = Recovery.Proposal;
-            BoundaryWire.Set(message, Recovery.Session, Recovery.Request);
+            BoundaryWire.Set(message, Recovery.Session, Recovery.Request,Recovery.MissionTime);
             QueueWarp(message);
             Debug.Log("[Aetherfront Stability] Warp boundary queued; generation=" + CurrentGeneration + "; request=" + Recovery.Request);
         }
@@ -232,10 +252,21 @@ namespace Aetherfront.Stability.Client
             if (own) { VesselPositionSystem.Singleton.RemoveVessel(__instance.VesselId); return false; }
             return true;
         }
-        static bool AllowSetTime(double targetTick)
+        static bool AllowSetTime(double targetTick,out ClockBirthAlignment.Lease __state)
         {
+            __state=null;
             if (!Running || aligning || !HighLogic.LoadedSceneIsFlight) return true;
             if (held) return false;
+            if(initializingFlight)
+            {
+                var warp=WarpSystem.Singleton;
+                double selected=warp.CurrentSubspace>=0&&warp.Subspaces.ContainsKey(warp.CurrentSubspace)?warp.CurrentSubspaceTime:double.NaN;
+                if(WarpRecoveryPolicy.Finite(selected)&&WarpRecoveryPolicy.Finite(targetTick)&&targetTick>=0&&Math.Abs(targetTick-selected)<=3.5&&
+                    (!WarpRecoveryPolicy.Finite(sceneClockAnchor)||targetTick>=sceneClockAnchor-3.5))
+                {__state=ClockBirthAlignment.Begin(FlightGlobals.ActiveVessel,Planetarium.GetUniversalTime(),targetTick);initializingFlight=false;return true;}
+                return false;
+            }
+            if(OwnFlight)return false;
             double delta = targetTick - Planetarium.GetUniversalTime();
             if (!WarpRecoveryPolicy.Finite(targetTick))
             {
@@ -245,6 +276,15 @@ namespace Aetherfront.Stability.Client
             if (delta < -0.05 || delta > 3.5) { SendBoundary(); return false; }
             return true;
         }
+        static Exception AfterSetTime(Exception __exception,ClockBirthAlignment.Lease __state)
+        {
+            if(__exception!=null&&__state!=null)
+            {
+                if(Math.Abs(Planetarium.GetUniversalTime()-__state.OldUT)<0.05)__state.Rollback();
+                initializingFlight=true;
+            }
+            return __exception;
+        }
         static bool AllowWarpRate(int __0) => !held || aligning || __0 == 0;
         static bool AllowPause(bool __0)
         {
@@ -253,19 +293,28 @@ namespace Aetherfront.Stability.Client
         }
         static bool AllowProtectedNativePause(ref bool __result)
         { if (!held && !aligning) return true; __result = true; return false; }
-        static void AfterWarpRate() { if (Running && MainSystem.IsUnityThread && TimeWarp.CurrentRateIndex == 0 && WarpSystem.Singleton.CurrentSubspace == -1) SendBoundary(); }
-        static void BeforeDisconnect() { disconnectRequested = true; if (MainSystem.IsUnityThread && HighLogic.LoadedSceneIsFlight) ProtectDisconnect(); }
+        static void AfterWarpRate() { if (Running && MainSystem.IsUnityThread && WarpSettled && WarpSystem.Singleton.CurrentSubspace == -1) SendBoundary(); }
+        static void BeforeDisconnect()
+        {
+            if(!Running&&!held&&!Recovery.Pending)return;
+            disconnectRequested = true;
+            CheckpointReconnect.NotifyDisconnect();
+            if (MainSystem.IsUnityThread && HighLogic.LoadedSceneIsFlight) ProtectDisconnect();
+        }
         static void BeforeStopGame()
         {
-            if (HighLogic.LoadedSceneIsFlight) ProtectDisconnect();
+            if (HighLogic.LoadedSceneIsFlight&&!CheckpointReconnect.Exiting) ProtectDisconnect();
             CancelBoundary(); transitioning = true;
         }
+        static Exception AfterStopGame(Exception __exception)
+        {if(__exception==null)CompleteMenuExit();else CheckpointReconnect.NotifyDisconnect();return __exception;}
         static void ProtectDisconnect() { SaveRecovery("disconnect"); Hold(); }
         static void Hold()
         {
-            if (!HighLogic.LoadedSceneIsFlight) return;
+            if (!HighLogic.LoadedSceneIsFlight||FlightGlobals.ActiveVessel==null) return;
             if (!held)
             {
+                if(TimeWarp.fetch!=null&&CancelAutoWarp!=null)CancelAutoWarp.Invoke(TimeWarp.fetch,null);
                 protectedVessel = FlightGlobals.ActiveVessel == null ? Guid.Empty : FlightGlobals.ActiveVessel.id;
                 Lease.Begin(protectedVessel, FlightDriver.Pause, Time.timeScale, FlightInputHandler.state.mainThrottle);
             }
@@ -288,7 +337,7 @@ namespace Aetherfront.Stability.Client
         {
             bool ownedBoundary=Recovery.Pending || held || session!=0;
             Recovery.Cancel();
-            if(ownedBoundary && !ReferenceEquals(MainSystem.Singleton,null))WarpSystem.Singleton.WaitingSubspaceIdFromServer = false;
+            if(ownedBoundary && Running && !ReferenceEquals(MainSystem.Singleton,null))WarpSystem.Singleton.WaitingSubspaceIdFromServer = false;
             while (Acknowledgements.TryDequeue(out _)) { }
         }
         static void ReleaseOwnedHold(bool completed)
@@ -308,6 +357,12 @@ namespace Aetherfront.Stability.Client
         static void SceneRequested(GameScenes next)
         {
             if (!installed) return;
+            if(next==GameScenes.FLIGHT&&MainSystem.NetworkState>=ClientState.Starting)
+            {
+                var warp=WarpSystem.Singleton;
+                sceneClockAnchor=warp.CurrentSubspace>=0&&warp.Subspaces.ContainsKey(warp.CurrentSubspace)?warp.CurrentSubspaceTime:Planetarium.GetUniversalTime();
+                initializingFlight=true;
+            }
             if (Recovery.Pending || held) SaveRecovery("scene-transition");
             CancelBoundary(); transitioning = true;
             // Keep flight frozen until Unity has actually left it. Update runs unscaled.
@@ -316,6 +371,17 @@ namespace Aetherfront.Stability.Client
         {
             observedScene = scene; transitioning = false;
             if (!HighLogic.LoadedSceneIsFlight) ReleaseOwnedHold(false);
+        }
+        public static void CompleteMenuExit()
+        {
+            // Native StopGame has already cleared the departing vessel lists.
+            // Releasing our old scene lease now cannot publish or resume it.
+            CancelBoundary();initializingFlight=false;
+            if(!held)return;
+            var release=Lease.EndScene(FlightDriver.Pause,Time.timeScale);
+            held=false;aligning=true;
+            try{if(release.Unpause)FlightDriver.SetPause(false,false);if(release.RestoreScale)Time.timeScale=release.Scale;}
+            finally{aligning=false;protectedVessel=Guid.Empty;}
         }
         static void VesselDestroyed(Vessel vessel)
         {
@@ -353,6 +419,9 @@ namespace Aetherfront.Stability.Client
                 if (reason == "periodic" || reason == "warp-boundary")
                 { owned.Clear(); if (!VesselCommon.IsSpectating) owned.Add(FlightGlobals.ActiveVessel.id); }
                 int count = 0, skipped = 0;
+                if(reason=="disconnect"||reason=="sync-failure"||reason=="manual-safe-exit")
+                    owned.RemoveWhere(id=>id!=FlightGlobals.ActiveVessel.id&&FlightGlobals.FindVessel(id)?.loaded!=true);
+                root.AddValue("scope","active-and-requested-owned-vessels");
                 foreach (var vessel in FlightGlobals.Vessels.Where(v => v != null && owned.Contains(v.id)))
                 {
                     try
@@ -435,16 +504,24 @@ namespace Aetherfront.Stability.Client
             if (!Running) { CancelBoundary(); if (held && HighLogic.LoadedSceneIsFlight) Hold(); return; }
             if (transitioning) return;
             var warp = WarpSystem.Singleton;
+            if(initializingFlight&&ReadyForBoundary()&&HighLogic.LoadedSceneIsFlight&&warp.CurrentSubspace>=0&&warp.Subspaces.ContainsKey(warp.CurrentSubspace))
+            {
+                double selected=warp.CurrentSubspaceTime;
+                if(WarpRecoveryPolicy.Finite(selected)&&selected>=sceneClockAnchor-3.5)TimeSyncSystem.Singleton.SetGameTime(selected);
+                if(initializingFlight)return;
+                Debug.Log("[Aetherfront Stability] Initial flight clock aligned to authenticated personal session before boundary publication.");
+            }
             if (warp.CurrentSubspace >= 0 && !Recovery.Pending && warp.Subspaces.TryGetValue(warp.CurrentSubspace, out var offset))
             { stableOffset = offset; hasStableOffset = true; }
             while (Acknowledgements.TryDequeue(out var ack))
             {
-                if (!Recovery.CanAccept(ack.Generation, ack.Session, ack.Request, ack.Id, ack.Offset, ack.Received) || TimeWarp.CurrentRateIndex != 0)
+                if (!Recovery.CanAcceptMission(ack.Generation, ack.Session, ack.Request, ack.Id, ack.Offset,ack.MissionTime, ack.Received))
                 {
                     Debug.LogWarning("[Aetherfront Stability] Stale or invalid boundary acknowledgement ignored; generation=" + ack.Generation + "; request=" + ack.Request + "; pending=" + Recovery.Pending);
                     continue;
                 }
-                double target = TimeSyncSystem.ServerClockSec + ack.Offset, now = Planetarium.GetUniversalTime();
+                if(!WarpSettled){Acknowledgements.Enqueue(ack);break;}
+                double target = ack.MissionTime, now = Planetarium.GetUniversalTime();
                 if (!WarpRecoveryPolicy.Finite(target) || target < now - 0.05 || target - now > forwardBudget)
                 { Fail("Warp acknowledgement does not match the protected flight clock. Reconnect to recover."); break; }
                 aligning = true;
@@ -454,7 +531,7 @@ namespace Aetherfront.Stability.Client
                         FlightGlobals.ActiveVessel.AdvanceShipPosition(target);
                     warp.Subspaces[ack.Id] = ack.Offset;
                     warp.WaitingSubspaceIdFromServer = false; warp.SkipSubspaceProcess = true; warp.CurrentSubspace = ack.Id;
-                    TimeSyncSystem.Singleton.SetGameTime(Math.Max(now, target));
+                    if(target>now+0.000001)TimeSyncSystem.Singleton.SetGameTime(target);
                     Recovery.Accepted(ack.Id); stableOffset = ack.Offset; hasStableOffset = true;
                     LmpClient.Events.WarpEvent.onTimeWarpStopped.Fire();
                     ReleaseOwnedHold(true);
@@ -468,13 +545,12 @@ namespace Aetherfront.Stability.Client
             {
                 Hold();
                 if (!recoveryNotice && Now - Recovery.Started >= 1.5)
-                { recoveryNotice = true; ScreenMessages.PostScreenMessage("Synchronizing mission time. Flight safely held (up to 15 seconds).", 12, ScreenMessageStyle.UPPER_CENTER); }
-                if (Recovery.Expired(Now)) Fail("Warp acknowledgement timed out after 15 seconds. Flight held and local recovery preserved; reconnect to resynchronize.");
+                { recoveryNotice = true; ScreenMessages.PostScreenMessage("Waiting for server confirmation. Flight is protected; safe exit remains available.", 12, ScreenMessageStyle.UPPER_CENTER); }
+                if (Recovery.Expired(Now)) Fail("Server synchronization did not recover within 180 seconds. Returning safely to the menu; local recovery preserved.");
                 else SendIfDue();
             }
-            else if (!held && ReadyForBoundary() && warp.CurrentSubspace == -1 && TimeWarp.CurrentRateIndex == 0) SendBoundary();
-            else if (!held && warp.CurrentSubspace >= 0 && HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && TimeWarp.CurrentRateIndex == 0 &&
-                Math.Abs(warp.CurrentSubspaceTime - Planetarium.GetUniversalTime()) > 3.5) SendBoundary();
+            else if (!held && ReadyForBoundary() && warp.CurrentSubspace == -1 && WarpSettled) SendBoundary();
+            VesselPersistence.Tick();
             if (!held && Time.realtimeSinceStartup >= nextSnapshot && HighLogic.LoadedSceneIsFlight)
             { nextSnapshot = Time.realtimeSinceStartup + 30; SaveRecovery("periodic"); }
         }

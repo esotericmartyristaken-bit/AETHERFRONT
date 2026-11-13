@@ -30,5 +30,16 @@ namespace Aetherfront.Synchronization
             result.Throttle = throttleBefore;
             Active = false; Vessel = Guid.Empty; return result;
         }
+        public HoldRelease EndScene(bool paused,float scale)
+        {
+            // A pause requested in the departing flight is not a pause lease
+            // for the next menu. Release only the pause/scale this guard owned;
+            // never restore throttle while discarding that flight scene.
+            var result=new HoldRelease();if(!Active)return result;
+            result.Unpause=pauseOwned&&paused;
+            result.RestoreScale=scaleOwned&&scale==0;
+            result.Scale=scaleBefore>0?scaleBefore:1;
+            Active=false;Vessel=Guid.Empty;return result;
+        }
     }
 }

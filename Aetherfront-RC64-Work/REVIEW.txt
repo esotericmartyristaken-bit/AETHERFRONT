@@ -1,0 +1,98 @@
+RC64 full-chain review, prepared 2026-11-13 UTC
+
+Scope and evidence
+Two supplied KSP sessions, KSP(5).log and KSP(6).log, plus matching
+VesselSyncLog.txt were copied from the shared Music directory. A stable copy
+of lmpserver_2026-11-13_09-50-54.log supports the server-side timing analysis.
+Evidence and build outputs are under UpdateBuilds/RC64-FullChain-20261113.
+The matching native inputs are the exact published RC63 archive, SHA-256
+a2b5be67db4be80d490758f559c2ffcaa3f0b03816d0ab34643497ca8ddd6532.
+This is not evidence that every historical screenshot represents that same
+session, nor that TDM199 actually lost 3000 authoritative science.
+
+Confirmed mechanisms and corrections
+1. The server recorded fleet/store holds near 120 seconds, far longer than the
+   client's 15-second boundary deadline. Native recovery compaction repeatedly
+   parsed complete historical states under the gameplay transaction lock.
+   RC64 validates bounded recovery history once at startup, caches eight trusted
+   committed frames, and compacts those bytes without rebuilding old graphs.
+   Primary transaction ordering, durable flush, atomic replacement, recovery
+   frames, save-failure rejection, craft authority and tombstones remain intact.
+   Invalid optional history cannot prevent a valid primary from booting; it is
+   retained until eight trusted live frames can replace it safely.
+2. KSP reported warp index zero with actual rate still 100000, then acknowledged
+   one timeline before another approximately 2000-second advance. RC64 waits for
+   the actual rate to settle. Identified boundaries carry an explicit protected
+   mission UT; receipt processing no longer adds server/queue wall time to it.
+   Matching receive-time acknowledgements are processed before timeout. A
+   180-second bounded hold allows transient multi-minute server stalls, but the
+   timeout increase is not the principal correction. Replays do not allocate
+   additional timelines. A narrow, in-progress identified publication exception
+   replaces offset-only rollback rejection; arbitrary stale joins remain guarded.
+3. Own-flight mission clocks now follow authorized position-reported simulated
+   UT, not elapsed server wall time. Durable high-water clocks remain monotonic.
+   Ordinary slow physics no longer repeatedly requests complete boundaries or
+   jumps a burning ship forward to catch a wall clock. Initial launch alignment
+   installs the authenticated clock before publication rather than proposing
+   stock UT zero. Existing virtual survival age, frozen timer domain and launch
+   epoch are preserved when that initial clock origin changes.
+4. Every active-flight disconnect requests unscaled native main-menu teardown.
+   Failed teardown retries instead of leaving a permanent frozen frame. Only
+   guard-owned controls are released, after native vessel lists are cleared;
+   throttle is never restored into the discarded scene. Correlated checkpoint
+   reconnect and bounded local-failure reconnect remain available. Ordinary
+   server kicks do not start an unrestricted reconnect loop.
+5. The exact RC63 sender already captured and serialized Unity state in order
+   with generation-bound queue admission. An older-source proposed replacement
+   was removed after shipping-binary inspection and runtime testing. RC64 retains
+   that implementation and adds one complete active owned-vessel publication
+   every ten seconds, after its clock is ready and outside a synchronization
+   hold/warp. This supplements native part-count/event triggers for panel,
+   deployment, freeze and module changes. Existing incremental fleet/state
+   transfer deduplication and revision-based snapshots are retained.
+6. Stock research had a 32-intent cliff, disconnect clearing and permanent retry
+   pause that removed projected purchases. RC64 retains up to 4096 bounded
+   intents, durably saved per server/account before request admission. Reconnect
+   requires a fresh authoritative snapshot. Same-sequence retries retain command
+   identity; a price increase requires new consent. Only authoritative unlocks
+   confirm purchases. Wallet and sequence validation remain server-side.
+   Local disk failure blocks new sends with an explicit retrying status instead
+   of silently claiming a durable intent. Unknown/corrupt local files are retained.
+
+Validation completed against Build-v5, before publication
+91 native journal assertions, including durable primary failure, recovery ordering,
+malformed frames, eight corrupt recovery states, and safe history replenishment.
+20 native authenticated clock assertions, including 125-second simulated server
+stall, exact protected UT, duplicate request, old session, offset-rollback scope,
+stale position and durable disconnect checkpoint.
+13 actual KSP Mono integration checks; 335 helper methods prepared and complete
+Harmony installation against shipping dependencies. Actual wire/envelope round
+trip, delayed Unity-frame ACK, index-zero deceleration, cancelled boundary and
+survival epoch preservation were exercised.
+147 research assertions under actual KSP Mono and grafted personal assembly,
+including 64 purchases, exact charges, delayed confirmations, reconnect freshness,
+command identity, price consent, bounds and complete private journal JsonFx schema.
+62 actual-mod burn/save/orbit checks, including synchronization holds, stale
+reconnect authorization, resource rollback and unrelated science field retention.
+7 installer startup checks; all 193 existing public members and 65 shipping
+installer references resolved. RC63 installer bytes are unchanged.
+All unrelated methods/resources are audited by the pinned-input graft tool.
+No production state was modified by these component tests.
+
+Limits and operational safeguards
+These are native/runtime/component tests, not a rendered replay of the affected
+144-part flight. A live-player launch, long burn, staged/retracted/frozen-state
+reconnect and checkpoint restore still require in-game acceptance testing.
+Historical crew/craft restoration cannot be chosen unambiguously from these
+logs. No crew resurrection, craft duplication, clock reset or progress reset is
+included. Existing server checkpoints and local recovery files are preserved.
+Complete vessel snapshots are application-queue admitted, not a new durable
+server receipt protocol; an abrupt hard crash can still lose the latest interval.
+The observed 310.030 ms maximum in the small 80-commit journal fixture is not a
+production-scale latency guarantee. Real server timing must be checked after
+deployment; protected live state was not made readable to bypass its ACL.
+
+Publication must use one clean pushed source commit and the exact RC64 archive,
+the installed v3 approval task, isolated candidate boot, signed client update,
+durable rollback backup, and health/preservation checks. Warn for 15 minutes if
+players are online. Keep arenas disabled. Do not swap live DLLs manually.

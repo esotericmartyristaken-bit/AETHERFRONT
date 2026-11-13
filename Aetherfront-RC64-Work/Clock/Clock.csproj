@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><TargetFramework>net8.0</TargetFramework><AssemblyName>ClockDonor</AssemblyName><LangVersion>latest</LangVersion></PropertyGroup>
+ <ItemGroup>
+  <Reference Include="Server"><HintPath>$(References)/Server.dll</HintPath><Private>false</Private></Reference>
+  <Reference Include="AetherfrontContinuityServer"><HintPath>$(Runtime)/AetherfrontContinuityServer.dll</HintPath><Private>false</Private></Reference>
+  <Reference Include="AetherfrontCore"><HintPath>$(Runtime)/AetherfrontCore.dll</HintPath><Private>false</Private></Reference>
+  <Reference Include="Lidgren.Core"><HintPath>$(Runtime)/Lidgren.Core.dll</HintPath><Private>false</Private></Reference>
+ </ItemGroup>
+</Project>

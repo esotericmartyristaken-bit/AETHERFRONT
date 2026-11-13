@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><TargetFramework>net472</TargetFramework><OutputType>Exe</OutputType><AssemblyName>ResearchMonoTests</AssemblyName><LangVersion>latest</LangVersion></PropertyGroup>
+ <ItemGroup>
+  <Reference Include="AetherfrontCore"><HintPath>$(Client)/AetherfrontCore.dll</HintPath><Private>false</Private></Reference>
+  <Reference Include="AetherfrontPersonalClient"><HintPath>$(Client)/AetherfrontPersonalClient.dll</HintPath><Private>false</Private></Reference>
+ </ItemGroup>
+</Project>

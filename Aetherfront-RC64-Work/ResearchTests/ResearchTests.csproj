@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><LangVersion>latest</LangVersion></PropertyGroup>
+ <ItemGroup><Compile Include="../../Aetherfront-RC46-Work/Client/ResearchQueue.cs" /></ItemGroup>
+ <ItemGroup><Reference Include="AetherfrontCore"><HintPath>$(Runtime)/AetherfrontCore.dll</HintPath></Reference></ItemGroup>
+</Project>

@@ -21,6 +21,9 @@ namespace Aetherfront.Stability.Client
         static volatile bool leaveFlight;
         static bool notice;
         static double nextSafetyReconnect;
+        static double nextExitAttempt;
+        public static bool Exiting { get; private set; }
+        public static void NotifyDisconnect(){leaveFlight=true;}
         public static void SafeExit(bool reconnect)
         {
             // Only called for our own local safety failure or explicit safe-exit
@@ -75,9 +78,9 @@ namespace Aetherfront.Stability.Client
         }
         public static void Tick()
         {
-            if (leaveFlight)
+            if (leaveFlight&&Now>=nextExitAttempt)
             {
-                leaveFlight = false;
+                nextExitAttempt=Now+0.5;Exiting=true;
                 lock (Gate) notice = Policy.Active;
                 // Native StopGame exits flight and resets its systems. Do not thaw
                 // a disconnected vessel or join the new timeline in the old scene.
@@ -90,7 +93,9 @@ namespace Aetherfront.Stability.Client
                     if (MainSystem.NetworkState != ClientState.Disconnected)
                         MainSystem.NetworkState = ClientState.Disconnected;
                     StopGame.Invoke(null, null);
+                    FlightSafety.CompleteMenuExit();
                     MainSystem.Singleton.ForceQuit = false;
+                    leaveFlight=false;
                     Debug.Log("[Aetherfront Stability] Safe disconnect confirmed; native main-menu exit requested.");
                 }
                 catch (Exception error)
@@ -100,6 +105,7 @@ namespace Aetherfront.Stability.Client
                     Debug.LogError("[Aetherfront Stability] Checkpoint menu exit failed; native safe exit remains requested: " + (error.InnerException ?? error));
                 }
             }
+            if(HighLogic.LoadedScene==GameScenes.MAINMENU)Exiting=false;
             bool connect, stopped; string target; int targetPort, attempt;
             lock (Gate)
             {

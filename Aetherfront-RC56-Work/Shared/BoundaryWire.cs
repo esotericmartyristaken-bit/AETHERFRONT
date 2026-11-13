@@ -11,15 +11,19 @@ namespace Aetherfront.Synchronization
     {
         static readonly FieldInfo SessionField = Required("BoundarySession");
         static readonly FieldInfo RequestField = Required("BoundaryRequest");
+        static readonly FieldInfo TimeField = Required("BoundaryMissionTime");
         static FieldInfo Required(string name) => typeof(WarpNewSubspaceMsgData).GetField(name)
             ?? throw new MissingFieldException(typeof(WarpNewSubspaceMsgData).FullName, name);
         public static long Session(WarpNewSubspaceMsgData data) => (long)SessionField.GetValue(data);
         public static long Request(WarpNewSubspaceMsgData data) => (long)RequestField.GetValue(data);
+        public static double MissionTime(WarpNewSubspaceMsgData data) => (double)TimeField.GetValue(data);
+        public static void Set(WarpNewSubspaceMsgData data,long session,long request,double missionTime)
+        {Set(data,session,request);TimeField.SetValue(data,missionTime);}
         public static void Set(WarpNewSubspaceMsgData data, long session, long request)
         { SessionField.SetValue(data, session); RequestField.SetValue(data, request); }
         public static void Write(WarpNewSubspaceMsgData data, NetOutgoingMessage message)
-        { message.Write(Session(data)); message.Write(Request(data)); }
+        { message.Write(Session(data)); message.Write(Request(data)); message.Write(MissionTime(data)); }
         public static void Read(WarpNewSubspaceMsgData data, NetIncomingMessage message)
-        { Set(data, message.ReadInt64(), message.ReadInt64()); }
+        { Set(data, message.ReadInt64(), message.ReadInt64(),message.ReadDouble()); }
     }
 }

@@ -1,0 +1,32 @@
+RC64 full-chain reliability work
+
+Evidence: UpdateBuilds/RC64-FullChain-20261113 (two KSP sessions, matching vessel
+sync log, stable server log). Production is RC63. No restart performed yet.
+
+Required corrections and verification gates:
+1. Journal compaction: eliminate repeated historical state deserialization in
+   the shared gameplay/store lock; retain eight validated recovery frames,
+   durable writes, monotonic commits and atomic journal replacement.
+2. Warp: stop repeated expensive boundaries for ordinary slow-flight drift;
+   receive-time/session/request matching, safe long-stall recovery, initialization
+   alignment before launch physics, no unbounded warp jumps during a hold.
+3. Disconnect: every connection-loss path must reach a usable menu, not just
+   locally generated failures. Preserve active recovery; restore only guard-owned
+   controls during teardown; checkpoint-specific reconnect remains correlated.
+4. Vessel persistence: inspection of the exact RC63 shipping binary confirmed
+   synchronous ProtoVessel serialization and captured-generation queueing already
+   exist. Preserve them rather than applying an obsolete sender replacement.
+   Publish bounded periodic full state, not only part-count drift. Preserve
+   tombstones, authority checks, crew/freeze state and existing progress.
+5. Research: no 32-node cliff, no disappearing pending purchase intent on a
+   transient disconnect, no misleading permanent pause that unprojects pending
+   nodes. Persist bounded account/server-specific intents; replay only safely
+   correlated intent against fresh authoritative state, charge once.
+6. Regressions: actual shipping API/Mono tests, delayed/stale acknowledgement and
+   multi-minute stalls, loaded-scene teardown, rapid purchases >32, restart and
+   reconnect, staged parts/module states, crew freeze state, durable save failure.
+
+Do not describe desktop/Mono component tests as a rendered Unity flight replay.
+Do not reset player clocks/progress, silently resurrect vessels/crew, or bypass
+signature, identity, approval, rollback and health checks. Deploy one matching
+client/server release after affected validation. Warn 15 minutes if occupied.

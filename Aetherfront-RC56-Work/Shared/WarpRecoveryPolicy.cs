@@ -5,7 +5,8 @@ namespace Aetherfront.Synchronization
     // Pure policy: network arrival time, not Unity frame time, decides lateness.
     public sealed class WarpRecoveryPolicy
     {
-        public const double TimeoutSeconds = 15, RetrySeconds = 2;
+        public const double TimeoutSeconds = 180, RetrySeconds = 2;
+        public double MissionTime { get; private set; }
         public bool Pending { get; private set; }
         public double Proposal { get; private set; }
         public double Started { get; private set; }
@@ -22,6 +23,11 @@ namespace Aetherfront.Synchronization
             Pending = true; Generation = generation; Session = session; Request = request;
             Proposal = proposal; Started = now; lastSent = now - RetrySeconds;
         }
+        public void Begin(int generation,long session,long request,double proposal,double now,double missionTime)
+        {if(!Finite(missionTime)||missionTime<0||missionTime>1e12)throw new ArgumentException("Finite mission time required.");Begin(generation,session,request,proposal,now);MissionTime=missionTime;}
+        public bool CanAcceptMission(int generation,long session,long request,int id,double offset,double missionTime,double received)
+            => Pending&&generation==Generation&&session==Session&&request==Request&&id>=0&&id>=LastAccepted&&Finite(offset)&&
+                Finite(received)&&received>=Started&&received-Started<TimeoutSeconds&&Finite(missionTime)&&missionTime>=MissionTime-0.01&&missionTime<=MissionTime+3.500001;
         public bool ShouldSend(double now)
         {
             if (!Pending || now - Started >= TimeoutSeconds || now - lastSent < RetrySeconds) return false;
@@ -39,5 +45,7 @@ namespace Aetherfront.Synchronization
         public void Cancel() { Pending = false; }
         public void Reset() { Pending = false; LastAccepted = -1; Session = Request = 0; }
         public static bool Finite(double value) => !double.IsNaN(value) && !double.IsInfinity(value);
+        public static bool RealTimeReady(int index,double rate,bool paused)
+            => index==0&&Finite(rate)&&(Math.Abs(rate-1)<0.001||paused&&Math.Abs(rate)<0.001);
     }
 }
