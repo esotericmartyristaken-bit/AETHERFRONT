@@ -47,6 +47,7 @@ namespace Aetherfront.Stability.Client
         static GameScenes observedScene;
         static string failure;
         float nextSnapshot;
+        static double topologyRecoveryAt;
         sealed class Lifecycle
         {
             internal void SceneRequested(GameScenes scene) => FlightSafety.SceneRequested(scene);
@@ -57,6 +58,10 @@ namespace Aetherfront.Stability.Client
         static readonly Lifecycle Listener = new Lifecycle();
         static bool Running => MainSystem.NetworkState == ClientState.Running;
         public static bool Holding => held;
+        public static bool SimulationProtected => held || aligning || transitioning || disconnectRequested || Recovery.Pending;
+        public static int ProtectionGeneration => CurrentGeneration;
+        public static void CaptureTopologyRecovery(string reason) { SaveRecovery(reason); }
+        public static void RequestTopologyRecovery() { topologyRecoveryAt = Now + 0.5; }
         public static string Failure => failure;
         static int CurrentGeneration => (int)GenerationProperty.GetValue(null, null);
         static double Now => (double)System.Diagnostics.Stopwatch.GetTimestamp() / System.Diagnostics.Stopwatch.Frequency;
@@ -75,7 +80,7 @@ namespace Aetherfront.Stability.Client
                 GameEvents.onVesselTerminated.Add(Listener.VesselTerminated);
                 observedScene = HighLogic.LoadedScene;
                 installed = true;
-                Debug.Log("[Aetherfront Stability] RC60 ordered synchronization, crew retry recovery and safe-exit lifecycle installed.");
+                Debug.Log("[Aetherfront Stability] RC61 ordered synchronization, docking/warp burn protection and safe-exit lifecycle installed.");
             }
             catch (Exception error)
             {
@@ -113,6 +118,14 @@ namespace Aetherfront.Stability.Client
                 SnapshotClient.Install(harmony);
                 CheckpointReconnect.Install(harmony);
                 CrewSaveRecovery.Install(harmony);
+                // A starter client may not have installed the pack yet. Do not
+                // JIT a third-party type until KSP has loaded that assembly;
+                // installation still restarts KSP before multiplayer admission.
+                if (AppDomain.CurrentDomain.GetAssemblies().Any(a => a.GetName().Name == "PersistentThrust"))
+                {
+                    var compatibility = typeof(FlightSafety).Assembly.GetType("Aetherfront.Stability.Client.PersistentThrustSafety", true);
+                    compatibility.GetMethod("Install").Invoke(null, new object[] { harmony });
+                }
         }
         static void Patch(Harmony harmony, MethodBase target, string prefix)
         {
@@ -352,6 +365,7 @@ namespace Aetherfront.Stability.Client
                         // A broken mod module on one stored vessel must not erase
                         // the active vessel's recovery. Never label this a complete
                         // capture or replace the last complete recovery file.
+                        Debug.LogWarning("[Aetherfront Stability] Recovery vessel capture failed: " + vessel.id + "; " + error.GetType().Name + ": " + error.Message);
                         skipped++; var missing = root.AddNode("SKIPPED_VESSEL");
                         missing.AddValue("id", vessel.id); missing.AddValue("errorType", error.GetType().Name);
                     }
@@ -367,7 +381,8 @@ namespace Aetherfront.Stability.Client
                 string text = root.ToString();
                 if (text.Length > 16777216) throw new InvalidDataException("Local recovery exceeds 16 MiB text limit; previous snapshot retained.");
                 bool failed = reason == "disconnect" || reason == "sync-failure";
-                string stem = failed ? "failure" : reason == "periodic" ? "active" : "latest";
+                string stem = failed ? "failure" : reason.StartsWith("pre-", StringComparison.Ordinal) ? "topology-before" :
+                    reason == "post-topology" ? "topology-after" : reason == "periodic" ? "active" : "latest";
                 if (skipped != 0) stem += "-partial";
                 string temporary = Path.Combine(directory, "pending.cfg"), current = Path.Combine(directory, stem + ".cfg"), previous = Path.Combine(directory, stem + "-previous.cfg");
                 File.WriteAllText(temporary, text);
@@ -379,6 +394,8 @@ namespace Aetherfront.Stability.Client
         }
         public void Update()
         {
+            if (topologyRecoveryAt > 0 && Now >= topologyRecoveryAt && !SimulationProtected && HighLogic.LoadedSceneIsFlight && FlightGlobals.ready)
+            { topologyRecoveryAt = 0; SaveRecovery("post-topology"); }
             if (!installed) return;
             CheckpointReconnect.Tick();
             if (Running && !fieldHookTried)

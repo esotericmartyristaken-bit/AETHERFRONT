@@ -1,0 +1,17 @@
+RC61: docking/warp safety and automatic incremental client updates
+
+Docking and persistent thrust
+Missing or destroyed SAS targets no longer prevent PersistentThrust vessel serialization. Target/AntiTarget metadata is optional; unrelated module data is preserved and live SAS controls are not changed by saving.
+Persistent burns require fresh pilot intent, native engine ignition, current ownership/session/topology and a valid heading. Synchronization-only on-rails packing and physics holds do not authorize thrust. A hold retains the pilot's prior valid intent; topology and reconnect changes invalidate stale cached intent.
+Throttle cutoff clears the old rolling maximum immediately. Duplicate 1x requests no longer generate repeated warp events. Intentional current-session background burns remain supported through process-local tickets; stored or forged tokens cannot resume a burn after restart or transfer.
+Powered warp rates adapt to both acceleration and local orbital timescale. Invalid vectors, excessively large impulses and atmosphere/surface-crossing proposals are rejected before live fuel requests. Background resource proposals are retained only with a valid orbital update.
+Pre/post topology recovery captures have separate files, so ordinary warp-boundary captures do not immediately rotate them away. Failed captures remain visibly partial rather than replacing the last complete snapshot.
+
+Faster client installation
+Includes the four previously validated updater components together: LmpClient, ApfCore, KesasInstall and AetherfrontInstallUI. Connect automatically prepares an update, waits for helper readiness, restarts only when changed files require it, and consumes the reconnect intent. Unchanged packages reuse authenticated completion inventory; only changed/missing client files are replaced. Explicit Verify/repair remains available.
+The first RC60-to-RC61 migration still runs inside the old client until it restarts. Subsequent connections use the new automatic flow. The signed client ZIP is still transferred on a client-version change; this is incremental application, not binary-delta transport.
+
+Preservation and release constraints
+Build from the pinned RC60 release. ServerPayload and media are unchanged. Preserve all existing synchronization, checkpoint, science, universe, account and authority fixes. No account reset or new compensation operation is packaged. Arenas remain disabled.
+The guarded publisher validates the candidate before stopping production, retains backups/signatures/health checks, and gives 15 minutes of notice if occupied. Do not replace live DLLs manually.
+Actual-binary Harmony, target-save, bounded orbit, explicit-intent and background proposal checks run under KSP's Mono. They do not reproduce the user's entire rendered flight or prove the initial explosion's exact cause. Production health and signed-update verification are separate required publication checks.

@@ -2,6 +2,7 @@
  <PropertyGroup><TargetFramework>net472</TargetFramework><LangVersion>latest</LangVersion><AssemblyName>AetherfrontStabilityClient</AssemblyName></PropertyGroup>
  <ItemGroup><Compile Include="../Shared/*.cs" /></ItemGroup>
  <ItemGroup>
+  <Reference Include="PersistentThrust"><HintPath>$(KspManaged)/../../GameData/PersistentThrust/Plugin/PersistentThrust.dll</HintPath><Private>false</Private></Reference>
   <Reference Include="LmpClient"><HintPath>$(ClientPlugins)/LmpClient.dll</HintPath><Private>false</Private></Reference>
   <Reference Include="Lidgren.Network"><HintPath>$(ClientPlugins)/Lidgren.Network.dll</HintPath><Private>false</Private></Reference>
   <Reference Include="AetherfrontCore"><HintPath>$(ClientPlugins)/AetherfrontCore.dll</HintPath><Private>false</Private></Reference>

@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><TargetFramework>net472</TargetFramework><OutputType>Exe</OutputType><PlatformTarget>x64</PlatformTarget><LangVersion>latest</LangVersion></PropertyGroup>
+ <ItemGroup>
+  <Reference Include="AetherfrontStabilityClient"><HintPath>$(Fixture)/AetherfrontStabilityClient.dll</HintPath><Private>false</Private></Reference>
+  <Reference Include="LmpClient"><HintPath>$(Fixture)/LmpClient.dll</HintPath><Private>false</Private></Reference>
+  <Reference Include="0Harmony"><HintPath>$(Fixture)/0Harmony.dll</HintPath><Private>false</Private></Reference>
+  <Reference Include="PersistentThrust"><HintPath>$(GameRoot)/GameData/PersistentThrust/Plugin/PersistentThrust.dll</HintPath><Private>false</Private></Reference>
+  <Reference Include="Assembly-CSharp"><HintPath>$(KspManaged)/Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+  <Reference Include="UnityEngine.CoreModule"><HintPath>$(KspManaged)/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+ </ItemGroup>
+</Project>
