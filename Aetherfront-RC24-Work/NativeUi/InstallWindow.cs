@@ -19,6 +19,7 @@ namespace AetherfrontInstallUI
                     using (var completion = Task.Run(() => NativeInstall.Run(helperRoot, transactionPath, kind)).GetAwaiter().GetResult())
                     {
                         if (completion == null) throw new InvalidOperationException("Installation returned no completion result.");
+                        if (!string.Equals(kind,"rollback",StringComparison.OrdinalIgnoreCase)) completion.Restart();
                     }
                     return 0;
                 }
@@ -99,7 +100,7 @@ namespace AetherfrontInstallUI
                 elapsed = new Label { AutoSize = true, Text = "Elapsed: 00:00:00", UseMnemonic = false };
                 notice = new Label { AutoSize = true, Text = "Keep KSP closed until installation is complete.", UseMnemonic = false };
                 progress = new ProgressBar { Dock = DockStyle.Fill, Style = ProgressBarStyle.Marquee, MarqueeAnimationSpeed = 30 };
-                restart = new Button { AutoSize = true, Text = "Restart KSP", Enabled = false };
+                restart = new Button { AutoSize = true, Text = "Restart KSP", Enabled = false, Visible = false };
                 close = new Button { AutoSize = true, Text = "Close", Enabled = false };
                 restart.Click += RestartClicked;
                 close.Click += (sender, args) => Close();
@@ -176,15 +177,15 @@ namespace AetherfrontInstallUI
                     ExitCode = 0;
                     heading.Text = CanRestart ? "Installation complete" : "Restore complete";
                     status.Text = CanRestart
-                        ? "All installation checks passed. Click Restart KSP when ready, or Close to leave KSP closed."
+                        ? "Update installed. Restarting KSP and reconnecting automatically..."
                         : "Recovery completed. Close this window; KSP has not been started.";
-                    notice.Text = "KSP will not start automatically.";
+                    notice.Text = CanRestart ? "The original server connection will resume after KSP loads." : "KSP remains closed after recovery.";
                     progress.Style = ProgressBarStyle.Blocks;
                     progress.Value = 100;
                     restart.Enabled = CanRestart;
                     close.Enabled = true;
                     AcceptButton = CanRestart ? restart : close;
-                    if (CanRestart) restart.Focus();
+                    if (CanRestart) RestartClicked(this, EventArgs.Empty);
                     else close.Focus();
                 }
                 catch (Exception error)

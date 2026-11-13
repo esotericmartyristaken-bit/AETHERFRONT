@@ -1,0 +1,54 @@
+Pending client updater changes: prepared, NOT deployed
+
+Build-Candidate.ps1 builds and tests a four-component client overlay against the
+pinned, signed RC60 client. It never signs, publishes, submits a job, restarts
+production or changes server configuration. A new fixture name is required.
+
+Normal flow: Connect checks small signed feeds, downloads only required package
+archives, prepares changes, waits for authenticated helper readiness, closes
+KSP, applies the changed client files/packages, restarts and consumes the existing
+one-shot server/password reconnect intent. No routine approval or restart buttons.
+No changes means connect immediately without restarting. Failures stop safely.
+If a scene changes before automatic quit, a per-request cancellation marker
+prevents the helper applying later when that game process eventually closes.
+
+The authenticated completed receipt binds the game root, selected profile,
+installed signed manifest and state-inventory bytes. Subsequent updates reuse
+unchanged package inventory without reading every payload. Changed/missing client
+files alone enter the replacement/recovery lists. Full archive SHA/RSA/inventory
+validation remains. New and changed package bytes remain fully checked.
+
+Full scan remains for first baseline, changed profile, invalid/missing completion
+proof, incomplete installation or explicit Verify / repair next connection.
+Unchanged managed payload is trusted after completion; arbitrary manual edits
+inside unchanged packages need explicit Repair. This is intentional, not an
+anticheat/tamper-monitoring mechanism. The signed client ZIP is still downloaded
+on a client-version change; transport is not a per-file binary-delta protocol.
+
+Extra profile-excluded mods move to APF/.disabled-mods, with ordinary recovery
+records. Saves, identity, controls and runtime settings retain protection.
+Windows access-denied errors are not bypassed or auto-approved.
+
+Validated staging: UpdateBuilds/RC56-Sync-Fixture/ClientUpdate-20261113-ValidatedC
+Candidate.json is authoritative; failed earlier A/B or exploratory fixtures are
+not release candidates. Logs include .NET, hidden STA UI and actual KSP Mono.
+123 assertions passed; 165 updater/connection methods prepared under KSP Mono.
+6308 unrelated client methods and 689 core methods preserved by the graft audit.
+The engine must compile against the shipping compression assemblies (4.0.0.0),
+not the desktop framework's 4.2.0.0 reference. Actual Mono tests enforce this.
+
+Future release integration
+Ship these FOUR components together: Plugins/LmpClient.dll, Plugins/ApfCore.dll,
+Plugins/KesasInstall.dll and Launcher/AetherfrontInstallUI.dll. Candidate files
+are unversioned RC60-based staging, NOT a signed or installable next release.
+Apply the next real version to the compiled client build-version constant/getter,
+APFClient.json, both catalog profiles, patch inventory and release/feed metadata;
+regenerate the normal signed client update. Keep media/configuration/progress.
+If combining other client fixes, rebase/review the graft against those bytes;
+do not overwrite newer gameplay/network changes with the RC60-based staged DLL.
+The old RC60 process cannot acquire the new flow before loading the new client;
+its initial migration may still use its existing confirmation sequence. A client
+restart loads these changes. Rendered KSP boot/rejoin remains a gameplay test.
+
+No deployment is authorized by this preparation request. Future publication
+requires a separate user request and the usual guarded local publisher.

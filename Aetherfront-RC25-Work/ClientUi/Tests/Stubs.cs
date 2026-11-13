@@ -52,6 +52,7 @@ namespace KesasInstall {
     public sealed class Installer {
         public static int Constructions,Writes,Cancels;
         public Func<bool> IsCanceled;public Action<ProgressInfo> Report;public Func<string,bool> Confirm;
+        public bool ForceVerification {get;set;}
         public Installer(string root,IPEndPoint endpoint,string version){Constructions++;}
         public InstallResult Run(string mode)=>new();
         public void Cancel(){Cancels++;}

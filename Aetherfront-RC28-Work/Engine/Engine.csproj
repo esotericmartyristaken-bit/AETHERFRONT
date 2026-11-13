@@ -1,8 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><TargetFramework>net472</TargetFramework><LangVersion>10</LangVersion><AssemblyName>KesasInstall</AssemblyName><Optimize>true</Optimize><DebugType>none</DebugType></PropertyGroup>
+  <PropertyGroup><TargetFramework>net472</TargetFramework><LangVersion>10</LangVersion><AssemblyName>KesasInstall</AssemblyName><Optimize>true</Optimize><DebugType>none</DebugType><ApfCorePath Condition="'$(ApfCorePath)' == ''">../../Aetherfront-RC23-Work/Candidate/Client/GameData/LunaMultiplayer/Plugins/ApfCore.dll</ApfCorePath></PropertyGroup>
   <ItemGroup>
-    <Reference Include="System.IO.Compression" /><Reference Include="System.IO.Compression.FileSystem" />
-    <Reference Include="ApfCore"><HintPath>../../Aetherfront-RC23-Work/Candidate/Client/GameData/LunaMultiplayer/Plugins/ApfCore.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="System.IO.Compression" Condition="'$(ShippingManaged)' == ''" /><Reference Include="System.IO.Compression.FileSystem" Condition="'$(ShippingManaged)' == ''" />
+    <Reference Include="$(ShippingManaged)/System.IO.Compression.dll" Condition="'$(ShippingManaged)' != ''"><HintPath>$(ShippingManaged)/System.IO.Compression.dll</HintPath><SpecificVersion>false</SpecificVersion><Private>false</Private></Reference>
+    <Reference Include="$(ShippingManaged)/System.IO.Compression.FileSystem.dll" Condition="'$(ShippingManaged)' != ''"><HintPath>$(ShippingManaged)/System.IO.Compression.FileSystem.dll</HintPath><SpecificVersion>false</SpecificVersion><Private>false</Private></Reference>
+    <Reference Include="ApfCore"><HintPath>$(ApfCorePath)</HintPath><Private>false</Private></Reference>
     <Compile Include="../../Aetherfront-RC22-Work/Engine/Transfer.cs" Link="Transfer.cs" />
     <Compile Include="../../Aetherfront-RC22-Work/Engine/DownloadFiles.cs" Link="DownloadFiles.cs" />
     <Compile Include="../../Aetherfront-RC22-Work/Engine/GitHub.cs" Link="GitHub.cs" />

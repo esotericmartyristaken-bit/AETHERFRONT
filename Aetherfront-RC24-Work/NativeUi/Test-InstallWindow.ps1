@@ -1,6 +1,6 @@
 #requires -Version 5.1
 [CmdletBinding()]
-param()
+param([string]$CorePath='', [string]$EnginePath='', [string]$UiPath='')
 $ErrorActionPreference = 'Stop'
 if ($PSVersionTable.PSEdition -ne 'Desktop' -or [Threading.Thread]::CurrentThread.GetApartmentState() -ne 'STA') {
     throw 'Run this test with Windows PowerShell 5.1 -STA. No visible window or installation is started.'
@@ -8,9 +8,10 @@ if ($PSVersionTable.PSEdition -ne 'Desktop' -or [Threading.Thread]::CurrentThrea
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 $work = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-foreach ($path in @('Patched/ApfCore.dll', 'Engine/bin/Release/net472/KesasInstall.dll', 'NativeUi/bin/Release/net472/AetherfrontInstallUI.dll')) {
-    [void][Reflection.Assembly]::LoadFrom((Join-Path $work $path))
-}
+if(!$CorePath){$CorePath=Join-Path $work 'Patched/ApfCore.dll'}
+if(!$EnginePath){$EnginePath=Join-Path $work 'Engine/bin/Release/net472/KesasInstall.dll'}
+if(!$UiPath){$UiPath=Join-Path $work 'NativeUi/bin/Release/net472/AetherfrontInstallUI.dll'}
+foreach($path in @($CorePath,$EnginePath,$UiPath)){[void][Reflection.Assembly]::LoadFrom($path)}
 $flags = [Reflection.BindingFlags]'Instance,Public,NonPublic'
 $windowType = [AetherfrontInstallUI.InstallWindow].GetNestedType('ProgressWindow', [Reflection.BindingFlags]::NonPublic)
 $windowConstructor = $windowType.GetConstructor($flags, $null, [type[]]@([string], [string], [string]), $null)
@@ -84,16 +85,22 @@ foreach ($kind in @('rollback', 'pack', 'client')) {
         Set-Worker $window $source.Task
         Invoke-WindowMethod $window 'Poll' ([object[]]@($null, [EventArgs]::Empty))
         Assert-Ui ($window.ExitCode -eq 0) 'Completed installation must return success.'
-        Assert-Ui ((Get-WindowField $window 'close').Enabled) 'Completed installation must permit close.'
-        Assert-Ui (!(Get-WindowField $window 'restartWorker')) 'Success must never automatically restart KSP.'
         if ($kind -eq 'rollback') {
+            Assert-Ui ((Get-WindowField $window 'close').Enabled) 'Rollback must permit close.'
+            Assert-Ui (!(Get-WindowField $window 'restartWorker')) 'Rollback must never automatically restart KSP.'
             Assert-Ui ((Get-WindowField $window 'heading').Text -eq 'Restore complete') 'Rollback must display Restore complete.'
             Assert-Ui (!(Get-WindowField $window 'restart').Enabled) 'Rollback must not enable restart.'
             Assert-Ui ($window.AcceptButton -eq (Get-WindowField $window 'close')) 'Rollback default action must be Close.'
             Invoke-WindowMethod $window 'RestartClicked' ([object[]]@($null, [EventArgs]::Empty))
             Assert-Ui (!(Get-WindowField $window 'restartWorker')) 'Direct rollback restart handler must remain blocked.'
         } else {
-            Assert-Ui ((Get-WindowField $window 'restart').Enabled) 'Verified pack/client installation must enable explicit restart.'
+            $restartTask=Get-WindowField $window 'restartWorker'
+            Assert-Ui ($null -ne $restartTask) 'Verified installation starts restart automatically.'
+            Assert-Ui (!(Get-WindowField $window 'close').Enabled) 'Restart blocks premature disposal.'
+            Assert-Ui ([Threading.SpinWait]::SpinUntil([Func[bool]]{$restartTask.IsCompleted},5000)) 'Automatic restart task settles.'
+            Invoke-WindowMethod $window 'Poll' ([object[]]@($null, [EventArgs]::Empty))
+            Assert-Ui ($window.ExitCode -eq 1) 'Null fixture transaction must refuse real executable launch.'
+            Assert-Ui ((Get-WindowField $window 'close').Enabled) 'Restart refusal permits close.'
         }
         Assert-CanClose $window $false
         Assert-Ui (!$window.Visible) 'Reflection tests must not display a window.'

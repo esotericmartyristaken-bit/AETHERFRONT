@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 using ApfCore;
 using KesasInstall;
@@ -20,16 +19,14 @@ namespace LmpClient.Apf
         private static string password;
         private static string mode="full";
         private static bool loaded,expanded,bypass;
+        private static bool repairRequested;
+        private static string reconnectWritten;
         private static volatile bool launching;
         private static InstallResult pending;
         private static volatile bool canceled;
         private static volatile ProgressInfo progress;
-        private static volatile string confirmation;
-        private static readonly ManualResetEventSlim confirmed=new ManualResetEventSlim(false);
-        private static volatile bool approved;
         private static bool layoutBusy,layoutExpanded,layoutPending,layoutLaunching;
         private static ProgressInfo layoutProgress;
-        private static string layoutConfirmation;
         private static GUIStyle textStyle;
         private static Vector2 detailsScroll;
         public static bool Busy {get {return task!=null || launching || pending!=null;}}
@@ -45,8 +42,9 @@ namespace LmpClient.Apf
             if(endpoints==null || endpoints.Length!=1){MainSystem.Singleton.Status="Enter one server IP and port.";return false;}
             try {
                 LoadSelection();
-                endpoint=endpoints[0];password=pass??"";canceled=false;confirmation=null;confirmed.Reset();
+                endpoint=endpoints[0];password=pass??"";canceled=false;
                 installer=new Installer(MainSystem.KspPath,endpoint,ApfClientSettings.ClientVersion);
+                installer.ForceVerification=repairRequested;repairRequested=false;
                 installer.IsCanceled=IsCanceled;installer.Report=Report;installer.Confirm=Confirm;
                 progress=new ProgressInfo{Status="Checking server requirements..."};
                 task=Task.Factory.StartNew(Work);
@@ -58,14 +56,15 @@ namespace LmpClient.Apf
         private static void Report(ProgressInfo value){progress=value;}
         private static bool Confirm(string message)
         {
-            approved=false;confirmed.Reset();confirmation=message;
-            try{while(!confirmed.Wait(100)){if(canceled)throw new OperationCanceledException();}return approved;}
-            finally{confirmation=null;}
+            if(canceled)throw new OperationCanceledException();
+            // Connect authorizes the selected managed profile. Removed mods
+            // are quarantined by the authenticated helper, never discarded.
+            return true;
         }
         public static void Cancel()
         {
             if(launching)return;
-            canceled=true;approved=false;confirmation=null;confirmed.Set();
+            canceled=true;
             if(pending!=null) {
                 pending=null;progress=null;endpoint=null;password=null;
                 MainSystem.Singleton.Status="Prepared install canceled. Installed files were kept.";
@@ -81,10 +80,20 @@ namespace LmpClient.Apf
                 if(HighLogic.LoadedScene!=GameScenes.MAINMENU)throw new InvalidOperationException("Return to the main menu before applying prepared files.");
                 string reconnect=ApfClientSettings.ReconnectPath;
                 ApfPaths.EnsureNoReparsePoints(MainSystem.KspPath,reconnect);
-                Installer.AtomicText(reconnect,ApfJson.Serialize(new ApfReconnectInfo{Address=endpoint.Address.ToString(),Port=endpoint.Port,Password=password}));
+                reconnectWritten=ApfJson.Serialize(new ApfReconnectInfo{Address=endpoint.Address.ToString(),Port=endpoint.Port,Password=password});
+                Installer.AtomicText(reconnect,reconnectWritten);
                 progress=new ProgressInfo{Status="Securing prepared files..."};
                 launching=true;task=Task.Factory.StartNew(Launch);
-            }catch(Exception error){launching=false;MainSystem.Singleton.Status=error.GetBaseException().Message;}
+            }catch(Exception error){launching=false;pending=null;progress=null;ClearReconnect();MainSystem.Singleton.Status=error.GetBaseException().Message;}
+        }
+        private static void ClearReconnect()
+        {
+            if(reconnectWritten==null)return;
+            try {
+                string path=ApfClientSettings.ReconnectPath;ApfPaths.EnsureNoReparsePoints(MainSystem.KspPath,path);
+                if(File.Exists(path) && new FileInfo(path).Length<=65536 && File.ReadAllText(path)==reconnectWritten)File.Delete(path);
+            }catch(IOException){}catch(UnauthorizedAccessException){}
+            reconnectWritten=null;
         }
         private static InstallResult Launch(){ApfPostExitLauncher.Launch(MainSystem.KspPath,pending.TransactionPath,pending.ClientUpdate);return pending;}
         public static void Tick()
@@ -95,18 +104,25 @@ namespace LmpClient.Apf
                 task=null;
                 if(canceled){MainSystem.Singleton.Status="Download canceled. Installed files were kept.";return;}
                 // Launch returns only after the authenticated helper publishes .ready.
-                if(launching){Application.Quit();return;}
+                if(launching){
+                    if(HighLogic.LoadedScene!=GameScenes.MAINMENU){
+                        Installer.AtomicText(pending.TransactionPath+".cancel","Scene changed before automatic restart.");
+                        throw new InvalidOperationException("Update postponed: return to the main menu before reconnecting. KSP was not closed.");
+                    }
+                    Application.Quit();return;
+                }
                 if(HighLogic.LoadedScene!=GameScenes.MAINMENU)throw new InvalidOperationException("Return to the main menu and reconnect before installing or joining.");
                 if(!result.Changed) {
                     MainSystem.Singleton.Status="Files match; connecting...";
                     bypass=true;try{NetworkConnection.ConnectToServer(new[]{endpoint},password);}finally{bypass=false;}
                 }else{
                     pending=result;
-                    progress=new ProgressInfo{Status="Prepared files verified. Choose Restart & apply to install and relaunch KSP, or Cancel to keep installed files."};
-                    MainSystem.Singleton.Status="Ready to apply. Restart & apply is required; KSP will remain open until you choose it.";
+                    progress=new ProgressInfo{Status="Update prepared. Restarting KSP and reconnecting automatically..."};
+                    MainSystem.Singleton.Status="Installing update, then reconnecting automatically...";
+                    RestartAndApply();
                 }
-            }catch(Exception error){task=null;launching=false;pending=null;MainSystem.Singleton.Status=canceled?"Download canceled. Installed files were kept.":error.GetBaseException().Message;progress=null;}
-            finally{if(task==null){installer=null;confirmation=null;if(pending==null && !launching)progress=null;}}
+            }catch(Exception error){task=null;launching=false;pending=null;ClearReconnect();MainSystem.Singleton.Status=canceled?"Download canceled. Installed files were kept.":error.GetBaseException().Message;progress=null;}
+            finally{if(task==null){installer=null;if(pending==null && !launching)progress=null;}}
         }
         private static void LoadSelection()
         {
@@ -131,6 +147,7 @@ namespace LmpClient.Apf
             if(layoutExpanded) {
                 if(GUILayout.Button("Regular"))Select("full");
                 if(GUILayout.Button("Potato"))Select("potato");
+                if(GUILayout.Button("Verify / repair next connection")){repairRequested=true;expanded=false;MainSystem.Singleton.Status="Full verification selected for the next connection.";}
             }
             GUI.enabled=enabled;
             if(layoutBusy && layoutProgress!=null) {
@@ -151,13 +168,7 @@ namespace LmpClient.Apf
                     if(p.PackageCount>0)GUILayout.Label("Package "+p.PackageIndex+" / "+p.PackageCount+": "+p.Package);
                     if(p.PackageTotal>0)GUILayout.Label("This package: "+Installer.Format(p.PackageDownloaded)+" / "+Installer.Format(p.PackageTotal));
                 }
-                if(layoutConfirmation!=null) {
-                    GUILayout.Label(layoutConfirmation,textStyle);
-                    if(GUILayout.Button("Approve listed changes")){approved=true;confirmed.Set();}
-                    if(GUILayout.Button("Keep existing mods; cancel"))Cancel();
-                }
                 GUI.enabled=enabled && !layoutLaunching;
-                if(layoutPending && !layoutLaunching && GUILayout.Button("Restart & apply"))RestartAndApply();
                 if(GUILayout.Button(layoutPending?"Cancel":"Cancel download"))Cancel();
                 GUI.enabled=enabled;
                 GUILayout.EndScrollView();
@@ -168,7 +179,6 @@ namespace LmpClient.Apf
             if(Event.current.type!=EventType.Layout)return;
             layoutBusy=Busy;layoutExpanded=expanded;layoutPending=pending!=null;layoutLaunching=launching;
             LayoutDisconnected=MainSystem.NetworkState<=ClientState.Disconnected;
-            layoutConfirmation=confirmation;
             // Reporters may reuse a mutable ProgressInfo; freeze every branch-driving value.
             var p=progress;
             layoutProgress=p==null?null:new ProgressInfo{Status=p.Status,Package=p.Package,PackageIndex=p.PackageIndex,PackageCount=p.PackageCount,

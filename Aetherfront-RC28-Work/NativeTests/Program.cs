@@ -46,8 +46,8 @@ internal static class Program
                 Check(!Directory.Exists(Path.Combine(root,"GameData/PersonalAddon")),"Approved extra mod removed");
                 var journal=Directory.GetFiles(Path.Combine(root,"APF/.transaction-backup"),"recovery.json",SearchOption.AllDirectories).Single();
                 var proof=ApfJson.Deserialize<ApfRecoveryJournal>(File.ReadAllText(journal));
-                Check(proof.Status=="complete"&&proof.Records.All(r=>!r.Target.EndsWith("PersonalAddon",StringComparison.OrdinalIgnoreCase)),"Removed mod has no backup or recovery record");
-                Check(!Directory.GetFiles(Path.Combine(root,"APF/.transaction-backup"),"remove.txt",SearchOption.AllDirectories).Any(),"No removed-mod content retained");
+                Check(proof.Status=="complete"&&proof.Records.Any(r=>r.Target.EndsWith("PersonalAddon",StringComparison.OrdinalIgnoreCase)),"Disabled extra mod has a recovery record");
+                Check(Directory.GetFiles(Path.Combine(root,"APF/.transaction-backup"),"remove.txt",SearchOption.AllDirectories).Any(),"Disabled mod content retained for recovery");
                 Check(Directory.GetFiles(Path.Combine(root,"APF/.transaction-backup"),"example.cfg",SearchOption.AllDirectories).Any(p=>File.ReadAllText(p)=="previous managed configuration"),"Replaced managed files retain failure recovery");
                 Check(LaunchBlocked("KSP_x64.exe")&&LaunchBlocked("KSP.exe"),"Both executable names blocked until completion is acknowledged");
                 Check(NativeInstall.Status.Contains("verified"),"Completion reported only after installation verification");
@@ -249,11 +249,11 @@ internal static class Program
         catch(InvalidDataException error){rejected=error.Message.Contains("Pack verification failed after installation")&&error.Message.Contains("missing-required");}
         Check(rejected,"Declared but unstaged required package forces post-install final scan failure");
         Check(managedBefore.SequenceEqual(Snapshot("GameData/TestCore"))&&stateBefore==File.ReadAllText(Path.Combine(data,"APFPackState.json")),"Final scan failure restores managed content and prior state exactly");
-        Check(!Directory.Exists(Path.Combine(root,"GameData/PersonalAddon")),"Final scan rollback does not restore the permanently removed extra mod");
+        Check(Directory.Exists(Path.Combine(root,"GameData/PersonalAddon")),"Final scan rollback restores the automatically disabled extra mod");
         var journal=ReadJournal();
-        Check(journal.Status=="restored"&&journal.Records.Count==2&&journal.Records.All(r=>r.Existed&&r.Restored)&&!journal.Records.Any(IsRemoval),"Restored journal covers only the replaced managed root and state");
+        Check(journal.Status=="restored"&&journal.Records.Count==3&&journal.Records.All(r=>r.Existed&&r.Restored)&&journal.Records.Any(IsRemoval),"Restored journal covers managed root, state and disabled mod");
         Check(Directory.GetFiles(BackupRoot,"example.cfg",SearchOption.AllDirectories).Any(p=>File.ReadAllText(p)=="new managed configuration"),"Rollback retains undo evidence that replacement extraction completed");
-        Check(!Directory.GetFiles(BackupRoot,"remove.txt",SearchOption.AllDirectories).Any(),"Failed installation retains no permanently removed mod content");
+        Check(Directory.GetFiles(BackupRoot,"remove.txt",SearchOption.AllDirectories).Any(),"Failed installation retains disabled mod recovery content");
         Check(profileBefore==File.ReadAllText(Path.Combine(data,"KesasInstallProfile.json"))&&settingsBefore==File.ReadAllText(Path.Combine(root,"settings.cfg")),"Final scan failure does not commit graphics or profile changes");
         string log=File.ReadAllText(Path.Combine(root,"APF/APFTransaction.log"));
         Check(log.Contains("START pack=kesas")&&log.Contains("ROLLED-BACK pack=kesas")&&!log.Contains("COMPLETED packages="),"Final scan failure logs rollback without transaction completion");

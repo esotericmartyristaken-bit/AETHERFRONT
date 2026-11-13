@@ -6,12 +6,13 @@
     <RootNamespace>AetherfrontInstallUI</RootNamespace>
     <Optimize>true</Optimize>
     <DebugType>none</DebugType>
+    <EngineAssembly Condition="'$(EngineAssembly)' == ''">../Engine/bin/Release/net472/KesasInstall.dll</EngineAssembly>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Drawing" />
     <Reference Include="KesasInstall">
-      <HintPath>../Engine/bin/Release/net472/KesasInstall.dll</HintPath>
+      <HintPath>$(EngineAssembly)</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

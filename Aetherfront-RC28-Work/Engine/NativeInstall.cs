@@ -14,6 +14,7 @@ namespace KesasInstall
     {
         private static volatile bool enabled;
         private static string root;
+        private static string cancellationPath;
         private static string status="Waiting for KSP to close...";
         private static readonly List<FileStream> executionLocks=new List<FileStream>();
         private static readonly HashSet<string> removals=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -32,6 +33,7 @@ namespace KesasInstall
                 if(!string.Equals(helperRoot,Path.Combine(root,"GameData","LunaMultiplayer"),StringComparison.OrdinalIgnoreCase))throw new InvalidDataException("Invalid helper location.");
                 ApfPaths.EnsureNoReparsePoints(root,helperRoot);
                 ApfPaths.EnsureNoReparsePoints(root,transactionPath);
+                cancellationPath=kind=="rollback"?null:transactionPath+".cancel";
                 enabled=true;removals.Clear();packageIndex=packageCount=0;
                 WriteResult("applying",kind);
                 Report("Waiting for KSP to close. Do not start another KSP instance.");
@@ -62,7 +64,7 @@ namespace KesasInstall
                 Report("Installation failed. KSP was not restarted. See APF/APFUpdater.log.");
                 if(root!=null)try{WriteResult("failed",kind);string log=Path.Combine(root,"APF","APFUpdater.log");ApfPaths.EnsureNoReparsePoints(root,log);File.AppendAllText(log,DateTime.UtcNow.ToString("o")+" "+error+Environment.NewLine);}catch{}
                 ReleaseExecutionLocks();throw;
-            } finally {PreparedPack.Close();enabled=false;removals.Clear();if(!succeeded)Interlocked.Exchange(ref busy,0);}
+            } finally {PreparedPack.Close();enabled=false;cancellationPath=null;removals.Clear();if(!succeeded)Interlocked.Exchange(ref busy,0);}
         }
         private static void WriteResult(string value,string kind)
         {
@@ -74,6 +76,7 @@ namespace KesasInstall
         public static void AcquireExecutionLocks(string executable)
         {
             if(!enabled)return;
+            ThrowIfCanceled();
             string expected=Path.Combine(root,"KSP_x64.exe");
             if(!string.Equals(Path.GetFullPath(executable),expected,StringComparison.OrdinalIgnoreCase)&&!string.Equals(Path.GetFullPath(executable),Path.Combine(root,"KSP.exe"),StringComparison.OrdinalIgnoreCase))throw new InvalidDataException("Unexpected KSP executable.");
             if(executionLocks.Count>0)return;
@@ -114,6 +117,12 @@ namespace KesasInstall
                 }
             }
         }
+        private static void ThrowIfCanceled()
+        {
+            if(cancellationPath==null)return;
+            ApfPaths.EnsureNoReparsePoints(root,cancellationPath);
+            if(File.Exists(cancellationPath)||Directory.Exists(cancellationPath))throw new OperationCanceledException("Prepared update was canceled before restart; installed files kept.");
+        }
         private static bool ProcessExited(Process process)
         {
             try{process.Refresh();return process.HasExited;}
@@ -144,16 +153,19 @@ namespace KesasInstall
         }
         public static ApfRecoveryJournal CreateRecovery(string gameRoot,string directory,IEnumerable<string> targets,string kind)
         {
-            // Removed mods are deliberately not recoverable. Replacement files retain recovery.
-            var selected=enabled&&kind=="pack"?targets.Where(p=>string.IsNullOrWhiteSpace(p)||!removals.Contains(Path.GetFullPath(p))):targets;
-            return ApfRecoveryStore.Create(gameRoot,directory,selected,kind);
+            // Connect is the only routine approval. Removed mods therefore need
+            // the same durable recovery protection as replacement targets.
+            return ApfRecoveryStore.Create(gameRoot,directory,targets,kind);
         }
         public static bool RemoveApproved(string target,string gameData)
         {
             if(!enabled||!removals.Contains(Path.GetFullPath(target)))return false;
             ValidateRemoval(target,gameData);
-            if(Directory.Exists(target)){ValidateTree(target);Directory.Delete(target,true);}
-            else if(File.Exists(target))File.Delete(target);
+            string relative=Path.GetFullPath(target).Substring(Path.GetFullPath(gameData).TrimEnd(Path.DirectorySeparatorChar).Length+1);
+            string destination=Path.Combine(root,"APF",".disabled-mods",Guid.NewGuid().ToString("N"),relative);
+            ApfPaths.EnsureNoReparsePoints(root,destination);
+            if(Directory.Exists(target)){ValidateTree(target);Directory.CreateDirectory(Path.GetDirectoryName(destination));Directory.Move(target,destination);}
+            else if(File.Exists(target)){Directory.CreateDirectory(Path.GetDirectoryName(destination));File.Move(target,destination);}
             return true;
         }
         private static void ValidateRemoval(string target,string gameData)
@@ -176,7 +188,7 @@ namespace KesasInstall
         {
             if(enabled)Report("Installing package "+(++packageIndex)+" / "+packageCount+": "+ApfPaths.PackageRoot(package));
         }
-        public static void Verifying() {if(enabled)Report("Verifying all installed package files. Keep KSP closed...");}
+        public static void Verifying() {if(enabled)Report("Verifying changed files and committing installation. Keep KSP closed...");}
         private static void ReleaseExecutionLocks() {foreach(var input in executionLocks)input.Dispose();executionLocks.Clear();}
 
         public sealed class Completion:IDisposable

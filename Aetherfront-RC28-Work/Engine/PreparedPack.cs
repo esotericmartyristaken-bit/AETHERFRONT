@@ -28,6 +28,8 @@ namespace KesasInstall
         public string BundledClientSha256 { get; set; }
         public string DuplicateClientSha256 { get; set; }
         public List<PreparedPackage> Packages { get; set; }
+        public List<PreparedPackage> RetainedPackages { get; set; }
+        public string PreviousClientManifestJson { get; set; }
     }
     public sealed class PreparedEnvelope
     {
@@ -44,7 +46,8 @@ namespace KesasInstall
         private static string preparedData;
         private static ApfClientUpdateTransaction bundledClient;
         private static string duplicateClient;
-        public static void Prepare(ApfSyncTransaction value,string requestPath,Action<string> progress,Func<bool> canceled)
+        private static Dictionary<string,ApfClientUpdateFile> previousClient;
+        public static void Prepare(ApfSyncTransaction value,string requestPath,Action<string> progress,Func<bool> canceled,List<PreparedPackage> retained=null,ApfClientUpdateManifest previousManifest=null)
         {
             string root=Path.GetFullPath(value.GameRoot);
             // Keep extraction close to the game root. Nesting beneath the long
@@ -54,7 +57,7 @@ namespace KesasInstall
             ApfPaths.EnsureNoReparsePoints(root,data);
             if(Directory.Exists(data))throw new InvalidDataException("Prepared installation directory already exists.");
             Directory.CreateDirectory(data);
-            var receipt=new PreparedReceipt{Authorization=value.Authorization,DataDirectory=relative,Packages=new List<PreparedPackage>()};
+            var receipt=new PreparedReceipt{Authorization=value.Authorization,DataDirectory=relative,Packages=new List<PreparedPackage>(),RetainedPackages=retained,PreviousClientManifestJson=previousManifest?.ToJson()};
             string clientPath=requestPath+".client";
             ApfPaths.EnsureNoReparsePoints(root,clientPath);
             if(File.Exists(clientPath)){if(new FileInfo(clientPath).Length>16L*1024*1024)throw new InvalidDataException("Bundled client request is too large.");receipt.BundledClientSha256=ApfJson.Sha256File(clientPath);}
@@ -99,6 +102,30 @@ namespace KesasInstall
             ApfPaths.EnsureNoReparsePoints(root,data);
             var ids=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             try {
+                if(!string.IsNullOrEmpty(receipt.PreviousClientManifestJson)) {
+                    if(receipt.PreviousClientManifestJson.Length>4*1024*1024)throw new InvalidDataException("Previous client inventory is too large.");
+                    var previous=ApfClientUpdateManifest.FromJson(receipt.PreviousClientManifestJson);
+                    if(!ApfClientUpdateValidator.Validate(previous).IsValid)throw new InvalidDataException("Previous client inventory is invalid.");
+                    string publicKey=Path.Combine(root,"GameData","LunaMultiplayer","Data","APFClientUpdatePublicKey.xml");
+                    ApfPaths.EnsureNoReparsePoints(root,publicKey);
+                    using(var signing=ApfClientUpdateSecurity.LoadXmlPublicKey(File.ReadAllText(publicKey)))if(!ApfClientUpdateSecurity.Verify(previous,signing))throw new InvalidDataException("Previous client signature is invalid.");
+                    previousClient=previous.Files.ToDictionary(f=>f.Path,StringComparer.OrdinalIgnoreCase);
+                }
+                foreach(var retained in receipt.RetainedPackages??new List<PreparedPackage>()) {
+                    var package=value.Manifest.ManagedPackages.SingleOrDefault(p=>string.Equals(p.Id,retained.Id,StringComparison.OrdinalIgnoreCase));
+                    var previous=value.ExistingState.Packages.SingleOrDefault(p=>string.Equals(p.Id,retained.Id,StringComparison.OrdinalIgnoreCase));
+                    if(package==null || previous==null || !ids.Add(retained.Id) || value.Packages.Any(p=>string.Equals(p.Package.Id,retained.Id,StringComparison.OrdinalIgnoreCase)) ||
+                        retained.ArchiveSha256!=package.Sha256 || previous.ArchiveSha256!=package.Sha256 || previous.Version!=package.Version ||
+                        retained.Root!=ApfPaths.PackageRoot(package) || retained.Files==null || retained.Files.Count==0 || !RuntimeFiles.SameFiles(previous.Files,retained.Files))
+                        throw new InvalidDataException("Retained package differs from its authorized inventory.");
+                    var paths=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    foreach(var file in retained.Files) {
+                        string name=ApfPaths.NormalizeGameDataRelative(file.Path);
+                        if(!ApfPaths.IsSafeRelative(name) || !paths.Add(name) ||
+                            !(name.Equals(retained.Root,StringComparison.OrdinalIgnoreCase) || name.StartsWith(retained.Root+"/",StringComparison.OrdinalIgnoreCase)))
+                            throw new InvalidDataException("Retained file escapes its package.");
+                    }
+                }
                 if(!string.IsNullOrEmpty(receipt.DuplicateClientSha256)) {
                     string duplicate=Path.Combine(root,"Resources","GameData","LunaMultiplayer");
                     ValidateTree(root,duplicate);
@@ -252,7 +279,13 @@ namespace KesasInstall
         {
             if(active==null||!string.Equals(Path.GetFullPath(gameData),Path.GetFullPath(transaction.GameDataPath),StringComparison.OrdinalIgnoreCase))return null;
             var package=active.Packages.SingleOrDefault(p=>string.Equals(Path.GetFullPath(packagePath),Path.GetFullPath(Path.Combine(gameData,p.Root.Replace('/',Path.DirectorySeparatorChar))),StringComparison.OrdinalIgnoreCase));
-            if(package==null)return null;
+            if(package==null) {
+                var retained=(active.RetainedPackages??new List<PreparedPackage>()).SingleOrDefault(p=>string.Equals(Path.GetFullPath(packagePath),Path.GetFullPath(Path.Combine(gameData,p.Root.Replace('/',Path.DirectorySeparatorChar))),StringComparison.OrdinalIgnoreCase));
+                if(retained==null)return null;
+                ApfPaths.EnsureNoReparsePoints(transaction.GameRoot,packagePath);
+                if(!Directory.Exists(packagePath)&&!File.Exists(packagePath))throw new InvalidDataException("Retained package root is missing; run Verify / repair.");
+                return retained.Files;
+            }
             // Reject removals/additions even while immutable file handles prevent writes.
             string[] actual=File.Exists(packagePath)?new[]{packagePath}:Directory.GetFiles(packagePath,"*",SearchOption.AllDirectories);
             var paths=new HashSet<string>(package.Files.Select(f=>ApfPaths.NormalizeGameDataRelative(f.Path)),StringComparer.OrdinalIgnoreCase);
@@ -266,7 +299,12 @@ namespace KesasInstall
             }
             return package.Files;
         }
-        public static void Close(){active=null;transaction=null;preparedData=null;bundledClient=null;duplicateClient=null;foreach(var input in locks)input.Dispose();locks.Clear();fileLocks.Clear();ReleaseDirectories();}
+        public static bool ClientUnchanged(string root,ApfClientUpdateFile file)
+        {
+            return active!=null && transaction!=null && previousClient!=null && string.Equals(Path.GetFullPath(root),Path.GetFullPath(transaction.GameRoot),StringComparison.OrdinalIgnoreCase) &&
+                previousClient.TryGetValue(file.Path,out var previous) && previous.SizeBytes==file.SizeBytes && string.Equals(previous.Sha256,file.Sha256,StringComparison.OrdinalIgnoreCase);
+        }
+        public static void Close(){active=null;transaction=null;preparedData=null;bundledClient=null;duplicateClient=null;previousClient=null;foreach(var input in locks)input.Dispose();locks.Clear();fileLocks.Clear();ReleaseDirectories();}
         public static void ReleaseDirectories(){foreach(var handle in directoryLocks.Values)handle.Dispose();directoryLocks.Clear();}
         private static void PlainFile(string root,string path)
         {

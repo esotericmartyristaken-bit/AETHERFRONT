@@ -53,12 +53,14 @@ namespace KesasInstall
         public Func<string, bool> Confirm = delegate { return false; };
         public Func<bool> IsCanceled = delegate { return false; };
         public Action<ProgressInfo> Report = delegate { };
+        public bool ForceVerification { get; set; }
         private readonly HashSet<string> pins;
         private readonly Uri updateUrl;
         private GitHubSettings github=new GitHubSettings();
         private bool githubReady;
         private readonly string installedVersion;
         private ApfClientUpdateManifest verifiedClientManifest;
+        private IncrementalInstall previousInstall;
         private string packageName="";
         private int packageIndex,packageCount;
         private long completed,totalBytes,currentDownloaded,currentTotal;
@@ -102,6 +104,7 @@ namespace KesasInstall
             CheckCanceled();
             ApfPaths.EnsureNoReparsePoints(Root,Root);
             checkedDirectories.Add(Root);
+            previousInstall=ForceVerification?null:IncrementalInstall.Load(Root,mode);
             LoadGitHubSettings();
             bool duplicateClient=ConfirmDuplicateClient();
             bool obsoleteInstaller=File.Exists(Path.Combine(Root,"GameData","LunaMultiplayer","Launcher","AetherfrontInstallUI.bin"));
@@ -127,7 +130,7 @@ namespace KesasInstall
             // A successful helper receipt is the reconnect proof. Do not rescan
             // player-modified runtime data or every shipped client file here.
             if(!duplicateClient && DuplicateClientExists())duplicateClient=ConfirmDuplicateClient();
-            if(!duplicateClient && !obsoleteInstaller && pendingClient==null && CompletedPackMatches(mode,catalog,manifest))return new InstallResult();
+            if(!ForceVerification && !duplicateClient && !obsoleteInstaller && pendingClient==null && CompletedPackMatches(mode,catalog,manifest))return new InstallResult();
             var sizes = catalog.Sizes.ToDictionary(s=>s.Id,s=>s.ExpandedBytes,StringComparer.OrdinalIgnoreCase);
             string statePath = Path.Combine(Data,"APFPackState.json");
             ApfPaths.EnsureNoReparsePoints(Root,statePath);
@@ -154,8 +157,7 @@ namespace KesasInstall
             }
             var known=new HashSet<string>(catalog.Full.ManagedPackages.Concat(catalog.Potato.ManagedPackages).Select(p=>ApfPaths.PackageRoot(p).Split('/')[0]),StringComparer.OrdinalIgnoreCase);
             var extra=deletes.Where(d=>!known.Contains(d.RelativePath.Substring("GameData/".Length))).ToList();
-            if(extra.Count>0 && !Confirm("These extra mods are not in the selected profile and will be permanently removed. Removed mods will not be backed up:\n\n"+string.Join("\n",extra.Select(d=>d.RelativePath))+"\n\nRemove these mods and continue?"))
-                throw new OperationCanceledException("Profile change canceled. No installed files changed.");
+            if(extra.Count>0)SetProgress("Extra mods will be disabled in APF/.disabled-mods; saves and identity stay unchanged.");
             long required=512L*1024*1024;
             if(pendingClient!=null)foreach(var file in verifiedClientManifest.Files)required=checked(required+2*file.SizeBytes);
             foreach(var package in needed) required=checked(required+package.SizeBytes+sizes[package.Id]);
@@ -195,7 +197,7 @@ namespace KesasInstall
                 Download(new Uri(updateUrl,"/APFPack.json"),serverFile,4L*1024*1024,null);
                 ValidateIdentity(ApfPackManifest.FromJson(File.ReadAllText(serverFile)),manifest,targetVersion);
                 currentDownloaded=currentTotal=0;
-                SetProgress("Preparing installation in game. Restart KSP when ready.");
+                SetProgress("Preparing changes for automatic restart and reconnect...");
                 string helperKey=Path.Combine(Data,"APFHelper.key");ApfPaths.EnsureNoReparsePoints(Root,helperKey);
                 var key=ApfTransactionSecurity.LoadOrCreateKey(helperKey);
                 ApfTransactionSecurity.Sign(transaction,key);
@@ -203,7 +205,10 @@ namespace KesasInstall
                 File.WriteAllText(request,ApfJson.Serialize(transaction));
                 if(pendingClient!=null)WriteBundledClient(pendingClient,request);
                 if(duplicateClient)File.WriteAllText(request+".duplicate","true",new UTF8Encoding(false));
-                PreparedPack.Prepare(transaction,request,SetProgress,IsCanceled);
+                var retained=manifest.ManagedPackages.Where(p=>!needed.Any(n=>string.Equals(n.Id,p.Id,StringComparison.OrdinalIgnoreCase))).Select(p=>new PreparedPackage {
+                    Id=p.Id,ArchiveSha256=p.Sha256,Root=ApfPaths.PackageRoot(p),Files=old[p.Id].Files
+                }).ToList();
+                PreparedPack.Prepare(transaction,request,SetProgress,IsCanceled,retained,previousInstall?.ClientManifest);
                 CheckCanceled();
                 return new InstallResult { Changed=true,TransactionPath=request };
             }
@@ -230,7 +235,7 @@ namespace KesasInstall
             if(latest!=null && latest.Version==manifest.Version && latest.ToJson()!=manifest.ToJson())throw new InvalidDataException("GitHub and server release manifests disagree.");
             int compared=ApfClientUpdateVersion.Compare(manifest.Version,installedVersion);
             if(compared<0)return null;
-            if(compared==0 && (CompletedClientMatches(mode,manifest) || ClientFilesMatch(manifest)))return null;
+            if(compared==0 && ((!ForceVerification && CompletedClientMatches(mode,manifest)) || ClientFilesMatch(manifest)))return null;
             if(manifest.KspVersion!="1.12.5")throw new InvalidDataException("This update requires a different KSP version.");
             var uri=new Uri(manifest.PackageUrl);
             if(!SameOrigin(uri,updateUrl)) throw new InvalidDataException("Client update is not hosted by this server.");
@@ -243,7 +248,7 @@ namespace KesasInstall
             string helperKey=Path.Combine(Data,"APFHelper.key");ApfPaths.EnsureNoReparsePoints(Root,helperKey);
             ApfTransactionSecurity.Sign(transaction,ApfTransactionSecurity.LoadOrCreateKey(helperKey));
             string request=Path.Combine(stage,Guid.NewGuid().ToString("N"),"transaction.json");Directory.CreateDirectory(Path.GetDirectoryName(request));File.WriteAllText(request,ApfJson.Serialize(transaction));
-            SetProgress("Client update downloaded. Restart KSP when ready to finish installation.");
+            SetProgress("Client changes downloaded; preparing automatic restart...");
             return new InstallResult {Changed=true,ClientUpdate=true,TransactionPath=request};
         }
         private bool DuplicateClientExists()
@@ -255,8 +260,7 @@ namespace KesasInstall
             if(!DuplicateClientExists())return false;
             string folder=Path.Combine(Root,"Resources","GameData","LunaMultiplayer");
             ApfPaths.EnsureNoReparsePoints(Root,Path.Combine(folder,"Plugins","LmpClient.dll"));
-            if(!Confirm("An extra multiplayer client was found at Resources/GameData/LunaMultiplayer. Disable this duplicate installation and continue? Saves/identity kept."))
-                throw new OperationCanceledException("Duplicate client repair canceled. No installed files changed.");
+            SetProgress("Disabling the duplicate multiplayer client; saves and identity are kept.");
             return true;
         }
         private ApfClientUpdateTransaction ReadPendingClient(InstallResult pending,out string json)
@@ -407,6 +411,7 @@ namespace KesasInstall
             string path=Path.Combine(Root,"GameData",ApfPaths.PackageRoot(package).Replace('/',Path.DirectorySeparatorChar));
             ApfPaths.EnsureNoReparsePoints(Root,path);
             if(!File.Exists(path) && !Directory.Exists(path))return false;
+            if(!ForceVerification && previousInstall!=null && previousInstall.CanReuse(package,state))return true;
             // Update/profile-change preflight and final verification must agree.
             // Unchanged completed reconnects still bypass this scan entirely.
             return RuntimeFiles.SameFiles(state.Files,RuntimeFiles.ScanFiles(Path.Combine(Root,"GameData"),path));
@@ -481,6 +486,7 @@ namespace KesasInstall
                 {"catalogSha256",catalogHash},{"clientManifestSha256",TextHash(feed.ToJson())},
                 {"packManifestSha256",TextHash(transaction.Manifest.ToJson())},{"updatedUtc",DateTime.UtcNow.ToString("o")}
             };
+            IncrementalInstall.Commit(root,receipt,feed,statePath);
             receipt["authorization"]=ReceiptAuthorization(receipt,ApfTransactionSecurity.LoadKey(keyPath));
             string result=Path.Combine(root,"APF","LastInstallResult.json");ApfPaths.EnsureNoReparsePoints(root,result);
             AtomicText(result,ApfJson.Serialize(receipt));
