@@ -286,8 +286,9 @@ namespace Aetherfront.Stability.Client
         }
         static void CancelBoundary()
         {
+            bool ownedBoundary=Recovery.Pending || held || session!=0;
             Recovery.Cancel();
-            WarpSystem.Singleton.WaitingSubspaceIdFromServer = false;
+            if(ownedBoundary && !ReferenceEquals(MainSystem.Singleton,null))WarpSystem.Singleton.WaitingSubspaceIdFromServer = false;
             while (Acknowledgements.TryDequeue(out _)) { }
         }
         static void ReleaseOwnedHold(bool completed)
@@ -393,6 +394,15 @@ namespace Aetherfront.Stability.Client
             catch (Exception error) { Debug.LogError("[Aetherfront Stability] Recovery capture failed; previous snapshot retained: " + error); }
         }
         public void Update()
+        {
+            // A failed or still-pending client startup must not construct and
+            // permanently poison LMP system singletons from an unrelated addon.
+            if(!installed || ReferenceEquals(MainSystem.Singleton,null))return;
+            UpdateInitialized();
+        }
+        // Keep Unity world fields out of the guarded entry method: Mono may
+        // initialize their declaring types while preparing its method body.
+        void UpdateInitialized()
         {
             if (topologyRecoveryAt > 0 && Now >= topologyRecoveryAt && !SimulationProtected && HighLogic.LoadedSceneIsFlight && FlightGlobals.ready)
             { topologyRecoveryAt = 0; SaveRecovery("post-topology"); }

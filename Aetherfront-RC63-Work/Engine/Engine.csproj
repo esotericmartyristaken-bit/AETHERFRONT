@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net472</TargetFramework><LangVersion>10</LangVersion><AssemblyName>KesasInstall</AssemblyName><Optimize>true</Optimize><DebugType>none</DebugType><GenerateAssemblyInfo>false</GenerateAssemblyInfo></PropertyGroup>
+  <ItemGroup>
+    <Reference Include="$(ShippingManaged)/System.IO.Compression.dll"><HintPath>$(ShippingManaged)/System.IO.Compression.dll</HintPath><SpecificVersion>false</SpecificVersion><Private>false</Private></Reference>
+    <Reference Include="$(ShippingManaged)/System.IO.Compression.FileSystem.dll"><HintPath>$(ShippingManaged)/System.IO.Compression.FileSystem.dll</HintPath><SpecificVersion>false</SpecificVersion><Private>false</Private></Reference>
+    <Reference Include="ApfCore"><HintPath>$(ApfCorePath)</HintPath><Private>false</Private></Reference>
+    <Compile Include="../../Aetherfront-RC31-Work/Engine/*.cs" Exclude="../../Aetherfront-RC31-Work/Engine/Installer.cs;../../Aetherfront-RC31-Work/Engine/NativeInstall.cs;../../Aetherfront-RC31-Work/Engine/PreparedPack.cs;../../Aetherfront-RC31-Work/Engine/LegacySettingsRecovery.cs;../../Aetherfront-RC31-Work/Engine/PostExit.cs" />
+    <Compile Include="../../Aetherfront-RC28-Work/Engine/IncrementalInstall.cs;../../Aetherfront-RC28-Work/Engine/DeltaClientFiles.cs" />
+    <Compile Include="../../Aetherfront-RuntimeRepair-Work/Hook/RuntimeAssemblyRepair.cs" />
+    <Compile Include="../../Aetherfront-RC22-Work/Engine/Transfer.cs;../../Aetherfront-RC22-Work/Engine/DownloadFiles.cs;../../Aetherfront-RC22-Work/Engine/GitHub.cs" />
+  </ItemGroup>
+</Project>

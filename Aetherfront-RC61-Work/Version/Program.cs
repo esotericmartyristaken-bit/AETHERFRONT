@@ -7,8 +7,11 @@ if (args.Length != 3 || !System.Text.RegularExpressions.Regex.IsMatch(args[2], "
 string input = Path.GetFullPath(args[0]), output = Path.GetFullPath(args[1]);
 string desired = args[2];
 string Hash(string path) => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
-if (Hash(input) != "db028bfee60f0cc8d058fc0643327a05094899b6e608e9240d83997893d8c3a2")
-    throw new InvalidDataException("Expected exact previously validated four-component updater client.");
+string priorVersion=Hash(input) switch {
+ "db028bfee60f0cc8d058fc0643327a05094899b6e608e9240d83997893d8c3a2"=>"kesas-rc60",
+ "1cc99211a47427b632d3890f28407418d1a416544c9028c6e3fd592746419a2c"=>"kesas-rc62",
+ _=>throw new InvalidDataException("Expected exact validated updater or published RC62 client.")
+};
 if (File.Exists(output)) throw new IOException("Preserve previous versioned candidate.");
 using var resolver = new DefaultAssemblyResolver();
 resolver.AddSearchDirectory(@"C:\Users\Administrator\Desktop\APF\Aetherfront-KSP-Smoke\KSP_x64_Data\Managed");
@@ -17,8 +20,8 @@ resolver.AddSearchDirectory(Path.GetDirectoryName(input)!);
 using var assembly = AssemblyDefinition.ReadAssembly(input, new ReaderParameters { AssemblyResolver = resolver });
 var version = assembly.MainModule.GetType("LmpClient.Apf.ApfClientBuildVersion").Fields.Single(f => f.Name == "Value");
 var getter = assembly.MainModule.GetType("LmpClient.Apf.ApfClientSettings").Methods.Single(m => m.Name == "get_ClientVersion");
-var literal = getter.Body.Instructions.Single(i => i.OpCode == OpCodes.Ldstr && (string)i.Operand == "kesas-rc60");
-if ((string)version.Constant != "kesas-rc60") throw new InvalidDataException("Unexpected compiled version.");
+var literal = getter.Body.Instructions.Single(i => i.OpCode == OpCodes.Ldstr && (string)i.Operand == priorVersion);
+if ((string)version.Constant != priorVersion) throw new InvalidDataException("Unexpected compiled version.");
 var before = assembly.MainModule.Types.SelectMany(Flatten).SelectMany(t => t.Methods).Where(m => m.HasBody && m != getter)
     .ToDictionary(m => m.FullName, Signature);
 version.Constant = desired; literal.Operand = desired; assembly.MainModule.Mvid = Guid.NewGuid();

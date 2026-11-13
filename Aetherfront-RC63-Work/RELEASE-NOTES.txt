@@ -1,0 +1,11 @@
+RC63 repairs the RC62 client startup regression.
+
+The updater preparation used an older installer source without the shipping prepared30 settings protocol, all sixteen preference paths and RuntimeAssemblyRepair. Canonical startup rejected the existing authenticated receipt, preventing MainSystem initialization. The continuity addon also referenced the missing type. Flight-safety Update then touched a dependent singleton while MainSystem was absent, causing cascading errors.
+
+The corrected installer combines the current preservation/casing/terrain/atomic-file behavior and runtime-repair hooks with the incremental updater. Its complete previous public API and all shipping installer references are audited. Four-argument PreparedPack.Prepare remains available. Legacy migration only considers packages actually replaced by its authenticated transaction. Optional signed UI payloads no longer trigger perpetual obsolete-installer work or disappear during helper completion.
+
+Flight-safety Update waits for canonical MainSystem initialization before dispatching Unity world work. Unowned boundary cancellation does not initialize WarpSystem. Existing docking, burn-intent, orbit, checkpoint, synchronization and automatic-update protections remain included.
+
+Use Build-Engine.ps1 for deployment builds: it explicitly selects KSP's 4.0 compression references. Desktop framework compiler references are not interchangeable. Audit and actual Mono startup tests are required before approval.
+
+No server DLL/media changes, account reset or science changes. Preserve the normal candidate gate, signatures, warning, backup, health checks and disabled arenas. RC62 users whose connection menu cannot load need an external signed recovery helper once RC63 is published; they cannot click a missing Connect button.

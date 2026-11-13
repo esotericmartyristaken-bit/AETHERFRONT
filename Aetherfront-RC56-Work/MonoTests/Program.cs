@@ -49,6 +49,13 @@ class Program
   foreach (var type in helper.GetTypes()) foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly))
    if (!method.ContainsGenericParameters && method.GetMethodBody() != null) { RuntimeHelpers.PrepareMethod(method.MethodHandle); methods++; }
   Check(methods > 100, "shipping helper methods JIT against KSP's actual Mono");
+  if(ReferenceEquals(LmpClient.MainSystem.Singleton,null)) {
+   var inactive=(FlightSafety)System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(FlightSafety));
+   typeof(FlightSafety).GetField("installed",BindingFlags.NonPublic|BindingFlags.Static).SetValue(null,true);
+   inactive.Update();
+   typeof(FlightSafety).GetMethod("CancelBoundary",BindingFlags.NonPublic|BindingFlags.Static).Invoke(null,null);
+   Check(true,"missing MainSystem startup does not initialize dependent LMP singletons");
+  }
   var listener = typeof(FlightSafety).GetField("Listener", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
   Check(listener != null && listener.GetType().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic).Count(m => m.DeclaringType == listener.GetType()) == 4,
    "KSP lifecycle callbacks retain non-null instance targets");

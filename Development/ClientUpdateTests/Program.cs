@@ -22,6 +22,11 @@ string Copy(string relative){string destination=Path.Combine(root,relative);Dire
 string data=Path.Combine(root,"GameData","LunaMultiplayer","Data");
 try {
     Write("KSP_x64.exe","fixture-only; never execute");Directory.CreateDirectory(Path.Combine(root,"GameData","Squad"));
+    // Production preserves the runtime-repair guard. A fake/missing game DLL
+    // must not make a reconnect fixture accidentally depend on its omission.
+    string runtime=Path.Combine(root,"KSP_x64_Data/Managed/Assembly-CSharp.dll");
+    Directory.CreateDirectory(Path.GetDirectoryName(runtime));
+    File.Copy(Path.Combine(baseline,"GameData/LunaMultiplayer/PluginData/Runtime/Assembly-CSharp.apfbin"),runtime);
     string save=Write("saves/Fixture/persistent.sfs","progress sentinel"),identity=Write("GameData/LunaMultiplayer/Data/privatekey.txt","identity sentinel"),controls=Write("settings.cfg","controls sentinel");
     Copy("GameData/LunaMultiplayer/Plugins/LmpClient.dll");
     Copy("GameData/LunaMultiplayer/Plugins/ApfCore.dll");
