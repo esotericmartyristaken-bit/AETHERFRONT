@@ -58,3 +58,17 @@ $result=Complete-ReviewedNativeRollback $empty (Join-Path $empty 'review.json')
 if($result.present -or $result.changed){throw 'Missing journal was not a no-op'}
 $checks++
 Write-Output "PASS $checks isolated journal tests. Production accesses were pinned HTTPS and UDP ownership reads only."
+$before=Join-Path $fixture 'crew-before';$live=Join-Path $fixture 'crew-live'
+Put (Join-Path $before 'Kerbals/Jangun Kerman.txt') "name = Jangun Kerman`nstate = Available`nbrave = 1`n"
+Put (Join-Path $live 'Kerbals/Jangun Kerman.txt') "name = Jangun Kerman`nstate = Assigned`nbrave = 1`n"
+Put (Join-Path $before 'Vessels/one.txt') "VESSEL`n{`n crew = Jangun Kerman`n}`n"
+Put (Join-Path $live 'Vessels/one.txt') "VESSEL`n{`n crew = Jangun Kerman`n}`n"
+if(-not (Test-ReviewedCrewNormalization $before $live 'Kerbals\Jangun Kerman.txt')){throw 'Canonical startup normalization refused'}
+Write-Output 'PASS crew availability-only normalization with exact canonical vessel'
+Put (Join-Path $live 'Kerbals/Jangun Kerman.txt') "name = Jangun Kerman`nstate = Assigned`nbrave = 0`n"
+if(Test-ReviewedCrewNormalization $before $live 'Kerbals\Jangun Kerman.txt'){throw 'Additional crew change accepted'}
+Write-Output 'PASS additional crew changes refused'
+Put (Join-Path $live 'Kerbals/Jangun Kerman.txt') "name = Jangun Kerman`nstate = Assigned`nbrave = 1`n"
+Put (Join-Path $live 'Vessels/one.txt') "VESSEL`n{`n crew = Other`n}`n"
+if(Test-ReviewedCrewNormalization $before $live 'Kerbals\Jangun Kerman.txt'){throw 'Changed canonical vessel accepted'}
+Write-Output 'PASS missing or changed canonical crew reference refused'
