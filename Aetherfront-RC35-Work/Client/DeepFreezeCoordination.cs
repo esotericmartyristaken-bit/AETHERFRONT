@@ -57,7 +57,7 @@ namespace Aetherfront.Continuity.Client
             if(handshake==null)throw new InvalidOperationException("DeepFreeze handshake signature changed");
             harmony.Patch(handshake,transpiler:new HarmonyMethod(typeof(DeepFreezeCoordination),nameof(HandshakeCapability)));
             available=SupportsMod(freezer.Assembly);
-            if(available){DeepFreezeAuthority.Install(harmony);DeepFreezeBackgroundSave.Install(harmony);}
+            if(available){DeepFreezeAuthority.Install(harmony);DeepFreezeBackgroundSave.Install(harmony);DeepFreezeVesselEvents.Install(harmony);}
         }
         private static bool SupportsMod(Assembly assembly) => assembly.GetName().Version.ToString()=="1.32.0.0" &&
             assembly.ManifestModule.ModuleVersionId==new Guid("3dfd9a02-2102-4022-9ef5-8326bd22a723");

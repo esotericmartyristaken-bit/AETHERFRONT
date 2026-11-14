@@ -7,7 +7,7 @@ using HarmonyLib;
 using LifeSupport;
 using Aetherfront.Continuity.Client;
 
-internal static class Program
+internal static partial class Program
 {
     static int checks;
     static string candidatePath;
@@ -82,6 +82,7 @@ internal static class Program
         CapturedDockingEpochs();
         SoundPrefabs(game);
         DeepFreezeRosterTransitions(game);
+        DeepFreezeVesselEventRegression();
         NativeFrozenMerge();
         DeepFreezeAuthorityGates();
         CryopodClockDomains(game);

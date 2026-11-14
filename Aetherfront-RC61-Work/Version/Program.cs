@@ -10,7 +10,8 @@ string Hash(string path) => Convert.ToHexString(SHA256.HashData(File.ReadAllByte
 string priorVersion=Hash(input) switch {
  "db028bfee60f0cc8d058fc0643327a05094899b6e608e9240d83997893d8c3a2"=>"kesas-rc60",
  "1cc99211a47427b632d3890f28407418d1a416544c9028c6e3fd592746419a2c"=>"kesas-rc62",
- _=>throw new InvalidDataException("Expected exact validated updater or published RC62 client.")
+ "eee970ac7e1cea2e3b70b66fe331a04f26edfaeefc878af165b9064cdef8520e"=>"kesas-rc64",
+ _=>throw new InvalidDataException("Expected an exact validated updater or pinned published client.")
 };
 if (File.Exists(output)) throw new IOException("Preserve previous versioned candidate.");
 using var resolver = new DefaultAssemblyResolver();
