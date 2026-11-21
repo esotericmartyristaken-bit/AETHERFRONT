@@ -129,8 +129,18 @@ function Wait-PreactivationArmed($Owned,[ValidateRange(0.01,180)][double]$Timeou
         if($child.HasExited){throw "Recovery watchdog exited before arming; preserve $directory"}
         $reportPath=Get-RecoveryChild $directory 'report.json'
         if([IO.File]::Exists($reportPath)){
-            Assert-RecoveryProtection $reportPath -Private
-            $report=Read-RecoveryJson $reportPath 8192
+            try {
+                Assert-RecoveryProtection $reportPath -Private
+                $report=Read-RecoveryJson $reportPath 8192 -AtomicReport
+            } catch {
+                $cause=$_.Exception.GetBaseException()
+                # Atomic replacement can temporarily hold the published path.
+                if($cause -isnot [IO.FileNotFoundException] -and
+                    ($cause -isnot [IO.IOException] -or ($cause.HResult -band 0xffff) -notin 32,33)){throw}
+                $lastReason='report replacement in progress'
+                Start-Sleep -Milliseconds 200
+                continue
+            }
             if($report.id -cne $id -or $report.planSha256 -cne $context.PlanSha256){throw "Recovery arm report identity mismatch; preserve $directory"}
             $lastReason=[string]$report.reason
             if($report.status -ceq 'needs-review'){throw "Recovery refused to arm: $($report.reason); preserve $directory"}

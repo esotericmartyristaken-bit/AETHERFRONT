@@ -98,7 +98,22 @@ try{
     Reject-Test {Wait-PreactivationArmed $delayed -TimeoutSeconds 0.01} 'no stop is authorized'
     Assert-Test ($null -eq $delayed.Status -and $script:kills -eq 1) 'Timed-out initialization authorized a stop or killed the retained watcher'
     'PASS delayed initialization requires exact armed report; bounded timeout retains child and authorizes no stop'
-    'PASS 5 arm-helper groups; no real process, task, ACL change or production operation'
+    $delayed.Context.ArmedAt=[DateTimeOffset]::UtcNow.ToString('o')
+    $null=Write-RecoveryReport $delayed.Context 'pending' 'armed'
+    $lockPath=Join-Path $delayed.Context.Directory 'report.json'
+    $script:reportLock=[IO.File]::Open($lockPath,'Open','ReadWrite','None')
+    try{
+        Reject-Test {Wait-PreactivationArmed $delayed -TimeoutSeconds 0.15} 'report replacement in progress'
+        Assert-Test ($null -eq $delayed.Status) 'An unreadable report authorized a stop'
+        $script:attempt=0
+        $delayed.Process|Add-Member ScriptMethod Refresh -Force {
+            if(++$script:attempt -eq 2){$script:reportLock.Dispose()}
+        }
+        $retry=Wait-PreactivationArmed $delayed -TimeoutSeconds 2
+        Assert-Test ($retry.Status.reason -ceq 'armed' -and $script:attempt -ge 2) 'Report did not recover after transient Windows file sharing violation'
+    }finally{$script:reportLock.Dispose()}
+    'PASS real Windows report lock stalls arming; retry requires valid exact report after release'
+    'PASS 6 arm-helper groups; no real process, task, ACL change or production operation'
 }finally{
     $resolved=[IO.Path]::GetFullPath($fixture)
     $temporary=[IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\')+'\'

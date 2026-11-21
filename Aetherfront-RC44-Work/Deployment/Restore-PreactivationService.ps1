@@ -45,9 +45,10 @@ function Assert-RecoveryProtection([string]$Path,[switch]$Private,[switch]$Contr
     }
 }
 
-function Read-RecoveryJson([string]$Path,[int]$MaximumBytes=262144) {
+function Read-RecoveryJson([string]$Path,[int]$MaximumBytes=262144,[switch]$AtomicReport) {
     $null=Assert-RecoveryLocalPath $Path
-    $stream=[IO.FileStream]::new($Path,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read)
+    $share=if($AtomicReport){[IO.FileShare]'ReadWrite,Delete'}else{[IO.FileShare]::Read}
+    $stream=[IO.FileStream]::new($Path,[IO.FileMode]::Open,[IO.FileAccess]::Read,$share)
     try{
         if($stream.Length -gt $MaximumBytes){throw 'Recovery JSON exceeds its limit'}
         $reader=[IO.StreamReader]::new($stream,[Text.UTF8Encoding]::new($false,$true),$true)
