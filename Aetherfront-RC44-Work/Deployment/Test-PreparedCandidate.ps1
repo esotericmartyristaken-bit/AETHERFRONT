@@ -808,6 +808,70 @@ function Write-PCPhase($Context,[string]$Phase) {
     if($Context.OnCandidateProgress){try{& $Context.OnCandidateProgress $Phase}catch{$Context.Receipt.progressCallbackFailed=$true}}
 }
 
+# Read only the immutable input snapshot, not state rewritten by the failed
+# candidate. Report counts and GUIDs, never roster names or raw save contents.
+function Get-PCDeepFreezeFailureSummary([string]$Scratch) {
+    $universe=Get-UpdateChildPath $Scratch 'Snapshots/Universe'
+    $scenarioPath=Get-UpdateChildPath $universe 'DeepFreeze/Scenario.txt'
+    $markerPath=Get-UpdateChildPath $universe 'DeepFreeze/applied.marker'
+    $scenarioInfo=$null
+    try { $scenarioInfo=Get-Item -LiteralPath $scenarioPath -ErrorAction Stop }
+    catch [Management.Automation.ItemNotFoundException] { return @{status='no-scenario'} }
+    if ($scenarioInfo.PSIsContainer -or $scenarioInfo.Length -gt 512KB -or
+        (Get-Item -LiteralPath $markerPath -ErrorAction Stop).Length -ne 109) {
+        return @{status='invalid-projection-size'}
+    }
+    $bytes=[IO.File]::ReadAllBytes($scenarioPath)
+    $marker=[IO.File]::ReadAllBytes($markerPath)
+    $digest=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
+    if ([Text.Encoding]::ASCII.GetString($marker,0,5) -cne 'DFAP1' -or
+        [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([byte[]]$marker[0..76])) -cne [Convert]::ToHexString($marker[77..108]) -or
+        $digest -ine [Convert]::ToHexString($marker[45..76])) { return @{status='invalid-projection-checksum'} }
+    $text=[Text.UTF8Encoding]::new($false,$true).GetString($bytes)
+    $records=[regex]::Matches($text,'(?ms)^\t(VesselInfo|PartInfo|KerbalInfo|AlarmInfo)\r?\n\t\{\r?\n(.*?)^\t\}')
+    if ($records.Count -ne [regex]::Matches($text,'(?m)^\s*(VesselInfo|PartInfo|KerbalInfo|AlarmInfo)\s*$').Count) {
+        return @{status='noncanonical-projection'}
+    }
+    $index=@{}
+    foreach ($record in $records) {
+        $kind=$record.Groups[1].Value
+        $key=if ($kind -ceq 'VesselInfo') {'Guid'} else {'vesselID'}
+        $body=$record.Groups[2].Value
+        $idMatch=[regex]::Matches($body,('(?im)^\t\t'+$key+'\s*=\s*([a-f0-9-]{36})\s*$'))
+        if ($idMatch.Count -ne 1) { return @{status='noncanonical-projection'} }
+        $id=([Guid]$idMatch[0].Groups[1].Value).ToString()
+        if (!$index.ContainsKey($id)) { $index[$id]=@{vessel=$null;parts=0;crew=0;alarms=0} }
+        $row=$index[$id]
+        if ($kind -in 'VesselInfo','PartInfo') {
+            $count=[regex]::Matches($body,'(?im)^\t\tnumFrznCrew\s*=\s*(\d+)\s*$')
+            if ($count.Count -ne 1) { return @{status='noncanonical-projection'} }
+            $frozen=[int]$count[0].Groups[1].Value
+            if ($kind -eq 'PartInfo') { $row.parts+=$frozen }
+            elseif ($null -eq $row.vessel) { $row.vessel=$frozen }
+            else { return @{status='duplicate-vessel-record'} }
+        } elseif ($kind -eq 'KerbalInfo') { $row.crew++ }
+        else { $row.alarms++ }
+    }
+    $missing=0;$frozenMissing=0;$crewMissing=0;$reported=[Collections.Generic.List[string]]::new()
+    foreach ($id in ($index.Keys | Sort-Object)) {
+        $row=$index[$id]
+        if ($null -eq $row.vessel) { return @{status='orphan-scenario-record'} }
+        try {
+            $file=Get-Item -LiteralPath (Get-UpdateChildPath $universe "Vessels/$id.txt") -ErrorAction Stop
+            if ($file.PSIsContainer) { return @{status='invalid-vessel-projection'} }
+            continue
+        } catch [Management.Automation.ItemNotFoundException] {}
+        $missing++
+        if ($row.vessel -gt 0 -or $row.parts -gt 0 -or $row.crew -gt 0) {
+            $frozenMissing++
+            $crewMissing+=$row.crew
+            if ($reported.Count -lt 32) { $reported.Add($id) }
+        }
+    }
+    @{status='checksum-verified';sha256=$digest;revision=[BitConverter]::ToInt64($marker,5);
+        missing=$missing;missingWithFrozenCrew=$frozenMissing;frozenCrewRows=$crewMissing;frozenVesselIds=$reported.ToArray()}
+}
+
 function Invoke-PreparedCandidate {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$DeploymentRoot,
@@ -844,7 +908,7 @@ function Invoke-PreparedCandidate {
         gateSha256=Get-PCHash $PSCommandPath;startPassed=$false;shutdownPassed=$false;productionUnchanged=$false;productionPidUnchanged=$false;success=$false;
         releaseManifestSha256=$null;releaseFiles=@();releasePayloadHashes=@();liveBaselineHashes=@();publishedFiles=@();signedFeedSha256=$null;signedArchiveSha256=$null;production=$null;
         baselineChecks=@();productionSamples=0;worldSnapshot=@();candidateFiles=@();candidatePackSha256=$null;packIdentity=$null;
-        isolation=$null;https=$null;bridge=$null;bridgeObservation=$null;shutdown=$null;failureStage=$null;failureDetail=$null;phaseTimings=@()
+        isolation=$null;https=$null;bridge=$null;bridgeObservation=$null;shutdown=$null;failureStage=$null;failureDetail=$null;deepFreezeSummary=$null;phaseTimings=@()
     }
     $context=@{Root=$root;Release=$release;Published=$published;Version=$ExpectedVersion;Scratch=$scratch;Candidate="$scratch/Native";
         Config=$null;Production=$null;Baseline=@();PublishedFiles=@();Receipt=$receipt;GamePort=0;PackPort=0;Game=$null;Pack=$null;
@@ -909,7 +973,15 @@ function Invoke-PreparedCandidate {
         Assert-PCNativeBytes $context
         Assert-PCProduction $context -Full
         $receipt.startPassed=$true
-    } catch { $failure=$true; $receipt.failureStage=$stage; $receipt.failureDetail=$_.Exception.Message }
+    } catch {
+        $failure=$true; $receipt.failureStage=$stage; $receipt.failureDetail=$_.Exception.Message
+        if ($stage -eq 'startup') {
+            try { $receipt.deepFreezeSummary=Get-PCDeepFreezeFailureSummary $scratch }
+            catch { $receipt.deepFreezeSummary=@{status='unavailable';errorType=$_.Exception.GetType().Name} }
+            $summary=$receipt.deepFreezeSummary | ConvertTo-Json -Depth 5 -Compress
+            $receipt.failureDetail+="; original snapshot DeepFreeze: $summary"
+        }
+    }
     finally {
         Write-PCPhase $context 'shutdown'
         try {

@@ -627,6 +627,72 @@ try {
         [IO.File]::WriteAllText("$($f.Base)/Logs/startup.log","All systems up and running.`nFATAL startup exploded")
         Expect-Failure { Read-PCStartup @{Scratch=$f.Base;Candidate="$($f.Base)/Candidate"} } '*startup log at Logs/startup.log:2*'
     }
+    Test-Fixture 'startup evidence distinguishes missing frozen vessels and excludes crew names' {
+        $f=New-Fixture
+        $u="$($f.Base)/Snapshots/Universe"
+        $null=[IO.Directory]::CreateDirectory("$u/DeepFreeze")
+        $null=[IO.Directory]::CreateDirectory("$u/Vessels")
+        $zero='1255a3ff-768a-4a3e-91bf-e049f1ada1db'
+        $frozen='90bf2169-8f20-4300-9c17-0cd008745eb6'
+        $scenario=@"
+SCENARIO
+{
+	VesselInfo
+	{
+		Guid = $zero
+		numFrznCrew = 0
+	}
+	VesselInfo
+	{
+		Guid = $frozen
+		numFrznCrew = 1
+	}
+	KerbalInfo
+	{
+		vesselID = $frozen
+		kerbalName = do-not-export
+	}
+	PartInfo
+	{
+		vesselID = $frozen
+		numFrznCrew = 1
+	}
+}
+"@
+        $bytes=[Text.Encoding]::UTF8.GetBytes($scenario)
+        $marker=[byte[]]::new(109)
+        [Text.Encoding]::ASCII.GetBytes('DFAP1').CopyTo($marker,0)
+        [BitConverter]::GetBytes([long]17).CopyTo($marker,5)
+        [Security.Cryptography.SHA256]::HashData($bytes).CopyTo($marker,45)
+        [Security.Cryptography.SHA256]::HashData([byte[]]$marker[0..76]).CopyTo($marker,77)
+        [IO.File]::WriteAllBytes("$u/DeepFreeze/Scenario.txt",$bytes)
+        [IO.File]::WriteAllBytes("$u/DeepFreeze/applied.marker",$marker)
+        $before=(Get-PCHash "$u/DeepFreeze/Scenario.txt")
+        $r=Get-PCDeepFreezeFailureSummary $f.Base
+        Assert-Fixture ($r.status -eq 'checksum-verified' -and $r.revision -eq 17 -and $r.missing -eq 2 -and $r.missingWithFrozenCrew -eq 1 -and $r.frozenCrewRows -eq 1)
+        Assert-Fixture ($r.frozenVesselIds[0] -ceq $frozen -and ($r|ConvertTo-Json) -notmatch 'do-not-export')
+        Assert-Fixture ((Get-PCHash "$u/DeepFreeze/Scenario.txt") -ceq $before)
+        [IO.File]::WriteAllText("$u/Vessels/$frozen.txt",'present')
+        $r=Get-PCDeepFreezeFailureSummary $f.Base
+        Assert-Fixture ($r.missing -eq 1 -and $r.missingWithFrozenCrew -eq 0)
+        [IO.File]::AppendAllText("$u/DeepFreeze/Scenario.txt",'tamper')
+        Assert-Fixture ((Get-PCDeepFreezeFailureSummary $f.Base).status -eq 'invalid-projection-checksum')
+    }
+    Test-Fixture 'release order keeps immutable draft and player warning behind actual boot' {
+        $publisher=Join-Path $PSScriptRoot '../../KESAS-VPS-Server/Publish-Release.ps1'
+        $errors=$null
+        $ast=[Management.Automation.Language.Parser]::ParseFile($publisher,[ref]$null,[ref]$errors)
+        Assert-Fixture ($errors.Count -eq 0)
+        $calls=$ast.FindAll({param($node) $node -is [Management.Automation.Language.CommandAst]},$true)
+        $boot=@($calls|Where-Object {$_.GetCommandName() -eq 'Invoke-PreparedCandidate'})
+        $draft=@($calls|Where-Object {$_.GetCommandName() -eq 'Prepare-GitHubPublication'})
+        $warn=@($calls|Where-Object {$_.GetCommandName() -eq 'Wait-LocalDeploymentAdmission'})
+        Assert-Fixture ($boot.Count -eq 1 -and $draft.Count -eq 1 -and $warn.Count -eq 1)
+        Assert-Fixture ($boot[0].Extent.StartOffset -lt $draft[0].Extent.StartOffset -and $draft[0].Extent.StartOffset -lt $warn[0].Extent.StartOffset)
+        $move=$ast.FindAll({param($node) $node -is [Management.Automation.Language.InvokeMemberExpressionAst] -and
+            $node.Extent.Text -ceq '[IO.Directory]::Move($preparedBuild,$prepared)'},$true)
+        Assert-Fixture ($move.Count -eq 1 -and $boot[0].Extent.StartOffset -lt $move[0].Extent.StartOffset -and $move[0].Extent.StartOffset -lt $draft[0].Extent.StartOffset)
+    }
     Test-Fixture 'native launch plan excludes inherited task/hook routes and uses fixed loopback arguments' {
         $f=New-Fixture; $context=@{Candidate=$f.Root;Scratch=$f.Base;Version='kesas-rc999';PackPort=28866}
         $previousTask=$env:APF_SERVER_TASK; $previousHook=$env:DOTNET_STARTUP_HOOKS

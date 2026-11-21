@@ -32,6 +32,13 @@ upload. The real isolated candidate still boots and passes signature/health
 checks before player admission and any production stop. Its redundant preliminary
 firewall probe is removed, not the candidate's actual firewall isolation.
 
+Reserve immutable GitHub assets only after the isolated boot passes. The local
+prepared cache is verified in private staging and moved into place atomically.
+A failed boot keeps its private receipt. When available, its sanitized startup
+detail includes checksum-verified counts of missing DeepFreeze vessel projections
+and whether frozen crew are affected. This is diagnostic evidence, not permission
+to discard frozen crew or bypass readiness checks.
+
 Keep the 15-minute warning when players are online; that intentional wait cannot
 fit inside a total 15-minute deadline. Log phase timings, follow fresh receipts,
 and investigate a stalled phase instead of repeatedly submitting deployments.

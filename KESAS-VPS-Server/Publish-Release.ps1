@@ -515,28 +515,6 @@ try{
     if($next.requiredClientVersion -cne $version){throw 'Pack template client version differs from the release version'}
     $next.serverId=$oldPack.serverId;$next.packId=$oldPack.packId
     Write-UpdateAtomic "$stage/pack.json" ($next|ConvertTo-Json -Depth 40)
-    if($githubEnabled){
-        # Upload immutable media and a draft of these exact signed bytes before
-        # any service is stopped. Never publish a candidate rebuilt elsewhere.
-        if(-not $reuse){
-            New-UpdateDirectory $prepared
-            Copy-UpdateTree "$stage/Published" "$prepared/Published"
-            Copy-UpdateAtomic $bootstrapSource "$prepared/KESAS-Client-Bootstrap.zip"
-            Copy-UpdateAtomic "$bootstrapSource.sha256" "$prepared/KESAS-Client-Bootstrap.zip.sha256"
-            Copy-UpdateAtomic $bootstrapSource "$prepared/Aetherfront-Starter-$version.zip"
-            Copy-UpdateAtomic "$stage/Client/GameData/LunaMultiplayer/Launcher/install-catalog.json" "$prepared/install-catalog.json"
-            Write-UpdateAtomic "$prepared/prepared.json" (@{schema=1;version=$version;fingerprint=$fingerprint;files=@(Get-PublisherPreparedInventory $prepared $version)}|ConvertTo-Json -Depth 16)
-            $bootstrapSource="$prepared/KESAS-Client-Bootstrap.zip"
-        }
-        Assert-PublisherPrepared $prepared $fingerprint $version
-        $githubPlan=Invoke-GhpValidationScope {
-            $plan=New-GitHubPublicationPlan -Repository $githubSettings.Value.repository -MediaTag $githubSettings.Value.mediaTag -PublishedDirectory "$prepared/Published" -BootstrapZip "$prepared/Aetherfront-Starter-$version.zip" -CatalogPath "$prepared/install-catalog.json" -MediaDirectory "$root/Server/Config"
-            if((Get-FileHash -LiteralPath $releasePath -Algorithm SHA256).Hash -ine $releaseSha){throw 'Source release changed during preparation; no GitHub mutation requested.'}
-            Write-PublisherStage 'media-publication'
-            $null=Prepare-GitHubPublication -Plan $plan
-            $plan
-        }
-    }
     $targets=@(
         @{source="$stage/Release/ClientTemplate.zip";relative='ClientTemplate.zip'},
         @{source="$stage/Release/AetherfrontTechnology.json";relative='Server/Config/AetherfrontTechnology.json'},
@@ -571,6 +549,34 @@ try{
     Write-PublisherStage 'candidate-preflight'
     $candidate=Invoke-PreparedCandidate -DeploymentRoot $root -ReleaseDirectory "$stage/Release" -PublishedDirectory "$stage/Published" -ExpectedVersion $version -ResultPath $candidateReceipt -OnCandidateProgress {param($phase) Write-PublisherStage ('candidate-'+$phase)}
     Assert-LocalPreparedReceipt $candidateReceipt $candidate.ReceiptSha256 $root "$stage/Release" "$stage/Published" $version $candidateGate
+    if($githubEnabled){
+        # A failed boot must not reserve immutable release assets. Freeze and
+        # publish only these tested bytes, still before admission or shutdown.
+        if(-not $reuse){
+            $preparedBuild=Get-UpdateChildPath $stage 'GitHubPrepared'
+            New-UpdateDirectory $preparedBuild
+            Copy-UpdateTree "$stage/Published" "$preparedBuild/Published"
+            Copy-UpdateAtomic $bootstrapSource "$preparedBuild/KESAS-Client-Bootstrap.zip"
+            Copy-UpdateAtomic "$bootstrapSource.sha256" "$preparedBuild/KESAS-Client-Bootstrap.zip.sha256"
+            Copy-UpdateAtomic $bootstrapSource "$preparedBuild/Aetherfront-Starter-$version.zip"
+            Copy-UpdateAtomic "$stage/Client/GameData/LunaMultiplayer/Launcher/install-catalog.json" "$preparedBuild/install-catalog.json"
+            Write-UpdateAtomic "$preparedBuild/prepared.json" (@{schema=1;version=$version;fingerprint=$fingerprint;files=@(Get-PublisherPreparedInventory $preparedBuild $version)}|ConvertTo-Json -Depth 16)
+            Assert-PublisherPrepared $preparedBuild $fingerprint $version
+            # A crash during preparation leaves only private staging, never an
+            # incomplete immutable version directory.
+            New-UpdateDirectory ([IO.Path]::GetDirectoryName($prepared))
+            [IO.Directory]::Move($preparedBuild,$prepared)
+        }
+        Assert-PublisherPrepared $prepared $fingerprint $version
+        $githubPlan=Invoke-GhpValidationScope {
+            $plan=New-GitHubPublicationPlan -Repository $githubSettings.Value.repository -MediaTag $githubSettings.Value.mediaTag -PublishedDirectory "$prepared/Published" -BootstrapZip "$prepared/Aetherfront-Starter-$version.zip" -CatalogPath "$prepared/install-catalog.json" -MediaDirectory "$root/Server/Config"
+            if((Get-FileHash -LiteralPath $releasePath -Algorithm SHA256).Hash -ine $releaseSha){throw 'Source release changed during preparation; no GitHub mutation requested.'}
+            Write-PublisherStage 'media-publication'
+            $null=Prepare-GitHubPublication -Plan $plan
+            $plan
+        }
+        Assert-LocalPreparedReceipt $candidateReceipt $candidate.ReceiptSha256 $root "$stage/Release" "$stage/Published" $version $candidateGate
+    }
     Write-PublisherStage 'local-player-warning'
     $admission=Wait-LocalDeploymentAdmission $LocalNode $localCode $LocalBotConfig $LocalEvidenceRoot $version $Notes
     Assert-LocalPreparedReceipt $candidateReceipt $candidate.ReceiptSha256 $root "$stage/Release" "$stage/Published" $version $candidateGate
