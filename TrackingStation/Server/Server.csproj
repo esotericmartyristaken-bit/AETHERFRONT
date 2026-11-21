@@ -4,6 +4,7 @@
     <Compile Include="../Wire.cs" />
     <Reference Include="Server"><HintPath>$(ServerReference)</HintPath><Private>false</Private></Reference>
     <Reference Include="AetherfrontCore"><HintPath>$(Runtime)/AetherfrontCore.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="ApfCore"><HintPath>$(Runtime)/ApfCore.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="LunaConfigNode"><HintPath>$(Runtime)/LunaConfigNode.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Lidgren.Core"><HintPath>$(Runtime)/Lidgren.Core.dll</HintPath><Private>false</Private></Reference>
   </ItemGroup>

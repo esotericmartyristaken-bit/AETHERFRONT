@@ -45,3 +45,19 @@ Before release, use a fresh isolated two-client world, not player saves:
 4. Compare network bytes and Tracking Station frame times with the feature
    off and on. Exercise a large fleet and record the 128-entry limit where
    applicable. Recheck stock marker suppression when a ship is fully synced.
+
+## DeepFreeze startup recovery (RC67)
+
+RC67 also handles missing DeepFreeze vessel projections without removing
+the corresponding committed scenario entries. It permits a missing
+projection to remain on hold only when the retained crew, freezer seats,
+and roster agree and none of those crew or parts exist on a present ship.
+Held vessel IDs cannot be replaced by ordinary packets. The existing
+committed-crew protections and validation of present DeepFreeze vessels
+remain active. This does not reconstruct a missing craft or thaw its crew.
+
+`Test-HeldDeepFreezeWorld.ps1 -CandidateRuntime <test server directory>`
+uses a retained save fixture. It checks the native validator and byte
+preservation, then changes one roster entry on a disposable copy to prove
+that mismatched data still fails startup. The guarded publisher must also
+boot the complete candidate on a fresh snapshot before stopping production.

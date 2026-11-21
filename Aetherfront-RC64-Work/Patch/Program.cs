@@ -20,6 +20,8 @@ resolver.AddSearchDirectory(Environment.GetEnvironmentVariable("AETHERFRONT_KSP_
 using var target=AssemblyDefinition.ReadAssembly(input,new ReaderParameters{AssemblyResolver=resolver,InMemory=true});var module=target.MainModule;
 if(mode=="tracking-reference"){
  module.GetType("Server.Message.VesselMsgReader").Methods.Single(m=>m.Name=="GetVesselSubspace").IsPublic=true;
+ module.GetType("Server.Aetherfront.AetherfrontDeepFreezeCheckpointValidator/VesselAssignments").Fields.Single(f=>f.Name=="Parts").IsPublic=true;
+ module.GetType("Server.System.KerbalSystem").Methods.Single(m=>m.Name=="TryValidateKerbalPayload").IsPublic=true;
  Directory.CreateDirectory(Path.GetDirectoryName(output)!);target.Write(output);return;
 }
 if(mode=="reference"){
@@ -53,7 +55,7 @@ if(mode is "server" or "client"){
 if(mode is "personal" or "server" or "clock" or "tracking"){
  using var donor=AssemblyDefinition.ReadAssembly(args[2],new ReaderParameters{AssemblyResolver=resolver});
  var roots=mode=="personal"?new[]{"Aetherfront.Personal.Client.ResearchQueue","Aetherfront.Personal.Client.ResearchSync"}:mode=="clock"?new[]{"Aetherfront.Continuity.Server.PersonalClockServer"}:new[]{"Aetherfront.Synchronization.Server.RecoveryJournal","Aetherfront.Synchronization.Server.BoundaryServer","Aetherfront.Synchronization.BoundaryWire"};
- if(mode=="tracking")roots=new[]{"Aetherfront.Tracking.TrackingCatalog","Aetherfront.Tracking.Wire","Aetherfront.Tracking.Marker"};
+ if(mode=="tracking")roots=new[]{"Aetherfront.Tracking.TrackingCatalog","Aetherfront.Tracking.Wire","Aetherfront.Tracking.Marker","Aetherfront.Tracking.DeepFreezeProjectionHold"};
  var sources=roots.Select(n=>donor.MainModule.GetType(n)??throw new IOException("Missing donor type "+n)).SelectMany(All).ToArray();
  var typeMap=new Dictionary<string,TypeDefinition>();var methodMap=new Dictionary<string,MethodDefinition>();var fieldMap=new Dictionary<string,FieldDefinition>();
  bool Local(TypeReference t)=>t.Scope?.Name==donor.Name.Name||t.Scope?.Name==donor.MainModule.Name||t.Scope?.Name==target.Name.Name||t.Scope?.Name==module.Name;
@@ -85,6 +87,43 @@ if(mode is "personal" or "server" or "clock" or "tracking"){
  }
  foreach(var s in sources){var n=typeMap[s.FullName];foreach(var m in s.Methods)Body(m,methodMap[m.FullName]);foreach(var p in s.Properties)n.Properties.Add(new PropertyDefinition(p.Name,p.Attributes,Type(p.PropertyType)){GetMethod=p.GetMethod==null?null:methodMap[p.GetMethod.FullName],SetMethod=p.SetMethod==null?null:methodMap[p.SetMethod.FullName]});var old=priorTypes.SingleOrDefault(t=>t.FullName==s.FullName);if(old!=null)foreach(var a in old.CustomAttributes)n.CustomAttributes.Add(a);}
  if(mode=="tracking"){
+  var coordinator=module.GetType("Server.Aetherfront.AetherfrontDeepFreezeCheckpointCoordinator");
+  var held=module.GetType("Aetherfront.Tracking.DeepFreezeProjectionHold");
+  var validate=coordinator.Methods.Single(m=>m.Name=="ValidateRecoveredWorld");
+  var keys=validate.Body.Instructions.Single(i=>i.Operand is MethodReference r&&r.Name=="get_Keys"&&
+     r.DeclaringType.FullName.Contains("DeepFreezeScenarioCodec/VesselRecord",StringComparison.Ordinal));
+  var current=coordinator.Fields.Single(f=>f.Name=="current");
+  var universe=coordinator.Fields.Single(f=>f.Name=="universeRoot");
+  if(keys.Previous.Operand is not MethodReference vessels||vessels.Name!="get_Vessels"||
+     keys.Previous.Previous.Operand!=current||keys.Previous.Previous.Previous.OpCode!=OpCodes.Ldarg_0||
+     keys.Next.Operand is not MethodReference array||array.Name!="ToArray")
+   throw new IOException("Unexpected DeepFreeze recovered projection enumeration");
+  var projectionLookup=validate.Body.Instructions.Single(i=>i.Operand is MethodReference r&&r.Name=="TryGetValue"&&
+     r.DeclaringType.FullName=="System.Collections.Generic.Dictionary`2<System.Guid,System.Byte[]>");
+  var recovered=validate.Body.Variables[3];
+  if(projectionLookup.Previous.Previous.Previous.OpCode!=OpCodes.Ldloc_3||
+     recovered.VariableType.FullName!="System.Collections.Generic.Dictionary`2<System.Guid,System.Byte[]>")
+   throw new IOException("Unexpected recovered-projection lookup");
+  var assignments=validate.Body.Variables.Single(v=>v.VariableType.FullName.Contains("DeepFreezeCheckpointValidator/VesselAssignments",StringComparison.Ordinal));
+  var validationIl=validate.Body.GetILProcessor();
+  // Retain the native scan, batch validator, and committed scenario. Only the
+  // checked hold path decides whether a missing projection can remain dormant.
+  foreach(var i in new[]{keys.Previous.Previous,keys.Previous}) {i.OpCode=OpCodes.Nop;i.Operand=null;}
+  foreach(var i in new[]{Instruction.Create(OpCodes.Ldarg_0),Instruction.Create(OpCodes.Ldfld,universe),
+    Instruction.Create(OpCodes.Ldarg_0),Instruction.Create(OpCodes.Ldfld,current),Instruction.Create(OpCodes.Ldloc,recovered),
+    Instruction.Create(OpCodes.Ldloc,assignments)}) validationIl.InsertBefore(keys,i);
+  keys.OpCode=OpCodes.Call;
+  keys.Operand=held.Methods.Single(m=>m.Name=="ValidateMissing");
+  allowed.Add(validate.FullName);
+  foreach(var guardName in new[]{"CanReplaceVessel","AcceptVesselRevision"}){
+   var guard=coordinator.Methods.Single(m=>m.Name==guardName);
+   if(guard.Parameters[0].ParameterType.FullName!="System.Guid")throw new IOException("Unexpected DeepFreeze projection guard");
+   var firstGuard=guard.Body.Instructions[0];var gil=guard.Body.GetILProcessor();
+   foreach(var i in new[]{Instruction.Create(OpCodes.Ldarg_0),Instruction.Create(OpCodes.Ldarg_1),
+     Instruction.Create(OpCodes.Call,held.Methods.Single(m=>m.Name=="Contains")),Instruction.Create(OpCodes.Brfalse,firstGuard),
+     Instruction.Create(OpCodes.Ldc_I4_0),Instruction.Create(OpCodes.Ret)})gil.InsertBefore(firstGuard,i);
+   allowed.Add(guard.FullName);
+  }
   var lookup=module.GetType("Server.Message.VesselMsgReader").Methods.Single(m=>m.Name=="GetVesselSubspace");
   if(!lookup.IsPrivate)throw new IOException("Unexpected subspace lookup visibility");
   lookup.IsAssembly=true;
