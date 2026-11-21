@@ -7,6 +7,8 @@ using Mono.Cecil.Cil;
 if (args.Length != 4) throw new ArgumentException("MODE PINNED_INPUT DONOR_OR_DASH NEW_OUTPUT");
 string mode=args[0], input=Path.GetFullPath(args[1]), output=Path.GetFullPath(args[3]);
 var pins=new Dictionary<string,string>{
+ ["tracking-reference"]="b4b18584eb00cf62c7b4993542b00aa7c5a6f906fd51deace51aebd908130113",
+ ["tracking"]="b4b18584eb00cf62c7b4993542b00aa7c5a6f906fd51deace51aebd908130113",
  ["personal"]="4424502ca38d7fcdd04e3f09642c0afea36e351068e7111b481eeb08463aea84",
  ["client"]="fe5ea047399c92516fdea52a1542273b77f6c797096f94e35e1d7ed893852058",
  ["clock"]="acbdb141064f6d8b91eab88503703cfd1d063b41d7c35cf23bc3159053b33f0c",
@@ -16,6 +18,10 @@ if(!pins.ContainsKey(mode)||Hash(input)!=pins[mode]||input==output||File.Exists(
 using var resolver=new DefaultAssemblyResolver();resolver.AddSearchDirectory(Path.GetDirectoryName(input)!);
 resolver.AddSearchDirectory(Environment.GetEnvironmentVariable("AETHERFRONT_KSP_MANAGED")??throw new IOException("KSP references required"));
 using var target=AssemblyDefinition.ReadAssembly(input,new ReaderParameters{AssemblyResolver=resolver,InMemory=true});var module=target.MainModule;
+if(mode=="tracking-reference"){
+ module.GetType("Server.Message.VesselMsgReader").Methods.Single(m=>m.Name=="GetVesselSubspace").IsPublic=true;
+ Directory.CreateDirectory(Path.GetDirectoryName(output)!);target.Write(output);return;
+}
 if(mode=="reference"){
  foreach(var t in module.Types.SelectMany(All).Where(t=>t.Name!="<Module>")){
   if(t.IsNested)t.IsNestedPublic=true;else t.IsPublic=true;
@@ -26,6 +32,7 @@ if(mode=="reference"){
  Console.WriteLine("Reference-only public metadata written; never ship this assembly: "+output);return;
 }
 var priorTypes=module.Types.SelectMany(All).ToArray();var before=priorTypes.SelectMany(t=>t.Methods).ToDictionary(m=>m.FullName,Image);
+var beforeMethodAttributes=priorTypes.SelectMany(t=>t.Methods).ToDictionary(m=>m.FullName,m=>m.Attributes);
 var beforeFields=priorTypes.SelectMany(t=>t.Fields).ToDictionary(f=>f.FullName,f=>f.Attributes+":"+f.Constant);
 var resources=module.Resources.Select(ResourceImage).ToArray();var references=module.AssemblyReferences.Select(r=>r.FullName).ToArray();
 var allowed=new HashSet<string>();var replaced=new HashSet<string>();var addedTypes=new List<string>();
@@ -43,9 +50,10 @@ if(mode is "server" or "client"){
  }
  var size=wire.Methods.Single(m=>m.Name=="InternalGetMessageSize");var ret=size.Body.Instructions.Last();size.Body.GetILProcessor().InsertBefore(ret,Instruction.Create(OpCodes.Ldc_I4,8));size.Body.GetILProcessor().InsertBefore(ret,Instruction.Create(OpCodes.Add));allowed.Add(size.FullName);
 }
-if(mode is "personal" or "server" or "clock"){
+if(mode is "personal" or "server" or "clock" or "tracking"){
  using var donor=AssemblyDefinition.ReadAssembly(args[2],new ReaderParameters{AssemblyResolver=resolver});
  var roots=mode=="personal"?new[]{"Aetherfront.Personal.Client.ResearchQueue","Aetherfront.Personal.Client.ResearchSync"}:mode=="clock"?new[]{"Aetherfront.Continuity.Server.PersonalClockServer"}:new[]{"Aetherfront.Synchronization.Server.RecoveryJournal","Aetherfront.Synchronization.Server.BoundaryServer","Aetherfront.Synchronization.BoundaryWire"};
+ if(mode=="tracking")roots=new[]{"Aetherfront.Tracking.TrackingCatalog","Aetherfront.Tracking.Wire","Aetherfront.Tracking.Marker"};
  var sources=roots.Select(n=>donor.MainModule.GetType(n)??throw new IOException("Missing donor type "+n)).SelectMany(All).ToArray();
  var typeMap=new Dictionary<string,TypeDefinition>();var methodMap=new Dictionary<string,MethodDefinition>();var fieldMap=new Dictionary<string,FieldDefinition>();
  bool Local(TypeReference t)=>t.Scope?.Name==donor.Name.Name||t.Scope?.Name==donor.MainModule.Name||t.Scope?.Name==target.Name.Name||t.Scope?.Name==module.Name;
@@ -76,6 +84,43 @@ if(mode is "personal" or "server" or "clock"){
   Instruction? At(Instruction? i)=>i==null?null:code[i];foreach(var e in s.Body.ExceptionHandlers)n.Body.ExceptionHandlers.Add(new ExceptionHandler(e.HandlerType){TryStart=At(e.TryStart),TryEnd=At(e.TryEnd),HandlerStart=At(e.HandlerStart),HandlerEnd=At(e.HandlerEnd),FilterStart=At(e.FilterStart),CatchType=e.CatchType==null?null:Type(e.CatchType)});
  }
  foreach(var s in sources){var n=typeMap[s.FullName];foreach(var m in s.Methods)Body(m,methodMap[m.FullName]);foreach(var p in s.Properties)n.Properties.Add(new PropertyDefinition(p.Name,p.Attributes,Type(p.PropertyType)){GetMethod=p.GetMethod==null?null:methodMap[p.GetMethod.FullName],SetMethod=p.SetMethod==null?null:methodMap[p.SetMethod.FullName]});var old=priorTypes.SingleOrDefault(t=>t.FullName==s.FullName);if(old!=null)foreach(var a in old.CustomAttributes)n.CustomAttributes.Add(a);}
+ if(mode=="tracking"){
+  var lookup=module.GetType("Server.Message.VesselMsgReader").Methods.Single(m=>m.Name=="GetVesselSubspace");
+  if(!lookup.IsPrivate)throw new IOException("Unexpected subspace lookup visibility");
+  lookup.IsAssembly=true;
+  const string storeName="Server.Aetherfront.AetherfrontServerStore";
+  var store=module.GetType(storeName);
+  var project=donor.MainModule.GetType(storeName).Methods.Single(m=>m.Name=="ReadTrackingCatalog");
+  var projection=new MethodDefinition(project.Name,project.Attributes,Type(project.ReturnType));
+  foreach(var p in project.Parameters)projection.Parameters.Add(new ParameterDefinition(p.Name,p.Attributes,Type(p.ParameterType)));
+  store.Methods.Add(projection);
+  Body(project,projection);
+  var bridge=module.GetType("Aetherfront.Tracking.TrackingCatalog").Methods.Single(m=>m.Name=="ReadCatalog");
+  var storeGetter=module.GetType("Server.Aetherfront.AetherfrontServerSystem").Methods.Single(m=>m.Name=="get_Store");
+  bridge.Body=new MethodBody(bridge);var bridgeIl=bridge.Body.GetILProcessor();
+  foreach(var i in new[]{Instruction.Create(OpCodes.Call,storeGetter),Instruction.Create(OpCodes.Ldarg_0),Instruction.Create(OpCodes.Ldarg_1),
+    Instruction.Create(OpCodes.Callvirt,projection),Instruction.Create(OpCodes.Ret)})bridgeIl.Append(i);
+  var method=module.GetType("Server.Message.AetherfrontMsgReader").Methods.Single(m=>m.Name=="HandleMessage");
+  var code=method.Body.Instructions;
+  var fleetEntry=code.Single(i=>i.OpCode==OpCodes.Ldsfld&&i.Operand is FieldReference f&&f.DeclaringType.FullName=="Server.Aetherfront.AetherfrontFleetGuard"&&f.Name=="Gate");
+  var admission=code.Single(i=>i.Operand==fleetEntry);
+  var request=method.Body.Variables.Single(v=>v.VariableType.FullName=="Aetherfront.Core.AetherfrontWireRequest");
+  var handle=module.GetType("Aetherfront.Tracking.TrackingCatalog").Methods.Single(m=>m.Name=="TryReply");
+  var end=code.Single(i=>i.OpCode==OpCodes.Ret);
+  if(admission.OpCode.Code is not (Code.Beq or Code.Beq_S)||
+    method.Body.ExceptionHandlers.Any(e=>e.TryStart==fleetEntry||e.TryEnd==fleetEntry||e.HandlerStart==fleetEntry||e.HandlerEnd==fleetEntry))
+   throw new IOException("Unexpected tracking admission boundary");
+  // Authenticate and parse as usual; read-only polls do not acquire the fleet gate.
+  var il=method.Body.GetILProcessor();var first=Instruction.Create(OpCodes.Ldarg_1);
+  foreach(var i in new[]{first,Instruction.Create(OpCodes.Ldloc,request),Instruction.Create(OpCodes.Call,handle),
+    Instruction.Create(OpCodes.Brfalse,fleetEntry),Instruction.Create(OpCodes.Leave,end)})il.InsertBefore(fleetEntry,i);
+  admission.Operand=first;
+  foreach(var i in code) i.OpCode=i.OpCode.Code switch{
+   Code.Br_S=>OpCodes.Br,Code.Brtrue_S=>OpCodes.Brtrue,Code.Brfalse_S=>OpCodes.Brfalse,Code.Beq_S=>OpCodes.Beq,
+   Code.Bne_Un_S=>OpCodes.Bne_Un,Code.Bge_S=>OpCodes.Bge,Code.Bge_Un_S=>OpCodes.Bge_Un,Code.Bgt_S=>OpCodes.Bgt,Code.Bgt_Un_S=>OpCodes.Bgt_Un,
+   Code.Ble_S=>OpCodes.Ble,Code.Ble_Un_S=>OpCodes.Ble_Un,Code.Blt_S=>OpCodes.Blt,Code.Blt_Un_S=>OpCodes.Blt_Un,Code.Leave_S=>OpCodes.Leave,_=>i.OpCode};
+  allowed.Add(method.FullName);
+ }
  if(mode=="server"){
   var store=module.GetType("Server.Aetherfront.AetherfrontServerStore");
   var helper=module.GetType("Aetherfront.Synchronization.Server.RecoveryJournal");
@@ -115,13 +160,21 @@ if(mode=="client"){
 Directory.CreateDirectory(Path.GetDirectoryName(output)!);target.Write(output);
 using var verify=AssemblyDefinition.ReadAssembly(output);var actual=verify.MainModule.Types.SelectMany(All).SelectMany(t=>t.Methods).ToDictionary(m=>m.FullName,Image);
 var changes=before.Keys.Where(k=>!actual.ContainsKey(k)||actual[k]!=before[k]).ToArray();
+var trackingAccessChanges=Array.Empty<string>();
+if(mode=="tracking"){
+ trackingAccessChanges=verify.MainModule.Types.SelectMany(All).SelectMany(t=>t.Methods)
+  .Where(m=>beforeMethodAttributes.TryGetValue(m.FullName,out var prior)&&prior!=m.Attributes).Select(m=>m.FullName).ToArray();
+ if(!trackingAccessChanges.SequenceEqual(new[]{"System.Int32 Server.Message.VesselMsgReader::GetVesselSubspace(System.Guid)"})||
+  !verify.MainModule.GetType("Server.Message.VesselMsgReader").Methods.Single(m=>m.Name=="GetVesselSubspace").IsAssembly)
+  throw new IOException("Unexpected tracking visibility change");
+}
 if(changes.Any(k=>!allowed.Contains(k)&&!replaced.Any(t=>k.Contains(" "+t+"::",StringComparison.Ordinal))))throw new IOException("Unrelated methods changed: "+string.Join(";",changes));
 if(allowed.Any(k=>!changes.Contains(k))||verify.Name.FullName!=target.Name.FullName||!verify.MainModule.Resources.Select(ResourceImage).SequenceEqual(resources))throw new IOException("Audit contract failed");
 var actualFields=verify.MainModule.Types.SelectMany(All).SelectMany(t=>t.Fields).ToDictionary(f=>f.FullName,f=>f.Attributes+":"+f.Constant);
 var fieldChanges=beforeFields.Keys.Where(k=>!actualFields.ContainsKey(k)||actualFields[k]!=beforeFields[k]).ToArray();
 if(fieldChanges.Any(k=>!replaced.Any(t=>k.Contains(" "+t+"::",StringComparison.Ordinal))&&!(mode=="client"&&k.EndsWith("ApfClientBuildVersion::Value",StringComparison.Ordinal))&&!(mode=="server"&&k.EndsWith("ScienceNotices::DelayMilliseconds",StringComparison.Ordinal))))throw new IOException("Unrelated field changed");
-var newRefs=verify.MainModule.AssemblyReferences.Select(r=>r.FullName).Except(references).ToArray();if(newRefs.Any(r=>r.Split(',')[0] is not("System.Runtime" or "System.Threading.Thread" or "System.Diagnostics.TraceSource")))throw new IOException("Unexpected dependency: "+string.Join(";",newRefs));
-var audit=new{version="kesas-rc64",mode,inputSha256=Hash(input),outputSha256=Hash(output),identityPreserved=true,allOtherMethodsUnchanged=true,changes,fieldChanges,replacedTypes=replaced,addedTypes,newReferences=newRefs};File.WriteAllText(output+".audit.json",JsonSerializer.Serialize(audit,new JsonSerializerOptions{WriteIndented=true}));Console.WriteLine(JsonSerializer.Serialize(audit));
+var newRefs=verify.MainModule.AssemblyReferences.Select(r=>r.FullName).Except(references).ToArray();if(newRefs.Any(r=>r.Split(',')[0] is not("System.Runtime" or "System.Threading.Thread" or "System.Diagnostics.TraceSource")&&!(mode=="tracking"&&r.Split(',')[0] is "System.Security.Cryptography" or "System.Collections.Concurrent")))throw new IOException("Unexpected dependency: "+string.Join(";",newRefs));
+var audit=new{version="kesas-rc64",mode,inputSha256=Hash(input),outputSha256=Hash(output),identityPreserved=true,allOtherMethodsUnchanged=true,changes,fieldChanges,trackingAccessChanges,replacedTypes=replaced,addedTypes,newReferences=newRefs};File.WriteAllText(output+".audit.json",JsonSerializer.Serialize(audit,new JsonSerializerOptions{WriteIndented=true}));Console.WriteLine(JsonSerializer.Serialize(audit));
 static string Hash(string p)=>Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(p))).ToLowerInvariant();
 static IEnumerable<TypeDefinition> All(TypeDefinition t){yield return t;foreach(var n in t.NestedTypes.SelectMany(All))yield return n;}
 static string ResourceImage(Resource r)=>r.Name+":"+r.ResourceType+":"+(r is EmbeddedResource e?Convert.ToHexString(SHA256.HashData(e.GetResourceData())):r.ToString());

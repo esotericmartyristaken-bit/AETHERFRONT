@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net472</TargetFramework><LangVersion>10</LangVersion></PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AetherfrontTrackingClient"><HintPath>$(Fixture)/AetherfrontTrackingClient.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="LmpClient"><HintPath>$(Fixture)/LmpClient.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="AetherfrontCore"><HintPath>$(Fixture)/AetherfrontCore.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="0Harmony"><HintPath>$(Fixture)/0Harmony.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(KspManaged)/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>
