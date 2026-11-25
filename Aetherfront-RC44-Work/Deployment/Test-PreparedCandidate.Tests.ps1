@@ -627,6 +627,22 @@ try {
         [IO.File]::WriteAllText("$($f.Base)/Logs/startup.log","All systems up and running.`nFATAL startup exploded")
         Expect-Failure { Read-PCStartup @{Scratch=$f.Base;Candidate="$($f.Base)/Candidate"} } '*startup log at Logs/startup.log:2*'
     }
+    Test-Fixture 'a ready boot gets one independent bounded HTTPS window' {
+        $owned=[pscustomobject]@{Process=@{Id=70001;HasExited=$false};OutputTask=@{IsFaulted=$false};ErrorTask=@{IsFaulted=$false}}
+        $owned|Add-Member ScriptMethod AssertOwned {}
+        $context=@{Game=$owned;Pack=$owned;Receipt=@{}}
+        $script:heartbeatCalls=0
+        Set-FixtureMock Assert-PCProduction {param($Context)}
+        Set-FixtureMock Read-PCStartup {param($Context) return $true}
+        Set-FixtureMock Assert-PCListeners {param($Context,[switch]$Require) return $true}
+        Set-FixtureMock Read-PCBridge {param($Context) (++$script:heartbeatCalls).ToString()}
+        Set-FixtureMock Invoke-PCHttps {param($Context) Start-Sleep -Milliseconds 2200}
+        & $original['Wait-PCReady'] $context -StartupSeconds 2 -VerificationSeconds 5
+        Assert-Fixture ($null -ne $context.Receipt.bridge)
+        $context.Receipt=@{}
+        Expect-Failure { & $original['Wait-PCReady'] $context -StartupSeconds 2 -VerificationSeconds 1 } '*deadline exceeded during HTTPS*'
+        Assert-Fixture (!$context.Receipt.ContainsKey('bridge'))
+    }
     Test-Fixture 'startup evidence distinguishes missing frozen vessels and excludes crew names' {
         $f=New-Fixture
         $u="$($f.Base)/Snapshots/Universe"

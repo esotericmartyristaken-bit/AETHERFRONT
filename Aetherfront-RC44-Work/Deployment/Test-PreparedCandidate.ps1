@@ -698,8 +698,9 @@ function Invoke-PCHttps($Context) {
     $Context.Receipt.https=@{health=$true;certificateSha256=$pin;packSha256=$packHash;feedSha256=$feedHash;zipSha256=$archiveHash;checkedAt=[DateTime]::UtcNow.ToString('o')}
 }
 
-function Wait-PCReady($Context) {
-    $deadline=[DateTime]::UtcNow.AddSeconds(180); $heartbeat=$null
+function Wait-PCReady($Context,[ValidateRange(1,180)][int]$StartupSeconds=180,[ValidateRange(1,90)][int]$VerificationSeconds=90) {
+    $clock=[Diagnostics.Stopwatch]::StartNew()
+    $deadline=$StartupSeconds; $heartbeat=$null; $verifying=$false
     do {
         Assert-PCProduction $Context
         foreach ($owned in @($Context.Game,$Context.Pack)) {
@@ -711,8 +712,14 @@ function Wait-PCReady($Context) {
         $fresh=Read-PCBridge $Context
         if ($listening -and $started -and $fresh) {
             if ($heartbeat -and $fresh -cne $heartbeat) {
+                if (!$verifying) {
+                    if ($clock.Elapsed.TotalSeconds -ge $deadline) { throw 'Candidate readiness timeout' }
+                    # Give an already-ready boot one bounded window for the fixed HTTPS probes.
+                    $deadline=$clock.Elapsed.TotalSeconds+$VerificationSeconds
+                    $verifying=$true
+                }
                 Invoke-PCHttps $Context
-                if ([DateTime]::UtcNow -ge $deadline) { throw 'Candidate readiness deadline exceeded during HTTPS verification' }
+                if ($clock.Elapsed.TotalSeconds -ge $deadline) { throw 'Candidate readiness deadline exceeded during HTTPS verification' }
                 # An owned auxiliary socket can briefly reappear after the
                 # probe. Continue the SAME deadline, then repeat every HTTPS
                 # check; do not admit it or discard earlier probe evidence.
@@ -720,13 +727,14 @@ function Wait-PCReady($Context) {
                 $null=Read-PCStartup $Context
                 $freshAfterProbe=Read-PCBridge $Context
                 if($listeningAfterProbe -and $freshAfterProbe -and $freshAfterProbe -cne $heartbeat){
+                    if ($clock.Elapsed.TotalSeconds -ge $deadline) { throw 'Candidate readiness deadline exceeded after HTTPS verification' }
                     $Context.Receipt.bridge=@{pid=$Context.Game.Process.Id;firstHeartbeat=$heartbeat;secondHeartbeat=$freshAfterProbe}
                     return
                 }
             }
             if (-not $heartbeat) { $heartbeat=$fresh }
         }
-        if ([DateTime]::UtcNow -ge $deadline) { throw 'Candidate readiness timeout' }
+        if ($clock.Elapsed.TotalSeconds -ge $deadline) { throw 'Candidate readiness timeout' }
         Start-Sleep -Milliseconds 500
     } while ($true)
 }
