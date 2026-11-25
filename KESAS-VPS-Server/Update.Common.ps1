@@ -319,10 +319,9 @@ function Start-UpdatedServer([string]$Root,$Config) {
         $probe.Dispose()
         $launcher=Start-Process powershell.exe -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',"`"$UpdateCodeRoot/Start-Server.ps1`"",'-LauncherLog',"`"$Root/LauncherLogs/$stamp.log`"",'-PublicationActivation','-DeploymentRoot',"`"$Root`"") -WindowStyle Hidden -PassThru
     }
-    # A cold managed server can spend over 30 seconds loading configuration and
-    # plugins before binding UDP. Keep readiness bounded without rolling back a
-    # healthy startup; listener ownership and pinned HTTPS are still required.
-    $deadline=(Get-Date).AddSeconds(300)
+    # Native RC68 reached bind after nearly six minutes against the live world.
+    # Keep a bounded cold-start margin; listener ownership and pinned HTTPS still gate activation.
+    $deadline=(Get-Date).AddSeconds(480)
     while(!(Get-NetUDPEndpoint -LocalPort $Config.gamePort -ErrorAction SilentlyContinue) -or !(Get-NetTCPConnection -LocalPort $Config.packPort -State Listen -ErrorAction SilentlyContinue)){
         if(($launcher -and $launcher.HasExited) -or (Get-Date)-gt $deadline){throw 'Updated server failed to start; inspect LauncherLogs'}
         Start-Sleep -Milliseconds 500
