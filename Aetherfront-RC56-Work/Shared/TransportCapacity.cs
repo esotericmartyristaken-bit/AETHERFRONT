@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using Lidgren.Network;
 using LmpCommon.Message.Interface;
@@ -20,6 +21,38 @@ namespace Aetherfront.Synchronization
             connectionBuffers = Field(typeof(NetConnection), "m_reliableOutgoingBuffers"),
             peerBuffers = Field(typeof(NetPeer), "m_reliableOutgoingBuffers");
         static FieldInfo Field(Type type, string name) => type.GetField(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public) ?? throw new MissingFieldException(type.FullName, name);
+        public sealed class Stall
+        {
+            long lastProgress = -1, lowBytes;
+            int lowReservations, lowArrays;
+            public void Reset() => lastProgress = -1;
+            public bool Blocked(long now, long bytes, int reservations, int arrays)
+            {
+                if (lastProgress < 0)
+                {
+                    lastProgress = now;
+                    lowBytes = bytes; lowReservations = reservations; lowArrays = arrays;
+                }
+                // Retiring fragments counts even before their shared backing array is released.
+                // Local low watermarks keep refills or other peers from extending the deadline.
+                if (bytes < lowBytes || reservations < lowReservations || arrays < lowArrays)
+                {
+                    lowBytes = Math.Min(lowBytes, bytes);
+                    lowReservations = Math.Min(lowReservations, reservations);
+                    lowArrays = Math.Min(lowArrays, arrays);
+                    lastProgress = now;
+                }
+                return now - lastProgress >= Stopwatch.Frequency * 30L;
+            }
+        }
+        public bool Stalled(NetPeer peer, NetConnection connection, Stall watch)
+        {
+            if (peer == null || connection == null || !ReferenceEquals(owner.GetValue(connection), peer))
+                return watch.Blocked(Stopwatch.GetTimestamp(), long.MaxValue, int.MaxValue, int.MaxValue);
+            lock (connectionGate.GetValue(connection)) lock (peerGate.GetValue(peer))
+                return watch.Blocked(Stopwatch.GetTimestamp(), (long)connectionBytes.GetValue(connection),
+                    (int)connectionMessages.GetValue(connection), ((Dictionary<byte[], int>)connectionBuffers.GetValue(connection)).Count);
+        }
         public bool CanSend(NetPeer peer, NetConnection connection, IMessageBase message, int size)
         {
             if (message.NetDeliveryMethod == NetDeliveryMethod.Unreliable || message.NetDeliveryMethod == NetDeliveryMethod.UnreliableSequenced) return true;

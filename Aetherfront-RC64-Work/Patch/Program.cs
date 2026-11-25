@@ -7,6 +7,7 @@ using Mono.Cecil.Cil;
 if (args.Length != 4) throw new ArgumentException("MODE PINNED_INPUT DONOR_OR_DASH NEW_OUTPUT");
 string mode=args[0], input=Path.GetFullPath(args[1]), output=Path.GetFullPath(args[3]);
 var pins=new Dictionary<string,string>{
+ ["sender"]="9970de519464348dfc90c2aea81e83e3d697b7356020ba54cd684a1750967875",
  ["tracking-reference"]="b4b18584eb00cf62c7b4993542b00aa7c5a6f906fd51deace51aebd908130113",
  ["tracking"]="b4b18584eb00cf62c7b4993542b00aa7c5a6f906fd51deace51aebd908130113",
  ["personal"]="4424502ca38d7fcdd04e3f09642c0afea36e351068e7111b481eeb08463aea84",
@@ -52,10 +53,11 @@ if(mode is "server" or "client"){
  }
  var size=wire.Methods.Single(m=>m.Name=="InternalGetMessageSize");var ret=size.Body.Instructions.Last();size.Body.GetILProcessor().InsertBefore(ret,Instruction.Create(OpCodes.Ldc_I4,8));size.Body.GetILProcessor().InsertBefore(ret,Instruction.Create(OpCodes.Add));allowed.Add(size.FullName);
 }
-if(mode is "personal" or "server" or "clock" or "tracking"){
+if(mode is "personal" or "server" or "clock" or "tracking" or "sender"){
  using var donor=AssemblyDefinition.ReadAssembly(args[2],new ReaderParameters{AssemblyResolver=resolver});
  var roots=mode=="personal"?new[]{"Aetherfront.Personal.Client.ResearchQueue","Aetherfront.Personal.Client.ResearchSync"}:mode=="clock"?new[]{"Aetherfront.Continuity.Server.PersonalClockServer"}:new[]{"Aetherfront.Synchronization.Server.RecoveryJournal","Aetherfront.Synchronization.Server.BoundaryServer","Aetherfront.Synchronization.BoundaryWire"};
  if(mode=="tracking")roots=new[]{"Aetherfront.Tracking.TrackingCatalog","Aetherfront.Tracking.Wire","Aetherfront.Tracking.Marker","Aetherfront.Tracking.DeepFreezeProjectionHold"};
+ if(mode=="sender")roots=new[]{"Aetherfront.Synchronization.TransportCapacity","Aetherfront.Synchronization.Server.ServerTraffic"};
  var sources=roots.Select(n=>donor.MainModule.GetType(n)??throw new IOException("Missing donor type "+n)).SelectMany(All).ToArray();
  var typeMap=new Dictionary<string,TypeDefinition>();var methodMap=new Dictionary<string,MethodDefinition>();var fieldMap=new Dictionary<string,FieldDefinition>();
  bool Local(TypeReference t)=>t.Scope?.Name==donor.Name.Name||t.Scope?.Name==donor.MainModule.Name||t.Scope?.Name==target.Name.Name||t.Scope?.Name==module.Name;
@@ -86,6 +88,13 @@ if(mode is "personal" or "server" or "clock" or "tracking"){
   Instruction? At(Instruction? i)=>i==null?null:code[i];foreach(var e in s.Body.ExceptionHandlers)n.Body.ExceptionHandlers.Add(new ExceptionHandler(e.HandlerType){TryStart=At(e.TryStart),TryEnd=At(e.TryEnd),HandlerStart=At(e.HandlerStart),HandlerEnd=At(e.HandlerEnd),FilterStart=At(e.FilterStart),CatchType=e.CatchType==null?null:Type(e.CatchType)});
  }
  foreach(var s in sources){var n=typeMap[s.FullName];foreach(var m in s.Methods)Body(m,methodMap[m.FullName]);foreach(var p in s.Properties)n.Properties.Add(new PropertyDefinition(p.Name,p.Attributes,Type(p.PropertyType)){GetMethod=p.GetMethod==null?null:methodMap[p.GetMethod.FullName],SetMethod=p.SetMethod==null?null:methodMap[p.SetMethod.FullName]});var old=priorTypes.SingleOrDefault(t=>t.FullName==s.FullName);if(old!=null)foreach(var a in old.CustomAttributes)n.CustomAttributes.Add(a);}
+ if(mode=="sender"){
+  var traffic=roots[1];
+  var nativeDrain=priorTypes.Single(t=>t.FullName==traffic).Methods.Single(m=>m.Name=="Drain");
+  if(!nativeDrain.HasBody||nativeDrain.Body.Instructions.Any(i=>i.OpCode==OpCodes.Throw))
+   throw new IOException("Expected the RC67 native queue drain");
+  Body(nativeDrain,methodMap[nativeDrain.FullName]);
+ }
  if(mode=="tracking"){
   var coordinator=module.GetType("Server.Aetherfront.AetherfrontDeepFreezeCheckpointCoordinator");
   var held=module.GetType("Aetherfront.Tracking.DeepFreezeProjectionHold");
@@ -213,7 +222,7 @@ var actualFields=verify.MainModule.Types.SelectMany(All).SelectMany(t=>t.Fields)
 var fieldChanges=beforeFields.Keys.Where(k=>!actualFields.ContainsKey(k)||actualFields[k]!=beforeFields[k]).ToArray();
 if(fieldChanges.Any(k=>!replaced.Any(t=>k.Contains(" "+t+"::",StringComparison.Ordinal))&&!(mode=="client"&&k.EndsWith("ApfClientBuildVersion::Value",StringComparison.Ordinal))&&!(mode=="server"&&k.EndsWith("ScienceNotices::DelayMilliseconds",StringComparison.Ordinal))))throw new IOException("Unrelated field changed");
 var newRefs=verify.MainModule.AssemblyReferences.Select(r=>r.FullName).Except(references).ToArray();if(newRefs.Any(r=>r.Split(',')[0] is not("System.Runtime" or "System.Threading.Thread" or "System.Diagnostics.TraceSource")&&!(mode=="tracking"&&r.Split(',')[0] is "System.Security.Cryptography" or "System.Collections.Concurrent")))throw new IOException("Unexpected dependency: "+string.Join(";",newRefs));
-var audit=new{version="kesas-rc64",mode,inputSha256=Hash(input),outputSha256=Hash(output),identityPreserved=true,allOtherMethodsUnchanged=true,changes,fieldChanges,trackingAccessChanges,replacedTypes=replaced,addedTypes,newReferences=newRefs};File.WriteAllText(output+".audit.json",JsonSerializer.Serialize(audit,new JsonSerializerOptions{WriteIndented=true}));Console.WriteLine(JsonSerializer.Serialize(audit));
+var audit=new{version=mode=="sender"?"kesas-rc68":"kesas-rc64",mode,inputSha256=Hash(input),outputSha256=Hash(output),identityPreserved=true,allOtherMethodsUnchanged=true,changes,fieldChanges,trackingAccessChanges,replacedTypes=replaced,addedTypes,newReferences=newRefs};File.WriteAllText(output+".audit.json",JsonSerializer.Serialize(audit,new JsonSerializerOptions{WriteIndented=true}));Console.WriteLine(JsonSerializer.Serialize(audit));
 static string Hash(string p)=>Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(p))).ToLowerInvariant();
 static IEnumerable<TypeDefinition> All(TypeDefinition t){yield return t;foreach(var n in t.NestedTypes.SelectMany(All))yield return n;}
 static string ResourceImage(Resource r)=>r.Name+":"+r.ResourceType+":"+(r is EmbeddedResource e?Convert.ToHexString(SHA256.HashData(e.GetResourceData())):r.ToString());

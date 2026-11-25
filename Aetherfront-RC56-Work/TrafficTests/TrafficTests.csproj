@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType></PropertyGroup>
+ <ItemGroup>
+  <Compile Include="../Shared/TransportCapacity.cs" />
+  <Reference Include="Server"><HintPath>$(Runtime)/Server.dll</HintPath></Reference>
+  <Reference Include="Lidgren.Core"><HintPath>$(Runtime)/Lidgren.Core.dll</HintPath></Reference>
+ </ItemGroup>
+</Project>

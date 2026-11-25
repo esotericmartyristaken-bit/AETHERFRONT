@@ -16,7 +16,7 @@ namespace Aetherfront.Stability.Client
 {
     public static class ClientTraffic
     {
-        sealed class State { internal TrafficScheduler Queue; internal DateTime LastProgress = DateTime.UtcNow; }
+        sealed class State { internal TrafficScheduler Queue; internal readonly TransportCapacity.Stall Stall = new TransportCapacity.Stall(); }
         static readonly ConditionalWeakTable<ConcurrentQueue<IMessageBase>, State> States = new ConditionalWeakTable<ConcurrentQueue<IMessageBase>, State>();
         static readonly TransportCapacity Capacity = new TransportCapacity();
         static readonly ConcurrentDictionary<IMessageBase, int> Generations = (ConcurrentDictionary<IMessageBase, int>)AccessTools.Field(typeof(NetworkSender), "MessageGenerations").GetValue(null);
@@ -60,10 +60,12 @@ namespace Aetherfront.Stability.Client
                 try
                 {
                     for (int i = 0; i < 512 && state.Queue.Count < 3800 && queue.TryDequeue(out var message); i++) state.Queue.Add(message);
+                    var peer = NetworkMain.ClientConnection;
+                    var connection = peer?.ServerConnection;
                     bool taken = state.Queue.TryTake((message, size) => message is IMasterServerMessageBase ||
-                        Capacity.CanSend(NetworkMain.ClientConnection, NetworkMain.ClientConnection?.ServerConnection, message, size), out result);
-                    if (taken || state.Queue.Count == 0) state.LastProgress = DateTime.UtcNow;
-                    else if ((DateTime.UtcNow - state.LastProgress).TotalSeconds >= 30)
+                        Capacity.CanSend(peer, connection, message, size), out result);
+                    if (taken || state.Queue.Count == 0) state.Stall.Reset();
+                    else if (Capacity.Stalled(peer, connection, state.Stall))
                         throw new TimeoutException("Application sender made no progress for 30 seconds; local flight recovery preserved.");
                     return taken;
                 }
