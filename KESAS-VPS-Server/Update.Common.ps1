@@ -322,7 +322,7 @@ function Start-UpdatedServer([string]$Root,$Config) {
     # A cold managed server can spend over 30 seconds loading configuration and
     # plugins before binding UDP. Keep readiness bounded without rolling back a
     # healthy startup; listener ownership and pinned HTTPS are still required.
-    $deadline=(Get-Date).AddSeconds(180)
+    $deadline=(Get-Date).AddSeconds(300)
     while(!(Get-NetUDPEndpoint -LocalPort $Config.gamePort -ErrorAction SilentlyContinue) -or !(Get-NetTCPConnection -LocalPort $Config.packPort -State Listen -ErrorAction SilentlyContinue)){
         if(($launcher -and $launcher.HasExited) -or (Get-Date)-gt $deadline){throw 'Updated server failed to start; inspect LauncherLogs'}
         Start-Sleep -Milliseconds 500

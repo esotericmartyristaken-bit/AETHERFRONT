@@ -698,7 +698,7 @@ function Invoke-PCHttps($Context) {
     $Context.Receipt.https=@{health=$true;certificateSha256=$pin;packSha256=$packHash;feedSha256=$feedHash;zipSha256=$archiveHash;checkedAt=[DateTime]::UtcNow.ToString('o')}
 }
 
-function Wait-PCReady($Context,[ValidateRange(1,180)][int]$StartupSeconds=180,[ValidateRange(1,90)][int]$VerificationSeconds=90) {
+function Wait-PCReady($Context,[ValidateRange(1,300)][int]$StartupSeconds=300,[ValidateRange(1,90)][int]$VerificationSeconds=90) {
     $clock=[Diagnostics.Stopwatch]::StartNew()
     $deadline=$StartupSeconds; $heartbeat=$null; $verifying=$false
     do {
@@ -713,7 +713,7 @@ function Wait-PCReady($Context,[ValidateRange(1,180)][int]$StartupSeconds=180,[V
         if ($listening -and $started -and $fresh) {
             if ($heartbeat -and $fresh -cne $heartbeat) {
                 if (!$verifying) {
-                    if ($clock.Elapsed.TotalSeconds -ge $deadline) { throw 'Candidate readiness timeout' }
+                    if ($clock.Elapsed.TotalSeconds -ge $deadline) { throw 'Candidate readiness timeout: advancing heartbeat arrived after startup budget' }
                     # Give an already-ready boot one bounded window for the fixed HTTPS probes.
                     $deadline=$clock.Elapsed.TotalSeconds+$VerificationSeconds
                     $verifying=$true
@@ -734,7 +734,9 @@ function Wait-PCReady($Context,[ValidateRange(1,180)][int]$StartupSeconds=180,[V
             }
             if (-not $heartbeat) { $heartbeat=$fresh }
         }
-        if ($clock.Elapsed.TotalSeconds -ge $deadline) { throw 'Candidate readiness timeout' }
+        if ($clock.Elapsed.TotalSeconds -ge $deadline) {
+            throw "Candidate readiness timeout: listeners=$([bool]$listening); startup=$([bool]$started); freshHeartbeat=$([bool]$fresh); verificationStarted=$verifying"
+        }
         Start-Sleep -Milliseconds 500
     } while ($true)
 }
